@@ -1,0 +1,13 @@
+{
+  "name": "gn_module_import",
+  "version": "1.0.0",
+  "description": "\"module geonature permettant l'import de données\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+  }
+}
