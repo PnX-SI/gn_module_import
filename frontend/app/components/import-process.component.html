@@ -1,0 +1,56 @@
+<mat-horizontal-stepper #stepper>
+
+    <!-- STEP 1 -->
+
+    <mat-step [stepControl]="importFile">
+
+        <h4> Nouvel Import </h4>
+
+        <br>
+
+        <div  id="upload_files">
+            <input type=file (change)="onFileSelected($event)" id="selectedFile" name="file"/>
+        </div>
+
+        <br>
+
+        <div>
+          <button mat-button matStepperNext> Etape suivante </button>
+        </div>
+        
+    </mat-step>
+
+
+    <!-- STEP 2 -->
+
+    <mat-step [stepControl]="correspondanceMapping">
+        <h4> Mapping des champs </h4>
+        <div>
+          <button mat-button matStepperPrevious> Etape précédente </button>
+          <button mat-button matStepperNext> Etape suivante </button>
+        </div>
+    </mat-step>
+
+
+    <!-- STEP 3 -->
+
+    <mat-step>
+        <h4> Mapping des contenus </h4>
+        <div>
+            <button mat-button matStepperPrevious> Etape précédente </button>
+            <button mat-button matStepperNext> Etape suivante </button>
+      </div>
+    </mat-step>
+
+
+    <!-- STEP 4 -->
+
+    <mat-step>
+        <h4> Terminer l'import </h4>
+        <div>
+            <button mat-button matStepperPrevious> Etape précédente </button>
+            <button mat-button (click)="resetStepper(stepper)"> Recommencer à 0 </button>
+        </div>
+    </mat-step>
+
+  </mat-horizontal-stepper>
