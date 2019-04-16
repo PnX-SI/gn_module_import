@@ -5,52 +5,93 @@
     <mat-step [stepControl]="importFile">
 
         <h4> Nouvel Import </h4>
-
         <br>
 
         <div  id="upload_files">
             <input type=file (change)="onFileSelected($event)" id="selectedFile" name="file"/>
         </div>
-
         <br>
 
         <div>
-          <button mat-button matStepperNext> Etape suivante </button>
+            <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" (click)="onUpload()" matStepperNext> 
+                <i class="material-icons"> navigate_next </i> 
+                Valider
+            </button>        
         </div>
-        
+        <br>
+
     </mat-step>
 
 
     <!-- STEP 2 -->
 
     <mat-step [stepControl]="correspondanceMapping">
+
         <h4> Mapping des champs </h4>
+        <br>
+
         <div>
-          <button mat-button matStepperPrevious> Etape précédente </button>
-          <button mat-button matStepperNext> Etape suivante </button>
+            <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between" matStepperPrevious> 
+                <i class="material-icons"> navigate_before </i> 
+                Précédent
+            </button>
+            <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" matStepperNext> 
+                <i class="material-icons"> navigate_next </i> 
+                Valider
+            </button>
         </div>
+        
+        <br>
+
     </mat-step>
 
 
     <!-- STEP 3 -->
 
     <mat-step>
+
         <h4> Mapping des contenus </h4>
+        <br>
+
         <div>
-            <button mat-button matStepperPrevious> Etape précédente </button>
-            <button mat-button matStepperNext> Etape suivante </button>
-      </div>
+                <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between" matStepperPrevious> 
+                    <i class="material-icons"> navigate_before </i> 
+                    Précédent
+                </button>
+                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" matStepperNext> 
+                    <i class="material-icons"> navigate_next </i> 
+                    Valider
+                </button>
+            </div>
+        <br>
+
     </mat-step>
 
 
     <!-- STEP 4 -->
 
     <mat-step>
+
         <h4> Terminer l'import </h4>
+        <br>
+
         <div>
-            <button mat-button matStepperPrevious> Etape précédente </button>
-            <button mat-button (click)="resetStepper(stepper)"> Recommencer à 0 </button>
+            <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between" matStepperPrevious> 
+                <i class="material-icons"> navigate_before </i> 
+                Précédent
+            </button> 
+            <button class="btn btn-primary box-shadow d-flex justify-content-center align-content-between" (click)="resetStepper(stepper)" matStepperPrevious> 
+                    <i class="material-icons"> refresh </i> 
+                    Recommencer le processus d'import
+            </button>               
         </div>
+        <br>
+
     </mat-step>
 
   </mat-horizontal-stepper>
+
+  <br>
+
+  <button type="button" id="cancelImport" (click)="onImportList()" class="btn btn-danger box-shadow btn-sm">Annuler l'import</button>
+  <button type="button" id="importListPage" (click)="onImportList()" class="btn btn-secondary box-shadow btn-sm">Retourner à ma liste des imports</button>
