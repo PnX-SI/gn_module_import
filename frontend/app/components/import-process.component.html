@@ -1,10 +1,8 @@
 <mat-horizontal-stepper #stepper>
 
     <!-- STEP 1 -->
-
-    <mat-step [stepControl]="importFile">
-
-        <h4> Nouvel Import </h4>
+    <mat-step>
+        <h4> Upload du fichier </h4>
         <br>
 
         <div  id="upload_files">
@@ -12,8 +10,8 @@
         </div>
         <br>
 
-        <div>
-            <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" (click)="onUpload()" matStepperNext> 
+        <div class="d-flex flex-row justify-content-between">
+            <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!isFileSelected" (click)="onUpload()" matStepperNext> 
                 <i class="material-icons"> navigate_next </i> 
                 Valider
             </button>        
@@ -25,12 +23,12 @@
 
     <!-- STEP 2 -->
 
-    <mat-step [stepControl]="correspondanceMapping">
+    <mat-step>
 
         <h4> Mapping des champs </h4>
         <br>
 
-        <div>
+        <div class="d-flex flex-row justify-content-between">
             <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between" matStepperPrevious> 
                 <i class="material-icons"> navigate_before </i> 
                 Précédent
@@ -53,7 +51,11 @@
         <h4> Mapping des contenus </h4>
         <br>
 
-        <div>
+        <div> Pas à faire dans iteration 1 </div>
+
+        <br>
+
+        <div class="d-flex flex-row justify-content-between">
                 <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between" matStepperPrevious> 
                     <i class="material-icons"> navigate_before </i> 
                     Précédent
@@ -75,15 +77,19 @@
         <h4> Terminer l'import </h4>
         <br>
 
-        <div>
+        <div class="d-flex flex-row justify-content-between">
             <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between" matStepperPrevious> 
                 <i class="material-icons"> navigate_before </i> 
                 Précédent
             </button> 
             <button class="btn btn-primary box-shadow d-flex justify-content-center align-content-between" (click)="resetStepper(stepper)" matStepperPrevious> 
-                    <i class="material-icons"> refresh </i> 
-                    Recommencer le processus d'import
-            </button>               
+                <i class="material-icons"> refresh </i> 
+                Recommencer le processus d'import
+            </button>
+            <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" (click)="resetStepper(stepper)" matStepperPrevious> 
+                <i class="material-icons"> done </i> 
+                Importer les données dans Geonature
+            </button>                  
         </div>
         <br>
 
@@ -93,5 +99,7 @@
 
   <br>
 
-  <button type="button" id="cancelImport" (click)="onImportList()" class="btn btn-danger box-shadow btn-sm">Annuler l'import</button>
+  <div class="d-flex flex-row justify-content-between" id="bottomButtons">
+  <button type="button" id="cancelImport" (click)="onCancel()" class="btn btn-danger box-shadow btn-sm">Annuler l'import</button>
   <button type="button" id="importListPage" (click)="onImportList()" class="btn btn-secondary box-shadow btn-sm">Retourner à ma liste des imports</button>
+  </div>

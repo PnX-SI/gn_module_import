@@ -2,3 +2,9 @@
 
 <button type="button" id="start_process" (click)="onProcess()" class="btn btn-primary box-shadow">Nouvel Import</button>
 
+<!-- MODEL FOR SELECTION OF THE DATASET -->
+<ng-template #ImportModalDataset let-c="close " let-d="dismiss">
+
+    <pnx-import-modal-dataset></pnx-import-modal-dataset>
+  
+</ng-template>

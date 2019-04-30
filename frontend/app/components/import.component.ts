@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonService } from '@geonature_common/service/common.service'; 
 import { AppConfig } from '@geonature_config/app.config';
-import { ModuleConfig } from '../module.config';
-import { Router } from "@angular/router";
-import { DataService } from '../services/data.service';
 import { ToastrService } from 'ngx-toastr';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
+import { ImportModalDatasetComponent } from './import-modal-dataset.component';
+import { DataService } from '../services/data.service';
 
 @Component({
   selector: 'pnx-import',
@@ -16,14 +16,14 @@ import { ToastrService } from 'ngx-toastr';
 
 export class ImportComponent implements OnInit {
 
-  public IMPORT_CONFIG = ModuleConfig;
-  public importListServerMsg: JSON;
+  public importListResponse: JSON;
+  public initializeResponse: JSON;
 
   constructor(
     private _commonService: CommonService,
-    private _router: Router,
     public _ds: DataService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    public ngbModal: NgbModal
   ) {}
 
 
@@ -32,13 +32,31 @@ export class ImportComponent implements OnInit {
   }
 
   onProcess() {
-    this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}/process`]);
+    this._ds.initializeProcess().subscribe(
+      res => {
+        this.initializeResponse = res as JSON;
+      },
+      error => {
+        if (error.statusText === 'Unknown Error') {
+          // show error message if no connexion
+          this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+        } else {
+          // show error message if other server error
+          this.toastr.error(error.error);
+        }
+      },
+      () => {
+        console.log(this.initializeResponse);
+        this.openDatasetModal();
+      }
+    );
+
   }
 
   onImportList() {
     this._ds.getImportList().subscribe(
       res => {
-        this.importListServerMsg = res as JSON;
+        this.importListResponse = res as JSON;
     },
       error => {
         if (error.statusText === 'Unknown Error') {
@@ -50,9 +68,18 @@ export class ImportComponent implements OnInit {
         }
     },
       () => {
-        console.log(this.importListServerMsg);
+        console.log(this.importListResponse);
       }
     );
+  }
+
+  openDatasetModal() {
+    const modalRef = this.ngbModal.open(ImportModalDatasetComponent, {
+      centered: true, 
+      size: "lg", 
+      backdrop: 'static', 
+      windowClass: 'dark-modal'
+    });
   }
   
 }

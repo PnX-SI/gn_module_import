@@ -1,3 +1,16 @@
-mat-horizontal-stepper {
-    //background-color: transparent;
+mat-step {
+    //background-color: transparent !important;
 }
+
+.custom {
+    width: 78px !important;
+}
+
+:host /deep/ .mat-step-icon {
+    background-color: rgb(79, 154, 230);
+ }
+
+ #bottomButtons {
+     margin-left: 25px;
+     margin-right: 25px;
+ }

@@ -1,0 +1,57 @@
+<form [formGroup]="selectDatasetForm">
+
+    <div class="modal-header">
+
+        <div id="title">
+            <h5 class="main-color "> Sélection du jeu de données </h5>
+        </div>
+
+        <button type="button" class="close" aria-label="Close" (click)="closeModal()">
+            <span aria-hidden="true">&times;</span>
+        </button>
+
+    </div>
+        
+
+
+    <div class="modal-body">
+
+        <p></p>
+
+
+            <div class="datasetSelection">
+
+                <div>
+                    <label for="datasetSelection"> Sélectionnez le jeu de données </label>
+                    <select class="form-control" id="datasetSelection" formControlName="dataset" required>
+                        <option *ngFor="let data of userDatasetsResponse" [value]="data">{{data}}</option>
+                    </select>
+                    <br/>
+                </div>
+            </div>
+        
+            <p></p>
+
+            <div id="datasetError" *ngIf="isUserDatasetError">
+                <i id="warningDataset" class="material-icons">warning</i> {{datasetError}}
+            </div>
+
+
+        <p></p>
+
+    </div>
+
+
+
+    <div class="modal-footer">
+
+        <div id="modalbuttons">  
+            <button (click)="onSubmit(selectDatasetForm.value)" [disabled]="!this.selectDatasetForm.valid" class="btn btn-sm btn-success box-shadow">
+            Enregistrer
+            </button>
+            <!-- penser à mettre un disable tant qu'aucun jeu n'est selectionné-->
+        </div>
+
+    </div>
+
+</form>
