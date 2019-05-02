@@ -7,6 +7,8 @@ import { ModuleConfig } from '../module.config';
 import { MatButtonModule } from '@angular/material/button';
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 
+import { importIdStorage } from './importId';
+
 
 @Component({
   selector: 'pnx-import-process',
@@ -26,28 +28,59 @@ export class ImportProcessComponent implements OnInit {
   public isFileSelected : Boolean = false; // used for disable valid button
   //step1Completed = false;
   //isLinear = true;
+  public deleteResponse;
 
   @ViewChild('stepper') stepper: MatStepperModule;
 
   constructor(
     private _router: Router, 
     public _ds: DataService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private _idImport: importIdStorage
   ) {}
 
 
   ngOnInit() {
   }
 
+
   resetStepper(stepper: MatStepperModule){
     stepper.selectedIndex = 0;
   }
+
 
   onFileSelected(event) {
     this.selectedFile = <File>event.target.files[0];
     this.isFileSelected = true;
     console.log('le nom du fichier uploadé par l\'utilisateur est = ' + this.selectedFile.name);
   }
+
+
+  cancelImport() {
+    this._ds.deleteImport(this._idImport.importId).subscribe(
+      res => {
+        this.deleteResponse = res as JSON;
+    },
+      error => {
+        if (error.statusText === 'Unknown Error') {
+          // show error message if no connexion
+          this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+        } else {
+          if (error.status = 400){
+            this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);
+          }
+          // show error message if other server error
+          this.toastr.error(error.error);
+        }
+    },
+      () => {
+        console.log(this.deleteResponse);
+        this.onImportList();
+      }
+    );       
+
+  }
+
 
   onUpload() {
     this._ds.postUserFile(this.selectedFile).subscribe(
@@ -75,12 +108,8 @@ export class ImportProcessComponent implements OnInit {
   } 
 
   onImportList() {
-    this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);
-  }
-
-  onCancel() {
-    this.onImportList();
     // effacer le fichier dans uploads (attention penser à gérer le fait que 2 utilisateurs puissent avoir le même nom de fichier?)
+    this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);
   }
 
   complete() {

@@ -11,6 +11,7 @@ import { ImportComponent } from "./components/import.component";
 import { ImportProcessComponent } from "./components/import-process.component";
 import { ImportModalDatasetComponent } from "./components/import-modal-dataset.component";
 import { DataService } from "./services/data.service";
+import { importIdStorage } from './components/importId';
 
 // my module routing
 const routes: Routes = [
@@ -38,7 +39,8 @@ const routes: Routes = [
   ],
 
   providers: [
-    DataService
+    DataService,
+    importIdStorage
   ],
 
   bootstrap: []

@@ -17,7 +17,7 @@ import { DataService } from '../services/data.service';
 export class ImportComponent implements OnInit {
 
   public importListResponse: JSON;
-  public initializeResponse: JSON;
+  public importId: JSON;
 
   constructor(
     private _commonService: CommonService,
@@ -32,25 +32,7 @@ export class ImportComponent implements OnInit {
   }
 
   onProcess() {
-    this._ds.initializeProcess().subscribe(
-      res => {
-        this.initializeResponse = res as JSON;
-      },
-      error => {
-        if (error.statusText === 'Unknown Error') {
-          // show error message if no connexion
-          this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-        } else {
-          // show error message if other server error
-          this.toastr.error(error.error);
-        }
-      },
-      () => {
-        console.log(this.initializeResponse);
-        this.openDatasetModal();
-      }
-    );
-
+    this.openDatasetModal();
   }
 
   onImportList() {

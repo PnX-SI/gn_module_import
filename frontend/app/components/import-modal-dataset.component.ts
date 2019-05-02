@@ -6,6 +6,8 @@ import { Router } from "@angular/router";
 
 import { DataService } from '../services/data.service';
 import { ModuleConfig } from '../module.config';
+import { ImportComponent } from './import.component';
+import { importIdStorage } from './importId';
 
 @Component({
     selector: 'pnx-import-modal-dataset',
@@ -22,12 +24,14 @@ import { ModuleConfig } from '../module.config';
     public datasetError;
     public IMPORT_CONFIG = ModuleConfig;
 
+
     constructor(
         public activeModal: NgbActiveModal,
         private _fb: FormBuilder,
         public _ds: DataService,
         private toastr: ToastrService,
-        private _router: Router
+        private _router: Router,
+        private _idImport: importIdStorage
       ) {
         this.selectDatasetForm = this._fb.group({
           dataset: ['', Validators.required]
@@ -39,14 +43,16 @@ import { ModuleConfig } from '../module.config';
       this.getUserDataset();
     }
 
+
     closeModal() {
-      this.activeModal.close();
+      this.activeModal.close();  
     }
 
+
     onSubmit(value) {
-      // post datasetname then
-      // close the modal then
-      // navigate to the beginning of the process
+      // post id_dataset and initialize db data related to the current import (t_imports table : id_import, id_dataset, create_date, update_dates, cor_role_import table)
+      // get id_import and id_dataset as response from the server
+      // then close the modal for selecting dataset and navigate to the process route to start the import process
       this._ds.postDataset(value).subscribe(
         res => {
           this.postDatasetResponse = res as JSON;
@@ -61,11 +67,14 @@ import { ModuleConfig } from '../module.config';
           }
       },
         () => {
-          this.closeModal();
+          console.log(this.postDatasetResponse);
+          this._idImport.importId = this.postDatasetResponse.id_import;
           this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}/process`]);
+          this.closeModal();
         }
       );
     } 
+
 
     getUserDataset() {
       // get list of all declared dataset of the user
@@ -88,7 +97,9 @@ import { ModuleConfig } from '../module.config';
             }
           }
         },
-        () => {}
+        () => {
+          console.log(this.userDatasetsResponse);
+        }
       );
     }
     

@@ -21,10 +21,6 @@ export class DataService {
         return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}`);
     }
 
-    initializeProcess() {
-        return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/init`);
-    }
-    
     postUserFile(selectedFile) {
         const urlStatus = `${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/uploads`;
         this.fd = new FormData();
@@ -32,13 +28,17 @@ export class DataService {
         return this._http.post<any>(urlStatus, this.fd);
     }
 
-    postDataset(data:any) {
-        const url = `${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/dataset`;
-        return this._http.post<any>(url,data);
+    postDataset(datasetId:number) {
+        const url = `${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/init`;
+        return this._http.post<any>(url,datasetId);
     }
 
     getUserDatasets() {
         return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/datasets`);
+    }
+
+    deleteImport(importId:number) {
+        return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/ImportDelete/${importId}`);
     }
 
 }

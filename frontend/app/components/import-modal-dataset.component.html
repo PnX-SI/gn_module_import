@@ -24,7 +24,7 @@
                 <div>
                     <label for="datasetSelection"> Sélectionnez le jeu de données </label>
                     <select class="form-control" id="datasetSelection" formControlName="dataset" required>
-                        <option *ngFor="let data of userDatasetsResponse" [value]="data">{{data}}</option>
+                        <option *ngFor="let data of userDatasetsResponse" [value]="data.datasetId">{{data.datasetName}}</option>
                     </select>
                     <br/>
                 </div>
@@ -49,7 +49,6 @@
             <button (click)="onSubmit(selectDatasetForm.value)" [disabled]="!this.selectDatasetForm.valid" class="btn btn-sm btn-success box-shadow">
             Enregistrer
             </button>
-            <!-- penser à mettre un disable tant qu'aucun jeu n'est selectionné-->
         </div>
 
     </div>
