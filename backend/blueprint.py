@@ -48,9 +48,37 @@ def get_import_list(info_role):
         return import list
     """
     try:
-        return 'hello I am the import list response',200
+        results = DB.session.query(TImports).filter(TImports.import_table != None).all()
+        history = []
+        if not results:
+            return {
+                "empty":True
+            },200
+        for r in results:
+            prop = {
+                "id_import":r.id_import,
+                "format_source_file":r.format_source_file,
+                "srid":r.srid,
+                "import_table":r.import_table,
+                "id_dataset":r.id_dataset,
+                "id_mapping":r.id_mapping,
+                "date_create_import":str(r.date_create_import),
+                "date_update_import":str(r.date_update_import),
+                "date_end_import":str(r.date_end_import),
+                "source_count":r.source_count,
+                "import_count":r.import_count,
+                "taxa_count":r.taxa_count,
+                "date_min_data":str(r.date_min_data),
+                "date_max_data":str(r.date_max_data)
+            }
+            history.append(prop)
+        return {
+            "empty":False,
+            "history":history,
+        },200
     except Exception:
         return 'INTERNAL SERVER ERROR ("get_import_list() error"): contactez l\'administrateur du site',500
+
 
 
 @blueprint.route('/datasets', methods=['GET'])
@@ -85,38 +113,17 @@ def get_user_datasets(info_role):
 @json_resp
 def post_dataset(info_role):
 
-    """
-        start to create data related to the current user import in the geonature db
-    """
+    #start to create data related to the current user import in the geonature db
 
     try:
         # get dataset_id from form post
         data = dict(request.get_json())
         selected_dataset_id = int(data['dataset'])
-
-        # initiate t_imports with id_import, dataset_id, date_create_import and date_update_import
-        init_date = datetime.datetime.now()
-        insert_t_imports = TImports(date_create_import=init_date,date_update_import=init_date,id_dataset=selected_dataset_id)
-        DB.session.add(insert_t_imports)
-        DB.session.commit()
-
-        # cor_role_import filling
-        id_import = DB.session.query(TImports.id_import).filter(TImports.date_create_import == init_date).one()[0]
-        insert_cor_role_import = CorRoleImport(id_role=info_role.id_role,id_import=id_import)
-        DB.session.add(insert_cor_role_import)
-        DB.session.commit()
-        DB.session.close()
-
-        serverResponse = {}
-        serverResponse['id_import'] = id_import
-        serverResponse['id_dataset'] = selected_dataset_id
         #data['date_create_import'] = init_date
         #data['date_update_import'] = init_date
-
-        return serverResponse,200
+        return {'id_dataset' : selected_dataset_id},200
     except Exception:
         return 'INTERNAL SERVER ERROR ("post_dataset() error"): contactez l\'administrateur du site',500
-
 
 @blueprint.route('/ImportDelete/<import_id>', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
@@ -147,7 +154,11 @@ def post_user_file(info_role):
     """
 
     try:
+        metadata = dict(request.form)
+        print(metadata)
+
         file = request.files['File']
+        pdb.set_trace()
         # prevoir un boolean (ou autre) pour bloquer la possibilité de l'utilisateur de lancer plusieurs uploads
         # lire flask upload
         # ajouter un blocage si pas de fichier choisi par l'utilisateur
@@ -157,7 +168,29 @@ def post_user_file(info_role):
         upload_directory_path = "upload"
         uploadsDirectory = os.path.join(module_directory_path,upload_directory_path)
         file.save(os.path.join(uploadsDirectory, file.filename))
-        return "hello I am the user file response", 200
+
+        # fill db :
+
+        # initiate t_imports with id_import, dataset_id, date_create_import and date_update_import
+        init_date = datetime.datetime.now()
+        insert_t_imports = TImports(
+            date_create_import=init_date,
+            date_update_import=init_date,
+            id_dataset=metadata['datasetId']
+            )
+        DB.session.add(insert_t_imports)
+        DB.session.commit()
+
+        # cor_role_import filling
+        id_import = DB.session.query(TImports.id_import).filter(TImports.date_create_import == init_date).one()[0]
+        insert_cor_role_import = CorRoleImport(id_role=info_role.id_role,id_import=id_import)
+        DB.session.add(insert_cor_role_import)
+        DB.session.commit()
+        DB.session.close()
+
+        return {
+            "importId" : id_import
+        }, 200
     except Exception:
         return 'INTERNAL SERVER ERROR ("post_user_file() error"): contactez l\'administrateur du site',500
 

@@ -1,11 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonService } from '@geonature_common/service/common.service'; 
 import { AppConfig } from '@geonature_config/app.config';
 import { ToastrService } from 'ngx-toastr';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { DatatableComponent } from '@swimlane/ngx-datatable';
 
 import { ImportModalDatasetComponent } from './import-modal-dataset.component';
 import { DataService } from '../services/data.service';
+import { ModuleConfig } from '../module.config';
 
 @Component({
   selector: 'pnx-import',
@@ -16,8 +18,14 @@ import { DataService } from '../services/data.service';
 
 export class ImportComponent implements OnInit {
 
-  public importListResponse: JSON;
   public importId: JSON;
+  public importHistory;
+  public history;
+  public empty : boolean;
+
+  public IMPORT_CONFIG = ModuleConfig;
+
+  @ViewChild(DatatableComponent) table: DatatableComponent;
 
   constructor(
     private _commonService: CommonService,
@@ -38,8 +46,10 @@ export class ImportComponent implements OnInit {
   onImportList() {
     this._ds.getImportList().subscribe(
       res => {
-        this.importListResponse = res as JSON;
-    },
+        this.importHistory = res;
+        this.history = this.importHistory.history;
+        this.empty = this.importHistory.empty;
+      },
       error => {
         if (error.statusText === 'Unknown Error') {
           // show error message if no connexion
@@ -50,7 +60,7 @@ export class ImportComponent implements OnInit {
         }
     },
       () => {
-        console.log(this.importListResponse);
+        console.log(this.importHistory);
       }
     );
   }

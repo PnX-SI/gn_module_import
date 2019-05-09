@@ -7,7 +7,7 @@ import { Router } from "@angular/router";
 import { DataService } from '../services/data.service';
 import { ModuleConfig } from '../module.config';
 import { ImportComponent } from './import.component';
-import { importIdStorage } from './importId';
+//import { importIdStorage } from './importId';
 
 @Component({
     selector: 'pnx-import-modal-dataset',
@@ -19,7 +19,7 @@ import { importIdStorage } from './importId';
 
     public selectDatasetForm: FormGroup;
     public userDatasetsResponse: JSON; // server response for getUserDatasets
-    public postDatasetResponse: JSON; // server response for postDatasetResponse (= post the dataset name from the 'selectDatasetForm' form)
+    public datasetResponse: JSON; // server response for postDatasetResponse (= post the dataset name from the 'selectDatasetForm' form)
     public isUserDatasetError: Boolean = false; // true if user does not have any declared dataset
     public datasetError;
     public IMPORT_CONFIG = ModuleConfig;
@@ -31,7 +31,7 @@ import { importIdStorage } from './importId';
         public _ds: DataService,
         private toastr: ToastrService,
         private _router: Router,
-        private _idImport: importIdStorage
+        //private _idImport: importIdStorage
       ) {
         this.selectDatasetForm = this._fb.group({
           dataset: ['', Validators.required]
@@ -50,12 +50,15 @@ import { importIdStorage } from './importId';
 
 
     onSubmit(value) {
-      // post id_dataset and initialize db data related to the current import (t_imports table : id_import, id_dataset, create_date, update_dates, cor_role_import table)
-      // get id_import and id_dataset as response from the server
-      // then close the modal for selecting dataset and navigate to the process route to start the import process
+      console.log(value.dataset);
+      //this._idImport.datasetId = value.dataset;
+      this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}/process/${value.dataset}`]);
+      this.closeModal();
+      
+      /*
       this._ds.postDataset(value).subscribe(
         res => {
-          this.postDatasetResponse = res as JSON;
+          this.datasetResponse = res as JSON;
       },
         error => {
           if (error.statusText === 'Unknown Error') {
@@ -67,12 +70,14 @@ import { importIdStorage } from './importId';
           }
       },
         () => {
-          console.log(this.postDatasetResponse);
-          this._idImport.importId = this.postDatasetResponse.id_import;
+          console.log(this.datasetResponse);
+          this._idImport.datasetId = this.datasetResponse.id_dataset;
           this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}/process`]);
           this.closeModal();
         }
       );
+      */
+  
     } 
 
 

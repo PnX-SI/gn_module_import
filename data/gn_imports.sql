@@ -94,8 +94,6 @@ $BODY$
   LANGUAGE plpgsql IMMUTABLE
   COST 100
   ROWS 1000;
-ALTER FUNCTION gn_imports.get_datasets(integer)
-  OWNER TO geonatuser;
 
 
 

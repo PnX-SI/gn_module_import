@@ -3,19 +3,40 @@
     <!-- STEP 1 -->
     <mat-step>
         <h4> Upload du fichier </h4>
+
         <br>
 
-        <div  id="upload_files">
-            <input type=file (change)="onFileSelected($event)" id="selectedFile" name="file"/>
-        </div>
-        <br>
+        <form [formGroup]="uploadForm">
 
-        <div class="d-flex flex-row justify-content-between">
-            <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!isFileSelected" (click)="onUpload()" matStepperNext> 
-                <i class="material-icons"> navigate_next </i> 
-                Valider
-            </button>        
-        </div>
+            <div class="form-group" id="upload_files">
+                <input type=file (change)="onFileSelected($event)" id="selectedFile" name="file"/>
+            </div>
+
+            <br>
+
+            <div class="form-group">
+                <label for="encodage">Encodage</label>
+                <input type="text" class="form-control" formControlName="encodage" id="encodage">
+            </div>
+
+            <br>
+
+            <div class="form-group">
+                <label for="encodage">SRID</label>
+                <input type="text" class="form-control" formControlName="srid" id="srid">
+            </div>
+
+            <br>
+
+            <div class="d-flex flex-row justify-content-between">
+                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!isFileSelected" (click)="onUpload(uploadForm.value)" matStepperNext> 
+                    <i class="material-icons"> navigate_next </i> 
+                    Valider
+                </button>        
+            </div>
+
+        </form>
+
         <br>
 
     </mat-step>
@@ -100,6 +121,6 @@
   <br>
 
   <div class="d-flex flex-row justify-content-between" id="bottomButtons">
-  <button type="button" id="cancelImport" (click)="cancelImport()" class="btn btn-danger box-shadow btn-sm">Annuler l'import</button>
+  <button *ngIf="isUploaded" type="button" id="cancelImport" (click)="cancelImport()" class="btn btn-danger box-shadow btn-sm">Annuler l'import</button>
   <button type="button" id="importListPage" (click)="onImportList()" class="btn btn-secondary box-shadow btn-sm">Retourner à ma liste des imports</button>
   </div>

@@ -1,13 +1,14 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { Router } from "@angular/router";
+import { Router,ActivatedRoute } from "@angular/router";
 import { MatStepperModule } from '@angular/material/stepper';
 import { DataService } from '../services/data.service';
 import { ToastrService } from 'ngx-toastr';
 import { ModuleConfig } from '../module.config';
 import { MatButtonModule } from '@angular/material/button';
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
+import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms';
 
-import { importIdStorage } from './importId';
+//import { importIdStorage } from './importId';
 
 
 @Component({
@@ -22,10 +23,13 @@ import { importIdStorage } from './importId';
 
 export class ImportProcessComponent implements OnInit {
 
-  selectedFile: File = null;
+  public fileName;
   public uploadResponse: JSON;
+  public isUploaded: Boolean = false;
   public IMPORT_CONFIG = ModuleConfig;
   public isFileSelected : Boolean = false; // used for disable valid button
+  public uploadForm: FormGroup;
+
   //step1Completed = false;
   //isLinear = true;
   public deleteResponse;
@@ -34,13 +38,25 @@ export class ImportProcessComponent implements OnInit {
 
   constructor(
     private _router: Router, 
+    private _activatedRoute: ActivatedRoute,
     public _ds: DataService,
     private toastr: ToastrService,
-    private _idImport: importIdStorage
-  ) {}
+    //private _idImport: importIdStorage
+    private _fb: FormBuilder
+  ) {
+    this._activatedRoute.params.subscribe(
+      //params => console.log(params)
+      );
+    this.uploadForm = this._fb.group({
+      file: [null, Validators.required],
+      encodage: [null, Validators.required],
+      srid: [null, Validators.required]
+    });
+  }
 
 
   ngOnInit() {
+    //console.log(this._activatedRoute.params._value);
   }
 
 
@@ -50,14 +66,19 @@ export class ImportProcessComponent implements OnInit {
 
 
   onFileSelected(event) {
-    this.selectedFile = <File>event.target.files[0];
+    console.log(event);
+    this.uploadForm.patchValue({
+      file: <File>event.target.files[0]
+    });
     this.isFileSelected = true;
-    console.log('le nom du fichier uploadé par l\'utilisateur est = ' + this.selectedFile.name);
+    this.fileName = this.uploadForm.get('file').value.name;
+    console.log('le nom du fichier uploadé par l\'utilisateur est = ' + this.fileName);
   }
 
 
   cancelImport() {
-    this._ds.deleteImport(this._idImport.importId).subscribe(
+    /*
+    this._ds.deleteImport(this._activatedRoute.params._value["import_id"]).subscribe(
       res => {
         this.deleteResponse = res as JSON;
     },
@@ -78,12 +99,12 @@ export class ImportProcessComponent implements OnInit {
         this.onImportList();
       }
     );       
-
+    */
   }
 
 
-  onUpload() {
-    this._ds.postUserFile(this.selectedFile).subscribe(
+  onUpload(value) {
+    this._ds.postUserFile2(value,this._activatedRoute.params._value['datasetId']).subscribe(
       res => {
         this.uploadResponse = res as JSON;
     },
@@ -99,6 +120,7 @@ export class ImportProcessComponent implements OnInit {
       () => {
         //this.isLinear = false;
         console.log(this.uploadResponse);
+        this.isUploaded = true;
 
         //this.complete();
         // vérifier validité du csv format : en l'ouvrant (csv.read)?
