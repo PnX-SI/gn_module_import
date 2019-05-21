@@ -26,7 +26,8 @@ CREATE TABLE gn_imports.t_imports(
   import_count integer,
   taxa_count integer,
   date_min_data timestamp without time zone,
-  date_max_data timestamp without time zone
+  date_max_data timestamp without time zone,
+  step integer
 );
 
 
@@ -72,30 +73,6 @@ ALTER TABLE ONLY cor_role_import
 -------------
 --FUNCTIONS--
 -------------
-
-CREATE OR REPLACE FUNCTION gn_imports.get_datasets(IN id integer)
-  RETURNS TABLE(dataset_id integer,dataset character varying) AS
-$BODY$
-
--- Function that allows to get user dataset names
--- USAGE : SELECT gn_import.get_datasets(id_role);
-  BEGIN
-	return query
-	select id_dataset,dataset_name
-	from gn_meta.t_datasets
-	where id_dataset in (
-		select distinct id_dataset
-		from gn_synthese.cor_observer_synthese cos
-		join gn_synthese.synthese s on s.id_synthese=cos.id_synthese
-		where id_role = id);
-	return;
-  END;
-$BODY$
-  LANGUAGE plpgsql IMMUTABLE
-  COST 100
-  ROWS 1000;
-
-
 
 
 
