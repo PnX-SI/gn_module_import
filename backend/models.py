@@ -38,6 +38,16 @@ class CorRoleImport(DB.Model):
     id_import = DB.Column(DB.Integer, primary_key=True)
 
 
+# ne pas mettre gn_import_archives en dur
+@serializable
+class CorImportArchives(DB.Model):
+    __tablename__ = 'cor_import_archives'
+    __table_args__ = {'schema': 'gn_import_archives', "extend_existing":True}
+
+    id_import = DB.Column(DB.Integer, primary_key=True)
+    table_archive = DB.Column(DB.Integer, primary_key=True)
+
+
 def generate_user_table_class(schema_name,table_name,pk_name,user_columns,schema_type):
     """
         Generate dynamically the user file class used to copy user data (csv) into db tables
@@ -55,13 +65,14 @@ def generate_user_table_class(schema_name,table_name,pk_name,user_columns,schema
 
     user_table = {
         '__tablename__': table_name,
-        '__table_args__' : {'schema': schema_name, "extend_existing":False}
+        '__table_args__' : (PrimaryKeyConstraint(pk_name),{'schema': schema_name, "extend_existing":False})
     }
     
     if schema_type == 'gn_imports':
         user_table.update({'gn_is_valid' : DB.Column(DB.Boolean,nullable=True)})
         user_table.update({'gn_invalid_reason' : DB.Column(DB.Unicode,nullable=True)})
 
+    user_table.update({pk_name : DB.Column(DB.Integer,autoincrement=True)})
     for column in user_columns:
         user_table.update({column:DB.Column(DB.Unicode,nullable=True)})
     

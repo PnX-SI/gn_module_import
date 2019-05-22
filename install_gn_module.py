@@ -1,7 +1,6 @@
 import os
 import subprocess
 import psycopg2
-import sys
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).absolute().parent
@@ -14,9 +13,19 @@ def gnmodule_install_app(gn_db, gn_app):
             - Base de données
             - Module (pour le moment rien)
     '''
+    """
     with gn_app.app_context() :
-	# install python package 'goodtables'
-	subprocess.call([sys.executable, '-m', 'pip', 'install', '{0}=={1}'.format('goodtables', '2.1.4')], shell=True)
+        os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'var/log'), exist_ok=True)
+        gn_import_archives_sql = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/gn_import_archives.sql')
+        gn_imports_sql = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/gn_imports.sql')
+
+        try:
+            gn_db.session.execute(open(gn_import_archives_sql, 'r').read())
+            gn_db.session.execute(open(gn_imports_sql, 'r').read())
+            gn_db.session.commit()
+        except Exception as e:
+            print(e)
+    """
 
 def execute_script(file_name):
     """

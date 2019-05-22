@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms';
 
-//import { importIdStorage } from './importId';
+import { importIdStorage } from './importId';
 
 
 @Component({

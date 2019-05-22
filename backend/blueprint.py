@@ -7,11 +7,13 @@ from flask import (
 import os
 import pathlib
 
+from goodtables import validate
+
 import ast
 
 import datetime
 
-from sqlalchemy import func, text, select
+from sqlalchemy import func, text, select, update
 
 from geonature.utils.utilssqlalchemy import json_resp
 
@@ -38,6 +40,7 @@ from pypnnomenclature.models import TNomenclatures
 from .models import (
     TImports,
     CorRoleImport,
+    CorImportArchives,
     generate_user_table_class
 )
 
@@ -59,7 +62,7 @@ def get_import_list(info_role):
         return import list
     """
     try:
-        results = DB.session.query(TImports).filter(TImports.import_table != None).all()
+        results = DB.session.query(TImports).filter(TImports.step >= 2).all()
         history = []
         if not results:
             return {
@@ -171,7 +174,9 @@ def post_user_file(info_role):
         metadata = dict(request.form)
         file = request.files['File']
 
-        ### SAVE USER FILE IN UPLOAD DIRECTORY ###
+        """
+        SAVE USER FILE IN UPLOAD DIRECTORY
+        """
 
         # prevoir un boolean (ou autre) pour bloquer la possibilité de l'utilisateur de lancer plusieurs uploads
         # relire flask upload
@@ -194,15 +199,45 @@ def post_user_file(info_role):
         # save user file in upload directory
         file.save(full_path)
 
-        #################################################
 
-        ### CHECK CSV ###
+        """
+        CHECK USER FILE
+        """
 
-        # use goodtables
+        # verifications :
+        # doublon de nom colonne
+        # blank header (aucun nom de colonne)
+        # headerless (un nom de colonne manquant)
+        # empty (pas de nom de colonne, pas de ligne)
+        # empty (nom de colonne, pas de ligne)
 
-        #################################################
+        # notes encodages :
+        # encodage : utf8 et 16 : pas d'erreur
+        # encodage : Europe occidentale ISO-8859-15/EURO (=latin-9) et ISO-8859-1 (=latin-1) : erreur ('source-error')
 
-        ### START FILLING METADATA (TIMPORTS AND CORROLEIMPORT TABLES) ###
+        report = validate(full_path)
+
+        if report['valid'] is False:
+
+            errors = []
+            for error in report['tables'][0]['errors']:
+                errors.append(error['code'])
+
+            error_list = list(dict.fromkeys(errors))
+            return 'Error in csv file: {}'.format(error_list),400
+
+        if report['tables'][0]['row-count'] == 0:
+            return 'Error in csv file: empty file',400
+
+        file_columns = report['tables'][0]['headers']
+        file_format = report['tables'][0]['format']
+        source_count = report['tables'][0]['row-count']
+        #encodage = report['tables'][0]['encoding']
+
+
+        """
+        START FILLING METADATA (gn_imports.t_imports and cor_role_import tables)
+        """
 
         print(metadata)
 
@@ -225,12 +260,13 @@ def post_user_file(info_role):
         # start t_imports filling
         init_date = datetime.datetime.now()
         insert_t_imports = TImports(
-            date_create_import=init_date,
-            date_update_import=init_date,
-            id_dataset=int(metadata['datasetId']),
-            srid=int(metadata['srid']),
-            step=1,  # mettre 2 à la fin du processus
-            format_source_file=str(extension)  # a remplacer par resultat de goodtable
+            date_create_import = init_date,
+            date_update_import = init_date,
+            id_dataset = int(metadata['datasetId']),
+            srid = int(metadata['srid']),
+            step = 1,  # mettre 2 à la fin du processus
+            format_source_file = file_format,
+            source_count = source_count-1
         )
         DB.session.add(insert_t_imports)
         # DB.session.commit()
@@ -241,35 +277,33 @@ def post_user_file(info_role):
         # file name treatment (clean string for special character, remove extension, add id_import (_n) suffix)
         cleaned_file_name = clean_file_name(file.filename, extension, id_import)
 
-        ###### CREATE TABLES CONTAINING RAW USER DATA IN GEONATURE DB ######
+
+        """
+        CREATE TABLES CONTAINING RAW USER DATA IN GEONATURE DB
+        """
 
         ## definition of variables :
 
-        ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
+        archives_schema_name = blueprint.config['ARCHIVES_SCHEMA_NAME']
         SEPARATOR = ";"
-        PREFIX = blueprint.config['PREFIX']
+        prefix = blueprint.config['PREFIX']
 
         # table names
         archives_table_name = cleaned_file_name
         t_imports_table_name = ''.join(['i_', cleaned_file_name])
 
         # schema.table names
-        archive_schema_table_name = '.'.join([ARCHIVES_SCHEMA_NAME, archives_table_name])
+        archive_schema_table_name = '.'.join([archives_schema_name, archives_table_name])
         gn_imports_schema_table_name = '.'.join(['gn_imports', t_imports_table_name])
 
         # pk name to include (because copy_from method requires a primary_key)
-        pk_name = "".join([PREFIX, 'pk'])
+        pk_name = "".join([prefix, 'pk'])
 
-        ## get column names of the user file (csv) :
-
-        # get list of column names
-        with open(full_path, 'r') as f:
-            columns = next(f).split(SEPARATOR)
         # clean column names
-        columns = [clean_string(x) for x in columns]
+        columns = [clean_string(x) for x in file_columns]
 
         ## create user table classes (1 for gn_import_archives schema, 1 for gn_imports schema) corresponding to the structure of the user file (csv)
-        user_class_gn_import_archives = generate_user_table_class(ARCHIVES_SCHEMA_NAME, archives_table_name,
+        user_class_gn_import_archives = generate_user_table_class(archives_schema_name, archives_table_name,
                                                                       pk_name, columns, schema_type='archives')
         user_class_gn_imports = generate_user_table_class('gn_imports', t_imports_table_name, pk_name, columns,
                                                               schema_type='gn_imports')
@@ -284,33 +318,48 @@ def post_user_file(info_role):
 
         cur = conn.cursor()
         with open(full_path, 'r') as f:
-            next(f)  # Skip the header row.
+            next(f)
             cur.copy_from(f, archive_schema_table_name, sep=SEPARATOR, columns=columns)
 
         with open(full_path, 'r') as f:
-            next(f)  # Skip the header row.
+            next(f)
             cur.copy_from(f, gn_imports_schema_table_name, sep=SEPARATOR, columns=columns)
 
         conn.commit()
+        conn.close()
+        cur.close()
 
-        ###### FILL cor_role_import ######
+        """
+        FILL cor_role_import and cor_import_archives
+        """
 
         insert_cor_role_import = CorRoleImport(id_role=info_role.id_role, id_import=id_import)
         DB.session.add(insert_cor_role_import)
 
-        DB.session.commit()
+        cor_import_archives = CorImportArchives(id_import=id_import, table_archive=archives_table_name)
+        DB.session.add(cor_import_archives)
+
+        # update gn_import.t_imports with cleaned file name and step = 2
+        DB.session.query(TImports).filter(TImports.id_import==id_import).\
+            update({TImports.import_table:cleaned_file_name,TImports.step:2})
+        
+        #DB.session.execute("UPDATE gn_imports.t_imports SET import_table={} WHERE id_import=={};".format(cleaned_file_name,id_import))
 
         # essayer voir si donnees inserees si erreur dans le try a la fin
         # suppression du fichier dans uploads
         # gerer : - push 2x le meme nom ; - quand step2 à step1 ça recréé un import id ce qui fait que le nom n'est pas en double, à corriger
+        
+        
 
         return {
-                   "importId": id_import
+                   "importId": id_import,
+                   "columns":columns
                }, 200
 
     except Exception:
         DB.session.rollback()
-        # raise
+        raise
         return 'INTERNAL SERVER ERROR ("post_user_file() error"): contactez l\'administrateur du site', 500
     finally:
+        DB.session.commit()
         DB.session.close()
