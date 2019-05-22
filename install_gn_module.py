@@ -1,6 +1,7 @@
 import os
 import subprocess
 import psycopg2
+import sys
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).absolute().parent
@@ -13,8 +14,9 @@ def gnmodule_install_app(gn_db, gn_app):
             - Base de données
             - Module (pour le moment rien)
     '''
-
-
+    with gn_app.app_context() :
+	# install python package 'goodtables'
+	subprocess.call([sys.executable, '-m', 'pip', 'install', '{0}=={1}'.format('goodtables', '2.1.4')], shell=True)
 
 def execute_script(file_name):
     """
