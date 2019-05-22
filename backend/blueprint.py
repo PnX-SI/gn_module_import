@@ -178,7 +178,7 @@ def post_user_file(info_role):
         # ajouter un blocage si pas de fichier choisi par l'utilisateur
 
         # mettre upload_directory_path en config?
-        upload_directory_path = "upload"
+        upload_directory_path = blueprint.config["UPLOAD_DIRECTORY"]
 
         # get full userfile path :
         # remplacer 'import' par blueprint.config.module_url à la ligne suivante ?
@@ -245,9 +245,9 @@ def post_user_file(info_role):
 
         ## definition of variables :
 
-        ARCHIVES_SCHEMA_NAME = 'gn_import_archives'  # put in parameters
-        SEPARATOR = ";"  # put in parameters
-        PREFIX = "gn_"  # put in parameters
+        ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
+        SEPARATOR = ";"
+        PREFIX = blueprint.config['PREFIX']
 
         # table names
         archives_table_name = cleaned_file_name
