@@ -48,12 +48,13 @@ class CorImportArchives(DB.Model):
     table_archive = DB.Column(DB.Integer, primary_key=True)
 
 
-def generate_user_table_class(schema_name,table_name,pk_name,user_columns,schema_type):
+def generate_user_table_class(schema_name,table_name,pk_name,user_columns,id,schema_type):
     """
         Generate dynamically the user file class used to copy user data (csv) into db tables
         parameters :
         - schema_name, table_name, pk_name = string
         - user_columns : list of strings (strings = csv column names)
+        - id : integer id_import
         - schema_type : = 'archives' or 't_imports' (because the table containing user data in t_imports schema has additionnal fields)
     """
     
@@ -78,8 +79,8 @@ def generate_user_table_class(schema_name,table_name,pk_name,user_columns,schema
     
     # creation of the user file class :
     if schema_type == 'archives':
-        UserTableClass = type('UserArchivesTableClass', (DB.Model,), user_table)
+        UserTableClass = type('UserArchivesTableClass{}'.format(id), (DB.Model,), user_table)
     else:
-        UserTableClass = type('UserTimportsTableClass', (DB.Model,), user_table)
+        UserTableClass = type('UserTimportsTableClass{}'.format(id), (DB.Model,), user_table)
 
     return UserTableClass

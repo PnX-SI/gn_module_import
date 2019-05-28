@@ -29,6 +29,7 @@ export class ImportProcessComponent implements OnInit {
   public IMPORT_CONFIG = ModuleConfig;
   public isFileSelected : Boolean = false; // used for disable valid button
   public uploadForm: FormGroup;
+  public importId;
 
   //step1Completed = false;
   //isLinear = true;
@@ -104,7 +105,7 @@ export class ImportProcessComponent implements OnInit {
 
 
   onUpload(value) {
-    this._ds.postUserFile2(value,this._activatedRoute.params._value['datasetId']).subscribe(
+    this._ds.postUserFile2(value,this._activatedRoute.params._value['datasetId'],this.importId).subscribe(
       res => {
         this.uploadResponse = res as JSON;
     },
@@ -113,13 +114,26 @@ export class ImportProcessComponent implements OnInit {
           // show error message if no connexion
           this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
         } else {
-          // show error message if other server error
-          this.toastr.error(error.error);
+          if (error.status == 400) {
+            this.toastr.error(
+              "ERREUR : " +
+              error.error['errorInterpretation']+ " : " 
+              error.error['errorMessage'] + 
+              error.error['errorContext'],
+              {timeOut: 100000});
+          }
+          if (error.status == 500) {
+            // show error message if other server error
+            this.toastr.error(error.error);
+          }
         }
     },
       () => {
         //this.isLinear = false;
         console.log(this.uploadResponse);
+        this.importId = this.uploadResponse.importId;
+        this.columns = this.uploadResponse.columns;
+        console.log(this.columns);
         this.isUploaded = true;
 
         //this.complete();

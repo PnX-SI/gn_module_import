@@ -23,7 +23,7 @@ export class DataService {
         return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}`);
     }
 
-    postUserFile2(value,datasetId) {
+    postUserFile2(value,datasetId,importId) {
         console.log(value);
         const urlStatus = `${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/uploads`;
         this.fd = new FormData();
@@ -31,6 +31,7 @@ export class DataService {
         this.fd.append('encodage', value.encodage);
         this.fd.append('srid', value.srid);
         this.fd.append('datasetId', datasetId);
+        this.fd.append('importId', importId);
         console.log(this.fd);
         return this._http.post<any>(urlStatus, this.fd, HttpUploadOptions);
     }

@@ -6,6 +6,7 @@ from flask import (
 
 import os
 import pathlib
+import psycopg2
 
 from goodtables import validate
 
@@ -13,7 +14,8 @@ import ast
 
 import datetime
 
-from sqlalchemy import func, text, select, update
+from sqlalchemy import func, text, select, update,create_engine
+from sqlalchemy.sql.elements import quoted_name
 
 from geonature.utils.utilssqlalchemy import json_resp
 
@@ -170,6 +172,8 @@ def post_user_file(info_role):
     """
 
     try:
+        is_file_saved = False
+
         # get form data
         metadata = dict(request.form)
         file = request.files['File']
@@ -186,36 +190,50 @@ def post_user_file(info_role):
         upload_directory_path = blueprint.config["UPLOAD_DIRECTORY"]
 
         # get full userfile path :
-        # remplacer 'import' par blueprint.config.module_url à la ligne suivante ?
-        module_directory_path = os.path.join(os.path.dirname(os.getcwd()), 'external_modules/import')
+        module_directory_path = os.path.join(os.path.dirname(os.getcwd()), 'external_modules/{}'.format(blueprint.config["MODULE_URL"]))
         uploads_directory = os.path.join(module_directory_path, upload_directory_path)
         full_path = os.path.join(uploads_directory, file.filename)
 
         # check user file extension (changer)
         extension = pathlib.Path(full_path).suffix.lower()
         if extension not in ['.csv', '.json']:
-            return "Le fichier uploadé doit avoir une extension en .csv ou .json", 400
+            return {
+                "errorMessage": '',
+                "errorContext": '',
+                "errorInterpretation": 'Le fichier uploadé doit avoir une extension en .csv ou .json'
+            },400
 
         # save user file in upload directory
         file.save(full_path)
 
+        if os.path.isfile(full_path):
+            is_file_saved = True
 
         """
         CHECK USER FILE
         """
 
-        # verifications :
-        # doublon de nom colonne
-        # blank header (aucun nom de colonne)
-        # headerless (un nom de colonne manquant)
-        # empty (pas de nom de colonne, pas de ligne)
-        # empty (nom de colonne, pas de ligne)
+        """
+        Vérifications :
+        - doublon de nom colonne
+        - aucun nom de colonne
+        - un nom de colonne manquant
+        - fichier vide (ni nom de colonne, ni ligne)
+        - pas de données (noms de colonne mais pas de ligne contenant les données)
+        - doublon ligne
+        - extra-value : une ligne a une valeur en trop
+        - less-value : une ligne a moins de colonnes que de noms de colonnes
 
-        # notes encodages :
-        # encodage : utf8 et 16 : pas d'erreur
-        # encodage : Europe occidentale ISO-8859-15/EURO (=latin-9) et ISO-8859-1 (=latin-1) : erreur ('source-error')
+        Notes encodages :
+        - encodage : utf8 et 16 : pas d'erreur
+        - encodage : Europe occidentale ISO-8859-15/EURO (=latin-9) et ISO-8859-1 (=latin-1) : erreur ('source-error')
+        - Donc il faut convertir en utf-8 avant de passer dans goodtables
 
-        report = validate(full_path)
+        Améliorations à faire :
+        - ajouter message plus précis? par exemple pour dire numero de lignes en doublon? numero de ligne avec extra value, ...
+        """
+
+        report = validate(full_path, row_limit=100000000)
 
         if report['valid'] is False:
 
@@ -224,15 +242,25 @@ def post_user_file(info_role):
                 errors.append(error['code'])
 
             error_list = list(dict.fromkeys(errors))
-            return 'Error in csv file: {}'.format(error_list),400
+            return {
+                "errorMessage": error_list,
+                "errorContext": 'Error detected in check csv file with goodtables',
+                "errorInterpretation": 'Error in csv file'
+            },400
 
         if report['tables'][0]['row-count'] == 0:
-            return 'Error in csv file: empty file',400
+            return {
+                "errorMessage": 'empty file',
+                "errorContext": 'Error detected in check csv file with goodtables',
+                "errorInterpretation": 'Error in csv file'
+            },400
 
+        # get column names:
         file_columns = report['tables'][0]['headers']
+        # get file format:
         file_format = report['tables'][0]['format']
+        # get row number:
         source_count = report['tables'][0]['row-count']
-        #encodage = report['tables'][0]['encoding']
 
 
         """
@@ -254,25 +282,29 @@ def post_user_file(info_role):
             dataset_ids.append(r.id_dataset)
 
         if int(metadata['datasetId']) not in dataset_ids:
-            return 'L`utilisateur {} n\'est pas autorisé à importer des données vers l\'id_dataset {}'.format(
-                info_role.id_role, int(metadata['datasetId'])), 400
+            return {
+                "errorMessage": '',
+                "errorContext": '',
+                "errorInterpretation": 'L`utilisateur {} n\'est pas autorisé à importer des données vers l\'id_dataset {}'
+                    .format(info_role.id_role, int(metadata['datasetId']))
+            },400
 
         # start t_imports filling
-        init_date = datetime.datetime.now()
-        insert_t_imports = TImports(
-            date_create_import = init_date,
-            date_update_import = init_date,
-            id_dataset = int(metadata['datasetId']),
-            srid = int(metadata['srid']),
-            step = 1,  # mettre 2 à la fin du processus
-            format_source_file = file_format,
-            source_count = source_count-1
-        )
-        DB.session.add(insert_t_imports)
-        # DB.session.commit()
-
-        # get id_import
-        id_import = DB.session.query(TImports.id_import).filter(TImports.date_create_import == init_date).one()[0]
+        if metadata['importId'] == 'undefined':
+            init_date = datetime.datetime.now()
+            insert_t_imports = TImports(
+                date_create_import = init_date,
+                date_update_import = init_date,
+            )
+            DB.session.add(insert_t_imports)
+            id_import = DB.session.query(TImports.id_import).filter(TImports.date_create_import == init_date).one()[0]
+        else:
+            id_import = int(metadata['importId'])
+            DB.session.query(CorImportArchives).filter(CorImportArchives.id_import == id_import).delete()
+            DB.session.query(CorRoleImport).filter(CorRoleImport.id_import == id_import).delete()
+            
+        DB.session.query(TImports).filter(TImports.id_import==id_import).\
+            update({TImports.step:1})
 
         # file name treatment (clean string for special character, remove extension, add id_import (_n) suffix)
         cleaned_file_name = clean_file_name(file.filename, extension, id_import)
@@ -285,6 +317,7 @@ def post_user_file(info_role):
         ## definition of variables :
 
         archives_schema_name = blueprint.config['ARCHIVES_SCHEMA_NAME']
+        #import_schema_name = blueprint.config['IMPORT_SCHEMA_NAME']
         SEPARATOR = ";"
         prefix = blueprint.config['PREFIX']
 
@@ -294,7 +327,7 @@ def post_user_file(info_role):
 
         # schema.table names
         archive_schema_table_name = '.'.join([archives_schema_name, archives_table_name])
-        gn_imports_schema_table_name = '.'.join(['gn_imports', t_imports_table_name])
+        gn_imports_schema_table_name = '.'.join(['gn_imports', t_imports_table_name]) # remplacer 'gn_imports' par import_schema_name
 
         # pk name to include (because copy_from method requires a primary_key)
         pk_name = "".join([prefix, 'pk'])
@@ -302,14 +335,29 @@ def post_user_file(info_role):
         # clean column names
         columns = [clean_string(x) for x in file_columns]
 
-        ## create user table classes (1 for gn_import_archives schema, 1 for gn_imports schema) corresponding to the structure of the user file (csv)
-        user_class_gn_import_archives = generate_user_table_class(archives_schema_name, archives_table_name,
-                                                                      pk_name, columns, schema_type='archives')
-        user_class_gn_imports = generate_user_table_class('gn_imports', t_imports_table_name, pk_name, columns,
-                                                              schema_type='gn_imports')
+        ## create user table classes (1 for gn_import_archives schema, 1 for gn_imports schema) corresponding to the user file structure (csv)
+        user_class_gn_import_archives = generate_user_table_class(archives_schema_name, archives_table_name,\
+                                                                      pk_name, columns, id_import, schema_type='archives')
+        user_class_gn_imports = generate_user_table_class('gn_imports', t_imports_table_name,\
+                                                                      pk_name, columns, id_import, schema_type='gn_imports')
 
         ## create 2 empty tables in geonature db (in gn_import_archives and gn_imports schemas)
+    
         engine = DB.engine
+        is_archive_table_exist = engine.has_table(archives_table_name, schema=archives_schema_name)
+        is_gn_imports_table_exist = engine.has_table(t_imports_table_name, schema='gn_imports')
+
+        print(is_archive_table_exist)
+        
+        if is_archive_table_exist:
+            DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
+
+
+        if is_gn_imports_table_exist:
+            DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
+
+        DB.session.commit()
+
         user_class_gn_import_archives.__table__.create(bind=engine, checkfirst=True)
         user_class_gn_imports.__table__.create(bind=engine, checkfirst=True)
 
@@ -320,10 +368,12 @@ def post_user_file(info_role):
         with open(full_path, 'r') as f:
             next(f)
             cur.copy_from(f, archive_schema_table_name, sep=SEPARATOR, columns=columns)
+        is_archives_table_exist = True
 
         with open(full_path, 'r') as f:
             next(f)
             cur.copy_from(f, gn_imports_schema_table_name, sep=SEPARATOR, columns=columns)
+        is_timports_table_exist = True
 
         conn.commit()
         conn.close()
@@ -333,33 +383,53 @@ def post_user_file(info_role):
         FILL cor_role_import and cor_import_archives
         """
 
+        # fill cor_role_import
         insert_cor_role_import = CorRoleImport(id_role=info_role.id_role, id_import=id_import)
         DB.session.add(insert_cor_role_import)
 
+        # fill cor_import_archives
         cor_import_archives = CorImportArchives(id_import=id_import, table_archive=archives_table_name)
         DB.session.add(cor_import_archives)
 
         # update gn_import.t_imports with cleaned file name and step = 2
         DB.session.query(TImports).filter(TImports.id_import==id_import).\
-            update({TImports.import_table:cleaned_file_name,TImports.step:2})
+            update({
+                TImports.import_table: cleaned_file_name,
+                TImports.step: 2,
+                TImports.id_dataset: int(metadata['datasetId']),
+                TImports.srid: int(metadata['srid']),
+                TImports.format_source_file: file_format,
+                TImports.source_count: source_count-1
+                })
+        # gerer : - push 2x le meme nom
         
-        #DB.session.execute("UPDATE gn_imports.t_imports SET import_table={} WHERE id_import=={};".format(cleaned_file_name,id_import))
-
-        # essayer voir si donnees inserees si erreur dans le try a la fin
-        # suppression du fichier dans uploads
-        # gerer : - push 2x le meme nom ; - quand step2 à step1 ça recréé un import id ce qui fait que le nom n'est pas en double, à corriger
-        
-        
+        DB.session.commit()
 
         return {
                    "importId": id_import,
-                   "columns":columns
+                   "columns": columns
                }, 200
+               
+    except psycopg2.errors.BadCopyFileFormat as e:
+        return {
+            "errorMessage": e.diag.message_primary,
+            "errorContext": e.diag.context,
+            "errorInterpretation": 'erreur probablement due à un problème de separateur'
+        },400
 
     except Exception:
         DB.session.rollback()
+        #engine = DB.engine
+        if is_archives_table_exist:
+            DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
+        if is_timports_table_exist:
+            DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
+        DB.session.commit()
         raise
         return 'INTERNAL SERVER ERROR ("post_user_file() error"): contactez l\'administrateur du site', 500
+
     finally:
-        DB.session.commit()
+        if is_file_saved:
+            os.remove(full_path)
+        DB.metadata.clear()
         DB.session.close()
