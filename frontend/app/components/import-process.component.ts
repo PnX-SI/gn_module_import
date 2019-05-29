@@ -25,7 +25,7 @@ export class ImportProcessComponent implements OnInit {
 
   public fileName;
   public uploadResponse: JSON;
-  public isUploaded: Boolean = false;
+  //public isUploaded: Boolean = false;
   public IMPORT_CONFIG = ModuleConfig;
   public isFileSelected : Boolean = false; // used for disable valid button
   public uploadForm: FormGroup;
@@ -73,7 +73,7 @@ export class ImportProcessComponent implements OnInit {
     });
     this.isFileSelected = true;
     this.fileName = this.uploadForm.get('file').value.name;
-    console.log('le nom du fichier uploadé par l\'utilisateur est = ' + this.fileName);
+    console.log('nom du fichier = ' + this.fileName);
   }
 
 
@@ -105,7 +105,7 @@ export class ImportProcessComponent implements OnInit {
 
 
   onUpload(value) {
-    this._ds.postUserFile2(value,this._activatedRoute.params._value['datasetId'],this.importId).subscribe(
+    this._ds.postUserFile(value,this._activatedRoute.params._value['datasetId'],this.importId).subscribe(
       res => {
         this.uploadResponse = res as JSON;
     },
@@ -117,7 +117,7 @@ export class ImportProcessComponent implements OnInit {
           if (error.status == 400) {
             this.toastr.error(
               "ERREUR : " +
-              error.error['errorInterpretation']+ " : " 
+              error.error['errorInterpretation'] + " : " 
               error.error['errorMessage'] + 
               error.error['errorContext'],
               {timeOut: 100000});
@@ -134,10 +134,7 @@ export class ImportProcessComponent implements OnInit {
         this.importId = this.uploadResponse.importId;
         this.columns = this.uploadResponse.columns;
         console.log(this.columns);
-        this.isUploaded = true;
-
-        //this.complete();
-        // vérifier validité du csv format : en l'ouvrant (csv.read)?
+        // this.isUploaded = true;
         // promesse pour bloquer front en attendant que ce soit fini
       }
     );

@@ -4,6 +4,8 @@ from flask import (
     request
 )
 
+from werkzeug.utils import secure_filename
+
 import os
 import pathlib
 import psycopg2
@@ -166,48 +168,97 @@ def delete_import(info_role, import_id):
 def post_user_file(info_role):
     """
         - load user file in "uploads" directory
-        - copy user file data in two tables of geonature db containing raw data
-        - fill t_imports, cor_role_import
-        - return t_imports.id_import
+        - copy user file raw data in 2 geonature db tables
+        - fill t_imports, cor_role_import, cor_archive_import
+        - return id_import and column names list
     """
 
     try:
-        is_file_saved = False
 
-        # get form data
-        metadata = dict(request.form)
-        file = request.files['File']
+        is_archives_table_exist = False
+        is_timports_table_exist = False
+
 
         """
         SAVE USER FILE IN UPLOAD DIRECTORY
         """
 
         # prevoir un boolean (ou autre) pour bloquer la possibilité de l'utilisateur de lancer plusieurs uploads
-        # relire flask upload
-        # ajouter un blocage si pas de fichier choisi par l'utilisateur
 
-        # mettre upload_directory_path en config?
-        upload_directory_path = blueprint.config["UPLOAD_DIRECTORY"]
+        is_file_saved = False
 
-        # get full userfile path :
-        module_directory_path = os.path.join(os.path.dirname(os.getcwd()), 'external_modules/{}'.format(blueprint.config["MODULE_URL"]))
-        uploads_directory = os.path.join(module_directory_path, upload_directory_path)
-        full_path = os.path.join(uploads_directory, file.filename)
+        MAX_FILE_SIZE = 200 #MB # mettre en conf
 
-        # check user file extension (changer)
-        extension = pathlib.Path(full_path).suffix.lower()
-        if extension not in ['.csv', '.json']:
-            return {
-                "errorMessage": '',
-                "errorContext": '',
-                "errorInterpretation": 'Le fichier uploadé doit avoir une extension en .csv ou .json'
-            },400
+        ALLOWED_EXTENSIONS = ['.csv', '.json'] # mettre en conf
 
-        # save user file in upload directory
-        file.save(full_path)
+        if request.method == 'POST':
 
-        if os.path.isfile(full_path):
+            if 'File' not in request.files:
+                return {
+                    "errorMessage": '',
+                    "errorContext": '',
+                    "errorInterpretation": 'Aucun fichier n\'est détecté'
+                },400
+            
+            file = request.files['File']
+
+            if file.filename == '':
+                return {
+                    "errorMessage": '',
+                    "errorContext": '',
+                    "errorInterpretation": 'Aucun fichier envoyé'
+                },400
+
+            # get file path
+            upload_directory_path = blueprint.config["UPLOAD_DIRECTORY"]
+            module_directory_path = os.path.join(os.path.dirname(os.getcwd()), 'external_modules/{}'.format(blueprint.config["MODULE_URL"]))
+            uploads_directory = os.path.join(module_directory_path, upload_directory_path)
+
+            filename = secure_filename(file.filename)
+
+            if len(filename) > 100:
+                return {
+                    "errorMessage": '',
+                    "errorContext": '',
+                    "errorInterpretation": 'Le nom du fichier doit être inférieur à 100 caractères'
+                },400
+
+            full_path = os.path.join(uploads_directory, filename)
+
+            # check user file extension (changer)
+            extension = pathlib.Path(full_path).suffix.lower()
+            if extension not in ALLOWED_EXTENSIONS:
+                return {
+                    "errorMessage": '',
+                    "errorContext": '',
+                    "errorInterpretation": 'Le fichier uploadé doit avoir une extension en .csv ou .json'
+                },400
+
+            # check file size
+            print(file)
+            file.seek(0, 2)
+            size = file.tell() / (1024 * 1024)
+            file.seek(0)
+            if size > MAX_FILE_SIZE:
+                return {
+                    "errorMessage": '',
+                    "errorContext": '',
+                    "errorInterpretation": 'La taille du fichier doit être < à {} MB, votre fichier a une taille de {} MB'\
+                        .format(MAX_FILE_SIZE,size)
+                },400
+
+            # save user file in upload directory
+            file.save(full_path)
+
+            if not os.path.isfile(full_path):
+                return {
+                    "errorMessage": '',
+                    "errorContext": '',
+                    "errorInterpretation": 'Le fichier n\'a pas pu être uploadé pour une raison inconnue'
+                },400
+
             is_file_saved = True
+
 
         """
         CHECK USER FILE
@@ -233,7 +284,11 @@ def post_user_file(info_role):
         - ajouter message plus précis? par exemple pour dire numero de lignes en doublon? numero de ligne avec extra value, ...
         """
 
+        print(full_path)
+
         report = validate(full_path, row_limit=100000000)
+
+        print(report)
 
         if report['valid'] is False:
 
@@ -266,15 +321,18 @@ def post_user_file(info_role):
         """
         START FILLING METADATA (gn_imports.t_imports and cor_role_import tables)
         """
-
-        print(metadata)
+        
+        # get form data
+        metadata = dict(request.form)
+        #print(metadata)
 
         # Check if id_dataset value is allowed (prevent forbidden manual change in url (process/n))
-        results = DB.session.query(TDatasets).\
-            filter(TDatasets.id_dataset == Synthese.id_dataset).\
-            filter(CorObserverSynthese.id_synthese == Synthese.id_synthese).\
-            filter(CorObserverSynthese.id_role == info_role.id_role).\
-            distinct(Synthese.id_dataset).all()
+        results = DB.session.query(TDatasets)\
+            .filter(TDatasets.id_dataset == Synthese.id_dataset)\
+            .filter(CorObserverSynthese.id_synthese == Synthese.id_synthese)\
+            .filter(CorObserverSynthese.id_role == info_role.id_role)\
+            .distinct(Synthese.id_dataset)\
+            .all()
 
         dataset_ids = []
 
@@ -297,14 +355,21 @@ def post_user_file(info_role):
                 date_update_import = init_date,
             )
             DB.session.add(insert_t_imports)
-            id_import = DB.session.query(TImports.id_import).filter(TImports.date_create_import == init_date).one()[0]
+            id_import = DB.session.query(TImports.id_import)\
+                        .filter(TImports.date_create_import == init_date)\
+                        .one()[0]
         else:
             id_import = int(metadata['importId'])
-            DB.session.query(CorImportArchives).filter(CorImportArchives.id_import == id_import).delete()
-            DB.session.query(CorRoleImport).filter(CorRoleImport.id_import == id_import).delete()
-            
-        DB.session.query(TImports).filter(TImports.id_import==id_import).\
-            update({TImports.step:1})
+            DB.session.query(CorImportArchives)\
+                .filter(CorImportArchives.id_import == id_import)\
+                .delete()
+            DB.session.query(CorRoleImport)\
+                .filter(CorRoleImport.id_import == id_import)\
+                .delete()
+
+        DB.session.query(TImports)\
+            .filter(TImports.id_import == id_import)\
+            .update({TImports.step:1})
 
         # file name treatment (clean string for special character, remove extension, add id_import (_n) suffix)
         cleaned_file_name = clean_file_name(file.filename, extension, id_import)
@@ -318,7 +383,7 @@ def post_user_file(info_role):
 
         archives_schema_name = blueprint.config['ARCHIVES_SCHEMA_NAME']
         #import_schema_name = blueprint.config['IMPORT_SCHEMA_NAME']
-        SEPARATOR = ";"
+        SEPARATOR = ";" # metadata['separator']
         prefix = blueprint.config['PREFIX']
 
         # table names
@@ -368,12 +433,10 @@ def post_user_file(info_role):
         with open(full_path, 'r') as f:
             next(f)
             cur.copy_from(f, archive_schema_table_name, sep=SEPARATOR, columns=columns)
-        is_archives_table_exist = True
 
         with open(full_path, 'r') as f:
             next(f)
             cur.copy_from(f, gn_imports_schema_table_name, sep=SEPARATOR, columns=columns)
-        is_timports_table_exist = True
 
         conn.commit()
         conn.close()
@@ -392,8 +455,9 @@ def post_user_file(info_role):
         DB.session.add(cor_import_archives)
 
         # update gn_import.t_imports with cleaned file name and step = 2
-        DB.session.query(TImports).filter(TImports.id_import==id_import).\
-            update({
+        DB.session.query(TImports)\
+            .filter(TImports.id_import==id_import)\
+            .update({
                 TImports.import_table: cleaned_file_name,
                 TImports.step: 2,
                 TImports.id_dataset: int(metadata['datasetId']),
@@ -401,7 +465,6 @@ def post_user_file(info_role):
                 TImports.format_source_file: file_format,
                 TImports.source_count: source_count-1
                 })
-        # gerer : - push 2x le meme nom
         
         DB.session.commit()
 
@@ -419,13 +482,12 @@ def post_user_file(info_role):
 
     except Exception:
         DB.session.rollback()
-        #engine = DB.engine
+
         if is_archives_table_exist:
             DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
         if is_timports_table_exist:
             DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
         DB.session.commit()
-        raise
         return 'INTERNAL SERVER ERROR ("post_user_file() error"): contactez l\'administrateur du site', 500
 
     finally:
