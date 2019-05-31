@@ -51,13 +51,15 @@ export class ImportProcessComponent implements OnInit {
     this.uploadForm = this._fb.group({
       file: [null, Validators.required],
       encodage: [null, Validators.required],
-      srid: [null, Validators.required]
+      srid: [null, Validators.required],
+      separator: [null, Validators.required]
     });
   }
 
 
   ngOnInit() {
     //console.log(this._activatedRoute.params._value);
+    this.importId = 'undefined'
   }
 
 
@@ -134,6 +136,7 @@ export class ImportProcessComponent implements OnInit {
         this.importId = this.uploadResponse.importId;
         this.columns = this.uploadResponse.columns;
         console.log(this.columns);
+        console.log(this.importId);
         // this.isUploaded = true;
         // promesse pour bloquer front en attendant que ce soit fini
       }

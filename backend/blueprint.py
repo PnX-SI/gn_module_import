@@ -88,7 +88,11 @@ def get_import_list(info_role):
                 "taxa_count": r.taxa_count,
                 "date_min_data": str(r.date_min_data),
                 "date_max_data": str(r.date_max_data),
-                "step": r.step
+                "step": r.step,
+                "dataset_name": DB.session\
+                    .query(TDatasets.dataset_name)\
+                    .filter(TDatasets.id_dataset == r.id_dataset)\
+                    .one()[0]
             }
             history.append(prop)
         return {
@@ -177,7 +181,7 @@ def post_user_file(info_role):
 
         is_archives_table_exist = False
         is_timports_table_exist = False
-
+        is_id_import = False
 
         """
         SAVE USER FILE IN UPLOAD DIRECTORY
@@ -187,7 +191,7 @@ def post_user_file(info_role):
 
         is_file_saved = False
 
-        MAX_FILE_SIZE = 200 #MB # mettre en conf
+        MAX_FILE_SIZE = 20 #MB # mettre en conf
 
         ALLOWED_EXTENSIONS = ['.csv', '.json'] # mettre en conf
 
@@ -323,8 +327,8 @@ def post_user_file(info_role):
         """
         
         # get form data
-        metadata = dict(request.form)
-        #print(metadata)
+        metadata = dict(request.form.to_dict())
+        print(metadata)
 
         # Check if id_dataset value is allowed (prevent forbidden manual change in url (process/n))
         results = DB.session.query(TDatasets)\
@@ -367,6 +371,8 @@ def post_user_file(info_role):
                 .filter(CorRoleImport.id_import == id_import)\
                 .delete()
 
+        is_id_import = True
+
         DB.session.query(TImports)\
             .filter(TImports.id_import == id_import)\
             .update({TImports.step:1})
@@ -383,7 +389,7 @@ def post_user_file(info_role):
 
         archives_schema_name = blueprint.config['ARCHIVES_SCHEMA_NAME']
         #import_schema_name = blueprint.config['IMPORT_SCHEMA_NAME']
-        SEPARATOR = ";" # metadata['separator']
+        SEPARATOR = metadata['separator']
         prefix = blueprint.config['PREFIX']
 
         # table names
@@ -482,7 +488,7 @@ def post_user_file(info_role):
 
     except Exception:
         DB.session.rollback()
-
+        raise
         if is_archives_table_exist:
             DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
         if is_timports_table_exist:

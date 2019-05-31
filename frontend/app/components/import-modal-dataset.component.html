@@ -20,16 +20,17 @@
 
 
             <div class="datasetSelection">
-
-                <div>
-                    <label for="datasetSelection"> Sélectionnez le jeu de données </label>
-                    <select class="form-control" id="datasetSelection" formControlName="dataset" required>
-                        <option *ngFor="let data of userDatasetsResponse" [value]="data.datasetId">{{data.datasetName}}</option>
+              <div class="col-auto form-group row">
+                  <label class="col-sm-auto col-form-label" for="datasetSelection"> Jeu de données </label>
+                  <div class="col-sm-auto">
+                    <select class="custom-select mr-sm-2" id="datasetSelection" formControlName="dataset" required>
+                      <option *ngFor="let data of userDatasetsResponse" [value]="data.datasetId">{{data.datasetName}}</option>
                     </select>
-                    <br/>
-                </div>
+                    <div class="invalid-feedback">Sélectionnez le jeu de données dans lequel s'insert votre import</div>
+                  </div>
+              </div>
             </div>
-        
+
             <p></p>
 
             <div id="datasetError" *ngIf="isUserDatasetError">

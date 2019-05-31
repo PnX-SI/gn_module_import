@@ -6,28 +6,33 @@
     
     <div *ngIf="!empty">
         <ngx-datatable
-        #table 
-        class="material striped no-box-shadow" 
-        [rows]="history"
-        [columnMode]="'standard'"
-        [headerHeight]="35"
-        [footerHeight]="40"
-        [rowHeight]="40"
-        [draggable]="false"
-        [limit]="15">
+            #table 
+            class="material striped no-box-shadow" 
+            [rows]="history"
+            [columnMode]="'force'"
+            [headerHeight]="35"
+            [footerHeight]="40"
+            [rowHeight]="40"
+            [draggable]="false"
+            [limit]="15">
 
-        <!--
-        <ngx-datatable-column [width]="60">
-            <ng-template let-row="row" ngx-datatable-cell-template>
-                <button class="clickable btn btn-sm btn-primary" style="margin-top: -5px;" [disabled]="cruvedStore.cruved?.METADATA?.cruved.U === '0'" [routerLink]="['/metadata/dataset', row.id_dataset]" > 
-                    <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-                </button>
-            </ng-template>
-        </ngx-datatable-column>
-        -->
-    
-        <ngx-datatable-column *ngFor="let col of IMPORT_CONFIG.LIST_COLUMNS_FRONTEND" name="{{col.name}}" prop="{{col.prop}}" maxWidth="{{col.max_width}}">
+            <ngx-datatable-column 
+                *ngFor="let col of IMPORT_CONFIG.LIST_COLUMNS_FRONTEND" name="{{col.name}}" prop="{{col.prop}}" maxWidth="{{col.max_width}}">
             </ngx-datatable-column>
+
+            
+            <ngx-datatable-column [width]="60" name="Statut">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    <button class="clickable btn btn-sm btn-primary" style="margin-top: -10px;" (click)="go_to_step(id)"> Finir
+                    <!--
+                        <button class="clickable btn btn-sm btn-primary" style="margin-top: -5px;" [disabled]="cruvedStore.cruved?.METADATA?.cruved.U === '0'" [routerLink]="['/metadata/dataset', row.id_dataset]" > 
+                        <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                    -->
+                    </button>
+                </ng-template>
+            </ngx-datatable-column>
+            -->
+        
 
         </ngx-datatable>
     </div>

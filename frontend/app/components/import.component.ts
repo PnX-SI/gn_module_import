@@ -73,6 +73,10 @@ export class ImportComponent implements OnInit {
       windowClass: 'dark-modal'
     });
   }
+
+  go_to_step(id) {
+    console.log('à faire');
+  }
   
 }
 

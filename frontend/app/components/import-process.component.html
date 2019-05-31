@@ -1,38 +1,64 @@
-<mat-horizontal-stepper #stepper>
+<mat-horizontal-stepper [linear]="isLinear" #stepper>
 
     <!-- STEP 1 -->
-    <mat-step>
+    <mat-step [stepControl]="uploadForm">
+
+      <ng-template matStepLabel>Upload</ng-template>
+
         <h4> Upload du fichier </h4>
 
         <br>
 
-        <form [formGroup]="uploadForm">
+        <form [formGroup]="uploadForm" class="was-validated">
 
-            <div class="form-group" id="upload_files">
-                <input type=file (change)="onFileSelected($event)" id="selectedFile" name="file"/>
+            <div id="upload" class="form-group">
+              <div class="custom-file col-sm-5" id="upload_files">
+                  <input class="custom-file-input" type=file (change)="onFileSelected($event)" id="selectedFile" name="file" required>
+                  <label class="custom-file-label" for="selectedFile">Choisissez votre fichier</label>
+                  {{fileName}}
+              </div>
             </div>
 
+            <p></p>
             <br>
 
-            <div class="form-group">
-                <label for="encodage">Encodage</label>
-                <input type="text" class="form-control" formControlName="encodage" id="encodage">
+            <div class="col-auto form-group row">
+                <label class="col-sm-3 col-form-label" for="encodage"> Encodage de votre fichier </label>
+                <div class="col-sm-3">
+                  <select class="custom-select mr-sm-2" id="encodage" formControlName="encodage" required>
+                    <option *ngFor="let encodage of IMPORT_CONFIG.ENCODAGE" [value]="encodage">{{encodage}}</option>
+                  </select>
+                  <div class="invalid-feedback">Sélectionnez un encodage</div>
+                </div>
             </div>
 
-            <br>
+            <div class="col-auto form-group row">
+                <label class="col-sm-3 col-form-label" for="srid"> SRID de vos données géographiques </label>
+                <div class="col-sm-3">
+                  <select class="custom-select mr-sm-2" id="srid" formControlName="srid" required>
+                      <option *ngFor="let srid of IMPORT_CONFIG.SRID" [value]="srid.code">{{srid.name}}</option>
+                  </select>
+                  <div class="invalid-feedback">Sélectionnez un SRID</div>
+                </div>
+            </div>
 
-            <div class="form-group">
-                <label for="encodage">SRID</label>
-                <input type="text" class="form-control" formControlName="srid" id="srid">
+            <div class="col-auto form-group row">
+                <label class="col-sm-3 col-form-label" for="srid"> Séparateur de votre fichier </label>
+                <div class="col-sm-3">
+                    <select class="custom-select mr-sm-2" id="separator" formControlName="separator" required>
+                        <option *ngFor="let separator of IMPORT_CONFIG.SEPARATOR" [value]="separator.code">{{separator.name}}</option>
+                    </select>
+                    <div class="invalid-feedback">Sélectionnez un séparateur</div>
+                </div>
             </div>
 
             <br>
 
             <div class="d-flex flex-row justify-content-between">
-                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!isFileSelected" (click)="onUpload(uploadForm.value)" matStepperNext> 
-                    <i class="material-icons"> navigate_next </i> 
-                    Valider
-                </button>        
+                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!isFileSelected" (click)="onUpload(uploadForm.value)" id="validate" matStepperNext>
+                    <i class="material-icons"> navigate_next </i>
+                    Etape suivante
+                </button>
             </div>
 
         </form>

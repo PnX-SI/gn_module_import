@@ -30,7 +30,7 @@ export class DataService {
         this.fd.append('File', value.file, value.file['name']);
         this.fd.append('encodage', value.encodage);
         this.fd.append('srid', value.srid);
-        //this.fd.append('separator', value.separator);
+        this.fd.append('separator', value.separator);
         this.fd.append('datasetId', datasetId);
         this.fd.append('importId', importId);
         console.log(this.fd);
