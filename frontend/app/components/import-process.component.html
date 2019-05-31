@@ -1,7 +1,7 @@
-<mat-horizontal-stepper [linear]="isLinear" #stepper>
+<mat-horizontal-stepper #stepper linear>
 
     <!-- STEP 1 -->
-    <mat-step [stepControl]="uploadForm">
+    <mat-step [stepControl]="uploadForm" editable="false">
 
       <ng-template matStepLabel>Upload</ng-template>
 

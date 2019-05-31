@@ -25,15 +25,15 @@ export class ImportProcessComponent implements OnInit {
 
   public fileName;
   public uploadResponse: JSON;
-  //public isUploaded: Boolean = false;
+  public isUploaded: Boolean = false;
   public IMPORT_CONFIG = ModuleConfig;
   public isFileSelected : Boolean = false; // used for disable valid button
   public uploadForm: FormGroup;
   public importId;
+  public cancelResponse;
 
   //step1Completed = false;
   //isLinear = true;
-  public deleteResponse;
 
   @ViewChild('stepper') stepper: MatStepperModule;
 
@@ -80,10 +80,10 @@ export class ImportProcessComponent implements OnInit {
 
 
   cancelImport() {
-    /*
-    this._ds.deleteImport(this._activatedRoute.params._value["import_id"]).subscribe(
+    console.log(this.importId);
+    this._ds.cancelImport(this.importId).subscribe(
       res => {
-        this.deleteResponse = res as JSON;
+        this.cancelResponse = res as JSON;
     },
       error => {
         if (error.statusText === 'Unknown Error') {
@@ -98,11 +98,10 @@ export class ImportProcessComponent implements OnInit {
         }
     },
       () => {
-        console.log(this.deleteResponse);
+        console.log(this.cancelResponse);
         this.onImportList();
       }
     );       
-    */
   }
 
 
@@ -137,7 +136,7 @@ export class ImportProcessComponent implements OnInit {
         this.columns = this.uploadResponse.columns;
         console.log(this.columns);
         console.log(this.importId);
-        // this.isUploaded = true;
+        this.isUploaded = true;
         // promesse pour bloquer front en attendant que ce soit fini
       }
     );

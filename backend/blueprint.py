@@ -149,17 +149,43 @@ def post_dataset(info_role):
 """
 
 
-@blueprint.route('/ImportDelete/<import_id>', methods=['GET'])
+@blueprint.route('/cancel_import/<import_id>', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def delete_import(info_role, import_id):
+def cancel_import(info_role, import_id):
     try:
         if import_id == "undefined":
             return 'Aucun import en cours (id_import = null)', 400
-        DB.session.query(TImports).filter(TImports.id_import == import_id).delete()
-        DB.session.query(CorRoleImport).filter(CorRoleImport.id_import == import_id).delete()
-        DB.session.commit()
-        DB.session.close()
+
+        # get step number
+        step = DB.session.query(TImports.step)\
+            .filter(TImports.id_import == import_id)\
+            .one()[0]
+
+        if step > 1:
+
+            # get data table name
+            user_data_name = DB.session.query(TImports.import_table)\
+            .filter(TImports.id_import == import_id)\
+            .one()[0]
+
+            # set data table names
+            archive_schema_table_name = '.'.join([blueprint.config['ARCHIVES_SCHEMA_NAME'],user_data_name])
+            gn_imports_table_name = ''.join(['i_', user_data_name])
+            gn_imports_schema_table_name = '.'.join(['gn_imports', gn_imports_table_name])
+
+            # delete metadata
+            DB.session.query(TImports).filter(TImports.id_import == import_id).delete()
+            DB.session.query(CorRoleImport).filter(CorRoleImport.id_import == import_id).delete()
+            DB.session.query(CorImportArchives).filter(CorImportArchives.id_import == import_id).delete()
+
+            # delete tables
+            DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
+            DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
+
+            DB.session.commit()
+            DB.session.close()
+
         server_response = {'deleted_id_import': import_id}
         return server_response, 200
     except Exception:

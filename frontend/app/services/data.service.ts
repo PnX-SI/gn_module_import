@@ -19,9 +19,11 @@ export class DataService {
         private _commonService: CommonService
     ) {}
 
+
     getImportList() {
         return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}`);
     }
+
 
     postUserFile(value,datasetId,importId) {
         console.log(value);
@@ -37,22 +39,14 @@ export class DataService {
         return this._http.post<any>(urlStatus, this.fd, HttpUploadOptions);
     }
 
-    /*
-    postDataset(datasetId:number) {
-        const url = `${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/init`;
-        return this._http.post<any>(url,datasetId);
-    }
-    */
-    
 
     getUserDatasets() {
         return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/datasets`);
     }
 
-    /*
-    deleteImport(importId:number) {
-        return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/ImportDelete/${importId}`);
+    
+    cancelImport(importId:number) {
+        return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/cancel_import/${importId}`);
     }
-    */
 
 }
