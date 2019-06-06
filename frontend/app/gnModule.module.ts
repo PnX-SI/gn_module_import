@@ -6,10 +6,12 @@ import { Routes, RouterModule, ActivatedRoute } from "@angular/router";
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialogModule } from "@angular/material";
 import { ImportComponent } from "./components/import.component";
 import { ImportProcessComponent } from "./components/import-process.component";
 import { ImportModalDatasetComponent } from "./components/import-modal-dataset.component";
+import { ProgressSpinnerDialogComponent } from './components/progress-spinner-dialog.component';
 import { DataService } from "./services/data.service";
 import { importIdStorage } from './components/importId';
 
@@ -23,7 +25,8 @@ const routes: Routes = [
   declarations: [
     ImportComponent,
     ImportProcessComponent,
-    ImportModalDatasetComponent
+    ImportModalDatasetComponent,
+    ProgressSpinnerDialogComponent
   ],
 
   imports: [
@@ -31,7 +34,9 @@ const routes: Routes = [
     RouterModule.forChild(routes), 
     CommonModule,
     MatStepperModule,
-    MatIconModule
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatDialogModule
   ],
 
   entryComponents: [
@@ -40,7 +45,6 @@ const routes: Routes = [
 
   providers: [
     DataService
-    //importIdStorage
   ],
 
   bootstrap: []

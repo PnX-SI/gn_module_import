@@ -14,7 +14,11 @@
             [footerHeight]="40"
             [rowHeight]="40"
             [draggable]="false"
-            [limit]="15">
+            [limit]="15"
+            [selectionType]='single'
+            [selected]="selected"
+            (activate)="onActivate($event)"
+            >
 
             <ngx-datatable-column 
                 *ngFor="let col of IMPORT_CONFIG.LIST_COLUMNS_FRONTEND" name="{{col.name}}" prop="{{col.prop}}" maxWidth="{{col.max_width}}">

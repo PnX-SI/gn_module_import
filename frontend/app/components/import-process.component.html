@@ -1,7 +1,7 @@
-<mat-horizontal-stepper #stepper linear>
+<mat-horizontal-stepper #stepper>
 
     <!-- STEP 1 -->
-    <mat-step [stepControl]="uploadForm" editable="false">
+    <mat-step [stepControl]="uploadForm"> <!--editable="false">-->
 
       <ng-template matStepLabel>Upload</ng-template>
 
@@ -54,12 +54,20 @@
 
             <br>
 
-            <div class="d-flex flex-row justify-content-between">
-                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!isFileSelected" (click)="onUpload(uploadForm.value)" id="validate" matStepperNext>
+            <div *ngIf="!isUploading" class="d-flex flex-row justify-content-between">
+                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!this.uploadForm.valid" (click)="onUpload(uploadForm.value)" id="validate">
                     <i class="material-icons"> navigate_next </i>
                     Etape suivante
                 </button>
             </div>
+
+            <div *ngIf="isUploading" >
+                <mat-spinner class="upload-spinner" 
+                    [color]="color">
+               </mat-spinner>
+           </div>
+
+           
 
         </form>
 
@@ -70,23 +78,45 @@
 
     <!-- STEP 2 -->
 
-    <mat-step>
+    <mat-step [stepControl]="syntheseForm">
 
         <h4> Mapping des champs </h4>
+
         <br>
+
+        <form [formGroup]="syntheseForm" class="was-validated">            
+
+            <div  *ngFor="let col of synColumnNames">
+                <div class="col-auto form-group row">
+                    <label class="col-sm-3 col-form-label" for="{{col}}"> {{col}} </label>
+                    <div class="col-sm-3">
+                    <select class="custom-select mr-sm-2" id="{{col}}" formControlName="{{col}}" required>
+                        <option *ngFor="let column of columns" [value]="column">{{column}}</option>
+                    </select>
+                    <div class="invalid-feedback">Sélectionnez {{col}}</div>
+                    </div>
+                </div>
+            </div>
+        <br>
+        
+        
 
         <div class="d-flex flex-row justify-content-between">
             <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between" matStepperPrevious> 
                 <i class="material-icons"> navigate_before </i> 
                 Précédent
             </button>
-            <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" matStepperNext> 
+            <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" (click)="onMapping(syntheseForm.value)" matStepperNext> 
                 <i class="material-icons"> navigate_next </i> 
                 Valider
             </button>
         </div>
+
+        </form>
         
         <br>
+
+        
 
     </mat-step>
 

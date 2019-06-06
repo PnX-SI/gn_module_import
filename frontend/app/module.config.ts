@@ -57,5 +57,10 @@ export const ModuleConfig = {
         }
       ],
      "PREFIX":"gn_",
-     "UPLOAD_DIRECTORY":"upload"
+     "UPLOAD_DIRECTORY":"upload",
+     "MAX_FILE_SIZE":50,
+     "ALLOWED_EXTENSIONS": [
+        '.csv', 
+        '.json'
+     ]
    }

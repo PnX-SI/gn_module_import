@@ -23,6 +23,8 @@ from geonature.utils.utilssqlalchemy import json_resp
 
 from geonature.utils.env import DB
 
+from psycopg2 import sql
+
 import pdb
 
 from geonature.core.gn_meta.models import TDatasets
@@ -48,6 +50,10 @@ from .models import (
     generate_user_table_class
 )
 
+from .query import (
+    get_synthese_info
+)
+
 from .utils import (
     clean_string,
     clean_file_name
@@ -66,7 +72,9 @@ def get_import_list(info_role):
         return import list
     """
     try:
-        results = DB.session.query(TImports).filter(TImports.step >= 2).all()
+        results = DB.session.query(TImports)\
+                    .order_by(TImports.id_import)\
+                    .filter(TImports.step >= 2)
         history = []
         if not results:
             return {
@@ -130,25 +138,6 @@ def get_user_datasets(info_role):
         return 'INTERNAL SERVER ERROR ("get_user_datasets() error"): contactez l\'administrateur du site', 500
 
 
-"""
-@blueprint.route('/init', methods=['POST'])
-@permissions.check_cruved_scope('C', True, module_code="IMPORT")
-@json_resp
-def post_dataset(info_role):
-    # start to create data related to the current user import in the geonature db
-
-    try:
-        # get dataset_id from form post
-        data = dict(request.get_json())
-        selected_dataset_id = int(data['dataset'])
-        # data['date_create_import'] = init_date
-        # data['date_update_import'] = init_date
-        return {'id_dataset': selected_dataset_id}, 200
-    except Exception:
-        return 'INTERNAL SERVER ERROR ("post_dataset() error"): contactez l\'administrateur du site', 500
-"""
-
-
 @blueprint.route('/cancel_import/<import_id>', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
@@ -197,10 +186,12 @@ def cancel_import(info_role, import_id):
 @json_resp
 def post_user_file(info_role):
     """
-        - load user file in "uploads" directory
+        - load user file in "upload" directory
+        - check data in the userfile (column names, row duplicates, ...)
         - copy user file raw data in 2 geonature db tables
         - fill t_imports, cor_role_import, cor_archive_import
         - return id_import and column names list
+        - delete user file in upload directory
     """
 
     try:
@@ -217,9 +208,9 @@ def post_user_file(info_role):
 
         is_file_saved = False
 
-        MAX_FILE_SIZE = 20 #MB # mettre en conf
+        MAX_FILE_SIZE = blueprint.config['MAX_FILE_SIZE']
 
-        ALLOWED_EXTENSIONS = ['.csv', '.json'] # mettre en conf
+        ALLOWED_EXTENSIONS = blueprint.config['ALLOWED_EXTENSIONS']
 
         if request.method == 'POST':
 
@@ -265,7 +256,6 @@ def post_user_file(info_role):
                 },400
 
             # check file size
-            print(file)
             file.seek(0, 2)
             size = file.tell() / (1024 * 1024)
             file.seek(0)
@@ -407,6 +397,7 @@ def post_user_file(info_role):
         cleaned_file_name = clean_file_name(file.filename, extension, id_import)
 
 
+
         """
         CREATE TABLES CONTAINING RAW USER DATA IN GEONATURE DB
         """
@@ -438,17 +429,33 @@ def post_user_file(info_role):
         user_class_gn_imports = generate_user_table_class('gn_imports', t_imports_table_name,\
                                                                       pk_name, columns, id_import, schema_type='gn_imports')
 
+        ## if existing, delete tables already uploaded having same id_import suffix
+        existing_table_names = DB.session.execute(\
+            "SELECT table_name \
+             FROM information_schema.tables \
+             WHERE table_schema='gn_import_archives'"
+            ) # remplacer par la variable archives_schema_name
+
+        existing_table_names = [table.table_name for table in existing_table_names]
+        for table_name in existing_table_names:
+            try:
+                if int(table_name.split('_')[-1]) == id_import:
+                    gn_imports_table_name = '_'.join(['i',table_name])
+                    DB.session.execute("DROP TABLE {}".format(quoted_name('.'.join([archives_schema_name,table_name]), False)))
+                    DB.session.execute("DROP TABLE {}".format(quoted_name('.'.join(['gn_imports',gn_imports_table_name]), False)))
+                    DB.session.commit()
+            except ValueError:
+                pass
+
+
         ## create 2 empty tables in geonature db (in gn_import_archives and gn_imports schemas)
-    
+
         engine = DB.engine
         is_archive_table_exist = engine.has_table(archives_table_name, schema=archives_schema_name)
         is_gn_imports_table_exist = engine.has_table(t_imports_table_name, schema='gn_imports')
-
-        print(is_archive_table_exist)
         
         if is_archive_table_exist:
             DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
-
 
         if is_gn_imports_table_exist:
             DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
@@ -503,9 +510,16 @@ def post_user_file(info_role):
         return {
                    "importId": id_import,
                    "columns": columns
-               }, 200
+               },200
                
     except psycopg2.errors.BadCopyFileFormat as e:
+        is_archive_table_exist = engine.has_table(archives_table_name, schema=archives_schema_name)
+        is_gn_imports_table_exist = engine.has_table(t_imports_table_name, schema='gn_imports')
+        if is_archive_table_exist:
+            DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
+        if is_gn_imports_table_exist:
+            DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
+        DB.session.commit()
         return {
             "errorMessage": e.diag.message_primary,
             "errorContext": e.diag.context,
@@ -514,10 +528,11 @@ def post_user_file(info_role):
 
     except Exception:
         DB.session.rollback()
-        raise
-        if is_archives_table_exist:
+        is_archive_table_exist = engine.has_table(archives_table_name, schema=archives_schema_name)
+        is_gn_imports_table_exist = engine.has_table(t_imports_table_name, schema='gn_imports')
+        if is_archive_table_exist:
             DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
-        if is_timports_table_exist:
+        if is_gn_imports_table_exist:
             DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
         DB.session.commit()
         return 'INTERNAL SERVER ERROR ("post_user_file() error"): contactez l\'administrateur du site', 500
@@ -527,3 +542,66 @@ def post_user_file(info_role):
             os.remove(full_path)
         DB.metadata.clear()
         DB.session.close()
+
+
+@blueprint.route('/mapping/<import_id>', methods=['GET', 'POST'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def postMapping(info_role, import_id):
+    data = dict(request.get_json())
+    
+    # get synthese column names
+    #info_synth = get_synthese_info('column_name')
+    keys = [key for key in data]
+    print(keys)
+
+    # get table name
+    table = DB.session.query(TImports.import_table).filter(TImports.id_import == import_id).one()[0]
+
+    # construct gn_imports.tablename
+    table_name = '_'.join(['i',table])
+    schema_table_name = '.'.join(['gn_imports',table_name])
+    print(schema_table_name)
+
+    """
+    for key in keys:
+        print(data[key])
+        results = DB.session.execute("SELECT {} FROM {}".format(data[key],schema_table_name)).fetchall()
+        key_values = [r[data[key]] for r in results]
+    """
+
+    user_table_data = DB.session.execute("SELECT* FROM {}".format(schema_table_name))
+    for row in user_table_data:
+        for key in data:
+            print(row[data[key]])
+            
+
+    """
+    DB.session.execute("INSERT INTO gn_synthese.synthese(\
+                                nom_cite, date_min, date_max)\
+                                VALUES ('paf', '2017-01-01 12:05:02', '2017-01-03 12:05:02')")
+    #DB.session.add(insert_synthese)  
+    DB.session.commit()  
+    """
+    return data
+
+        
+@blueprint.route('/syntheseInfo', methods=['GET'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def getSyntheseInfo(info_role):
+    try:
+        names = []
+        data = DB.session.execute(\
+                    "SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
+                     FROM INFORMATION_SCHEMA.COLUMNS\
+                     WHERE table_name = 'synthese';"\
+        )
+        for d in data:
+            names.append(d.column_name)
+        names2 = ['nom_cite', 'date_min', 'date_max']
+        return names2, 200
+    except Exception:
+        return 'INTERNAL SERVER ERROR ("getSyntheseInfo() error"): contactez l\'administrateur du site', 500
+
+

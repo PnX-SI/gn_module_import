@@ -4,6 +4,7 @@ import { AppConfig } from '@geonature_config/app.config';
 import { ToastrService } from 'ngx-toastr';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { DatatableComponent } from '@swimlane/ngx-datatable';
+import { Router } from "@angular/router";
 
 import { ImportModalDatasetComponent } from './import-modal-dataset.component';
 import { DataService } from '../services/data.service';
@@ -22,8 +23,9 @@ export class ImportComponent implements OnInit {
   public importHistory;
   public history;
   public empty : boolean;
-
+  selected = [];
   public IMPORT_CONFIG = ModuleConfig;
+  public rowData;
 
   @ViewChild(DatatableComponent) table: DatatableComponent;
 
@@ -31,7 +33,8 @@ export class ImportComponent implements OnInit {
     private _commonService: CommonService,
     public _ds: DataService,
     private toastr: ToastrService,
-    public ngbModal: NgbModal
+    public ngbModal: NgbModal,
+    public _router: Router
   ) {}
 
 
@@ -74,9 +77,18 @@ export class ImportComponent implements OnInit {
     });
   }
 
-  go_to_step(id) {
-    console.log('à faire');
+  go_to_step() {
+    if (this.rowData != "undefined") {
+      console.log(this.rowData);
+      // create TImports interface and push this.rowData in rowData interface
+      //this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}/process/${this.rowData.id_dataset}`]);
+    }
   }
   
+  onActivate(event) {
+      this.rowData = event.row;
+      return this.rowData;
+  }
+
 }
 

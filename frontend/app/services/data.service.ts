@@ -8,6 +8,11 @@ import { ModuleConfig } from "../module.config";
 const HttpUploadOptions = {
     headers: new HttpHeaders({ "Accept": "application/json" })
   }
+
+const HttpFormOptions = {
+    headers: new HttpHeaders({ 'Content-Type': 'x-www-form-urlencoded'})
+  }
+
 @Injectable()
 export class DataService {
 
@@ -47,6 +52,16 @@ export class DataService {
     
     cancelImport(importId:number) {
         return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/cancel_import/${importId}`);
+    }
+
+    getSynColumnNames() {
+        return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/syntheseInfo`);
+    }
+
+    postMapping(value, importId:number) {
+        //console.log(value);
+        const urlMapping = `${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/mapping/${importId}`;        
+        return this._http.post<any>(urlMapping, value);
     }
 
 }

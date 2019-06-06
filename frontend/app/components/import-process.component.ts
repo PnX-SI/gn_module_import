@@ -8,16 +8,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms';
 
-import { importIdStorage } from './importId';
-
 
 @Component({
   selector: 'pnx-import-process',
   styleUrls: ['import-process.component.scss'],
-  templateUrl: 'import-process.component.html',
-  providers: [{
-    provide: STEPPER_GLOBAL_OPTIONS, useValue: {displayDefaultIndicatorType: false}
-  }]
+  templateUrl: 'import-process.component.html'
 })
 
 
@@ -26,14 +21,14 @@ export class ImportProcessComponent implements OnInit {
   public fileName;
   public uploadResponse: JSON;
   public isUploaded: Boolean = false;
+  public isUploading: Boolean = false;
   public IMPORT_CONFIG = ModuleConfig;
-  public isFileSelected : Boolean = false; // used for disable valid button
   public uploadForm: FormGroup;
   public importId;
   public cancelResponse;
-
-  //step1Completed = false;
-  //isLinear = true;
+  public synColumnNames;
+  public mappingResponse: JSON;
+  public syntheseForm: FormGroup;
 
   @ViewChild('stepper') stepper: MatStepperModule;
 
@@ -42,24 +37,34 @@ export class ImportProcessComponent implements OnInit {
     private _activatedRoute: ActivatedRoute,
     public _ds: DataService,
     private toastr: ToastrService,
-    //private _idImport: importIdStorage
     private _fb: FormBuilder
   ) {
+
     this._activatedRoute.params.subscribe(
       //params => console.log(params)
       );
+
     this.uploadForm = this._fb.group({
       file: [null, Validators.required],
       encodage: [null, Validators.required],
       srid: [null, Validators.required],
       separator: [null, Validators.required]
     });
+
+    this.syntheseForm = this._fb.group({
+      /*
+      nomCite: [null, Validators.required],
+      date_min: [null, Validators.required],
+      date_max: [null, Validators.required]
+      */
+    });
   }
 
 
   ngOnInit() {
     //console.log(this._activatedRoute.params._value);
-    this.importId = 'undefined'
+    this.importId = 'undefined';
+    this.getSynColumnNames();
   }
 
 
@@ -106,6 +111,7 @@ export class ImportProcessComponent implements OnInit {
 
 
   onUpload(value) {
+    this.isUploading = true;
     this._ds.postUserFile(value,this._activatedRoute.params._value['datasetId'],this.importId).subscribe(
       res => {
         this.uploadResponse = res as JSON;
@@ -127,6 +133,7 @@ export class ImportProcessComponent implements OnInit {
             // show error message if other server error
             this.toastr.error(error.error);
           }
+          this.isUploading = false;
         }
     },
       () => {
@@ -137,15 +144,66 @@ export class ImportProcessComponent implements OnInit {
         console.log(this.columns);
         console.log(this.importId);
         this.isUploaded = true;
+        this.stepper.next();
+        this.isUploading = false;
+
         // promesse pour bloquer front en attendant que ce soit fini
       }
     );
   } 
 
+
+  onMapping(value) {
+    this._ds.postMapping(value, this.importId).subscribe(
+      res => {
+        this.mappingResponse = res as JSON;
+    },
+      error => {
+        if (error.statusText === 'Unknown Error') {
+          // show error message if no connexion
+          this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+        } else {
+            // show error message if other server error
+            this.toastr.error(error.error.message);
+        }
+    },
+      () => {
+        console.log(this.mappingResponse);
+      }
+    );
+  }
+
+
   onImportList() {
     // effacer le fichier dans uploads (attention penser à gérer le fait que 2 utilisateurs puissent avoir le même nom de fichier?)
     this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);
   }
+
+
+  getSynColumnNames() {
+    this._ds.getSynColumnNames().subscribe(
+      res => {
+        this.synColumnNames = res as JSON;
+    },
+      error => {
+        if (error.statusText === 'Unknown Error') {
+          // show error message if no connexion
+          this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+        } else {
+          // show error message if other server error
+          this.toastr.error(error.error.message);
+        }
+    },
+      () => {
+        //this.isLinear = false;
+        console.log(this.synColumnNames);
+        for (let col of this.synColumnNames){
+          this.syntheseForm.addControl(col, new FormControl('', Validators.required));
+        }
+        console.log(this.syntheseForm);
+      }
+    );
+}
 
   complete() {
     /*
