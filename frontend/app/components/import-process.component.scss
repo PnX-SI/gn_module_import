@@ -19,3 +19,26 @@ mat-step {
     box-shadow: none;
     background: rgba(0, 0, 0, 0.0);
 }
+
+#errorList {
+    color: red;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th.Code {
+    width: 30%;
+}
+
+td,th {
+    border: 1px solid black;
+    text-align: left;
+    padding: 8px;
+  }
+
+  tr:nth-child(even) {
+    background-color: #dddddddd;
+  }

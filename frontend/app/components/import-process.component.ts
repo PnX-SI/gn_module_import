@@ -7,6 +7,7 @@ import { ModuleConfig } from '../module.config';
 import { MatButtonModule } from '@angular/material/button';
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 
 @Component({
@@ -18,17 +19,21 @@ import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms'
 
 export class ImportProcessComponent implements OnInit {
 
-  public fileName;
-  public uploadResponse: JSON;
-  public isUploaded: Boolean = false;
-  public isUploading: Boolean = false;
-  public IMPORT_CONFIG = ModuleConfig;
-  public uploadForm: FormGroup;
-  public importId;
-  public cancelResponse;
-  public synColumnNames;
-  public mappingResponse: JSON;
-  public syntheseForm: FormGroup;
+  private fileName;
+  private uploadResponse: JSON;
+  private isUploaded: Boolean = false;
+  private isUploading: Boolean = false;
+  private IMPORT_CONFIG = ModuleConfig;
+  private uploadForm: FormGroup;
+  private importId;
+  private cancelResponse;
+  private synColumnNames;
+  private mappingResponse: JSON;
+  private syntheseForm: FormGroup;
+  private isFileSelected : Boolean = false;
+  private isUserError: boolean;
+  private userErrors;
+  private columns;
 
   @ViewChild('stepper') stepper: MatStepperModule;
 
@@ -37,7 +42,7 @@ export class ImportProcessComponent implements OnInit {
     private _activatedRoute: ActivatedRoute,
     public _ds: DataService,
     private toastr: ToastrService,
-    private _fb: FormBuilder
+    private _fb: FormBuilder,
   ) {
 
     this._activatedRoute.params.subscribe(
@@ -51,20 +56,13 @@ export class ImportProcessComponent implements OnInit {
       separator: [null, Validators.required]
     });
 
-    this.syntheseForm = this._fb.group({
-      /*
-      nomCite: [null, Validators.required],
-      date_min: [null, Validators.required],
-      date_max: [null, Validators.required]
-      */
-    });
+    this.syntheseForm = this._fb.group({});
   }
 
 
   ngOnInit() {
-    //console.log(this._activatedRoute.params._value);
     this.importId = 'undefined';
-    this.getSynColumnNames();
+    this.isUserError = false;
   }
 
 
@@ -112,32 +110,36 @@ export class ImportProcessComponent implements OnInit {
 
   onUpload(value) {
     this.isUploading = true;
+    this.isUserError = false;
     this._ds.postUserFile(value,this._activatedRoute.params._value['datasetId'],this.importId).subscribe(
       res => {
         this.uploadResponse = res as JSON;
-    },
+      },
       error => {
+        this.isUploading = false;
+
         if (error.statusText === 'Unknown Error') {
           // show error message if no connexion
           this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
         } else {
-          if (error.status == 400) {
-            this.toastr.error(
-              "ERREUR : " +
-              error.error['errorInterpretation'] + " : " 
-              error.error['errorMessage'] + 
-              error.error['errorContext'],
-              {timeOut: 100000});
-          }
           if (error.status == 500) {
             // show error message if other server error
+            console.log('erreur 500 attention')
             this.toastr.error(error.error);
           }
-          this.isUploading = false;
-        }
-    },
+          if (error.status == 400) {
+            this.isUserError = true;
+            this.userErrors = error.error;
+            console.log(this.userErrors);
+          }
+          if (error.status == 403) {
+            this.toastr.error(error.error);
+          }
+      },
       () => {
-        //this.isLinear = false;
+        this.getSynColumnNames();
+        this.isUserError = false;
+        this.isUploading = false;
         console.log(this.uploadResponse);
         this.importId = this.uploadResponse.importId;
         this.columns = this.uploadResponse.columns;
@@ -146,8 +148,6 @@ export class ImportProcessComponent implements OnInit {
         this.isUploaded = true;
         this.stepper.next();
         this.isUploading = false;
-
-        // promesse pour bloquer front en attendant que ce soit fini
       }
     );
   } 
@@ -175,12 +175,12 @@ export class ImportProcessComponent implements OnInit {
 
 
   onImportList() {
-    // effacer le fichier dans uploads (attention penser à gérer le fait que 2 utilisateurs puissent avoir le même nom de fichier?)
     this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);
   }
 
 
   getSynColumnNames() {
+    // attention
     this._ds.getSynColumnNames().subscribe(
       res => {
         this.synColumnNames = res as JSON;
@@ -195,12 +195,14 @@ export class ImportProcessComponent implements OnInit {
         }
     },
       () => {
-        //this.isLinear = false;
-        console.log(this.synColumnNames);
         for (let col of this.synColumnNames){
-          this.syntheseForm.addControl(col, new FormControl('', Validators.required));
-        }
-        console.log(this.syntheseForm);
+          if (col.is_nullable === 'NO') {
+            this.syntheseForm.addControl(col.column_name, new FormControl('', Validators.required));
+          } else {
+            this.syntheseForm.addControl(col.column_name, new FormControl(''));
+          }
+        //console.log(this.syntheseForm);
+        
       }
     );
 }

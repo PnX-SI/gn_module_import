@@ -16,8 +16,8 @@ const HttpFormOptions = {
 @Injectable()
 export class DataService {
 
-    fd: any;
-    public IMPORT_CONFIG = ModuleConfig;
+    private fd: FormData;
+    private IMPORT_CONFIG = ModuleConfig;
 
     constructor(
         private _http: HttpClient, 
@@ -62,6 +62,10 @@ export class DataService {
         //console.log(value);
         const urlMapping = `${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/mapping/${importId}`;        
         return this._http.post<any>(urlMapping, value);
+    }
+
+    delete_aborted_step1() {
+        return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/delete_step1`);
     }
 
 }

@@ -10,7 +10,6 @@ import os
 import pathlib
 import psycopg2
 
-from goodtables import validate
 
 import ast
 
@@ -51,17 +50,27 @@ from .models import (
 )
 
 from .query import (
-    get_synthese_info
+    get_synthese_info,
+    delete_tables_if_existing,
+    get_table_list,
+    test_user_dataset,
+    delete_import_CorImportArchives,
+    delete_import_CorRoleImport,
+    delete_import_TImports,
+    delete_tables
 )
 
-from .utils import (
-    clean_string,
-    clean_file_name
-)
+from .utils import*
+# ameliorer prise en charge des erreurs
 
-# ameliorer prise en charge des erreurs (en particulier depuis utils.py vers les routes)
+from .upload import upload
+
+from .upload_errors import*
+
+from .check_user_file import check_user_file
 
 blueprint = Blueprint('import', __name__)
+
 
 
 @blueprint.route('', methods=['GET'])
@@ -78,8 +87,8 @@ def get_import_list(info_role):
         history = []
         if not results:
             return {
-                       "empty": True
-                   }, 200
+                "empty": True
+            }, 200
         for r in results:
             prop = {
                 "id_import": r.id_import,
@@ -108,7 +117,38 @@ def get_import_list(info_role):
                    "history": history,
                }, 200
     except Exception:
+        raise
         return 'INTERNAL SERVER ERROR ("get_import_list() error"): contactez l\'administrateur du site', 500
+
+
+@blueprint.route('/delete_step1', methods=['GET'])
+@permissions.check_cruved_scope('R', True, module_code="IMPORT")
+@json_resp
+def delete_step1(info_role):
+    """
+        delete id_import previously created by current id_role having step = 1 value
+        (might happen when user uploads several files during the same import process (=same id_import)
+        and finally interrupts the process without any valid import)
+    """
+    try:
+        list_to_delete = DB.session.query(TImports.id_import)\
+                            .filter(CorRoleImport.id_import == TImports.id_import)\
+                            .filter(CorRoleImport.id_role == info_role.id_role)\
+                            .filter(TImports.step == 1)\
+
+        ids = []
+
+        for id in list_to_delete:
+            delete_import_CorImportArchives(id.id_import)
+            delete_import_CorRoleImport(id.id_import)
+            delete_import_TImports(id.id_import)
+            ids.append(id.id_import)
+            DB.session.commit()
+
+        return {"deleted_step1_imports":ids},200
+
+    except Exception:
+        return 'INTERNAL SERVER ERROR ("delete_step1() error"): contactez l\'administrateur du site', 500
 
 
 @blueprint.route('/datasets', methods=['GET'])
@@ -143,8 +183,11 @@ def get_user_datasets(info_role):
 @json_resp
 def cancel_import(info_role, import_id):
     try:
+        
         if import_id == "undefined":
-            return 'Aucun import en cours (id_import = null)', 400
+            server_response = {'deleted_id_import': "canceled"}
+            return server_response,200
+        
 
         # get step number
         step = DB.session.query(TImports.step)\
@@ -155,29 +198,30 @@ def cancel_import(info_role, import_id):
 
             # get data table name
             user_data_name = DB.session.query(TImports.import_table)\
-            .filter(TImports.id_import == import_id)\
-            .one()[0]
+                .filter(TImports.id_import == import_id)\
+                .one()[0]
 
             # set data table names
-            archive_schema_table_name = '.'.join([blueprint.config['ARCHIVES_SCHEMA_NAME'],user_data_name])
-            gn_imports_table_name = ''.join(['i_', user_data_name])
-            gn_imports_schema_table_name = '.'.join(['gn_imports', gn_imports_table_name])
-
-            # delete metadata
-            DB.session.query(TImports).filter(TImports.id_import == import_id).delete()
-            DB.session.query(CorRoleImport).filter(CorRoleImport.id_import == import_id).delete()
-            DB.session.query(CorImportArchives).filter(CorImportArchives.id_import == import_id).delete()
+            archives_full_name = get_full_table_name(blueprint.config['ARCHIVES_SCHEMA_NAME'],user_data_name)
+            imports_table_name = set_imports_table_name(user_data_name)
+            imports_full_name = get_full_table_name('gn_imports', imports_table_name)
 
             # delete tables
-            DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
-            DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
+            DB.session.execute("DROP TABLE {}".format(archives_full_name))
+            DB.session.execute("DROP TABLE {}".format(imports_full_name))
 
-            DB.session.commit()
-            DB.session.close()
-
+        # delete metadata
+        DB.session.query(TImports).filter(TImports.id_import == import_id).delete()
+        DB.session.query(CorRoleImport).filter(CorRoleImport.id_import == import_id).delete()
+        DB.session.query(CorImportArchives).filter(CorImportArchives.id_import == import_id).delete()
+        
+        DB.session.commit()
+        DB.session.close()
         server_response = {'deleted_id_import': import_id}
+
         return server_response, 200
     except Exception:
+        raise
         return 'INTERNAL SERVER ERROR ("delete_TImportRow() error"): contactez l\'administrateur du site', 500
 
 
@@ -192,304 +236,175 @@ def post_user_file(info_role):
         - fill t_imports, cor_role_import, cor_archive_import
         - return id_import and column names list
         - delete user file in upload directory
+
+        # Note perso:
+        # prevoir un boolean (ou autre) pour bloquer la possibilité de l'utilisateur de lancer plusieurs uploads sans passer par interface front
+
     """
 
     try:
-
-        is_archives_table_exist = False
-        is_timports_table_exist = False
+        is_file_saved = False
         is_id_import = False
+        errors = []
+
+        MAX_FILE_SIZE = blueprint.config['MAX_FILE_SIZE']
+        ALLOWED_EXTENSIONS = blueprint.config['ALLOWED_EXTENSIONS']
+        DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
+        MODULE_URL = blueprint.config["MODULE_URL"]
+        PREFIX = blueprint.config['PREFIX']
+        ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
         """
         SAVE USER FILE IN UPLOAD DIRECTORY
         """
 
-        # prevoir un boolean (ou autre) pour bloquer la possibilité de l'utilisateur de lancer plusieurs uploads
+        uploaded_file = upload(request, MAX_FILE_SIZE, ALLOWED_EXTENSIONS, DIRECTORY_NAME, MODULE_URL)
 
-        is_file_saved = False
+        if uploaded_file['error'] == 'no_file':
+            errors.append(no_file)
+        if uploaded_file['error'] == 'empty':
+            errors.append(empty)
+        if uploaded_file['error'] == 'bad_extension':
+            errors.append(extension_error)
+        if uploaded_file['error'] == 'long_name':
+            errors.append(long_name)
+        if uploaded_file['error'] == 'max_size':
+            errors.append(max_size)  
+        if uploaded_file['error'] == 'unknown':
+            errors.append(unkown)        
+        if uploaded_file['error'] != '':
+            return errors,400
 
-        MAX_FILE_SIZE = blueprint.config['MAX_FILE_SIZE']
+        full_path = uploaded_file['full_path']
 
-        ALLOWED_EXTENSIONS = blueprint.config['ALLOWED_EXTENSIONS']
-
-        if request.method == 'POST':
-
-            if 'File' not in request.files:
-                return {
-                    "errorMessage": '',
-                    "errorContext": '',
-                    "errorInterpretation": 'Aucun fichier n\'est détecté'
-                },400
-            
-            file = request.files['File']
-
-            if file.filename == '':
-                return {
-                    "errorMessage": '',
-                    "errorContext": '',
-                    "errorInterpretation": 'Aucun fichier envoyé'
-                },400
-
-            # get file path
-            upload_directory_path = blueprint.config["UPLOAD_DIRECTORY"]
-            module_directory_path = os.path.join(os.path.dirname(os.getcwd()), 'external_modules/{}'.format(blueprint.config["MODULE_URL"]))
-            uploads_directory = os.path.join(module_directory_path, upload_directory_path)
-
-            filename = secure_filename(file.filename)
-
-            if len(filename) > 100:
-                return {
-                    "errorMessage": '',
-                    "errorContext": '',
-                    "errorInterpretation": 'Le nom du fichier doit être inférieur à 100 caractères'
-                },400
-
-            full_path = os.path.join(uploads_directory, filename)
-
-            # check user file extension (changer)
-            extension = pathlib.Path(full_path).suffix.lower()
-            if extension not in ALLOWED_EXTENSIONS:
-                return {
-                    "errorMessage": '',
-                    "errorContext": '',
-                    "errorInterpretation": 'Le fichier uploadé doit avoir une extension en .csv ou .json'
-                },400
-
-            # check file size
-            file.seek(0, 2)
-            size = file.tell() / (1024 * 1024)
-            file.seek(0)
-            if size > MAX_FILE_SIZE:
-                return {
-                    "errorMessage": '',
-                    "errorContext": '',
-                    "errorInterpretation": 'La taille du fichier doit être < à {} MB, votre fichier a une taille de {} MB'\
-                        .format(MAX_FILE_SIZE,size)
-                },400
-
-            # save user file in upload directory
-            file.save(full_path)
-
-            if not os.path.isfile(full_path):
-                return {
-                    "errorMessage": '',
-                    "errorContext": '',
-                    "errorInterpretation": 'Le fichier n\'a pas pu être uploadé pour une raison inconnue'
-                },400
-
-            is_file_saved = True
-
+        is_file_saved = uploaded_file['is_uploaded']
 
         """
         CHECK USER FILE
         """
 
-        """
-        Vérifications :
-        - doublon de nom colonne
-        - aucun nom de colonne
-        - un nom de colonne manquant
-        - fichier vide (ni nom de colonne, ni ligne)
-        - pas de données (noms de colonne mais pas de ligne contenant les données)
-        - doublon ligne
-        - extra-value : une ligne a une valeur en trop
-        - less-value : une ligne a moins de colonnes que de noms de colonnes
+        report = check_user_file(full_path, 100000000)
 
-        Notes encodages :
-        - encodage : utf8 et 16 : pas d'erreur
-        - encodage : Europe occidentale ISO-8859-15/EURO (=latin-9) et ISO-8859-1 (=latin-1) : erreur ('source-error')
-        - Donc il faut convertir en utf-8 avant de passer dans goodtables
-
-        Améliorations à faire :
-        - ajouter message plus précis? par exemple pour dire numero de lignes en doublon? numero de ligne avec extra value, ...
-        """
-
-        print(full_path)
-
-        report = validate(full_path, row_limit=100000000)
-
-        print(report)
-
-        if report['valid'] is False:
-
-            errors = []
-            for error in report['tables'][0]['errors']:
-                errors.append(error['code'])
-
-            error_list = list(dict.fromkeys(errors))
-            return {
-                "errorMessage": error_list,
-                "errorContext": 'Error detected in check csv file with goodtables',
-                "errorInterpretation": 'Error in csv file'
-            },400
-
-        if report['tables'][0]['row-count'] == 0:
-            return {
-                "errorMessage": 'empty file',
-                "errorContext": 'Error detected in check csv file with goodtables',
-                "errorInterpretation": 'Error in csv file'
-            },400
-
-        # get column names:
-        file_columns = report['tables'][0]['headers']
-        # get file format:
-        file_format = report['tables'][0]['format']
-        # get row number:
-        source_count = report['tables'][0]['row-count']
-
+        if len(report['errors']) > 0:
+            return report['errors'],400
 
         """
-        START FILLING METADATA (gn_imports.t_imports and cor_role_import tables)
+        CREATE CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
         """
         
         # get form data
         metadata = dict(request.form.to_dict())
         print(metadata)
 
-        # Check if id_dataset value is allowed (prevent forbidden manual change in url (process/n))
-        results = DB.session.query(TDatasets)\
-            .filter(TDatasets.id_dataset == Synthese.id_dataset)\
-            .filter(CorObserverSynthese.id_synthese == Synthese.id_synthese)\
-            .filter(CorObserverSynthese.id_role == info_role.id_role)\
-            .distinct(Synthese.id_dataset)\
-            .all()
+        # Check if id_dataset value is allowed (prevent from forbidden manual change in url (url/process/N))
+        is_dataset_allowed = test_user_dataset(info_role.id_role, metadata['datasetId'])
+        if not is_dataset_allowed:
+            return \
+            'L\'utilisateur {} n\'est pas autorisé à importer des données vers l\'id_dataset {}'\
+            .format(info_role.id_role, int(metadata['datasetId']))\
+            ,403
 
-        dataset_ids = []
-
-        for r in results:
-            dataset_ids.append(r.id_dataset)
-
-        if int(metadata['datasetId']) not in dataset_ids:
-            return {
-                "errorMessage": '',
-                "errorContext": '',
-                "errorInterpretation": 'L`utilisateur {} n\'est pas autorisé à importer des données vers l\'id_dataset {}'
-                    .format(info_role.id_role, int(metadata['datasetId']))
-            },400
-
-        # start t_imports filling
+        # start t_imports filling and fill cor_role_import
         if metadata['importId'] == 'undefined':
+            # if first file uploaded by the user in the current import process :
             init_date = datetime.datetime.now()
             insert_t_imports = TImports(
                 date_create_import = init_date,
                 date_update_import = init_date,
             )
             DB.session.add(insert_t_imports)
-            id_import = DB.session.query(TImports.id_import)\
-                        .filter(TImports.date_create_import == init_date)\
-                        .one()[0]
+            DB.session.flush()
+            id_import = insert_t_imports.id_import
+            # fill cor_role_import
+            insert_cor_role_import = CorRoleImport(id_role=info_role.id_role, id_import=id_import)
+            DB.session.add(insert_cor_role_import)
+            DB.session.flush()
         else:
+            # if other file(s) already uploaded by the user in the current import process :
             id_import = int(metadata['importId'])
-            DB.session.query(CorImportArchives)\
-                .filter(CorImportArchives.id_import == id_import)\
-                .delete()
-            DB.session.query(CorRoleImport)\
-                .filter(CorRoleImport.id_import == id_import)\
-                .delete()
+            DB.session.query(TImports)\
+                .filter(TImports.id_import == id_import)\
+                .update({
+                    TImports.date_update_import:datetime.datetime.now()
+                    })
 
-        is_id_import = True
+        if isinstance(id_import,int):
+            is_id_import = True
 
+        # set step to 1 in t_imports table
         DB.session.query(TImports)\
             .filter(TImports.id_import == id_import)\
-            .update({TImports.step:1})
+            .update({
+                TImports.step:1
+                })
 
-        # file name treatment (clean string for special character, remove extension, add id_import (_n) suffix)
-        cleaned_file_name = clean_file_name(file.filename, extension, id_import)
+        """
+        GET/SET FILE,SCHEMA,TABLE,COLUMN NAMES
+        """
 
+        # file name treatment
+        file_name_cleaner = clean_file_name(uploaded_file['file_name'], uploaded_file['extension'], id_import)
+        if len(file_name_cleaner['errors']) > 0:
+            # if user file name is not valid, an error is returned
+            return file_name_cleaner['errors'],400
+        cleaned_file_name = file_name_cleaner['clean_name']
 
+        ## get/set table and column names
+        separator = metadata['separator']
+        archives_table_name = cleaned_file_name
+        imports_table_name = set_imports_table_name(cleaned_file_name)
+
+        # set schema.table names
+        archives_full_name = get_full_table_name(ARCHIVES_SCHEMA_NAME, archives_table_name)
+        imports_full_name = get_full_table_name(IMPORTS_SCHEMA_NAME, imports_table_name)
+
+        # pk name to include (because copy_from method requires a primary_key)
+        pk_name = "".join([PREFIX, 'pk'])
+
+        # clean column names
+        columns = [clean_string(x) for x in report['column_names']]
 
         """
         CREATE TABLES CONTAINING RAW USER DATA IN GEONATURE DB
         """
 
-        ## definition of variables :
-
-        archives_schema_name = blueprint.config['ARCHIVES_SCHEMA_NAME']
-        #import_schema_name = blueprint.config['IMPORT_SCHEMA_NAME']
-        SEPARATOR = metadata['separator']
-        prefix = blueprint.config['PREFIX']
-
-        # table names
-        archives_table_name = cleaned_file_name
-        t_imports_table_name = ''.join(['i_', cleaned_file_name])
-
-        # schema.table names
-        archive_schema_table_name = '.'.join([archives_schema_name, archives_table_name])
-        gn_imports_schema_table_name = '.'.join(['gn_imports', t_imports_table_name]) # remplacer 'gn_imports' par import_schema_name
-
-        # pk name to include (because copy_from method requires a primary_key)
-        pk_name = "".join([prefix, 'pk'])
-
-        # clean column names
-        columns = [clean_string(x) for x in file_columns]
-
-        ## create user table classes (1 for gn_import_archives schema, 1 for gn_imports schema) corresponding to the user file structure (csv)
-        user_class_gn_import_archives = generate_user_table_class(archives_schema_name, archives_table_name,\
-                                                                      pk_name, columns, id_import, schema_type='archives')
-        user_class_gn_imports = generate_user_table_class('gn_imports', t_imports_table_name,\
-                                                                      pk_name, columns, id_import, schema_type='gn_imports')
-
-        ## if existing, delete tables already uploaded having same id_import suffix
-        existing_table_names = DB.session.execute(\
-            "SELECT table_name \
-             FROM information_schema.tables \
-             WHERE table_schema='gn_import_archives'"
-            ) # remplacer par la variable archives_schema_name
-
-        existing_table_names = [table.table_name for table in existing_table_names]
-        for table_name in existing_table_names:
-            try:
-                if int(table_name.split('_')[-1]) == id_import:
-                    gn_imports_table_name = '_'.join(['i',table_name])
-                    DB.session.execute("DROP TABLE {}".format(quoted_name('.'.join([archives_schema_name,table_name]), False)))
-                    DB.session.execute("DROP TABLE {}".format(quoted_name('.'.join(['gn_imports',gn_imports_table_name]), False)))
-                    DB.session.commit()
-            except ValueError:
-                pass
-
-
-        ## create 2 empty tables in geonature db (in gn_import_archives and gn_imports schemas)
-
-        engine = DB.engine
-        is_archive_table_exist = engine.has_table(archives_table_name, schema=archives_schema_name)
-        is_gn_imports_table_exist = engine.has_table(t_imports_table_name, schema='gn_imports')
-        
-        if is_archive_table_exist:
-            DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
-
-        if is_gn_imports_table_exist:
-            DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
-
+        ## if existing, delete all tables already uploaded which have the same id_import suffix
+        delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
         DB.session.commit()
 
+        ## create user table classes (1 for gn_import_archives schema, 1 for gn_imports schema) corresponding to the user file structure (csv)
+        user_class_gn_import_archives = generate_user_table_class(ARCHIVES_SCHEMA_NAME, archives_table_name,\
+                                                                      pk_name, columns, id_import, schema_type='archives')
+        user_class_gn_imports = generate_user_table_class(IMPORTS_SCHEMA_NAME, imports_table_name,\
+                                                                      pk_name, columns, id_import, schema_type='gn_imports')
+
+        ## create 2 empty tables in geonature db (in gn_import_archives and gn_imports schemas)
+        engine = DB.engine
         user_class_gn_import_archives.__table__.create(bind=engine, checkfirst=True)
         user_class_gn_imports.__table__.create(bind=engine, checkfirst=True)
 
         ## fill the user table (copy_from function is equivalent to COPY function of postgresql)
         conn = engine.raw_connection()
-
         cur = conn.cursor()
-        with open(full_path, 'r') as f:
-            next(f)
-            cur.copy_from(f, archive_schema_table_name, sep=SEPARATOR, columns=columns)
 
         with open(full_path, 'r') as f:
             next(f)
-            cur.copy_from(f, gn_imports_schema_table_name, sep=SEPARATOR, columns=columns)
+            cur.copy_from(f, archives_full_name, sep=separator, columns=columns)
+
+        with open(full_path, 'r') as f:
+            next(f)
+            cur.copy_from(f, imports_full_name, sep=separator, columns=columns)
 
         conn.commit()
         conn.close()
         cur.close()
 
         """
-        FILL cor_role_import and cor_import_archives
+        FILL CorImportArchives AND UPDATE TImports
         """
-
-        # fill cor_role_import
-        insert_cor_role_import = CorRoleImport(id_role=info_role.id_role, id_import=id_import)
-        DB.session.add(insert_cor_role_import)
-
-        # fill cor_import_archives
+        
+        delete_import_CorImportArchives(id_import)
         cor_import_archives = CorImportArchives(id_import=id_import, table_archive=archives_table_name)
         DB.session.add(cor_import_archives)
 
@@ -501,40 +416,36 @@ def post_user_file(info_role):
                 TImports.step: 2,
                 TImports.id_dataset: int(metadata['datasetId']),
                 TImports.srid: int(metadata['srid']),
-                TImports.format_source_file: file_format,
-                TImports.source_count: source_count-1
+                TImports.format_source_file: report['file_format'],
+                TImports.source_count: report['row_count']-1
                 })
         
         DB.session.commit()
 
         return {
-                   "importId": id_import,
-                   "columns": columns
-               },200
+            "importId": id_import,
+            "columns": columns,
+        },200
                
     except psycopg2.errors.BadCopyFileFormat as e:
-        is_archive_table_exist = engine.has_table(archives_table_name, schema=archives_schema_name)
-        is_gn_imports_table_exist = engine.has_table(t_imports_table_name, schema='gn_imports')
-        if is_archive_table_exist:
-            DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
-        if is_gn_imports_table_exist:
-            DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
+        DB.session.rollback()
+        if is_id_import:
+            delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
         DB.session.commit()
-        return {
-            "errorMessage": e.diag.message_primary,
-            "errorContext": e.diag.context,
-            "errorInterpretation": 'erreur probablement due à un problème de separateur'
-        },400
+        errors = []
+        errors.append({
+                'code': 'psycopg2.errors.BadCopyFileFormat',
+                'message': 'Erreur probablement due à un problème de separateur',
+                'message_data': e.diag.message_primary
+        })
+        return errors,400
 
     except Exception:
         DB.session.rollback()
-        is_archive_table_exist = engine.has_table(archives_table_name, schema=archives_schema_name)
-        is_gn_imports_table_exist = engine.has_table(t_imports_table_name, schema='gn_imports')
-        if is_archive_table_exist:
-            DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
-        if is_gn_imports_table_exist:
-            DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
+        if is_id_import:
+            delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
         DB.session.commit()
+        raise
         return 'INTERNAL SERVER ERROR ("post_user_file() error"): contactez l\'administrateur du site', 500
 
     finally:
@@ -548,42 +459,39 @@ def post_user_file(info_role):
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
 def postMapping(info_role, import_id):
-    data = dict(request.get_json())
-    
-    # get synthese column names
-    #info_synth = get_synthese_info('column_name')
-    keys = [key for key in data]
-    print(keys)
+    try:
+        # in progress, just started
+        data = dict(request.get_json())
 
-    # get table name
-    table = DB.session.query(TImports.import_table).filter(TImports.id_import == import_id).one()[0]
+        print(user_class_gn_imports)
+        
+        # get synthese column names
+        #info_synth = get_synthese_info('column_name')
+        keys = [key for key in data]
+        
+        filled = []
+        for key in keys:
+            if data[key] != '':
+                filled.append(key)
+        print(filled)
 
-    # construct gn_imports.tablename
-    table_name = '_'.join(['i',table])
-    schema_table_name = '.'.join(['gn_imports',table_name])
-    print(schema_table_name)
+        # get table name
+        table = DB.session.query(TImports.import_table).filter(TImports.id_import == import_id).one()[0]
 
-    """
-    for key in keys:
-        print(data[key])
-        results = DB.session.execute("SELECT {} FROM {}".format(data[key],schema_table_name)).fetchall()
-        key_values = [r[data[key]] for r in results]
-    """
+        # construct gn_imports.tablename
+        table_name = '_'.join(['i',table])
+        schema_table_name = '.'.join(['gn_imports',table_name])
+        print(schema_table_name)
 
-    user_table_data = DB.session.execute("SELECT* FROM {}".format(schema_table_name))
-    for row in user_table_data:
-        for key in data:
-            print(row[data[key]])
-            
 
-    """
-    DB.session.execute("INSERT INTO gn_synthese.synthese(\
-                                nom_cite, date_min, date_max)\
-                                VALUES ('paf', '2017-01-01 12:05:02', '2017-01-03 12:05:02')")
-    #DB.session.add(insert_synthese)  
-    DB.session.commit()  
-    """
-    return data
+        results = DB.session.execute("SELECT* FROM gn_imports.i_data_exemple_549")
+        for v in results:
+            for column, value in v.items():
+                print('{0}: {1}'.format(column, value))
+        return data
+    except Exception:
+        raise
+        return 'INTERNAL SERVER ERROR ("postMapping() error"): contactez l\'administrateur du site', 500
 
         
 @blueprint.route('/syntheseInfo', methods=['GET'])
@@ -591,17 +499,49 @@ def postMapping(info_role, import_id):
 @json_resp
 def getSyntheseInfo(info_role):
     try:
-        names = []
+        EXCLUDED_SYNTHESE_FIELDS_FRONT = blueprint.config['EXCLUDED_SYNTHESE_FIELDS_FRONT']
+        NOT_NULLABLE_SYNTHESE_FIELDS = blueprint.config['NOT_NULLABLE_SYNTHESE_FIELDS']
+
+        synthese_info = []
+
         data = DB.session.execute(\
                     "SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
                      FROM INFORMATION_SCHEMA.COLUMNS\
                      WHERE table_name = 'synthese';"\
         )
+
         for d in data:
-            names.append(d.column_name)
-        names2 = ['nom_cite', 'date_min', 'date_max']
-        return names2, 200
+            if d.column_name not in EXCLUDED_SYNTHESE_FIELDS_FRONT:
+                if d.column_name in NOT_NULLABLE_SYNTHESE_FIELDS:
+                    is_nullabl = 'NO'
+                else:
+                    is_nullabl = 'YES'
+                prop = {
+                    "column_name": d.column_name,
+                    "is_nullable": is_nullabl,
+                    "data_type": d.data_type,
+                    "character_maximum_length": d.character_maximum_length,
+                }
+                synthese_info.append(prop)
+        #names2 = ['nom_cite', 'date_min', 'date_max']
+        print(synthese_info)
+        return synthese_info, 200
     except Exception:
+        raise
         return 'INTERNAL SERVER ERROR ("getSyntheseInfo() error"): contactez l\'administrateur du site', 500
 
 
+"""
+@blueprint.route('/return_to_list/<import_id>', methods=['GET'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def return_to_list(info_role, import_id):
+    try:
+        
+        #Si import_id is not undefined, effacer ligne dans timports_id, cor_role_import, cor_archive_import si step = 1
+        
+
+        return server_response, 200
+    except Exception:
+        return 'INTERNAL SERVER ERROR ("delete_TImportRow() error"): contactez l\'administrateur du site', 500
+"""

@@ -67,6 +67,31 @@
                </mat-spinner>
            </div>
 
+           <br>
+
+           <div id="errorList" *ngIf="isUserError">
+
+                <div> Attention, erreurs detectées dans le fichier uploadé : </div>
+
+                <table >
+                    <thead>
+                        <tr>
+                        <th class="Code"> Code </th>
+                        <th class="Message"> Message </th>
+                        <th class="MessageData"> Message Data </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr *ngFor="let error of userErrors">
+                        <td> {{error.code}} </td>
+                        <td> {{error.message}} </td>
+                        <td> {{error.message_data}} </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
            
 
         </form>
@@ -88,12 +113,17 @@
 
             <div  *ngFor="let col of synColumnNames">
                 <div class="col-auto form-group row">
-                    <label class="col-sm-3 col-form-label" for="{{col}}"> {{col}} </label>
+                    <label class="col-sm-3 col-form-label" for="{{col.column_name}}"> {{col.column_name}} </label>
                     <div class="col-sm-3">
-                    <select class="custom-select mr-sm-2" id="{{col}}" formControlName="{{col}}" required>
+                    <select *ngIf="col.is_nullable == 'NO';else YES" class="custom-select mr-sm-2" id="{{col.column_name}}" formControlName="{{col.column_name}}" required>
                         <option *ngFor="let column of columns" [value]="column">{{column}}</option>
                     </select>
-                    <div class="invalid-feedback">Sélectionnez {{col}}</div>
+                    <ng-template #YES>
+                        <select class="custom-select mr-sm-2" id="{{col.column_name}}" formControlName="{{col.column_name}}">
+                            <option *ngFor="let column of columns" [value]="column">{{column}}</option>
+                        </select>
+                    </ng-template>
+                    <div class="invalid-feedback">Sélectionnez {{col.column_name}}</div>
                     </div>
                 </div>
             </div>
@@ -159,10 +189,6 @@
                 <i class="material-icons"> navigate_before </i> 
                 Précédent
             </button> 
-            <button class="btn btn-primary box-shadow d-flex justify-content-center align-content-between" (click)="resetStepper(stepper)" matStepperPrevious> 
-                <i class="material-icons"> refresh </i> 
-                Recommencer le processus d'import
-            </button>
             <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" (click)="resetStepper(stepper)" matStepperPrevious> 
                 <i class="material-icons"> done </i> 
                 Importer les données dans Geonature
@@ -177,6 +203,6 @@
   <br>
 
   <div class="d-flex flex-row justify-content-between" id="bottomButtons">
-  <button *ngIf="isUploaded" type="button" id="cancelImport" (click)="cancelImport()" class="btn btn-danger box-shadow btn-sm">Annuler l'import</button>
-  <button type="button" id="importListPage" (click)="onImportList()" class="btn btn-secondary box-shadow btn-sm">Retourner à ma liste des imports</button>
+  <button type="button" id="cancelImport" (click)="cancelImport()" class="btn btn-danger box-shadow btn-sm">Annuler l'import</button>
+  <button *ngIf="isUploaded" type="button" id="importListPage" (click)="onImportList()" class="btn btn-secondary box-shadow btn-sm">Enregistrer et quitter</button>
   </div>

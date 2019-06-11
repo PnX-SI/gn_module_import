@@ -11,9 +11,7 @@ import { MatDialogModule } from "@angular/material";
 import { ImportComponent } from "./components/import.component";
 import { ImportProcessComponent } from "./components/import-process.component";
 import { ImportModalDatasetComponent } from "./components/import-modal-dataset.component";
-import { ProgressSpinnerDialogComponent } from './components/progress-spinner-dialog.component';
 import { DataService } from "./services/data.service";
-import { importIdStorage } from './components/importId';
 
 // my module routing
 const routes: Routes = [
@@ -25,8 +23,7 @@ const routes: Routes = [
   declarations: [
     ImportComponent,
     ImportProcessComponent,
-    ImportModalDatasetComponent,
-    ProgressSpinnerDialogComponent
+    ImportModalDatasetComponent
   ],
 
   imports: [

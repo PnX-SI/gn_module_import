@@ -7,7 +7,6 @@ import { Router } from "@angular/router";
 import { DataService } from '../services/data.service';
 import { ModuleConfig } from '../module.config';
 import { ImportComponent } from './import.component';
-//import { importIdStorage } from './importId';
 
 @Component({
     selector: 'pnx-import-modal-dataset',

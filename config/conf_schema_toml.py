@@ -15,7 +15,7 @@ UPLOAD_DIRECTORY = "upload"
 
 ARCHIVES_SCHEMA_NAME = "gn_import_archives"
 
-GN_IMPORT_SCHEMA_NAME = "gn_imports"
+IMPORTS_SCHEMA_NAME = "gn_imports"
 
 PREFIX = "gn_"
 
@@ -42,13 +42,19 @@ ALLOWED_EXTENSIONS = [
     '.json'
 ]
 
+EXCLUDED_SYNTHESE_FIELDS_FRONT = ['id_synthese', 'id_source', 'id_module', 'id_dataset', 'the_geom_4326', 'the_geom_point','the_geom_local', 'last_action']
+
+NOT_NULLABLE_SYNTHESE_FIELDS = ['cd_nom', 'nom_cite', 'date_min']
+
 class GnModuleSchemaConf(Schema):
       LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, missing=DEFAULT_LIST_COLUMN)
       UPLOAD_DIRECTORY = fields.String(missing=UPLOAD_DIRECTORY)
       ARCHIVES_SCHEMA_NAME = fields.String(missing=ARCHIVES_SCHEMA_NAME)
-      GN_IMPORT_SCHEMA_NAME = fields.String(missing=GN_IMPORT_SCHEMA_NAME)
+      IMPORTS_SCHEMA_NAME = fields.String(missing=IMPORTS_SCHEMA_NAME)
       PREFIX = fields.String(missing=PREFIX)
       SRID = fields.List(fields.Dict, missing=SRID)
       ENCODAGE = fields.List(fields.String, missing=ENCODAGE)
       MAX_FILE_SIZE = fields.Integer(missing=MAX_FILE_SIZE)
       ALLOWED_EXTENSIONS = fields.List(fields.String, missing=ALLOWED_EXTENSIONS)
+      EXCLUDED_SYNTHESE_FIELDS_FRONT = fields.List(fields.String, missing=EXCLUDED_SYNTHESE_FIELDS_FRONT)
+      NOT_NULLABLE_SYNTHESE_FIELDS = fields.List(fields.String, missing=NOT_NULLABLE_SYNTHESE_FIELDS)

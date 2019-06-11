@@ -19,34 +19,37 @@ import { ModuleConfig } from '../module.config';
 
 export class ImportComponent implements OnInit {
 
-  public importId: JSON;
-  public importHistory;
-  public history;
-  public empty : boolean;
-  selected = [];
-  public IMPORT_CONFIG = ModuleConfig;
-  public rowData;
+  private importHistory;
+  private deletedStep1;
+  private history;
+  private empty : boolean;
+  private selected = [];
+  private IMPORT_CONFIG = ModuleConfig;
+  private rowData;
 
   @ViewChild(DatatableComponent) table: DatatableComponent;
 
   constructor(
     private _commonService: CommonService,
-    public _ds: DataService,
+    private _ds: DataService,
     private toastr: ToastrService,
-    public ngbModal: NgbModal,
-    public _router: Router
+    private ngbModal: NgbModal,
+    private _router: Router
   ) {}
 
 
   ngOnInit() {
     this.onImportList();
+    this.onDelete_aborted_step1();
   }
 
-  onProcess() {
+
+  private onProcess() {
     this.openDatasetModal();
   }
 
-  onImportList() {
+
+  private onImportList() {
     this._ds.getImportList().subscribe(
       res => {
         this.importHistory = res;
@@ -68,7 +71,8 @@ export class ImportComponent implements OnInit {
     );
   }
 
-  openDatasetModal() {
+
+  private openDatasetModal() {
     const modalRef = this.ngbModal.open(ImportModalDatasetComponent, {
       centered: true, 
       size: "lg", 
@@ -77,7 +81,8 @@ export class ImportComponent implements OnInit {
     });
   }
 
-  go_to_step() {
+
+  private go_to_step() {
     if (this.rowData != "undefined") {
       console.log(this.rowData);
       // create TImports interface and push this.rowData in rowData interface
@@ -85,10 +90,33 @@ export class ImportComponent implements OnInit {
     }
   }
   
-  onActivate(event) {
+  
+  private onActivate(event) {
       this.rowData = event.row;
       return this.rowData;
   }
+
+
+  private onDelete_aborted_step1() {
+    this._ds.delete_aborted_step1().subscribe(
+      res => {
+        this.deletedStep1 = res;
+      },
+      error => {
+        if (error.statusText === 'Unknown Error') {
+          // show error message if no connexion
+          this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+        } else {
+          // show error message if other server error
+          this.toastr.error(error.error);
+        }
+      },
+      () => {
+        console.log(this.deletedStep1);
+      }
+    ); 
+  }
+  
 
 }
 
