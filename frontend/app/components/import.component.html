@@ -46,8 +46,10 @@
 
     <p></p>
 
-    <button type="button" id="start_process" (click)="onProcess()" class="btn btn-primary box-shadow">Nouvel Import</button>
-
+    <div class="text-right">
+        <button type="button" id="start_process" (click)="onProcess()" class="btn btn-primary box-shadow">Nouvel Import</button>
+    </div>
+    
     <!-- MODEL FOR SELECTION OF THE DATASET -->
     <ng-template #ImportModalDataset let-c="close " let-d="dismiss">
 

@@ -1,6 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { Router,ActivatedRoute } from "@angular/router";
-import { MatStepperModule } from '@angular/material/stepper';
+import { Router, ActivatedRoute } from "@angular/router";
 import { DataService } from '../services/data.service';
 import { ToastrService } from 'ngx-toastr';
 import { ModuleConfig } from '../module.config';
@@ -8,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
 import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { NgbTabChangeEvent, NgbTabset } from "@ng-bootstrap/ng-bootstrap";
 
 
 @Component({
@@ -30,15 +30,19 @@ export class ImportProcessComponent implements OnInit {
   private synColumnNames;
   private mappingResponse: JSON;
   private syntheseForm: FormGroup;
-  private isFileSelected : Boolean = false;
+  private isFileSelected: Boolean = false;
   private isUserError: boolean;
   private userErrors;
   private columns;
+  private isStep2Disabled: Boolean = true;
+  private isStep3Disabled: Boolean = true;
+  private isStep4Disabled: Boolean = true;
 
-  @ViewChild('stepper') stepper: MatStepperModule;
+  @ViewChild(NgbTabset)
+  private tabset: NgbTabset;
 
   constructor(
-    private _router: Router, 
+    private _router: Router,
     private _activatedRoute: ActivatedRoute,
     public _ds: DataService,
     private toastr: ToastrService,
@@ -47,7 +51,7 @@ export class ImportProcessComponent implements OnInit {
 
     this._activatedRoute.params.subscribe(
       //params => console.log(params)
-      );
+    );
 
     this.uploadForm = this._fb.group({
       file: [null, Validators.required],
@@ -63,11 +67,8 @@ export class ImportProcessComponent implements OnInit {
   ngOnInit() {
     this.importId = 'undefined';
     this.isUserError = false;
-  }
-
-
-  resetStepper(stepper: MatStepperModule){
-    stepper.selectedIndex = 0;
+    console.log(this.tabset);
+    
   }
 
 
@@ -87,31 +88,31 @@ export class ImportProcessComponent implements OnInit {
     this._ds.cancelImport(this.importId).subscribe(
       res => {
         this.cancelResponse = res as JSON;
-    },
+      },
       error => {
         if (error.statusText === 'Unknown Error') {
           // show error message if no connexion
           this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
         } else {
-          if (error.status = 400){
+          if (error.status = 400) {
             this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);
           }
           // show error message if other server error
           this.toastr.error(error.error);
         }
-    },
+      },
       () => {
         console.log(this.cancelResponse);
         this.onImportList();
       }
-    );       
+    );
   }
 
 
   onUpload(value) {
     this.isUploading = true;
     this.isUserError = false;
-    this._ds.postUserFile(value,this._activatedRoute.params._value['datasetId'],this.importId).subscribe(
+    this._ds.postUserFile(value, this._activatedRoute.params._value['datasetId'], this.importId).subscribe(
       res => {
         this.uploadResponse = res as JSON;
       },
@@ -135,38 +136,48 @@ export class ImportProcessComponent implements OnInit {
           if (error.status == 403) {
             this.toastr.error(error.error);
           }
-      },
-      () => {
-        this.getSynColumnNames();
-        this.isUserError = false;
-        this.isUploading = false;
-        console.log(this.uploadResponse);
-        this.importId = this.uploadResponse.importId;
-        this.columns = this.uploadResponse.columns;
-        console.log(this.columns);
-        console.log(this.importId);
-        this.isUploaded = true;
-        this.stepper.next();
-        this.isUploading = false;
-      }
+        },
+        () => {
+          this.getSynColumnNames();
+          this.isUserError = false;
+          this.isUploading = false;
+          console.log(this.uploadResponse);
+          this.importId = this.uploadResponse.importId;
+          this.columns = this.uploadResponse.columns;
+          console.log(this.columns);
+          console.log(this.importId);
+          this.isUploaded = true;
+          this.isUploading = false;
+          this.tabset.tabs._results[1].disabled = false;
+          this.tabset.select('field-mapping');
+        }
     );
-  } 
+  }
 
+  /*
+  public beforeChange($event: NgbTabChangeEvent) {
+    if ($event.nextId === 'field-mapping') {
+      if (this.isUploaded == false) {
+        $event.preventDefault();
+      }
+    }
+  }
+  */
 
   onMapping(value) {
     this._ds.postMapping(value, this.importId).subscribe(
       res => {
         this.mappingResponse = res as JSON;
-    },
+      },
       error => {
         if (error.statusText === 'Unknown Error') {
           // show error message if no connexion
           this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
         } else {
-            // show error message if other server error
-            this.toastr.error(error.error.message);
+          // show error message if other server error
+          this.toastr.error(error.error.message);
         }
-    },
+      },
       () => {
         console.log(this.mappingResponse);
       }
@@ -184,7 +195,7 @@ export class ImportProcessComponent implements OnInit {
     this._ds.getSynColumnNames().subscribe(
       res => {
         this.synColumnNames = res as JSON;
-    },
+      },
       error => {
         if (error.statusText === 'Unknown Error') {
           // show error message if no connexion
@@ -193,31 +204,22 @@ export class ImportProcessComponent implements OnInit {
           // show error message if other server error
           this.toastr.error(error.error.message);
         }
-    },
+      },
       () => {
-        for (let col of this.synColumnNames){
+        for (let col of this.synColumnNames) {
           if (col.is_nullable === 'NO') {
             this.syntheseForm.addControl(col.column_name, new FormControl('', Validators.required));
           } else {
             this.syntheseForm.addControl(col.column_name, new FormControl(''));
           }
-        //console.log(this.syntheseForm);
-        
-      }
-    );
-}
+          //console.log(this.syntheseForm);
 
-  complete() {
-    /*
-    console.log(this.stepper);
-    console.log(this.stepper.selected.completed);
-    //this.stepper.selected.editable = false;
-    this.stepper.completed = true;
-    if (this.stepper.completed = true) {
-      this.stepper.next();
-    }
-    */
+        }
+    );
   }
+
+
+
 
 }
 

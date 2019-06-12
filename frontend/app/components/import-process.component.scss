@@ -1,23 +1,5 @@
-mat-step {
-    //background-color: transparent !important;
-}
-
 .custom {
     width: 78px !important;
-}
-
-:host /deep/ .mat-step-icon {
-    background-color: rgb(79, 154, 230);
- }
-
- #bottomButtons {
-     margin-left: 25px;
-     margin-right: 25px;
- }
-
- .transparent .mat-dialog-container {
-    box-shadow: none;
-    background: rgba(0, 0, 0, 0.0);
 }
 
 #errorList {
@@ -39,6 +21,31 @@ td,th {
     padding: 8px;
   }
 
-  tr:nth-child(even) {
+tr:nth-child(even) {
     background-color: #dddddddd;
+}
+
+.spinner {
+    position: fixed;
+    z-index: 999;
+    height: 2em;
+    width: 2em;
+    overflow: show;
+    margin: auto;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+  }
+  
+  /* Transparent Overlay */
+  .spinner:before {
+    content: '';
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.3);
   }
