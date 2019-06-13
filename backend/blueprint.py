@@ -463,7 +463,7 @@ def postMapping(info_role, import_id):
         # in progress, just started
         data = dict(request.get_json())
 
-        print(user_class_gn_imports)
+        #print(user_class_gn_imports)
         
         # get synthese column names
         #info_synth = get_synthese_info('column_name')

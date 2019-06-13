@@ -41,6 +41,7 @@ export class ImportComponent implements OnInit {
   ngOnInit() {
     this.onImportList();
     this.onDelete_aborted_step1();
+    // faire promesse pour structurer le déroulement de ces 2 appels
   }
 
 

@@ -37,6 +37,8 @@ export class ImportProcessComponent implements OnInit {
   private isStep2Disabled: Boolean = true;
   private isStep3Disabled: Boolean = true;
   private isStep4Disabled: Boolean = true;
+  private isStep1: boolean;
+  private impatient;
 
   @ViewChild(NgbTabset)
   private tabset: NgbTabset;
@@ -68,7 +70,8 @@ export class ImportProcessComponent implements OnInit {
     this.importId = 'undefined';
     this.isUserError = false;
     console.log(this.tabset);
-    
+    this.isStep1 = true;
+    this.impatient = false;
   }
 
 
@@ -154,17 +157,22 @@ export class ImportProcessComponent implements OnInit {
     );
   }
 
-  /*
+  
   public beforeChange($event: NgbTabChangeEvent) {
-    if ($event.nextId === 'field-mapping') {
-      if (this.isUploaded == false) {
-        $event.preventDefault();
-      }
+    if ($event.nextId === 'upload') {
+      this.isStep1 = true;
+    } else {
+      this.isStep1 = false;
     }
+    
   }
-  */
+  
 
   onMapping(value) {
+    console.log('soon');
+    this.tabset.tabs._results[2].disabled = false;
+    this.tabset.select('content-mapping');
+    /*
     this._ds.postMapping(value, this.importId).subscribe(
       res => {
         this.mappingResponse = res as JSON;
@@ -182,8 +190,38 @@ export class ImportProcessComponent implements OnInit {
         console.log(this.mappingResponse);
       }
     );
+    */
   }
 
+
+  onFinalStep() {
+    console.log('soon');
+    this.tabset.tabs._results[3].disabled = false;
+    this.tabset.select('final');
+    /*
+    this._ds.postMapping(value, this.importId).subscribe(
+      res => {
+        this.mappingResponse = res as JSON;
+      },
+      error => {
+        if (error.statusText === 'Unknown Error') {
+          // show error message if no connexion
+          this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+        } else {
+          // show error message if other server error
+          this.toastr.error(error.error.message);
+        }
+      },
+      () => {
+        console.log(this.mappingResponse);
+      }
+    );
+    */
+  }
+
+  onFinalImport() {
+    this.impatient = true;
+  }
 
   onImportList() {
     this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);

@@ -1,7 +1,7 @@
 
 <div class=container>
 
-    <ngb-tabset #tabset type="pills" activeId="upload" justify="fill">
+    <ngb-tabset #tabset type="pills" activeId="upload" (tabChange)="beforeChange($event)" justify="fill">
 
         <!-- STEP 1 -->
 
@@ -57,10 +57,11 @@
                     </div>
 
                     <br>
-                    <div class="text-right">
+                    
+                    <div class="float-right">
                         <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!this.uploadForm.valid" (click)="onUpload(uploadForm.value)" id="validate">
+                            Suivant
                             <i class="material-icons"> navigate_next </i>
-                            Etape suivante
                         </button>
                     </div>
 
@@ -69,8 +70,8 @@
                             [color]="color"
                             [diameter]="150"
                             [strokeWidth]="12">
-                    </mat-spinner>
-                </div>
+                        </mat-spinner>
+                    </div>
 
                 <br>
 
@@ -100,7 +101,7 @@
                 
 
                 </form>
-
+            
                 <br>
 
             </ng-template>
@@ -146,9 +147,9 @@
                         <i class="material-icons"> navigate_before </i> 
                         Précédent
                     </button>
-                    <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" (click)="onMapping(syntheseForm.value)"> 
+                    <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!this.syntheseForm.valid" (click)="onMapping(syntheseForm.value)"> 
+                        Suivant
                         <i class="material-icons"> navigate_next </i> 
-                        Valider
                     </button>
                 </div>
 
@@ -176,13 +177,13 @@
                 <br>
 
                 <div class="d-flex flex-row justify-content-between">
-                        <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"> 
+                        <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between" (click)="tabset.select('field-mapping')"> 
                             <i class="material-icons"> navigate_before </i> 
                             Précédent
                         </button>
-                        <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"> 
+                        <button (click)="onFinalStep()" class="btn btn-success box-shadow d-flex justify-content-center align-content-between"> 
+                            Suivant
                             <i class="material-icons"> navigate_next </i> 
-                            Valider
                         </button>
                     </div>
                 <br>
@@ -199,16 +200,24 @@
             <ng-template ngbTabContent>
                 
             <br>
-
             <h4> TERMINER L'IMPORT </h4>
             <br>
 
+            <div *ngIf="!impatient">
+            Preview des données avant import dans la synthèse
+            </div>
+            <div *ngIf="impatient">
+                ALLONS, NE SOYEZ PAS TROP IMPATIENT !
+            </div>
+
+            <br>
+
             <div class="d-flex flex-row justify-content-between">
-                <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"> 
+                <button (click)="tabset.select('content-mapping')" class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"> 
                     <i class="material-icons"> navigate_before </i> 
                     Précédent
                 </button> 
-                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"> 
+                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" (click)="onFinalImport()"> 
                     <i class="material-icons"> done </i> 
                     Importer les données dans Geonature
                 </button>                  
@@ -223,9 +232,13 @@
 
 
     <br>
+    <footer>
 
     <div class="d-flex flex-row justify-content-between" id="bottomButtons">
-    <button type="button" id="cancelImport" (click)="cancelImport()" class="btn btn-danger box-shadow btn-sm">Annuler l'import</button>
-    <button *ngIf="isUploaded" type="button" id="importListPage" (click)="onImportList()" class="btn btn-secondary box-shadow btn-sm">Enregistrer et quitter</button>
+        <button type="button" id="cancelImport" (click)="cancelImport()" class="btn btn-danger box-shadow btn-sm">Annuler l'import</button>
+        <button *ngIf="!isStep1" type="button" id="importListPage" (click)="onImportList()" class="btn btn-secondary box-shadow btn-sm">Enregistrer et quitter</button>
     </div>
+
+    </footer>
+
 </div>
