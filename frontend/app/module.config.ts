@@ -1,66 +1,82 @@
 export const ModuleConfig = {
-    "ARCHIVES_SCHEMA_NAME": "gn_import_archives",
-    "ID_MODULE": 13,
-    "LIST_COLUMNS_FRONTEND": [
-     {
-      "max_width": 50,
-      "name": "Id",
-      "prop": "id_import"
-     },
-     {
-      "max_width": 400,
-      "name": "JDD",
-      "prop": "dataset_name"
-     },
-     {
-        "max_width": 200,
-        "name": "Nb de taxons",
-        "prop": "taxa_count"
-     },
-     {
-        "max_width": 200,
-        "name": "Nb de données",
-        "prop": "import_count"
-     }
-    ],
-    "MODULE_CODE": "IMPORT",
-    "MODULE_URL": "import",
-    "SRID":[
-       {
-         "name":"WGS84",
-         "code":4326
-       },
-       {
-         "name":"Lambert93",
-         "code":2154
-       }
-     ],
-     "ENCODAGE":[
-       "UTF-8"
-     ],
-     "SEPARATOR":[
-        {
-          "name":"virgule (,)",
-          "code":","
-        },
-        {
-          "name":"tabulation",
-          "code":"\t"
-        },
-        {
-          "name":"point-virgule (;)",
-          "code":";"
-        },
-        {
-          "name":"espace",
-          "code":" "
-        }
-      ],
-     "PREFIX":"gn_",
-     "UPLOAD_DIRECTORY":"upload",
-     "MAX_FILE_SIZE":50,
-     "ALLOWED_EXTENSIONS": [
-        '.csv', 
-        '.json'
-     ]
-   }
+ "ALLOWED_EXTENSIONS": [
+  ".csv",
+  ".json"
+ ],
+ "ARCHIVES_SCHEMA_NAME": "gn_import_archives",
+ "ENCODAGE": [
+  "UTF-8"
+ ],
+ "EXCLUDED_SYNTHESE_FIELDS_FRONT": [
+  "id_synthese",
+  "id_source",
+  "id_module",
+  "id_dataset",
+  "the_geom_4326",
+  "the_geom_point",
+  "the_geom_local",
+  "last_action"
+ ],
+ "ID_MODULE": 15,
+ "IMPORTS_SCHEMA_NAME": "gn_imports",
+ "LIST_COLUMNS_FRONTEND": [
+  {
+   "max_width": 50,
+   "name": "Id",
+   "prop": "id_import"
+  },
+  {
+   "max_width": 400,
+   "name": "JDD",
+   "prop": "import_table"
+  },
+  {
+   "max_width": 200,
+   "name": "Nb de taxons",
+   "prop": "taxa_count"
+  },
+  {
+   "max_width": 200,
+   "name": "Nb de donn\u00e9es",
+   "prop": "import_count"
+  }
+ ],
+ "MAX_FILE_SIZE": 50,
+ "MODULE_CODE": "IMPORT",
+ "MODULE_URL": "import",
+ "NOT_NULLABLE_SYNTHESE_FIELDS": [
+  "cd_nom",
+  "nom_cite",
+  "date_min"
+ ],
+ "PREFIX": "gn_",
+ "SEPARATOR": [
+  {
+   "code": ",",
+   "name": "virgule (,)"
+  },
+  {
+   "code": "\t",
+   "name": "tabulation"
+  },
+  {
+   "code": ";",
+   "name": "point-virgule (;)"
+  },
+  {
+   "code": " ",
+   "name": "espace"
+  }
+ ],
+ "SRID": [
+  {
+   "code": 4326,
+   "name": "WGS84"
+  },
+  {
+   "code": 2154,
+   "name": "Lambert93"
+  }
+ ],
+ "UPLOAD_DIRECTORY": "upload"
+}

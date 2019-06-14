@@ -30,7 +30,7 @@ ENCODAGE = [
 
 SEPARATOR = [
     {"name":"virgule (,)", "code":","},
-    {"name":"tabulation", "code":"/n"},
+    {"name":"tabulation", "code":"\t"},
     {"name":"point-virgule (;)", "code":";"},
     {"name":"espace", "code":" "}
 ]
@@ -53,6 +53,7 @@ class GnModuleSchemaConf(Schema):
       IMPORTS_SCHEMA_NAME = fields.String(missing=IMPORTS_SCHEMA_NAME)
       PREFIX = fields.String(missing=PREFIX)
       SRID = fields.List(fields.Dict, missing=SRID)
+      SEPARATOR = fields.List(fields.Dict, missing=SEPARATOR)
       ENCODAGE = fields.List(fields.String, missing=ENCODAGE)
       MAX_FILE_SIZE = fields.Integer(missing=MAX_FILE_SIZE)
       ALLOWED_EXTENSIONS = fields.List(fields.String, missing=ALLOWED_EXTENSIONS)

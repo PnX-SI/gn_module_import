@@ -10,22 +10,26 @@ table {
     width: 100%;
     border-collapse: collapse;
     color: black;
+    background-color: rgb(241, 241, 241);
 }
 
 th.Code {
-    width: 30%;
+    width:15%;
+}
+th.Message {
+    width:40%;
 }
 
 td,th {
-    border-bottom: 1px solid black;
+    border-bottom: 0.1em solid black;
     border-top: 1px solid black;
     border-collapse: collapse;
     text-align: left;
-    padding: 0px;
+    padding: 5px;
   }
 
 tr:nth-child(even) {
-    background: #dddddddd !important;
+    background: #e0e0e0dd !important;
 }
 
 .spinner {

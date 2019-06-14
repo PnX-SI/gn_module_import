@@ -254,6 +254,7 @@ def post_user_file(info_role):
         PREFIX = blueprint.config['PREFIX']
         ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        
 
         """
         SAVE USER FILE IN UPLOAD DIRECTORY
@@ -352,6 +353,9 @@ def post_user_file(info_role):
 
         ## get/set table and column names
         separator = metadata['separator']
+        print('separator:')
+        print(separator)
+        print('fin')
         archives_table_name = cleaned_file_name
         imports_table_name = set_imports_table_name(cleaned_file_name)
 
