@@ -183,7 +183,9 @@ export class ImportProcessComponent implements OnInit {
           this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
         } else {
           // show error message if other server error
-          this.toastr.error(error.error.message);
+          this.isUserError = true;
+            this.userErrors = error.error;
+            console.log(this.userErrors);
         }
       },
       () => {

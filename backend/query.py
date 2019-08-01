@@ -188,9 +188,9 @@ def delete_tables(id, archives_schema, imports_schema):
         for table_name in table_names_list:
             try:
                 if int(table_name.split('_')[-1]) == id:
-                    imports_table_name = set_imports_table_name(table_name)
+                    #imports_table_name = set_imports_table_name(table_name)
                     DB.session.execute("DROP TABLE {}".format(get_full_table_name(archives_schema,table_name)))
-                    DB.session.execute("DROP TABLE {}".format(get_full_table_name(imports_schema,imports_table_name)))
+                    #DB.session.execute("DROP TABLE {}".format(get_full_table_name(imports_schema,imports_table_name)))
             except ValueError:
                 pass
 

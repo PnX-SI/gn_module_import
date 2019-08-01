@@ -31,11 +31,14 @@ import sqlalchemy
 from sqlalchemy import func, text, select, update,create_engine, event
 from sqlalchemy.sql.elements import quoted_name
 from sqlalchemy.sql import column
+
 from geonature.utils.utilssqlalchemy import json_resp
 
 from geonature.utils.env import DB
 
 from psycopg2 import sql
+from psycopg2.extensions import QuotedString
+
 
 import pdb
 
@@ -378,11 +381,11 @@ def post_user_file(info_role):
         ## get/set table and column names
         separator = metadata['separator']
         archives_table_name = cleaned_file_name
-        imports_table_name = set_imports_table_name(cleaned_file_name)
+        #imports_table_name = set_imports_table_name(cleaned_file_name)
 
         # set schema.table names
         archives_full_name = get_full_table_name(ARCHIVES_SCHEMA_NAME, archives_table_name)
-        imports_full_name = get_full_table_name(IMPORTS_SCHEMA_NAME, imports_table_name)
+        #imports_full_name = get_full_table_name(IMPORTS_SCHEMA_NAME, imports_table_name)
 
         # pk name to include (because copy_from method requires a primary_key)
         pk_name = "".join([PREFIX, 'pk'])
@@ -392,7 +395,6 @@ def post_user_file(info_role):
 
         # check for reserved sql word in column names
         column_check = check_sql_words(columns)
-
         if len(column_check) > 0:
             forbidden_names = [report['column_names'][position] for position in column_check]
             errors = []
@@ -416,13 +418,13 @@ def post_user_file(info_role):
         ## create user table classes (1 for gn_import_archives schema, 1 for gn_imports schema) corresponding to the user file structure (csv)
         user_class_gn_import_archives = generate_user_table_class(ARCHIVES_SCHEMA_NAME, archives_table_name,\
                                                                       pk_name, columns, id_import, schema_type='archives')
-        user_class_gn_imports = generate_user_table_class(IMPORTS_SCHEMA_NAME, imports_table_name,\
-                                                                      pk_name, columns, id_import, schema_type='gn_imports')
+        #user_class_gn_imports = generate_user_table_class(IMPORTS_SCHEMA_NAME, imports_table_name,\
+        #                                                              pk_name, columns, id_import, schema_type='gn_imports')
 
         ## create 2 empty tables in geonature db (in gn_import_archives and gn_imports schemas)
         engine = DB.engine
         user_class_gn_import_archives.__table__.create(bind=engine, checkfirst=True)
-        user_class_gn_imports.__table__.create(bind=engine, checkfirst=True)
+        #user_class_gn_imports.__table__.create(bind=engine, checkfirst=True)
 
         ## fill the user table (copy_from function is equivalent to COPY function of postgresql)
         conn = engine.raw_connection()
@@ -432,9 +434,11 @@ def post_user_file(info_role):
             next(f)
             cur.copy_from(f, archives_full_name, sep=separator, columns=columns)
 
+        """
         with open(full_path, 'r') as f:
             next(f)
             cur.copy_from(f, imports_full_name, sep=separator, columns=columns)
+        """
 
         conn.commit()
         conn.close()
@@ -499,110 +503,101 @@ def post_user_file(info_role):
 @json_resp
 def postMapping(info_role, import_id):
     try:
+        # set table names and index col
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
         PREFIX = blueprint.config['PREFIX']
         index_col = ''.join([PREFIX,'pk'])
+        archives_table_name = get_import_table_name(import_id)
+        imports_table_name = set_imports_table_name(archives_table_name)
+        imports_full_table_name = get_full_table_name(IMPORTS_SCHEMA_NAME,imports_table_name)
 
-        data = dict(request.get_json())
-
-        # get non empty synthese fields
-        #selected_columns = {key: value for key, value in data.items() if value}
-        selected_columns = {key:value for key, value in data.items() if value}
-        selected_columns.update({'gn_is_valid':'gn_is_valid'})
-        cols = ','.join(selected_columns.values())
-
-
-        # get import table name
-        table_name = set_imports_table_name(get_import_table_name(import_id))
-        full_table_name = get_full_table_name(IMPORTS_SCHEMA_NAME,table_name)
-
-        # from postgresql table to pandas dataframe
-        engine = DB.engine
-        #conn = engine.raw_connection()
-
-
-        # EXTRACT
+        # EXTRACT (from postgresql table to dask dataframe)
 
         print("start load table data in df")
         deb = datetime.datetime.now()
         # create empty dataframe as model for importing data from sql table to dask dataframe (for meta argument in read_sql_table method)
-        column_names = get_table_info(table_name,'column_name')
-        #dict_names = { i : ['object'] for i in column_names }
-
+        column_names = get_table_info(archives_table_name,'column_name')
         empty_df = pd.DataFrame(columns=column_names,dtype='object')
-        #empty_df = pd.DataFrame(dict_names).set_index(index_col,drop=False)
-        empty_df['gn_pk'] = pd.to_numeric(empty_df['gn_pk'],errors='coerce')
-        empty_df['gn_is_valid'] = empty_df['gn_is_valid'].astype('bool')
-
-        #empty_df = empty_df.set_index(empty_df['gn_pk'], drop=False)
-        #empty_df.index_col
-
-        index_col = sqlalchemy.sql.column("gn_pk").label("ID")
-        #dict_names['gn_pk'] = 'int64'
+        empty_df[index_col] = pd.to_numeric(empty_df[index_col],errors='coerce')
 
         # get number of cores to set npartitions:
         ncores = psutil.cpu_count(logical=False)
-
-        # create dataframe
-        df = dd.read_sql_table(table=table_name, index_col=index_col, meta=empty_df, npartitions=ncores, uri=str(DB.engine.url), schema=IMPORTS_SCHEMA_NAME, bytes_per_chunk=100000000)
-        # tester avec taxref pour tester les chunksizes
+        index_dask = sqlalchemy.sql.column(index_col).label("gn_id")
+        df = dd.read_sql_table(table=archives_table_name, index_col=index_dask, meta=empty_df, npartitions=ncores, uri=str(DB.engine.url), schema=ARCHIVES_SCHEMA_NAME, bytes_per_chunk=100000)
         print("end load table data in df")
         fin = datetime.datetime.now()
         perf = fin-deb
         print('load table data in df: {} secondes'.format(perf))
-        df2 = df.compute()
+
+        # create df2 containing only selected columns + gn_is_valid + gn_invalid_reason:
+        data = dict(request.get_json())
+
+        # get non empty synthese fields
+        selected_columns = {key:value for key, value in data.items() if value}
+        #selected_columns.update({'gn_is_valid':'gn_is_valid'})
+        selected_columns.update({index_col:index_col})
+        #cols = ','.join(selected_columns.values())
+
+        df2 = df.loc[:,[*list(selected_columns.values())]]
+        del(df)
+        gn_is_valid = False
+        df2['gn_is_valid'] = gn_is_valid
+        df2['gn_invalid_reason'] = ''
 
 
-        # TRANSFORM
-
-        # data wrangling
-        """
+        # TRANSFORM (data wrangling with Dask dataframe)
+        
         print("start data wrangling")
         deb = datetime.datetime.now()
-        df['nom_scientifique'] = df['nom_scientifique'].apply(lambda x: __test(x))
+        df2['nom_scientifique'] = df2['nom_scientifique'].apply(lambda x: __test(x))
         fin = datetime.datetime.now()
         perf = fin-deb
         print("end data wrangling")
         print('data wrangling: {} secondes'.format(perf))
-        """
+        
 
-
-
-        # LOAD
+        # LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
 
         # df to sql avec d6tstack avec dask delayed
         # create engine url for d6tstack:
-
-        str_engine = "postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver,engine.url.username,'monpassachanger',engine.url.host,engine.url.port,engine.url.database)
-        my_engine = create_engine("postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver,engine.url.username,'monpassachanger',engine.url.host,engine.url.port,engine.url.database))
+        engine = DB.engine
+        str_engine = "postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver,engine.url.username,engine.url.password,engine.url.host,engine.url.port,engine.url.database)
+        my_engine = create_engine("postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver,engine.url.username,engine.url.password,engine.url.host,engine.url.port,engine.url.database))
         print("start convert df dask to pandas df")
         deb = datetime.datetime.now()
+       
 
-        
-        DB.session.execute("DELETE FROM {};".format(full_table_name))
-        #DB.session.commit()
-        #DB.session.close()
-
-        df2 = df.compute()
-        df2 = df2.loc[:1]
-        #df2 = df.compute()
-        #df2.to_sql(table_name, engine, if_exists="append", index=False, schema=IMPORTS_SCHEMA_NAME, method="multi", index_label='index_col')
+        #d6tstack.utils.pd_to_psql(df.compute(),str_engine,imports_table_name,schema_name=IMPORTS_SCHEMA_NAME,if_exists='append',sep='\t')
         dto_sql = dask.delayed(d6tstack.utils.pd_to_psql)
-        out = [dto_sql(df, str_engine, table_name,schema_name=IMPORTS_SCHEMA_NAME,if_exists='append',sep='\t') for d in df.to_delayed()]
-        
-        DB.session.commit()
+        [dask.compute(dto_sql(d,str(my_engine.url),imports_table_name,schema_name=IMPORTS_SCHEMA_NAME,if_exists='append',sep='\t')) for d in df2.to_delayed()]
 
-        dask.compute(*out)
+        del df2
 
+        # prendre seulement les colonnes : ok
+        # mettre gn_pk en primary_key : ok
+        # verif que table entierement exportee : ok
+        # en cas d'echec : ok pour doublons si on recharge 2x la même table
+        # suppression si retour
+        # verifier memoire sur tres gros fichiers
+
+        DB.session.execute("ALTER TABLE ONLY {} ADD CONSTRAINT pk_gn_imports_{} PRIMARY KEY ({});".format(imports_full_table_name,imports_table_name,'gn_pk'))
         fin = datetime.datetime.now()
         perf = fin-deb
         print("end convert dask df to pandas df")
         print('convert df dask to pandas df: {} secondes'.format(perf))
-        #DB.session.close()
+        DB.session.commit()
+        DB.session.close()
+
+        # check entire df is loaded :
+        n_original_rows = DB.session.execute("SELECT source_count FROM gn_imports.t_imports WHERE id_import=198;").fetchone()[0]
+        n_loaded_rows = DB.session.execute("SELECT count(*) FROM {}".format(imports_full_table_name)).fetchone()[0]
+        if n_original_rows != n_loaded_rows:
+            return 'INTERNAL SERVER ERROR ("postMapping() error"): lignes manquantes dans {} - refaire le matching'.format(imports_full_table_name), 500
 
         pdb.set_trace()
 
-
+        """
         # get synthese column names
         info_synth = get_table_info('synthese','type')
         print('info_synth : ')
@@ -634,11 +629,33 @@ def postMapping(info_role, import_id):
             for column, value in v.items():
                 print('{0}: {1}'.format(column, value))
         return data
+        """
+
+    except psycopg2.errors.UniqueViolation as e:
+        DB.session.rollback()
+        DB.session.execute("DROP TABLE {}".format(imports_full_table_name))
+        DB.session.commit()
+        raise
+        """
+        a corriger, erreur ne s'affiche pas
+        errors = []
+        errors.append({
+                'code': 'psycopg2.errors.UniqueViolation',
+                'message': 'Doublon - erreur serveur',
+                'message_data': e.diag.message_primary
+        })
+        return errors,500
+        """
     except Exception:
+        DB.session.rollback()
+        print('full table name :')
+        print(imports_full_table_name)
+        DB.session.execute("DROP TABLE {}".format(imports_full_table_name))
+        DB.session.commit()
         raise
         return 'INTERNAL SERVER ERROR ("postMapping() error"): contactez l\'administrateur du site', 500
+    
 
-        
 @blueprint.route('/syntheseInfo', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
