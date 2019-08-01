@@ -1,6 +1,8 @@
 from goodtables import validate
 
-from .user_file_errors import*
+from .goodtables_errors import*
+
+import pdb
 
 """
 Vérifications :
@@ -30,13 +32,13 @@ def check_user_file(full_path, row_limit=100000000):
         for error in report['tables'][0]['errors']:
             if 'No such file or directory' in error['message']:
                 # avoid printing original goodtable message error containing the user full_path (security purpose)
-                usererror = set_error(error['code'], 'No such file or directory', '')
-                errors.append(usererror)
+                user_error = set_error(error['code'], 'No such file or directory', '')
+                errors.append(user_error)
             else:
-                print(error['message'])
+                #print(error['message'])
                 # other goodtable errors :
-                usererror = set_error(error['code'], '', error['message'])
-                errors.append(usererror)
+                user_error = set_error(error['code'], '', error['message'])
+                errors.append(user_error)
 
     # if no rows :
     if report['tables'][0]['row-count'] == 0:

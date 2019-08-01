@@ -5,10 +5,13 @@
 from marshmallow import Schema, fields
 
 DEFAULT_LIST_COLUMN = [
-    {'prop': 'id_import', 'name': 'Id', 'max_width': 50},
-    {'prop': 'import_table', 'name': 'JDD', 'max_width': 400},
-    {'prop': 'taxa_count', 'name': 'Nb de taxons', 'max_width': 200},
-    {'prop': 'import_count', 'name': 'Nb de données', 'max_width': 200}
+    {'prop': 'id_import', 'name': 'Id', 'max_width': 50, 'show': True},
+    {'prop': 'format_source_file', 'name': 'File format', 'max_width': 50, 'show': False},
+    {'prop': 'dataset_name', 'name': 'JDD', 'max_width': 400, 'show': True},
+    {'prop': 'taxa_count', 'name': 'Nb de taxons', 'max_width': 200, 'show': True},
+    {'prop': 'import_count', 'name': 'Nb de donnees', 'max_width': 200, 'show': True},
+    {'prop': 'date_create_import', 'name': 'Debut import', 'max_width': 200, 'show': True},
+    {'prop': 'date_end_import', 'name': 'Fin import', 'max_width': 200, 'show': True}
 ]
 
 UPLOAD_DIRECTORY = "upload"
@@ -35,7 +38,7 @@ SEPARATOR = [
     {"name":"espace", "code":" "}
 ]
 
-MAX_FILE_SIZE = 50
+MAX_FILE_SIZE = 500
 
 ALLOWED_EXTENSIONS = [
     '.csv', 

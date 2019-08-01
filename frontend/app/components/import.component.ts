@@ -65,7 +65,7 @@ export class ImportComponent implements OnInit {
           // show error message if other server error
           this.toastr.error(error.error);
         }
-    },
+      },
       () => {
         console.log(this.importHistory);
       }

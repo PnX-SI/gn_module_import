@@ -172,7 +172,7 @@ export class ImportProcessComponent implements OnInit {
     console.log('soon');
     this.tabset.tabs._results[2].disabled = false;
     this.tabset.select('content-mapping');
-    /*
+    
     this._ds.postMapping(value, this.importId).subscribe(
       res => {
         this.mappingResponse = res as JSON;
@@ -190,7 +190,7 @@ export class ImportProcessComponent implements OnInit {
         console.log(this.mappingResponse);
       }
     );
-    */
+    
   }
 
 

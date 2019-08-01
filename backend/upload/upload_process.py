@@ -3,7 +3,25 @@ import pathlib
 from werkzeug.utils import secure_filename
 
 def upload(request, size_max, allowed_extensions, directory_name, module_url):
+    """ check and upload user data:
+        - check if user request is not empty
+        - check if user file name is lower than 100 characters
+        - check user file extension
+        - check if user file size is allowed
+        - if no error, uploads user file in the upload directory
 
+    Args:
+        - request (werkzeug.local.LocalProxy): http request posted by the user
+        - size_max (int): max size allowed for the user file
+        - allowed_extension (list(str)): list of file extensions allowed
+        - directory_name (str): name of the upload directory
+        - module_url (str)
+
+    Returns:
+        - (dict) : !!!!!
+
+
+    """
     if request.method == 'POST':
     
         if 'File' not in request.files:
@@ -17,7 +35,6 @@ def upload(request, size_max, allowed_extensions, directory_name, module_url):
             return {
                 'error':'empty'
             }
-
 
         # get file path
         upload_directory_path = directory_name

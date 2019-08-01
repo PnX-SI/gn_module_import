@@ -28,7 +28,7 @@ long_name = \
 
 max_size = \
 {
-    'code': 'Max name length',
+    'code': 'Max size',
     'message': 'La taille du fichier est trop importante',
     'message_data': ''
 }

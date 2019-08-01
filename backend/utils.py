@@ -1,45 +1,90 @@
 import unicodedata
 import re
-from .user_file_errors import digit_name
+from .goodtables_checks.goodtables_errors import digit_name
+from .reserved_sql_words import words
 import pdb
 
 def clean_string(my_string):
-    # white spaces : removed if located on the extremities of the string, otherwise replaced by '_'
+    """ Clean strings (file or column names) from user data:
+            - white spaces: removed if located on the extremities of the string, otherwise replaced by '_'
+            - remove special characters (not '_')
+            - decode in utf-8
+            - remove uppercases
+
+    Args:
+        my_string (str): string to clean
+
+    Returns:
+        my_string (str): cleaned string
+
+    """
     my_string = my_string.strip().replace(' ', '_')
-    # remove special characters (not '_')
     my_string = re.sub('[^A-Za-z0-9_]+', '', my_string)
-    # decode in utf-8
     my_string = unicodedata.normalize('NFKD', my_string).encode('ASCII', 'ignore').decode('utf-8')
-    # remove uppercases
     my_string = my_string.lower()
     return my_string
 
 
 def clean_file_name(my_string, extension, id_import):
+    """ Clean user file name:
+            - remove extension
+            - remove first characters if digit (return an error if the full name is made of digits)
+            - clean name with clean_string function
+            - add id_import suffix
+
+    Args:
+        - my_string (str): file name to clean
+        - extension (str): file name extension
+        - id_import (int): import id to add as suffix
+
+    Returns:
+        - dicts {
+            'clean_name' (str): cleaned file name
+            'errors': if error(s), returns error(s) defined in user_file_errors.py
+    """
     errors = []
-    # remove extension
     my_string = my_string.replace(extension, '')
-    # remove first characters if digit
     while my_string[0].isdigit():
         if len(my_string) == 1:
             errors.append(digit_name)
             return {
-                'errors':errors
-                }
+               'errors': errors
+            }
         my_string = re.sub(r'^(\D*)\d', r'\1', my_string)
-    # clean name
     my_string = clean_string(my_string)
-    # add id_import suffix
     my_string = "_".join([my_string, str(id_import)])
     return {
-        'clean_name':my_string,
-        'errors':errors
+        'clean_name': my_string,
+        'errors': errors
     }
 
 
+def check_sql_words(my_string_list):
+    forbidden_word_positions = []
+    for my_string in my_string_list:
+        if my_string.upper() in words:
+            forbidden_word_positions.append(my_string_list.index(my_string))
+    return forbidden_word_positions
+
+
 def get_full_table_name(schema_name, table_name):
+    """ Get full table name (schema_name.table_name)
+
+    Args:
+        - schema_name (str)
+        - table_name (str)
+    Returns:
+        - full name (str)
+    """
     return '.'.join([schema_name, table_name])
 
 
 def set_imports_table_name(table_name):
+    """ Set imports table name (prefixed with 'i_')
+
+    Args:
+        - table_name (str)
+    Returns:
+        - table name with 'i_' prefix (str)
+    """
     return ''.join(['i_', table_name])

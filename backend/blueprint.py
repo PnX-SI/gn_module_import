@@ -3,21 +3,34 @@ from flask import (
     current_app,
     request
 )
-
+from dask.distributed import Client
 from werkzeug.utils import secure_filename
 
 import os
 import pathlib
 import psycopg2
+import psutil
+import pandas as pd
+import pandas.io.sql as psql
+import numpy as np
+
+import threading
+
+import io
+import tempfile
+import dask.dataframe as dd
+import dask
+import d6tstack
 
 
 import ast
 
 import datetime
 
-from sqlalchemy import func, text, select, update,create_engine
+import sqlalchemy
+from sqlalchemy import func, text, select, update,create_engine, event
 from sqlalchemy.sql.elements import quoted_name
-
+from sqlalchemy.sql import column
 from geonature.utils.utilssqlalchemy import json_resp
 
 from geonature.utils.env import DB
@@ -25,6 +38,8 @@ from geonature.utils.env import DB
 from psycopg2 import sql
 
 import pdb
+
+from .transform import __test
 
 from geonature.core.gn_meta.models import TDatasets
 
@@ -50,24 +65,24 @@ from .models import (
 )
 
 from .query import (
-    get_synthese_info,
-    delete_tables_if_existing,
+    get_table_info,
     get_table_list,
     test_user_dataset,
     delete_import_CorImportArchives,
     delete_import_CorRoleImport,
     delete_import_TImports,
-    delete_tables
+    delete_tables,
+    get_import_table_name
 )
 
 from .utils import*
 # ameliorer prise en charge des erreurs
 
-from .upload import upload
+from .upload.upload_process import upload
 
-from .upload_errors import*
+from .upload.upload_errors import*
 
-from .check_user_file import check_user_file
+from .goodtables_checks.check_user_file import check_user_file
 
 blueprint = Blueprint('import', __name__)
 
@@ -84,12 +99,17 @@ def get_import_list(info_role):
         results = DB.session.query(TImports)\
                     .order_by(TImports.id_import)\
                     .filter(TImports.step >= 2)
+        nrows = DB.session.query(TImports).count()
         history = []
-        if not results:
+        if not results or nrows == 0:
             return {
                 "empty": True
             }, 200
         for r in results:
+            if r.date_end_import is None:
+                date_end_import = 'En cours'
+            else:
+                date_end_import = r.date_end_import
             prop = {
                 "id_import": r.id_import,
                 "format_source_file": r.format_source_file,
@@ -97,9 +117,9 @@ def get_import_list(info_role):
                 "import_table": r.import_table,
                 "id_dataset": r.id_dataset,
                 "id_mapping": r.id_mapping,
-                "date_create_import": str(r.date_create_import),
-                "date_update_import": str(r.date_update_import),
-                "date_end_import": str(r.date_end_import),
+                "date_create_import": str(r.date_create_import),#recupérer seulement date et pas heure
+                "date_update_import": str(r.date_update_import),#recupérer seulement date et pas heure
+                "date_end_import": str(date_end_import),
                 "source_count": r.source_count,
                 "import_count": r.import_count,
                 "taxa_count": r.taxa_count,
@@ -254,14 +274,14 @@ def post_user_file(info_role):
         PREFIX = blueprint.config['PREFIX']
         ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
-        
 
         """
-        SAVE USER FILE IN UPLOAD DIRECTORY
+        SAVES USER FILE IN UPLOAD DIRECTORY
         """
 
         uploaded_file = upload(request, MAX_FILE_SIZE, ALLOWED_EXTENSIONS, DIRECTORY_NAME, MODULE_URL)
 
+        # checks if error in user file or user http request:
         if uploaded_file['error'] == 'no_file':
             errors.append(no_file)
         if uploaded_file['error'] == 'empty':
@@ -274,6 +294,7 @@ def post_user_file(info_role):
             errors.append(max_size)  
         if uploaded_file['error'] == 'unknown':
             errors.append(unkown)        
+        
         if uploaded_file['error'] != '':
             return errors,400
 
@@ -282,16 +303,17 @@ def post_user_file(info_role):
         is_file_saved = uploaded_file['is_uploaded']
 
         """
-        CHECK USER FILE
+        CHECKS USER FILE
         """
 
         report = check_user_file(full_path, 100000000)
 
+        # reports user file errors:
         if len(report['errors']) > 0:
             return report['errors'],400
 
         """
-        CREATE CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
+        CREATES CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
         """
         
         # get form data
@@ -350,12 +372,11 @@ def post_user_file(info_role):
             # if user file name is not valid, an error is returned
             return file_name_cleaner['errors'],400
         cleaned_file_name = file_name_cleaner['clean_name']
+        print('cleaned_file_name:')
+        print(cleaned_file_name)
 
         ## get/set table and column names
         separator = metadata['separator']
-        print('separator:')
-        print(separator)
-        print('fin')
         archives_table_name = cleaned_file_name
         imports_table_name = set_imports_table_name(cleaned_file_name)
 
@@ -369,8 +390,23 @@ def post_user_file(info_role):
         # clean column names
         columns = [clean_string(x) for x in report['column_names']]
 
+        # check for reserved sql word in column names
+        column_check = check_sql_words(columns)
+
+        if len(column_check) > 0:
+            forbidden_names = [report['column_names'][position] for position in column_check]
+            errors = []
+            error = {
+                'code': 'forbidden_colum_names',
+                'message': 'Vous ne pouvez pas utiliser certains noms de colonnes car ils sont reservés à sql',
+                'message_data': forbidden_names
+            }
+            errors.append(error)
+            return errors,400
+
+
         """
-        CREATE TABLES CONTAINING RAW USER DATA IN GEONATURE DB
+        CREATES TABLES CONTAINING RAW USER DATA IN GEONATURE DB
         """
 
         ## if existing, delete all tables already uploaded which have the same id_import suffix
@@ -405,7 +441,7 @@ def post_user_file(info_role):
         cur.close()
 
         """
-        FILL CorImportArchives AND UPDATE TImports
+        FILLS CorImportArchives AND UPDATES TImports
         """
         
         delete_import_CorImportArchives(id_import)
@@ -449,7 +485,6 @@ def post_user_file(info_role):
         if is_id_import:
             delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
         DB.session.commit()
-        raise
         return 'INTERNAL SERVER ERROR ("post_user_file() error"): contactez l\'administrateur du site', 500
 
     finally:
@@ -464,13 +499,119 @@ def post_user_file(info_role):
 @json_resp
 def postMapping(info_role, import_id):
     try:
-        # in progress, just started
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        PREFIX = blueprint.config['PREFIX']
+        index_col = ''.join([PREFIX,'pk'])
+
         data = dict(request.get_json())
 
-        #print(user_class_gn_imports)
+        # get non empty synthese fields
+        #selected_columns = {key: value for key, value in data.items() if value}
+        selected_columns = {key:value for key, value in data.items() if value}
+        selected_columns.update({'gn_is_valid':'gn_is_valid'})
+        cols = ','.join(selected_columns.values())
+
+
+        # get import table name
+        table_name = set_imports_table_name(get_import_table_name(import_id))
+        full_table_name = get_full_table_name(IMPORTS_SCHEMA_NAME,table_name)
+
+        # from postgresql table to pandas dataframe
+        engine = DB.engine
+        #conn = engine.raw_connection()
+
+
+        # EXTRACT
+
+        print("start load table data in df")
+        deb = datetime.datetime.now()
+        # create empty dataframe as model for importing data from sql table to dask dataframe (for meta argument in read_sql_table method)
+        column_names = get_table_info(table_name,'column_name')
+        #dict_names = { i : ['object'] for i in column_names }
+
+        empty_df = pd.DataFrame(columns=column_names,dtype='object')
+        #empty_df = pd.DataFrame(dict_names).set_index(index_col,drop=False)
+        empty_df['gn_pk'] = pd.to_numeric(empty_df['gn_pk'],errors='coerce')
+        empty_df['gn_is_valid'] = empty_df['gn_is_valid'].astype('bool')
+
+        #empty_df = empty_df.set_index(empty_df['gn_pk'], drop=False)
+        #empty_df.index_col
+
+        index_col = sqlalchemy.sql.column("gn_pk").label("ID")
+        #dict_names['gn_pk'] = 'int64'
+
+        # get number of cores to set npartitions:
+        ncores = psutil.cpu_count(logical=False)
+
+        # create dataframe
+        df = dd.read_sql_table(table=table_name, index_col=index_col, meta=empty_df, npartitions=ncores, uri=str(DB.engine.url), schema=IMPORTS_SCHEMA_NAME, bytes_per_chunk=100000000)
+        # tester avec taxref pour tester les chunksizes
+        print("end load table data in df")
+        fin = datetime.datetime.now()
+        perf = fin-deb
+        print('load table data in df: {} secondes'.format(perf))
+        df2 = df.compute()
+
+
+        # TRANSFORM
+
+        # data wrangling
+        """
+        print("start data wrangling")
+        deb = datetime.datetime.now()
+        df['nom_scientifique'] = df['nom_scientifique'].apply(lambda x: __test(x))
+        fin = datetime.datetime.now()
+        perf = fin-deb
+        print("end data wrangling")
+        print('data wrangling: {} secondes'.format(perf))
+        """
+
+
+
+        # LOAD
+
+        # df to sql avec d6tstack avec dask delayed
+        # create engine url for d6tstack:
+
+        str_engine = "postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver,engine.url.username,'monpassachanger',engine.url.host,engine.url.port,engine.url.database)
+        my_engine = create_engine("postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver,engine.url.username,'monpassachanger',engine.url.host,engine.url.port,engine.url.database))
+        print("start convert df dask to pandas df")
+        deb = datetime.datetime.now()
+
         
+        DB.session.execute("DELETE FROM {};".format(full_table_name))
+        #DB.session.commit()
+        #DB.session.close()
+
+        df2 = df.compute()
+        df2 = df2.loc[:1]
+        #df2 = df.compute()
+        #df2.to_sql(table_name, engine, if_exists="append", index=False, schema=IMPORTS_SCHEMA_NAME, method="multi", index_label='index_col')
+        dto_sql = dask.delayed(d6tstack.utils.pd_to_psql)
+        out = [dto_sql(df, str_engine, table_name,schema_name=IMPORTS_SCHEMA_NAME,if_exists='append',sep='\t') for d in df.to_delayed()]
+        
+        DB.session.commit()
+
+        dask.compute(*out)
+
+        fin = datetime.datetime.now()
+        perf = fin-deb
+        print("end convert dask df to pandas df")
+        print('convert df dask to pandas df: {} secondes'.format(perf))
+        #DB.session.close()
+
+        pdb.set_trace()
+
+
         # get synthese column names
-        #info_synth = get_synthese_info('column_name')
+        info_synth = get_table_info('synthese','type')
+        print('info_synth : ')
+        print(info_synth)
+        print(info_synth['id_source'])
+
+        #data wrangling
+        #push vers i_table en modifiant le type
+
         keys = [key for key in data]
         
         filled = []

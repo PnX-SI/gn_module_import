@@ -23,22 +23,44 @@ export const ModuleConfig = {
   {
    "max_width": 50,
    "name": "Id",
-   "prop": "id_import"
+   "prop": "id_import",
+   "show": true
+  },
+  {
+   "max_width": 50,
+   "name": "File format",
+   "prop": "format_source_file",
+   "show": false
   },
   {
    "max_width": 400,
    "name": "JDD",
-   "prop": "import_table"
+   "prop": "dataset_name",
+   "show": true
   },
   {
    "max_width": 200,
    "name": "Nb de taxons",
-   "prop": "taxa_count"
+   "prop": "taxa_count",
+   "show": true
   },
   {
    "max_width": 200,
-   "name": "Nb de donn\u00e9es",
-   "prop": "import_count"
+   "name": "Nb de donnees",
+   "prop": "import_count",
+   "show": true
+  },
+  {
+   "max_width": 200,
+   "name": "Debut import",
+   "prop": "date_create_import",
+   "show": true
+  },
+  {
+   "max_width": 200,
+   "name": "Fin import",
+   "prop": "date_end_import",
+   "show": true
   }
  ],
  "MAX_FILE_SIZE": 50,

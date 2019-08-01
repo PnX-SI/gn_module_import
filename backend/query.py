@@ -1,5 +1,7 @@
 from sqlalchemy.sql.elements import quoted_name
 
+from psycopg2.extensions import AsIs,QuotedString
+
 from geonature.utils.env import DB
 
 from geonature.core.gn_synthese.models import (
@@ -23,23 +25,36 @@ from .utils import (
 )
 
 
-def get_synthese_info(info='all'):
-    synthese_info = DB.session.execute(\
-        "SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
-         FROM INFORMATION_SCHEMA.COLUMNS\
-         WHERE table_name = 'synthese';"\
-    )
+def get_table_info(table_name,info='all'):
+    try:
+        table_info = DB.session.execute(\
+            "SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
+            FROM INFORMATION_SCHEMA.COLUMNS\
+            WHERE table_name = {};".format(QuotedString(table_name))\
+        )
 
-    if info == 'column_name':
-        data = []
-        for info in synthese_info:
-            data.append(info.column_name)
-        return data
+        if info == 'all':
+            return table_info
+
+        if info == 'type':
+            data = {}
+            for d in table_info:
+                data.update({d.column_name:d.data_type})
+            return data
+        
+        if info == 'column_name':
+            data = []
+            for d in table_info:
+                data.append(d.column_name)
+            return data
+    except Exception:
+        raise
     
-    if info == 'all':
-        return synthese_info
 
 
+
+
+"""
 def delete_tables_if_existing(schema_archive, schema_gnimports, archive_table, gnimport_table):
     engine = DB.engine
     archive_schema_table_name = get_full_table_name(schema_archive,archive_table)
@@ -53,15 +68,28 @@ def delete_tables_if_existing(schema_archive, schema_gnimports, archive_table, g
 
     if is_gn_imports_table_exist:
         DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
+"""
 
-def get_table_list():
+
+def get_table_list(schema_name):
+
+    """ List of table names from a schema.
+
+        Args:
+            schema_name (str) : name of the schema
+        
+        Returns:
+            table_names (List[str]) : list of table names in schema_name
+    """
+    
     try:
         table_names = DB.session.execute(\
             "SELECT table_name \
              FROM information_schema.tables \
-             WHERE table_schema='gn_import_archives'"
-        ) # remplacer par la variable archives_schema_name
+             WHERE table_schema={schema};".format(schema=QuotedString(schema_name))\
+        ) 
         table_names = [table.table_name for table in table_names]
+        print('table_names:')
         print(table_names)
         return table_names
     except Exception:
@@ -69,6 +97,17 @@ def get_table_list():
 
 
 def test_user_dataset(id_role, current_dataset_id):
+
+    """ Test if the dataset_id provided in the url path ("url/process/dataset_id") is allowed
+        (allowed = in the list of dataset_ids previously created by the user)
+
+        Args:
+            id_role (int) : id_role of the user
+            current_dataset_id (str?) : dataset_id provided in the url path
+        
+        Returns:
+            Boolean : True if allowed, False if not allowed
+    """
 
     results = DB.session.query(TDatasets)\
         .filter(TDatasets.id_dataset == Synthese.id_dataset)\
@@ -89,25 +128,62 @@ def test_user_dataset(id_role, current_dataset_id):
 
 
 def delete_import_CorImportArchives(id):
+
+    """ Delete an import from cor_import_archives table.
+
+        Args:
+            id (int) : import id to delete
+        Returns:
+            None
+
+    """
     DB.session.query(CorImportArchives)\
         .filter(CorImportArchives.id_import == id)\
         .delete()
 
 
 def delete_import_CorRoleImport(id):
+    """ Delete an import from cor_role_import table.
+
+        Args:
+            id (int) : import id to delete
+        Returns:
+            None
+
+    """
     DB.session.query(CorRoleImport)\
         .filter(CorRoleImport.id_import == id)\
         .delete()
 
 
 def delete_import_TImports(id):
+    """ Delete an import from t_imports table.
+
+    Args:
+        id (int) : import id to delete
+    Returns:
+        None
+
+    """
     DB.session.query(TImports)\
         .filter(TImports.id_import == id)\
         .delete()
 
 
 def delete_tables(id, archives_schema, imports_schema):
-    table_names_list = get_table_list()
+    """ Delete all the tables related to an id import in archives and imports schemas
+
+    Args:
+        id (int) : import id
+        archives_schema (str) : archives schema name
+        imports_schema (str) : imports schema name
+    Returns:
+        None
+
+    """   
+    table_names_list = get_table_list(archives_schema)
+    print('table_names_list')
+    print(table_names_list)
     if len(table_names_list) > 0:
         for table_name in table_names_list:
             try:
@@ -117,3 +193,15 @@ def delete_tables(id, archives_schema, imports_schema):
                     DB.session.execute("DROP TABLE {}".format(get_full_table_name(imports_schema,imports_table_name)))
             except ValueError:
                 pass
+
+
+def get_import_table_name(id_import):
+    
+    """ 
+    """
+
+    results = DB.session.query(TImports.import_table)\
+        .filter(TImports.id_import == id_import)\
+        .one()
+
+    return results.import_table

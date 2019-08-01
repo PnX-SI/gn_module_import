@@ -1,4 +1,18 @@
 def set_error(code ,message, message_data):
+    """ set a user data error as a dict:
+
+    Args: 
+        code (str): short message error
+        message (str): error
+        message_data (str) : error localisation in user data
+    Returns:
+        - (dict): {
+            - 'code' (str)
+            - 'message' (str)
+            - 'message_data' (str)
+        }
+        
+    """
     return {
         'code': code,
         'message': message,

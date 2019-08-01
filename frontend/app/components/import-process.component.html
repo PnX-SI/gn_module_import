@@ -15,17 +15,19 @@
 
                 <form [formGroup]="uploadForm" class="was-validated">
 
+                    <!-- File upload field -->
                     <div id="upload" class="form-group">
                     <div class="custom-file col-sm-5" id="upload_files">
                         <input class="custom-file-input" type=file (change)="onFileSelected($event)" id="selectedFile" name="file" required>
-                        <label class="custom-file-label" for="selectedFile">Choisissez votre fichier</label>
-                        {{fileName}}
+                        <label class="custom-file-label" for="selectedFile">{{fileName}}</label>
+                        <label *ngIf="!fileName" class="custom-file-label" for="selectedFile"> Choisissez votre fichier</label>
                     </div>
                     </div>
 
                     <p></p>
                     <br>
 
+                    <!-- Encoding field -->
                     <div class="col-auto form-group row">
                         <label class="col-sm-3 col-form-label" for="encodage"> Encodage de votre fichier </label>
                         <div class="col-sm-3">
@@ -36,6 +38,7 @@
                         </div>
                     </div>
 
+                    <!-- SRID field -->
                     <div class="col-auto form-group row">
                         <label class="col-sm-3 col-form-label" for="srid"> SRID de vos données géographiques </label>
                         <div class="col-sm-3">
@@ -46,6 +49,7 @@
                         </div>
                     </div>
 
+                    <!-- separator field -->
                     <div class="col-auto form-group row">
                         <label class="col-sm-3 col-form-label" for="srid"> Séparateur de votre fichier </label>
                         <div class="col-sm-3">
@@ -58,6 +62,7 @@
 
                     <br>
                     
+                    <!-- Navigation buttons -->
                     <div class="float-right">
                         <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!this.uploadForm.valid" (click)="onUpload(uploadForm.value)" id="validate">
                             Suivant
@@ -65,6 +70,7 @@
                         </button>
                     </div>
 
+                    <!-- Spinner -->
                     <div *ngIf="isUploading" class="spinner">
                         <mat-spinner class="upload-spinner" 
                             [color]="color"
@@ -75,6 +81,7 @@
 
                 <br>
 
+                <!-- Error list in table -->
                 <div id="errorList" *ngIf="isUserError">
 
                         <div> Attention, erreurs detectées dans le fichier uploadé : </div>
@@ -122,15 +129,19 @@
 
                 <form [formGroup]="syntheseForm" class="was-validated">             
 
+                    <!-- List of synthese fields -->
+
                     <div  *ngFor="let col of synColumnNames">
                         <div class="col-auto form-group row">
                             <label class="col-sm-3 col-form-label" for="{{col.column_name}}"> {{col.column_name}} </label>
                             <div class="col-sm-3">
-                            <select *ngIf="col.is_nullable == 'NO';else YES" class="custom-select mr-sm-2" id="{{col.column_name}}" formControlName="{{col.column_name}}" required>
+                            <select *ngIf="col.is_nullable == 'NO';else YES" class="custom-select mr-sm-2" id="{{col.column_name}}" placeholder="Open this select menu" formControlName="{{col.column_name}}" required>
+                                <option selected [value]=""> </option>
                                 <option *ngFor="let column of columns" [value]="column">{{column}}</option>
                             </select>
                             <ng-template #YES>
-                                <select class="custom-select mr-sm-2" id="{{col.column_name}}" formControlName="{{col.column_name}}">
+                                <select class="custom-select mr-sm-2" id="{{col.column_name}}" placeholder="Open this select menu" formControlName="{{col.column_name}}">
+                                    <option selected [value]=""> </option>
                                     <option *ngFor="let column of columns" [value]="column">{{column}}</option>
                                 </select>
                             </ng-template>
@@ -139,8 +150,9 @@
                         </div>
                     </div>
                 <br>
+            
                 
-                
+                <!-- Navigation buttons -->
 
                 <div class="d-flex flex-row justify-content-between">
                     <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between" (click)="tabset.select('upload')"> 
@@ -195,7 +207,7 @@
 
         <!-- STEP 4 -->
         
-        <ngb-tab id="final" title="4- Terminer" disabled="isStep4Disabled">
+        <ngb-tab id="final" title="4- Importer" disabled="isStep4Disabled">
 
             <ng-template ngbTabContent>
                 
