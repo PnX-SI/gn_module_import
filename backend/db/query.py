@@ -19,11 +19,12 @@ from .models import (
     generate_user_table_class
 )
 
-from .utils import (
+from ..utils.table_names import (
     get_full_table_name,
     set_imports_table_name
 )
 
+from .reserved_sql_words import words
 
 def get_table_info(table_name,info='all'):
     try:
@@ -89,8 +90,6 @@ def get_table_list(schema_name):
              WHERE table_schema={schema};".format(schema=QuotedString(schema_name))\
         ) 
         table_names = [table.table_name for table in table_names]
-        print('table_names:')
-        print(table_names)
         return table_names
     except Exception:
         raise
@@ -182,8 +181,6 @@ def delete_tables(id, archives_schema, imports_schema):
 
     """   
     table_names_list = get_table_list(archives_schema)
-    print('table_names_list')
-    print(table_names_list)
     if len(table_names_list) > 0:
         for table_name in table_names_list:
             try:
@@ -205,3 +202,11 @@ def get_import_table_name(id_import):
         .one()
 
     return results.import_table
+
+
+def check_sql_words(my_string_list):
+    forbidden_word_positions = []
+    for my_string in my_string_list:
+        if my_string.upper() in words:
+            forbidden_word_positions.append(my_string_list.index(my_string))
+    return forbidden_word_positions

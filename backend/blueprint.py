@@ -3,27 +3,30 @@ from flask import (
     current_app,
     request
 )
-from dask.distributed import Client
+
 from werkzeug.utils import secure_filename
 
 import os
+
 import pathlib
-import psycopg2
+
 import psutil
+
 import pandas as pd
-import pandas.io.sql as psql
+#import pandas.io.sql as psql
+
 import numpy as np
 
-import threading
+#import threading
 
-import io
-import tempfile
+#import io
+#import tempfile
 import dask.dataframe as dd
 import dask
 import d6tstack
 
 
-import ast
+#import ast
 
 import datetime
 
@@ -32,41 +35,32 @@ from sqlalchemy import func, text, select, update,create_engine, event
 from sqlalchemy.sql.elements import quoted_name
 from sqlalchemy.sql import column
 
-from geonature.utils.utilssqlalchemy import json_resp
-
-from geonature.utils.env import DB
-
+import psycopg2
 from psycopg2 import sql
 from psycopg2.extensions import QuotedString
 
-
-import pdb
-
-
+from geonature.utils.utilssqlalchemy import json_resp
+from geonature.utils.env import DB
 from geonature.core.gn_meta.models import TDatasets
-
 from geonature.core.gn_synthese.models import (
     Synthese,
     TSources,
     CorObserverSynthese
 )
-
 from geonature.core.gn_commons.models import BibTablesLocation
-
 from geonature.utils.env import DB
-
 from geonature.core.gn_permissions import decorators as permissions
 
 from pypnnomenclature.models import TNomenclatures
 
-from .models import (
+from .db.models import (
     TImports,
     CorRoleImport,
     CorImportArchives,
     generate_user_table_class
 )
 
-from .query import (
+from .db.query import (
     get_table_info,
     get_table_list,
     test_user_dataset,
@@ -74,23 +68,21 @@ from .query import (
     delete_import_CorRoleImport,
     delete_import_TImports,
     delete_tables,
-    get_import_table_name
+    get_import_table_name,
+    check_sql_words
 )
 
-from .utils import*
-# ameliorer prise en charge des erreurs
-
+from .utils.clean_names import*
+from .utils.table_names import*
 from .upload.upload_process import upload
-
 from .upload.upload_errors import*
-
 from .goodtables_checks.check_user_file import check_user_file
-
 from .transform.transform import __test
+
+import pdb
 
 
 blueprint = Blueprint('import', __name__)
-
 
 
 @blueprint.route('', methods=['GET'])
@@ -232,8 +224,12 @@ def cancel_import(info_role, import_id):
             imports_full_name = get_full_table_name('gn_imports', imports_table_name)
 
             # delete tables
+            engine = DB.engine
+            is_gn_imports_table_exist = engine.has_table(imports_table_name, schema=blueprint.config['IMPORTS_SCHEMA_NAME'])
+            if is_gn_imports_table_exist:
+                DB.session.execute("DROP TABLE {}".format(imports_full_name))
+
             DB.session.execute("DROP TABLE {}".format(archives_full_name))
-            DB.session.execute("DROP TABLE {}".format(imports_full_name))
 
         # delete metadata
         DB.session.query(TImports).filter(TImports.id_import == import_id).delete()
@@ -268,6 +264,7 @@ def post_user_file(info_role):
     """
 
     try:
+        #pdb.set_trace()
         is_file_saved = False
         is_id_import = False
         errors = []
@@ -455,7 +452,7 @@ def post_user_file(info_role):
         DB.session.query(TImports)\
             .filter(TImports.id_import==id_import)\
             .update({
-                TImports.import_table: cleaned_file_name,
+                TImports.import_table: archives_table_name,
                 TImports.step: 2,
                 TImports.id_dataset: int(metadata['datasetId']),
                 TImports.srid: int(metadata['srid']),
@@ -587,7 +584,7 @@ def postMapping(info_role, import_id):
         DB.session.close()
 
         # check entire df is loaded :
-        n_original_rows = DB.session.execute("SELECT source_count FROM gn_imports.t_imports WHERE id_import=198;").fetchone()[0]
+        n_original_rows = DB.session.execute("SELECT source_count FROM gn_imports.t_imports WHERE id_import={};".format(import_id)).fetchone()[0]
         n_loaded_rows = DB.session.execute("SELECT count(*) FROM {}".format(imports_full_table_name)).fetchone()[0]
         if n_original_rows != n_loaded_rows:
             return 'INTERNAL SERVER ERROR ("postMapping() error"): lignes manquantes dans {} - refaire le matching'.format(imports_full_table_name), 500
@@ -596,7 +593,6 @@ def postMapping(info_role, import_id):
         DB.session.close()
 
         pdb.set_trace()
-
 
         """
         # get synthese column names
@@ -634,8 +630,11 @@ def postMapping(info_role, import_id):
 
     except psycopg2.errors.UniqueViolation as e:
         DB.session.rollback()
-        DB.session.execute("DROP TABLE {}".format(imports_full_table_name))
-        DB.session.commit()
+        is_gn_imports_table_exist = engine.has_table(imports_table_name, schema=IMPORTS_SCHEMA_NAME)
+        print(is_gn_imports_table_exist)
+        if is_gn_imports_table_exist:
+            DB.session.execute("DROP TABLE {}".format(imports_full_table_name))
+            DB.session.commit()
         """
         a corriger, erreur ne s'affiche pas
         errors = []
@@ -653,8 +652,11 @@ def postMapping(info_role, import_id):
         DB.session.rollback()
         print('full table name :')
         print(imports_full_table_name)
-        DB.session.execute("DROP TABLE {}".format(imports_full_table_name))
-        DB.session.commit()
+        is_gn_imports_table_exist = engine.has_table(imports_table_name, schema=IMPORTS_SCHEMA_NAME)
+        print(is_gn_imports_table_exist)
+        if is_gn_imports_table_exist:
+            DB.session.execute("DROP TABLE {}".format(imports_full_table_name))
+            DB.session.commit()
         DB.session.close()
         raise
         return 'INTERNAL SERVER ERROR ("postMapping() error"): contactez l\'administrateur du site', 500
