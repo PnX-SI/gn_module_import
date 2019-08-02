@@ -42,7 +42,6 @@ from psycopg2.extensions import QuotedString
 
 import pdb
 
-from .transform import __test
 
 from geonature.core.gn_meta.models import TDatasets
 
@@ -86,6 +85,9 @@ from .upload.upload_process import upload
 from .upload.upload_errors import*
 
 from .goodtables_checks.check_user_file import check_user_file
+
+from .transform.transform import __test
+
 
 blueprint = Blueprint('import', __name__)
 
@@ -374,13 +376,10 @@ def post_user_file(info_role):
         if len(file_name_cleaner['errors']) > 0:
             # if user file name is not valid, an error is returned
             return file_name_cleaner['errors'],400
-        cleaned_file_name = file_name_cleaner['clean_name']
-        print('cleaned_file_name:')
-        print(cleaned_file_name)
 
         ## get/set table and column names
         separator = metadata['separator']
-        archives_table_name = cleaned_file_name
+        archives_table_name = file_name_cleaner['clean_name']
         #imports_table_name = set_imports_table_name(cleaned_file_name)
 
         # set schema.table names
@@ -512,6 +511,14 @@ def postMapping(info_role, import_id):
         imports_table_name = set_imports_table_name(archives_table_name)
         imports_full_table_name = get_full_table_name(IMPORTS_SCHEMA_NAME,imports_table_name)
 
+        # if imports table already exist : delete it
+        engine = DB.engine
+        is_gn_imports_table_exist = engine.has_table(imports_table_name, schema=IMPORTS_SCHEMA_NAME)
+        print(is_gn_imports_table_exist)
+        if is_gn_imports_table_exist:
+            DB.session.execute("DROP TABLE {}".format(imports_full_table_name))
+            DB.session.commit()
+
         # EXTRACT (from postgresql table to dask dataframe)
 
         print("start load table data in df")
@@ -540,7 +547,6 @@ def postMapping(info_role, import_id):
         #cols = ','.join(selected_columns.values())
 
         df2 = df.loc[:,[*list(selected_columns.values())]]
-        del(df)
         gn_is_valid = False
         df2['gn_is_valid'] = gn_is_valid
         df2['gn_invalid_reason'] = ''
@@ -548,6 +554,7 @@ def postMapping(info_role, import_id):
 
         # TRANSFORM (data wrangling with Dask dataframe)
         
+        # just a try of dask dataframe api
         print("start data wrangling")
         deb = datetime.datetime.now()
         df2['nom_scientifique'] = df2['nom_scientifique'].apply(lambda x: __test(x))
@@ -561,27 +568,17 @@ def postMapping(info_role, import_id):
 
         # df to sql avec d6tstack avec dask delayed
         # create engine url for d6tstack:
-        engine = DB.engine
-        str_engine = "postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver,engine.url.username,engine.url.password,engine.url.host,engine.url.port,engine.url.database)
         my_engine = create_engine("postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver,engine.url.username,engine.url.password,engine.url.host,engine.url.port,engine.url.database))
         print("start convert df dask to pandas df")
         deb = datetime.datetime.now()
        
-
         #d6tstack.utils.pd_to_psql(df.compute(),str_engine,imports_table_name,schema_name=IMPORTS_SCHEMA_NAME,if_exists='append',sep='\t')
         dto_sql = dask.delayed(d6tstack.utils.pd_to_psql)
         [dask.compute(dto_sql(d,str(my_engine.url),imports_table_name,schema_name=IMPORTS_SCHEMA_NAME,if_exists='append',sep='\t')) for d in df2.to_delayed()]
 
         del df2
 
-        # prendre seulement les colonnes : ok
-        # mettre gn_pk en primary_key : ok
-        # verif que table entierement exportee : ok
-        # en cas d'echec : ok pour doublons si on recharge 2x la même table
-        # suppression si retour
-        # verifier memoire sur tres gros fichiers
-
-        DB.session.execute("ALTER TABLE ONLY {} ADD CONSTRAINT pk_gn_imports_{} PRIMARY KEY ({});".format(imports_full_table_name,imports_table_name,'gn_pk'))
+        DB.session.execute("ALTER TABLE ONLY {} ADD CONSTRAINT pk_gn_imports_{} PRIMARY KEY ({});".format(imports_full_table_name,imports_table_name,index_col))
         fin = datetime.datetime.now()
         perf = fin-deb
         print("end convert dask df to pandas df")
@@ -595,7 +592,11 @@ def postMapping(info_role, import_id):
         if n_original_rows != n_loaded_rows:
             return 'INTERNAL SERVER ERROR ("postMapping() error"): lignes manquantes dans {} - refaire le matching'.format(imports_full_table_name), 500
 
+        DB.session.commit()
+        DB.session.close()
+
         pdb.set_trace()
+
 
         """
         # get synthese column names
@@ -635,7 +636,6 @@ def postMapping(info_role, import_id):
         DB.session.rollback()
         DB.session.execute("DROP TABLE {}".format(imports_full_table_name))
         DB.session.commit()
-        raise
         """
         a corriger, erreur ne s'affiche pas
         errors = []
@@ -646,12 +646,16 @@ def postMapping(info_role, import_id):
         })
         return errors,500
         """
+        DB.session.close()
+        raise
+
     except Exception:
         DB.session.rollback()
         print('full table name :')
         print(imports_full_table_name)
         DB.session.execute("DROP TABLE {}".format(imports_full_table_name))
         DB.session.commit()
+        DB.session.close()
         raise
         return 'INTERNAL SERVER ERROR ("postMapping() error"): contactez l\'administrateur du site', 500
     
