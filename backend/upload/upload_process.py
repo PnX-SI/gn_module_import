@@ -1,6 +1,7 @@
 import os
 import pathlib
 from werkzeug.utils import secure_filename
+import pdb
 
 def upload(request, size_max, allowed_extensions, directory_name, module_url):
     """ check and upload user data:

@@ -23,6 +23,7 @@ export class ImportProcessComponent implements OnInit {
   private uploadResponse: JSON;
   private isUploaded: Boolean = false;
   private isUploading: Boolean = false;
+  private isMapping: Boolean = false;
   private IMPORT_CONFIG = ModuleConfig;
   private uploadForm: FormGroup;
   private importId;
@@ -32,7 +33,9 @@ export class ImportProcessComponent implements OnInit {
   private syntheseForm: FormGroup;
   private isFileSelected: Boolean = false;
   private isUserError: boolean;
+  private isMappingError: boolean;
   private userErrors;
+  private mappingErrors;
   private columns;
   private isStep2Disabled: Boolean = true;
   private isStep3Disabled: Boolean = true;
@@ -87,7 +90,6 @@ export class ImportProcessComponent implements OnInit {
 
 
   cancelImport() {
-    console.log(this.importId);
     this._ds.cancelImport(this.importId).subscribe(
       res => {
         this.cancelResponse = res as JSON;
@@ -128,7 +130,7 @@ export class ImportProcessComponent implements OnInit {
         } else {
           if (error.status == 500) {
             // show error message if other server error
-            console.log('erreur 500 attention')
+            console.log(error.error)
             this.toastr.error(error.error);
           }
           if (error.status == 400) {
@@ -147,7 +149,6 @@ export class ImportProcessComponent implements OnInit {
           console.log(this.uploadResponse);
           this.importId = this.uploadResponse.importId;
           this.columns = this.uploadResponse.columns;
-          console.log(this.columns);
           console.log(this.importId);
           this.isUploaded = true;
           this.isUploading = false;
@@ -169,27 +170,36 @@ export class ImportProcessComponent implements OnInit {
   
 
   onMapping(value) {
-    console.log('soon');
-    this.tabset.tabs._results[2].disabled = false;
-    this.tabset.select('content-mapping');
-    
+    this.isMapping = true;
+    this.isMappingError = false;
     this._ds.postMapping(value, this.importId).subscribe(
       res => {
         this.mappingResponse = res as JSON;
       },
       error => {
+        this.isMapping = false;
         if (error.statusText === 'Unknown Error') {
           // show error message if no connexion
           this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
         } else {
-          // show error message if other server error
-          this.isUserError = true;
-            this.userErrors = error.error;
-            console.log(this.userErrors);
+          if (error.status == 500) {
+            // show error message if other server error
+            console.log(error.error)
+            this.toastr.error(error.error);
+          }
+          if (error.status == 400) {
+            this.isMappingError = true;
+            this.mappingErrors = error.error;
+            console.log(this.mappingErrors);
+          }
         }
       },
       () => {
+        this.isMapping = false;
+        this.isMappingError = false;
         console.log(this.mappingResponse);
+        this.tabset.tabs._results[2].disabled = false;
+        this.tabset.select('content-mapping');
       }
     );
     
@@ -197,7 +207,6 @@ export class ImportProcessComponent implements OnInit {
 
 
   onFinalStep() {
-    console.log('soon');
     this.tabset.tabs._results[3].disabled = false;
     this.tabset.select('final');
     /*
@@ -222,7 +231,7 @@ export class ImportProcessComponent implements OnInit {
   }
 
   onFinalImport() {
-    this.impatient = true;
+    //this.impatient = true;
   }
 
   onImportList() {

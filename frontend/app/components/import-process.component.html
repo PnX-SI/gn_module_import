@@ -165,6 +165,41 @@
                     </button>
                 </div>
 
+                <!-- Spinner -->
+                <div *ngIf="isMapping" class="spinner">
+                    <mat-spinner class="upload-spinner" 
+                        [color]="color"
+                        [diameter]="150"
+                        [strokeWidth]="12">
+                    </mat-spinner>
+                </div>
+
+                <br>
+
+                <!-- Error list in table -->
+                <div id="mappingErrorList" *ngIf="isMappingError">
+
+                        <div> Attention, erreurs detectées pendant la vérification du mapping : </div>
+
+                        <table >
+                            <thead>
+                                <tr>
+                                <th class="Code"> Code </th>
+                                <th class="Message"> Message </th>
+                                <th class="MessageData"> Message Data </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr *ngFor="let error of mappingErrors">
+                                <td> {{error.code}} </td>
+                                <td> {{error.message}} </td>
+                                <td> {{error.message_data}} </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
                 </form>
                 
                 <br>
@@ -215,12 +250,10 @@
             <h4> TERMINER L'IMPORT </h4>
             <br>
 
-            <div *ngIf="!impatient">
-            Preview des données avant import dans la synthèse
+            <div>
+                Preview des données avant import dans la synthèse
             </div>
-            <div *ngIf="impatient">
-                ALLONS, NE SOYEZ PAS TROP IMPATIENT !
-            </div>
+
 
             <br>
 
