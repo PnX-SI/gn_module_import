@@ -273,3 +273,15 @@ def get_synthese_info(selected_synthese_cols):
     my_dict = {d[0] : {'is_nullable':d[1],'column_default':d[2],'data_type':d[3],'character_max_length':d[4]} for d in synthese_info}
 
     return my_dict
+
+
+def get_synthese_types():
+    synthese_info = DB.session.execute(\
+        "SELECT data_type\
+         FROM INFORMATION_SCHEMA.COLUMNS\
+         WHERE table_name = 'synthese';"
+    ).fetchall()
+
+    types = [d.data_type for d in synthese_info]
+
+    return types

@@ -84,6 +84,10 @@ from .upload.upload_errors import*
 from .goodtables_checks.check_user_file import check_user_file
 from .transform.clean_cd_nom import cleaning_cd_nom
 from .transform.clean_dates import cleaning_dates
+from .transform.check_missing import format_missing, check_missing
+from .transform.check_id_sinp import check_uuid
+from .transform.check_types import check_types
+from .transform.check_other_fields import entity_source
 
 import pdb
 
@@ -510,6 +514,7 @@ def postMapping(info_role, import_id):
         engine = DB.engine
         column_names = get_table_info(table_names['imports_table_name'], 'column_name')
         data = dict(request.get_json())
+        MISSING_VALUES = ['', 'NA', 'NaN', 'na'] # mettre en conf
 
 
         ### EXTRACT 
@@ -544,18 +549,46 @@ def postMapping(info_role, import_id):
         # get synthese column info:
         selected_synthese_cols = [*list(selected_columns.keys())]
         synthese_info = get_synthese_info(selected_synthese_cols)
-        synthese_info['cd_nom']['is_nullable'] = 'NO'
+        synthese_info['cd_nom']['is_nullable'] = 'NO' # mettre en conf?
 
+
+        # check missing
+        try:
+            deb = datetime.datetime.now()
+            format_missing(df, selected_columns, synthese_info, MISSING_VALUES)
+            error_missing = check_missing(df, selected_columns, synthese_info, MISSING_VALUES)
+            fin = datetime.datetime.now()
+            print('check missing in {} secondes'.format(fin-deb))
+            if error_missing != '':
+                for error in error_missing:
+                    errors.append(error)
+        except Exception:
+            raise
+            return 'INTERNAL SERVER ERROR ("postMapping() - check missing - error")', 500
+
+        # check types
+        try:
+            deb = datetime.datetime.now()
+            format_missing(df, selected_columns, synthese_info, MISSING_VALUES)
+            error_types = check_types(df, selected_columns, synthese_info, MISSING_VALUES)
+            fin = datetime.datetime.now()
+            print('check types in {} secondes'.format(fin-deb))
+            if error_types != '':
+                for error in error_types:
+                    errors.append(error)
+        except Exception:
+            raise
+            return 'INTERNAL SERVER ERROR ("postMapping() - check missing - error")', 500                   
+        
         # cd_nom checks
         try:
             deb = datetime.datetime.now()
-            error_cd_nom = cleaning_cd_nom(df, selected_columns)
+            error_cd_nom = cleaning_cd_nom(df, selected_columns, MISSING_VALUES)
             fin = datetime.datetime.now()
             print('cd nom cleaning in {} secondes'.format(fin-deb))
             if error_cd_nom != '':
                 errors.append(error_cd_nom)
         except Exception:
-            raise
             return 'INTERNAL SERVER ERROR ("postMapping() - cleaning cd_nom - error")', 500
 
         # date checks
@@ -568,10 +601,35 @@ def postMapping(info_role, import_id):
                 for error in error_dates:
                     errors.append(error)
         except Exception:
-            raise
-            return 'INTERNAL SERVER ERROR ("postMapping() - cleaning dates - error")', 500       
+            return 'INTERNAL SERVER ERROR ("postMapping() - cleaning dates - error")', 500
 
-        df = df.drop('test', axis=1)
+        # unique_id_sinp
+        try:
+            deb = datetime.datetime.now()
+            error_uuid = check_uuid(df,selected_columns,synthese_info)
+            fin = datetime.datetime.now()
+            print('check uuid in {} secondes'.format(fin-deb))
+            if error_uuid != '':
+                for error in error_uuid:
+                    errors.append(error)
+        except Exception:
+            return 'INTERNAL SERVER ERROR ("postMapping() - unique_id_SINP - error")', 500
+        
+        # check other fields
+        try:
+            deb = datetime.datetime.now()
+            error_other_fields = entity_source(df,selected_columns,synthese_info)
+            fin = datetime.datetime.now()
+            print('check other fields in {} secondes'.format(fin-deb))
+            if error_other_fields != '':
+                for error in error_other_fields:
+                    errors.append(error)
+        except Exception:
+            return 'INTERNAL SERVER ERROR ("postMapping() - unique_id_SINP - error")', 500
+
+    
+        df = df.drop('check_dates', axis=1)
+        df = df.drop('temp', axis=1)
 
 
         ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
