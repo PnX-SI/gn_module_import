@@ -601,6 +601,7 @@ def postMapping(info_role, import_id):
                 for error in error_dates:
                     errors.append(error)
         except Exception:
+            raise
             return 'INTERNAL SERVER ERROR ("postMapping() - cleaning dates - error")', 500
 
         # unique_id_sinp
@@ -704,6 +705,12 @@ def postMapping(info_role, import_id):
         DB.session.rollback()
         DB.session.close()
         raise
+        n_loaded_rows = DB.session.execute(
+            "SELECT count(*) FROM {}".format(table_names['imports_full_table_name'])
+            ).fetchone()[0]
+        if n_loaded_rows == 0:
+            return 'INTERNAL SERVER ERROR ("postMapping() error"): table {} vide à cause d\'une erreur de copie, refaire l\'upload et le mapping, ou contactez l\'administrateur du site'.format(table_names['imports_full_table_name']), 500
+
         return 'INTERNAL SERVER ERROR ("postMapping() error"): contactez l\'administrateur du site', 500
     
 

@@ -7,21 +7,6 @@ import dask.dataframe as dd
 from .transform import fill_col
 
 
-def convert_to_datetime(value):
-    try:
-        return pd.to_datetime(value)
-    except ValueError:
-        return value
-
-
-def check_datetime_conversion(value):
-    try:
-        pd.to_datetime(value)
-        return True
-    except ValueError:
-        return False
-
-
 @dask.delayed
 def check_dates(col_date_min, col_date_max):
     for i_index, i_value in col_date_min.iteritems():
@@ -51,7 +36,7 @@ def is_negative_date(value):
         if type(value) != pd.Timedelta:
             return True
         else:
-            if value.days > 0:
+            if value.total_seconds() >= 0:
                 return True
             else:
                 return False
@@ -77,12 +62,18 @@ def cleaning_dates(df, selected_columns, synthese_info):
 
     # ajouter verif que date min <= date max
     df['temp'] = ''
-    df['check_dates'] = dd.to_datetime(df['my_timestamp'], errors='coerce') - dd.to_datetime(df['my_date'], errors='coerce')
-    df['temp'] = df['temp'].where(cond=df['check_dates'].apply(lambda x: is_negative_date(x)), other=False)
-    df['gn_is_valid'] = df['gn_is_valid'].where(cond=df['temp'].apply(lambda x: fill_col(x)), other=False)
-    df['gn_invalid_reason'] = df['gn_invalid_reason'].where(cond=df['temp'].apply(lambda x: fill_col(x)), other=df['gn_invalid_reason'] + 'date_min > date_max; ')
+    df['check_dates'] = (dd.to_datetime(df[selected_columns['date_max']], errors='coerce') - dd.to_datetime(df[selected_columns['date_min']], errors='coerce'))
+    df['temp'] = df['temp'].where(
+        cond=df['check_dates'].apply(lambda x: is_negative_date(x)), 
+        other=False)
+    df['gn_is_valid'] = df['gn_is_valid'].where(
+        cond=df['temp'].apply(lambda x: fill_col(x)), 
+        other=False)
+    df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
+        cond=df['temp'].apply(lambda x: fill_col(x)), 
+        other=df['gn_invalid_reason'] + 'date_min > date_max; ')
 
-    n_date_min_sup = df['temp'].astype(str).str.contains('False').sum()
+    n_date_min_sup = df['temp'].astype(str).str.contains('False').sum().compute()
 
     if n_date_min_sup > 0:
         user_error.append({

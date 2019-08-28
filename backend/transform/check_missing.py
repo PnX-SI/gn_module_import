@@ -30,7 +30,7 @@ def check_missing(df, selected_columns, synthese_info, missing_values):
     
         df.drop('temp',axis=1)
 
-        n_missing_value = df['temp'].astype(str).str.contains('False').sum()
+        n_missing_value = df['temp'].astype(str).str.contains('False').sum().compute()
 
         if n_missing_value > 0:
             user_error.append({

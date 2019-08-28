@@ -21,7 +21,8 @@ def check_uuid(df,selected_columns,synthese_info):
                 cond=df['temp'].apply(lambda x: fill_col(x)),
                 other=df['gn_invalid_reason'] + 'warning : missing uuid for {} column; '.format(col))
 
-            n_missing_uuid = df['temp'].astype(str).str.contains('False').sum()
+            n_missing_uuid = df['temp'].astype(str).str.contains('False').sum().compute()
+            # si trop long de compter les lignes, parcourir temp et stop des que trouve false
 
             if n_missing_uuid > 0:
                 user_error.append({
