@@ -88,7 +88,7 @@ from .transform.check_missing import format_missing, check_missing
 from .transform.check_id_sinp import check_uuid
 from .transform.check_types import check_types
 from .transform.check_other_fields import entity_source
-from .transform.check_numerics import check_numeric
+from .transform.check_numerics import check_counts
 
 import pdb
 
@@ -634,11 +634,11 @@ def postMapping(info_role, import_id):
         # check numerics
         try:
             deb = datetime.datetime.now()
-            error_check_numeric = check_numeric(df, selected_columns, synthese_info, DEFAULT_COUNT_VALUE)
+            error_check_counts = check_counts(df, selected_columns, synthese_info, DEFAULT_COUNT_VALUE)
             fin = datetime.datetime.now()
             print('check numerics in {} secondes'.format(fin-deb))
-            if error_check_numeric != '':
-                for error in error_check_numeric:
+            if error_check_counts != '':
+                for error in error_check_counts:
                     errors.append(error)
         except Exception:
             raise
