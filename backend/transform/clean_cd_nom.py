@@ -30,7 +30,7 @@ def cleaning_cd_nom(df, selected_columns, missing_values):
         cond=df['temp'].apply(lambda x: fill_col(x)), 
         other=df['gn_invalid_reason'] + 'invalid cd_nom value in {} column -- '.format(selected_columns['cd_nom']))
 
-    n_cd_nom_error = df['temp'].astype(str).str.contains('False').sum().compute()
+    n_cd_nom_error = df['temp'].astype(str).str.contains('False').sum()
 
     if n_cd_nom_error > 0:
         user_error = {

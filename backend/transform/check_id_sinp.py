@@ -16,12 +16,12 @@ def check_uuid(df,selected_columns,synthese_info):
         for col in uuid_cols:
             df['temp'] = ''
             df['temp'] = df['temp'].where(cond=df[selected_columns[col]].notnull(), other=False)
-            df['gn_is_valid'] = df['gn_is_valid'].where(cond=df['temp'].apply(lambda x: fill_col(x)), other=False)
+            #df['gn_is_valid'] = df['gn_is_valid'].where(cond=df['temp'].apply(lambda x: fill_col(x)), other=False)
             df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
                 cond=df['temp'].apply(lambda x: fill_col(x)),
-                other=df['gn_invalid_reason'] + 'warning : missing uuid for {} column; '.format(col))
+                other=df['gn_invalid_reason'] + 'warning : missing uuid for {} column -- '.format(col))
 
-            n_missing_uuid = df['temp'].astype(str).str.contains('False').sum().compute()
+            n_missing_uuid = df['temp'].astype(str).str.contains('False').sum()
             # si trop long de compter les lignes, parcourir temp et stop des que trouve false
 
             if n_missing_uuid > 0:

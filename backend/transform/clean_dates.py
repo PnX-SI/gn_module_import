@@ -7,30 +7,6 @@ import dask.dataframe as dd
 from .transform import fill_col
 
 
-@dask.delayed
-def check_dates(col_date_min, col_date_max):
-    for i_index, i_value in col_date_min.iteritems():
-        for j_index, j_value in col_date_max.iteritems():
-            try:
-                if pd.to_datetime(i_value) <= pd.to_datetime(j_value):
-                    df['check_dates'][i_index] = True
-                else:
-                    df['check_dates'][i_index] = False
-            except Exception:
-                df['check_dates'][i_index] = False
-
-
-"""
-@dask.delayed
-def count_false(column):
-    n = 0
-    for index,value in column.iteritems():
-        if value is False:
-            n = n+1
-    return n
-"""
-
-
 def is_negative_date(value):
     try:
         if type(value) != pd.Timedelta:
@@ -62,7 +38,7 @@ def cleaning_dates(df, selected_columns, synthese_info):
 
     # ajouter verif que date min <= date max
     df['temp'] = ''
-    df['check_dates'] = (dd.to_datetime(df[selected_columns['date_max']], errors='coerce') - dd.to_datetime(df[selected_columns['date_min']], errors='coerce'))
+    df['check_dates'] = dd.to_datetime(df[selected_columns['date_max']], errors='coerce') - dd.to_datetime(df[selected_columns['date_min']], errors='coerce')
     df['temp'] = df['temp'].where(
         cond=df['check_dates'].apply(lambda x: is_negative_date(x)), 
         other=False)
@@ -71,9 +47,9 @@ def cleaning_dates(df, selected_columns, synthese_info):
         other=False)
     df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
         cond=df['temp'].apply(lambda x: fill_col(x)), 
-        other=df['gn_invalid_reason'] + 'date_min > date_max; ')
+        other=df['gn_invalid_reason'] + 'date_min ({}) > date_max ({}) -- '.format(selected_columns['date_min'],selected_columns['date_max']))
 
-    n_date_min_sup = df['temp'].astype(str).str.contains('False').sum().compute()
+    n_date_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
     if n_date_min_sup > 0:
         user_error.append({

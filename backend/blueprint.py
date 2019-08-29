@@ -88,6 +88,7 @@ from .transform.check_missing import format_missing, check_missing
 from .transform.check_id_sinp import check_uuid
 from .transform.check_types import check_types
 from .transform.check_other_fields import entity_source
+from .transform.check_numerics import check_numeric
 
 import pdb
 
@@ -534,6 +535,8 @@ def postMapping(info_role, import_id):
         # get user table row data as a dask dataframe
         df = dd.read_sql_table(table=table_names['imports_table_name'], index_col=index_dask, meta=empty_df, npartitions=ncores, uri=str(DB.engine.url), schema=IMPORTS_SCHEMA_NAME, bytes_per_chunk=100000)
 
+        #df = df.compute()
+
 
         ### TRANSFORM 
 
@@ -614,21 +617,32 @@ def postMapping(info_role, import_id):
                 for error in error_uuid:
                     errors.append(error)
         except Exception:
+            raise
             return 'INTERNAL SERVER ERROR ("postMapping() - unique_id_SINP - error")', 500
         
         # check other fields
         try:
             deb = datetime.datetime.now()
-            error_other_fields = entity_source(df,selected_columns,synthese_info)
+            entity_source(df,selected_columns,synthese_info)
             fin = datetime.datetime.now()
             print('check other fields in {} secondes'.format(fin-deb))
-            if error_other_fields != '':
-                for error in error_other_fields:
+        except Exception:
+            raise
+            return 'INTERNAL SERVER ERROR ("postMapping() - other fields - error")', 500
+
+        # check numerics
+        try:
+            deb = datetime.datetime.now()
+            error_check_numeric = check_numeric(df,selected_columns)
+            fin = datetime.datetime.now()
+            print('check numerics in {} secondes'.format(fin-deb))
+            if error_check_numeric != '':
+                for error in error_check_numeric:
                     errors.append(error)
         except Exception:
-            return 'INTERNAL SERVER ERROR ("postMapping() - unique_id_SINP - error")', 500
+            raise
+            return 'INTERNAL SERVER ERROR ("postMapping() - check numerics - error")', 500
 
-    
         df = df.drop('check_dates', axis=1)
         df = df.drop('temp', axis=1)
 
@@ -641,8 +655,10 @@ def postMapping(info_role, import_id):
         #d6tstack.utils.pd_to_psql(df.compute(),str(my_engine.url),table_names['imports_table_name'],schema_name=IMPORTS_SCHEMA_NAME,if_exists='replace',sep='\t')
         print("start convert df dask to sql table")
         deb = datetime.datetime.now()
+        
         dto_sql = dask.delayed(d6tstack.utils.pd_to_psql)
         [dask.compute(dto_sql(df,str(my_engine.url),table_names['imports_table_name'],schema_name=IMPORTS_SCHEMA_NAME,if_exists='replace',sep='\t'))]
+        #d6tstack.utils.pd_to_psql(df,str(my_engine.url),table_names['imports_table_name'],schema_name=IMPORTS_SCHEMA_NAME,if_exists='replace',sep='\t')
         fin = datetime.datetime.now()
         perf = fin-deb
         print("end convert df dask to sql table")
