@@ -516,6 +516,7 @@ def postMapping(info_role, import_id):
         column_names = get_table_info(table_names['imports_table_name'], 'column_name')
         data = dict(request.get_json())
         MISSING_VALUES = ['', 'NA', 'NaN', 'na'] # mettre en conf
+        DEFAULT_COUNT_VALUE = 1 # mettre en conf
 
 
         ### EXTRACT 
@@ -546,7 +547,7 @@ def postMapping(info_role, import_id):
         selected_columns = {key:value for key, value in data.items() if value}
 
         # set gn_is_valid and gn_invalid_reason
-        df['gn_is_valid'] = ''
+        df['gn_is_valid'] = True
         df['gn_invalid_reason'] = ''
 
         # get synthese column info:
@@ -623,7 +624,7 @@ def postMapping(info_role, import_id):
         # check other fields
         try:
             deb = datetime.datetime.now()
-            entity_source(df,selected_columns,synthese_info)
+            entity_source(df, selected_columns, synthese_info)
             fin = datetime.datetime.now()
             print('check other fields in {} secondes'.format(fin-deb))
         except Exception:
@@ -633,7 +634,7 @@ def postMapping(info_role, import_id):
         # check numerics
         try:
             deb = datetime.datetime.now()
-            error_check_numeric = check_numeric(df,selected_columns)
+            error_check_numeric = check_numeric(df, selected_columns, synthese_info, DEFAULT_COUNT_VALUE)
             fin = datetime.datetime.now()
             print('check numerics in {} secondes'.format(fin-deb))
             if error_check_numeric != '':
@@ -692,16 +693,12 @@ def postMapping(info_role, import_id):
             result = db_pool.execute(entity.__table__.insert(), records)
         """
 
-
-
         """
         ### importer les données dans synthese
         selected_columns = {key:value for key, value in data.items() if value}
 
         selected_synthese_cols = ','.join(selected_columns.keys())
         selected_user_cols = ','.join(selected_columns.values())
-
-        pdb.set_trace()
 
         # ok ça marche
         print('fill synthese')
@@ -711,6 +708,7 @@ def postMapping(info_role, import_id):
         DB.session.commit()      
         DB.session.close()
         """
+        
         
         if len(errors) > 0:
             return errors,400

@@ -11,7 +11,7 @@ def format_missing(df, selected_columns, synthese_info, missing_values):
     fields = [field for field in synthese_info]
 
     for field in fields:
-        df[selected_columns[field]] = df[selected_columns[field]].replace(missing_values,np.nan)
+        df[selected_columns[field]] = df[selected_columns[field]].replace(missing_values,pd.np.nan).fillna(value=pd.np.nan)
 
 
 def check_missing(df, selected_columns, synthese_info, missing_values):
