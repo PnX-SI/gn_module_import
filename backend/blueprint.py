@@ -88,7 +88,7 @@ from .transform.check_missing import format_missing, check_missing
 from .transform.check_id_sinp import check_uuid
 from .transform.check_types import check_types
 from .transform.check_other_fields import entity_source
-from .transform.check_numerics import check_counts
+from .transform.check_numerics import check_counts, check_altitudes
 
 import pdb
 
@@ -643,6 +643,7 @@ def postMapping(info_role, import_id):
         try:
             deb = datetime.datetime.now()
             error_check_counts = check_counts(df, selected_columns, synthese_info, DEFAULT_COUNT_VALUE)
+            check_altitudes(df, selected_columns, synthese_info, calcul=False)
             fin = datetime.datetime.now()
             print('check numerics in {} secondes'.format(fin-deb))
             if error_check_counts != '':
