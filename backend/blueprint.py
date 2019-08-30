@@ -145,7 +145,6 @@ def get_import_list(info_role):
                    "history": history,
                }, 200
     except Exception:
-        raise
         return 'INTERNAL SERVER ERROR ("get_import_list() error"): contactez l\'administrateur du site', 500
 
 
@@ -160,9 +159,9 @@ def delete_step1(info_role):
     """
     try:
         list_to_delete = DB.session.query(TImports.id_import)\
-                            .filter(CorRoleImport.id_import == TImports.id_import)\
-                            .filter(CorRoleImport.id_role == info_role.id_role)\
-                            .filter(TImports.step == 1)\
+            .filter(CorRoleImport.id_import == TImports.id_import)\
+            .filter(CorRoleImport.id_role == info_role.id_role)\
+            .filter(TImports.step == 1)\
 
         ids = []
 
@@ -523,6 +522,13 @@ def postMapping(info_role, import_id):
 
         # (extract = from postgresql table to dask dataframe)
 
+        """
+        SELECT
+        pg_size_pretty(relpages::bigint*8*1024) AS size
+        FROM pg_class
+        where relname = 'taxref';
+        """
+
         # create empty dataframe as model for importing data from sql table to dask dataframe (for meta argument in read_sql_table method)
         empty_df = pd.DataFrame(columns=column_names, dtype='object')
         empty_df[index_col] = pd.to_numeric(empty_df[index_col], errors='coerce')
@@ -554,6 +560,8 @@ def postMapping(info_role, import_id):
         selected_synthese_cols = [*list(selected_columns.keys())]
         synthese_info = get_synthese_info(selected_synthese_cols)
         synthese_info['cd_nom']['is_nullable'] = 'NO' # mettre en conf?
+
+ 
 
 
         # check missing
