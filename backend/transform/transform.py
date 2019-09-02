@@ -23,6 +23,7 @@ def data_cleaning(df, data, missing_val, def_count_val):
 
         # get synthese fields filled in the user form:
         selected_columns = {key:value for key, value in data.items() if value}
+        logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
         # set gn_is_valid and gn_invalid_reason:
         df['gn_is_valid'] = True
@@ -63,6 +64,6 @@ def data_cleaning(df, data, missing_val, def_count_val):
                 user_error.append(error)
         
         return user_error
-        
+
     except Exception:
         raise

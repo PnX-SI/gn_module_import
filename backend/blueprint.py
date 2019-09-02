@@ -520,6 +520,9 @@ def postMapping(info_role, import_id):
         MISSING_VALUES = ['', 'NA', 'NaN', 'na'] # mettre en conf
         DEFAULT_COUNT_VALUE = 1 # mettre en conf
 
+        logger.debug('import_id = %s', import_id)
+        logger.debug('DB tabel name = %s', table_names['imports_table_name'])
+
 
         ### EXTRACT 
 
@@ -532,12 +535,15 @@ def postMapping(info_role, import_id):
         where relname = 'taxref';
         """
 
+        logger.info('START EXTRACT FROM DB TABLE TO PYTHON')
+
         # create empty dataframe as model for importing data from sql table to dask dataframe (for meta argument in read_sql_table method)
         empty_df = pd.DataFrame(columns=column_names, dtype='object')
         empty_df[index_col] = pd.to_numeric(empty_df[index_col], errors='coerce')
 
         # get number of cores to set npartitions:
         ncores = psutil.cpu_count(logical=False)
+        logger.warning('ncores used by Dask = %s', ncores)
 
         # set dask dataframe index
         index_dask = sqlalchemy.sql.column(index_col).label("gn_id")
@@ -547,25 +553,25 @@ def postMapping(info_role, import_id):
 
         #df = df.compute()
 
+        logger.info('END EXTRACT FROM DB TABLE TO PYTHON')
+
 
         ### TRANSFORM 
 
         # (transform = data wrangling using Dask dataframe API)
 
-        try:
-            transform_errors = data_cleaning(df, data, MISSING_VALUES, DEFAULT_COUNT_VALUE)
-        except Exception as e:
-            logger.exception(e)
-            raise GeonatureImportApiError(\
-                message='INTERNAL SERVER ERROR : data cleaning - contacter l\'administrateur',
-                details=str(e))
+        logger.info('START DATA CLEANING')
+        transform_errors = data_cleaning(df, data, MISSING_VALUES, DEFAULT_COUNT_VALUE)
 
         if len(transform_errors) > 0:
             for error in transform_errors:
+                logger.debug('USER ERRORS : %s', error['message'])
                 errors.append(error)
 
         if 'temp' in df.columns:
             df = df.drop('temp', axis=1)
+
+        logger.info('END DATA CLEANING')
             
 
         ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
@@ -635,18 +641,21 @@ def postMapping(info_role, import_id):
 
         return data
 
-    except Exception:
+    except Exception as e:
+        logger.exception(e)
         DB.session.rollback()
         DB.session.close()
-        raise
+
+        #is_table = engine.has_table(archive_table, schema=schema_archive)
         n_loaded_rows = DB.session.execute(
             "SELECT count(*) FROM {}".format(table_names['imports_full_table_name'])
             ).fetchone()[0]
         if n_loaded_rows == 0:
             return 'INTERNAL SERVER ERROR ("postMapping() error"): table {} vide à cause d\'une erreur de copie, refaire l\'upload et le mapping, ou contactez l\'administrateur du site'.format(table_names['imports_full_table_name']), 500
-
-        return 'INTERNAL SERVER ERROR ("postMapping() error"): contactez l\'administrateur du site', 500
     
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l\'administrateur',
+            details=str(e))
 
 @blueprint.route('/syntheseInfo', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")

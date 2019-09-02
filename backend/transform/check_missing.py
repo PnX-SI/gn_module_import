@@ -41,9 +41,9 @@ def check_missing(df, selected_columns, synthese_info, missing_values):
             
             df['temp'] = ''
             df['temp'] = df[selected_columns[field]].replace(missing_values,np.nan).notnull()
-            df['gn_is_valid'] = df['gn_is_valid'].where(cond=df['temp'].apply(lambda x: fill_col(x)), other=False)
+            df['gn_is_valid'] = df['gn_is_valid'].where(cond=df['temp'].apply(lambda x: fill_col(x), meta=False), other=False)
             df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
-                cond=df['temp'].apply(lambda x: fill_col(x)), 
+                cond=df['temp'].apply(lambda x: fill_col(x), meta=False), 
                 other=df['gn_invalid_reason'] + 'missing value in {} column -- '.format(selected_columns[field]))
         
             df.drop('temp',axis=1)

@@ -40,36 +40,41 @@ def check_altitudes(df, selected_columns, synthese_info, calcul):
     replace alt min = 0 if alt min = NA ?
     """
 
-    user_error = []
+    try:
 
-    altitudes = []
+        user_error = []
 
-    for element in list(selected_columns.keys()):
-        if element == 'altitude_min' or element == 'altitude_max':
-            altitudes.append(element)
+        altitudes = []
 
-    if calcul is False:
+        for element in list(selected_columns.keys()):
+            if element == 'altitude_min' or element == 'altitude_max':
+                altitudes.append(element)
 
-        if len(altitudes) == 2:
-    
-            # check max >= min
-            df['temp'] = ''
-            df['temp'] = df.apply(lambda x: check_alt_min_max(x[selected_columns['altitude_min']], x[selected_columns['altitude_max']]), axis=1)
-            df['gn_is_valid'] = df['gn_is_valid'].where(cond=df['temp'].apply(lambda x: fill_col(x)), other=False)
-            df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
-                cond=df['temp'].apply(lambda x: fill_col(x)),
-                other=df['gn_invalid_reason'] + 'altitude_min ({}) > altitude_max ({}) -- '.format(selected_columns['altitude_min'],selected_columns['altitude_max']))
+        if calcul is False:
 
-            n_alt_min_sup = df['temp'].astype(str).str.contains('False').sum()
+            if len(altitudes) == 2:
+        
+                # check max >= min
+                df['temp'] = ''
+                df['temp'] = df.apply(lambda x: check_alt_min_max(x[selected_columns['altitude_min']], x[selected_columns['altitude_max']]), axis=1, meta=False)
+                df['gn_is_valid'] = df['gn_is_valid'].where(cond=df['temp'].apply(lambda x: fill_col(x), meta=False), other=False)
+                df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
+                    cond=df['temp'].apply(lambda x: fill_col(x), meta=False),
+                    other=df['gn_invalid_reason'] + 'altitude_min ({}) > altitude_max ({}) -- '.format(selected_columns['altitude_min'],selected_columns['altitude_max']))
 
-            if n_alt_min_sup > 0:
-                user_error.append({
-                    'code': 'altitude error',
-                    'message': 'Des altitude min sont supérieurs à altitude max',
-                    'message_data': 'nombre de lignes avec erreurs : {}'.format(n_alt_min_sup)
-                })
+                n_alt_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
-    if len(user_error) == 0:
-        user_error = ''
+                if n_alt_min_sup > 0:
+                    user_error.append({
+                        'code': 'altitude error',
+                        'message': 'Des altitude min sont supérieurs à altitude max',
+                        'message_data': 'nombre de lignes avec erreurs : {}'.format(n_alt_min_sup)
+                    })
 
-    return user_error
+        if len(user_error) == 0:
+            user_error = ''
+
+        return user_error
+
+    except Exception:
+        raise
