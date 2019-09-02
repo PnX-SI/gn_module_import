@@ -2,10 +2,8 @@ from flask import (
     Blueprint,
     current_app,
     request,
-    jsonify,
-    abort
+    jsonify
 )
-import traceback
 
 from werkzeug.utils import secure_filename
 
@@ -13,27 +11,16 @@ import os
 
 import pathlib
 
-import psutil
-
 import pandas as pd
-#import pandas.io.sql as psql
 
 import numpy as np
 
 import threading
 
-#import io
-#import tempfile
-import dask.dataframe as dd
-import dask
-import d6tstack
-
-#import ast
-
 import datetime
 
 import sqlalchemy
-from sqlalchemy import func, text, select, update,create_engine, event
+from sqlalchemy import func, text, select, update, event
 from sqlalchemy.sql.elements import quoted_name
 from sqlalchemy.sql import column
 
@@ -75,8 +62,8 @@ from .db.query import (
     check_sql_words,
     get_full_table_name,
     set_imports_table_name,
-    check_row_number,
-    get_synthese_info
+    get_synthese_info,
+    load_csv_to_db
 )
 
 from .utils.clean_names import*
@@ -86,6 +73,9 @@ from .goodtables_checks.check_user_file import check_user_file
 from .transform.transform import data_cleaning
 from .logs import logger
 from .api_error import GeonatureImportApiError
+from .extract.extract import extract
+from .load.load import load
+from .wrappers import checker
 
 import pdb
 
@@ -262,6 +252,7 @@ def cancel_import(info_role, import_id):
 @blueprint.route('/uploads', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
+@checker('Total time to post user file and fill metadata')
 def post_user_file(info_role):
     """
         - load user file in "upload" directory
@@ -277,6 +268,11 @@ def post_user_file(info_role):
     """
 
     try:
+
+        logger.info('*** START UPLOAD USER FILE')
+
+        ### INITIALIZE VARIABLES
+
         is_file_saved = False
         is_id_import = False
         errors = []
@@ -290,9 +286,10 @@ def post_user_file(info_role):
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
         N_MAX_ROWS_CHECK = 100000000
 
-        """
-        SAVES USER FILE IN UPLOAD DIRECTORY
-        """
+        
+        ### SAVES USER FILE IN UPLOAD DIRECTORY
+        
+        logger.info('* START SAVE USER FILE IN UPLOAD DIRECTORY')
 
         uploaded_file = upload(request, MAX_FILE_SIZE, ALLOWED_EXTENSIONS, DIRECTORY_NAME, MODULE_URL)
 
@@ -311,25 +308,31 @@ def post_user_file(info_role):
             errors.append(unkown)        
         
         if uploaded_file['error'] != '':
+            logger.error('Saving user file : %s', errors)
             return errors,400
 
         full_path = uploaded_file['full_path']
 
         is_file_saved = uploaded_file['is_uploaded']
 
-        """
-        CHECKS USER FILE
-        """
+        logger.info('* END SAVE USER FILE IN UPLOAD DIRECTORY')
+
+
+        ### CHECKS USER FILE
+
+        logger.info('* START CHECK USER FILE VALIDITY')
 
         report = check_user_file(full_path, N_MAX_ROWS_CHECK)
 
         # reports user file errors:
         if len(report['errors']) > 0:
+            logger.error(report['errors'])
             return report['errors'],400
 
-        """
-        CREATES CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
-        """
+        logger.info('* END CHECK USER FILE VALIDITY')
+
+
+        ### CREATES CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
         
         # get form data
         metadata = request.form.to_dict()
@@ -337,6 +340,7 @@ def post_user_file(info_role):
         # Check if id_dataset value is allowed (prevent from forbidden manual change in url (url/process/N))
         is_dataset_allowed = test_user_dataset(info_role.id_role, metadata['datasetId'])
         if not is_dataset_allowed:
+            logger.error('Provided dataset is not allowed')
             return \
             'L\'utilisateur {} n\'est pas autorisé à importer des données vers l\'id_dataset {}'\
             .format(info_role.id_role, int(metadata['datasetId']))\
@@ -353,6 +357,8 @@ def post_user_file(info_role):
             DB.session.add(insert_t_imports)
             DB.session.flush()
             id_import = insert_t_imports.id_import
+            logger.debug('id_import = %s', id_import)
+            logger.debug('id_role = %s', info_role.id_role)
             # fill cor_role_import
             insert_cor_role_import = CorRoleImport(id_role=info_role.id_role, id_import=id_import)
             DB.session.add(insert_cor_role_import)
@@ -376,9 +382,8 @@ def post_user_file(info_role):
                 TImports.step:1
                 })
 
-        """
-        GET/SET FILE,SCHEMA,TABLE,COLUMN NAMES
-        """
+        
+        # GET/SET FILE,SCHEMA,TABLE,COLUMN NAMES
 
         # file name treatment
         file_name_cleaner = clean_file_name(uploaded_file['file_name'], uploaded_file['extension'], id_import)
@@ -389,6 +394,7 @@ def post_user_file(info_role):
         ## get/set table and column names
         separator = metadata['separator']
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, file_name_cleaner['clean_name'])
+        logger.debug('full DB user table name = %s', table_names['imports_full_table_name'])
 
         # pk name to include (because copy_from method requires a primary_key)
         pk_name = "".join([PREFIX, 'pk'])
@@ -407,6 +413,7 @@ def post_user_file(info_role):
                 'message_data': forbidden_names
             }
             errors.append(error)
+            logger.debug('forbidden column names in user file : %s', forbidden_names)
             return errors,400
 
 
@@ -433,14 +440,13 @@ def post_user_file(info_role):
         conn = engine.raw_connection()
         cur = conn.cursor()
 
-        with open(full_path, 'r') as f:
-            next(f)
-            cur.copy_from(f, table_names['archives_full_table_name'], sep=separator, columns=columns)
+        logger.info('* START COPY FROM CSV TO ARCHIVES SCHEMA')
+        load_csv_to_db(full_path, cur, table_names['archives_full_table_name'], separator, columns)
+        logger.info('* END COPY FROM CSV TO ARCHIVES SCHEMA')
 
-        with open(full_path, 'r') as f:
-            next(f)
-            cur.copy_from(f, table_names['imports_full_table_name'], sep=separator, columns=columns)
-        
+        logger.info('* START COPY FROM CSV TO IMPORTS SCHEMA')
+        load_csv_to_db(full_path, cur, table_names['imports_full_table_name'], separator, columns)
+        logger.info('* END COPY FROM CSV TO IMPORTS SCHEMA')
 
         conn.commit()
         conn.close()
@@ -468,12 +474,15 @@ def post_user_file(info_role):
         
         DB.session.commit()
 
+        logger.info('*** END UPLOAD USER FILE')
+
         return {
             "importId": id_import,
             "columns": columns,
         },200
                
     except psycopg2.errors.BadCopyFileFormat as e:
+        logger.exception(e)
         DB.session.rollback()
         if is_id_import:
             delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
@@ -484,15 +493,19 @@ def post_user_file(info_role):
                 'message': 'Erreur probablement due à un problème de separateur',
                 'message_data': e.diag.message_primary
         })
+        logger.error(errors)
         return errors,400
 
-    except Exception:
+    except Exception as e:
+        logger.error('*** ERROR WHEN POSTING FILE')
+        logger.exception(e)
         DB.session.rollback()
         if is_id_import:
             delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
         DB.session.commit()
-        return 'INTERNAL SERVER ERROR ("post_user_file() error"): contactez l\'administrateur du site', 500
-
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR : Erreur pendant l\'enregistrement du fichier - contacter l\'administrateur',
+            details=str(e))
     finally:
         if is_file_saved:
             os.remove(full_path)
@@ -507,6 +520,8 @@ def postMapping(info_role, import_id):
     try:
 
         ### INITIALIZE VARIABLES
+
+        logger.info('*** START CORRESPONDANCE MAPPING')
 
         errors = []
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
@@ -524,43 +539,16 @@ def postMapping(info_role, import_id):
         logger.debug('DB tabel name = %s', table_names['imports_table_name'])
 
 
-        ### EXTRACT 
+        ### EXTRACT (from postgresql table to dask dataframe)
 
-        # (extract = from postgresql table to dask dataframe)
-
-        """
-        SELECT
-        pg_size_pretty(relpages::bigint*8*1024) AS size
-        FROM pg_class
-        where relname = 'taxref';
-        """
-
-        logger.info('START EXTRACT FROM DB TABLE TO PYTHON')
-
-        # create empty dataframe as model for importing data from sql table to dask dataframe (for meta argument in read_sql_table method)
-        empty_df = pd.DataFrame(columns=column_names, dtype='object')
-        empty_df[index_col] = pd.to_numeric(empty_df[index_col], errors='coerce')
-
-        # get number of cores to set npartitions:
-        ncores = psutil.cpu_count(logical=False)
-        logger.warning('ncores used by Dask = %s', ncores)
-
-        # set dask dataframe index
-        index_dask = sqlalchemy.sql.column(index_col).label("gn_id")
-
-        # get user table row data as a dask dataframe
-        df = dd.read_sql_table(table=table_names['imports_table_name'], index_col=index_dask, meta=empty_df, npartitions=ncores, uri=str(DB.engine.url), schema=IMPORTS_SCHEMA_NAME, bytes_per_chunk=100000)
-
-        #df = df.compute()
-
-        logger.info('END EXTRACT FROM DB TABLE TO PYTHON')
+        logger.info('* START EXTRACT FROM DB TABLE TO PYTHON')
+        df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col)
+        logger.info('* END EXTRACT FROM DB TABLE TO PYTHON')
 
 
-        ### TRANSFORM 
+        ### TRANSFORM (data checking and cleaning)
 
-        # (transform = data wrangling using Dask dataframe API)
-
-        logger.info('START DATA CLEANING')
+        logger.info('* START DATA CLEANING')
         transform_errors = data_cleaning(df, data, MISSING_VALUES, DEFAULT_COUNT_VALUE)
 
         if len(transform_errors) > 0:
@@ -571,46 +559,29 @@ def postMapping(info_role, import_id):
         if 'temp' in df.columns:
             df = df.drop('temp', axis=1)
 
-        logger.info('END DATA CLEANING')
+        logger.info('* END DATA CLEANING')
             
 
         ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
 
-        # create engine url for d6tstack:
-        my_engine = create_engine("postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver, engine.url.username, engine.url.password, engine.url.host, engine.url.port, engine.url.database))
+        logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE')
+        load(df, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, table_names['imports_full_table_name'], import_id, engine, index_col)
+        logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE')
 
-        #d6tstack.utils.pd_to_psql(df.compute(),str(my_engine.url),table_names['imports_table_name'],schema_name=IMPORTS_SCHEMA_NAME,if_exists='replace',sep='\t')
-        print("start convert df dask to sql table")
-        deb = datetime.datetime.now()
-        
-        dto_sql = dask.delayed(d6tstack.utils.pd_to_psql)
-        [dask.compute(dto_sql(df,str(my_engine.url),table_names['imports_table_name'],schema_name=IMPORTS_SCHEMA_NAME,if_exists='replace',sep='\t'))]
-        #d6tstack.utils.pd_to_psql(df,str(my_engine.url),table_names['imports_table_name'],schema_name=IMPORTS_SCHEMA_NAME,if_exists='replace',sep='\t')
-        fin = datetime.datetime.now()
-        perf = fin-deb
-        print("end convert df dask to sql table")
-        print('convert df dask to sql table: {} secondes'.format(perf))
-        #DB.session.commit()
-        #DB.session.close()
 
-        print('alter la table')
-        DB.session.execute("ALTER TABLE ONLY {} ADD CONSTRAINT pk_gn_imports_{} PRIMARY KEY ({});".format(table_names['imports_full_table_name'], table_names['imports_table_name'], index_col))
-        print('fin alter la table')
-
-        # check if df is fully loaded in postgresql table :
-        is_rows_ok = check_row_number(import_id,table_names['imports_full_table_name'])
-        if not is_rows_ok:
-            return 'INTERNAL SERVER ERROR ("postMapping() error"): lignes manquantes dans {} - refaire le matching'.format(table_names['imports_full_table_name']), 500
+        ### UPDATE METADATA
 
         DB.session.query(TImports)\
             .filter(TImports.id_import==import_id)\
             .update({
                 TImports.step: 3,
                 })
+        
 
         DB.session.commit()
         DB.session.close()
 
+        logger.info('*** END CORRESPONDANCE MAPPING')
 
         """
         def save_frame():
@@ -642,16 +613,19 @@ def postMapping(info_role, import_id):
         return data
 
     except Exception as e:
+        logger.error('*** ERROR IN CORRESPONDANCE MAPPING')
         logger.exception(e)
         DB.session.rollback()
         DB.session.close()
 
-        #is_table = engine.has_table(archive_table, schema=schema_archive)
         n_loaded_rows = DB.session.execute(
             "SELECT count(*) FROM {}".format(table_names['imports_full_table_name'])
             ).fetchone()[0]
         if n_loaded_rows == 0:
-            return 'INTERNAL SERVER ERROR ("postMapping() error"): table {} vide à cause d\'une erreur de copie, refaire l\'upload et le mapping, ou contactez l\'administrateur du site'.format(table_names['imports_full_table_name']), 500
+            logger.error('Table %s vide à cause d\'une erreur de copie, refaire l\'upload et le mapping', table_names['imports_full_table_name'])
+            raise GeonatureImportApiError(\
+                message='INTERNAL SERVER ERROR :: Erreur pendant le mapping de correspondance :: Table {} vide à cause d\'une erreur de copie, refaire l\'upload et le mapping, ou contactez l\'administrateur du site'.format(table_names['imports_full_table_name']),
+                details='')
     
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l\'administrateur',
@@ -687,7 +661,7 @@ def getSyntheseInfo(info_role):
                 }
                 synthese_info.append(prop)
         #names2 = ['nom_cite', 'date_min', 'date_max']
-        print(synthese_info)
+        #print(synthese_info)
         return synthese_info, 200
     except Exception:
         raise

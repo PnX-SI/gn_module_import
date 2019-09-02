@@ -20,6 +20,7 @@ from .models import (
 )
 
 from .reserved_sql_words import words
+from ..wrappers import checker
 
 import pdb
 
@@ -285,3 +286,10 @@ def get_synthese_types():
     types = [d.data_type for d in synthese_info]
 
     return types
+
+
+@checker('CSV loaded to DB table')
+def load_csv_to_db(full_path, cur, full_table_name, separator, columns):
+    with open(full_path, 'r') as f:
+        next(f)
+        cur.copy_from(f, full_table_name, sep=separator, columns=columns)
