@@ -1,0 +1,107 @@
+2019-09-02 11:00:03,466 :: INFO ::  * Running on http://0.0.0.0:8000/ (Press CTRL+C to quit)
+2019-09-02 11:00:03,467 :: INFO ::  * Restarting with stat
+2019-09-02 11:00:04,846 :: WARNING ::  * Debugger is active!
+2019-09-02 11:00:04,847 :: INFO ::  * Debugger PIN: 125-826-543
+2019-09-02 11:00:09,185 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:00:09] "OPTIONS /import/mapping/323 HTTP/1.1" 200 -
+2019-09-02 11:00:10,006 :: INFO :: Data cleaning : missing values checked - time : 0:00:00.511178
+2019-09-02 11:00:10,339 :: INFO :: Data cleaning : type of values checked - time : 0:00:00.332814
+2019-09-02 11:00:15,295 :: INFO :: Data cleaning : cd_nom checked - time : 0:00:04.955577
+2019-09-02 11:00:15,323 :: INFO :: Data cleaning : type of values checked - time : 0:00:00.028162
+2019-09-02 11:00:15,385 :: INFO :: check uuid values - time : 0:00:00.061468
+2019-09-02 11:00:15,462 :: INFO :: Data cleaning : other_field operations checked - time : 0:00:00.076520
+2019-09-02 11:00:15,462 :: INFO :: Data cleaning : counts checked - time : 0:00:00.000013
+2019-09-02 11:00:15,463 :: INFO :: Data cleaning : altitudes checked - time : 0:00:00.000008
+2019-09-02 11:00:15,463 :: ERROR :: name 'errors' is not defined
+Traceback (most recent call last):
+  File "/home/ju/geonature/external_modules/import/backend/blueprint.py", line 556, in postMapping
+    transformed = data_cleaning(df, data, MISSING_VALUES, DEFAULT_COUNT_VALUE)
+  File "/home/ju/geonature/external_modules/import/backend/transform/transform.py", line 52, in data_cleaning
+    errors.append(error)
+NameError: name 'errors' is not defined
+2019-09-02 11:00:15,507 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:00:15] "POST /import/mapping/323 HTTP/1.1" 500 -
+2019-09-02 11:00:56,691 :: INFO ::  * Detected change in '/home/ju/geonature/external_modules/import/backend/transform/check_dates.py', reloading
+2019-09-02 11:00:56,926 :: INFO ::  * Restarting with stat
+2019-09-02 11:00:58,694 :: WARNING ::  * Debugger is active!
+2019-09-02 11:00:58,696 :: INFO ::  * Debugger PIN: 125-826-543
+2019-09-02 11:01:18,310 :: INFO ::  * Detected change in '/home/ju/geonature/external_modules/import/backend/transform/check_id_sinp.py', reloading
+2019-09-02 11:01:18,566 :: INFO ::  * Restarting with stat
+2019-09-02 11:01:20,078 :: WARNING ::  * Debugger is active!
+2019-09-02 11:01:20,078 :: INFO ::  * Debugger PIN: 125-826-543
+2019-09-02 11:01:28,394 :: INFO ::  * Detected change in '/home/ju/geonature/external_modules/import/backend/transform/check_id_sinp.py', reloading
+2019-09-02 11:01:28,638 :: INFO ::  * Restarting with stat
+2019-09-02 11:01:30,356 :: WARNING ::  * Debugger is active!
+2019-09-02 11:01:30,356 :: INFO ::  * Debugger PIN: 125-826-543
+2019-09-02 11:01:54,149 :: INFO ::  * Detected change in '/home/ju/geonature/external_modules/import/backend/transform/transform.py', reloading
+2019-09-02 11:01:54,411 :: INFO ::  * Restarting with stat
+2019-09-02 11:01:55,905 :: WARNING ::  * Debugger is active!
+2019-09-02 11:01:55,905 :: INFO ::  * Debugger PIN: 125-826-543
+2019-09-02 11:03:22,517 :: INFO ::  * Detected change in '/home/ju/geonature/external_modules/import/backend/transform/transform.py', reloading
+2019-09-02 11:03:22,778 :: INFO ::  * Restarting with stat
+2019-09-02 11:03:24,411 :: WARNING ::  * Debugger is active!
+2019-09-02 11:03:24,411 :: INFO ::  * Debugger PIN: 125-826-543
+2019-09-02 11:03:58,687 :: INFO ::  * Detected change in '/home/ju/geonature/external_modules/import/backend/transform/transform.py', reloading
+2019-09-02 11:03:58,923 :: INFO ::  * Restarting with stat
+2019-09-02 11:04:00,997 :: WARNING ::  * Debugger is active!
+2019-09-02 11:04:00,999 :: INFO ::  * Debugger PIN: 125-826-543
+2019-09-02 11:04:02,544 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:04:02] "OPTIONS /import/mapping/323 HTTP/1.1" 200 -
+2019-09-02 11:04:03,218 :: INFO :: Data cleaning : missing values checked - time : 0:00:00.498272
+2019-09-02 11:04:03,493 :: INFO :: Data cleaning : type of values checked - time : 0:00:00.274922
+2019-09-02 11:04:08,252 :: INFO :: Data cleaning : cd_nom checked - time : 0:00:04.758790
+2019-09-02 11:04:08,284 :: INFO :: Data cleaning : dates checked - time : 0:00:00.031682
+2019-09-02 11:04:08,351 :: INFO :: Data cleaning : check uuid values - time : 0:00:00.065994
+2019-09-02 11:04:08,351 :: INFO :: Data cleaning : counts checked - time : 0:00:00.000016
+2019-09-02 11:04:08,352 :: INFO :: Data cleaning : altitudes checked - time : 0:00:00.000017
+2019-09-02 11:04:08,450 :: INFO :: Data cleaning : other_field operations checked - time : 0:00:00.097402
+2019-09-02 11:04:22,169 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:04:22] "POST /import/mapping/323 HTTP/1.1" 200 -
+2019-09-02 11:04:47,333 :: INFO ::  * Detected change in '/home/ju/geonature/external_modules/import/backend/transform/transform.py', reloading
+2019-09-02 11:04:47,702 :: INFO ::  * Restarting with stat
+2019-09-02 11:04:49,117 :: WARNING ::  * Debugger is active!
+2019-09-02 11:04:49,117 :: INFO ::  * Debugger PIN: 125-826-543
+2019-09-02 11:08:20,473 :: INFO ::  * Detected change in '/home/ju/geonature/external_modules/import/backend/blueprint.py', reloading
+2019-09-02 11:08:20,765 :: INFO ::  * Restarting with stat
+2019-09-02 11:08:22,494 :: WARNING ::  * Debugger is active!
+2019-09-02 11:08:22,495 :: INFO ::  * Debugger PIN: 125-826-543
+2019-09-02 11:08:35,998 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:08:35] "POST /import/uploads HTTP/1.1" 200 -
+2019-09-02 11:08:36,059 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:08:36] "GET /import/syntheseInfo HTTP/1.1" 200 -
+2019-09-02 11:08:38,712 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:08:38] "OPTIONS /import/mapping/323 HTTP/1.1" 200 -
+2019-09-02 11:08:39,430 :: INFO :: Data cleaning : missing values checked - time : 0:00:00.527941
+2019-09-02 11:08:39,752 :: INFO :: Data cleaning : type of values checked - time : 0:00:00.321877
+2019-09-02 11:08:43,697 :: INFO :: Data cleaning : cd_nom checked - time : 0:00:03.944692
+2019-09-02 11:08:43,725 :: INFO :: Data cleaning : dates checked - time : 0:00:00.027001
+2019-09-02 11:08:43,785 :: INFO :: Data cleaning : check uuid values - time : 0:00:00.060114
+2019-09-02 11:08:43,786 :: INFO :: Data cleaning : counts checked - time : 0:00:00.000015
+2019-09-02 11:08:43,786 :: INFO :: Data cleaning : altitudes checked - time : 0:00:00.000013
+2019-09-02 11:08:43,867 :: INFO :: Data cleaning : other_field operations checked - time : 0:00:00.080958
+2019-09-02 11:08:43,881 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:08:43] "POST /import/mapping/323 HTTP/1.1" 500 -
+2019-09-02 11:09:03,515 :: INFO ::  * Detected change in '/home/ju/geonature/external_modules/import/backend/blueprint.py', reloading
+2019-09-02 11:09:03,960 :: INFO ::  * Restarting with stat
+2019-09-02 11:09:05,486 :: WARNING ::  * Debugger is active!
+2019-09-02 11:09:05,487 :: INFO ::  * Debugger PIN: 125-826-543
+2019-09-02 11:09:08,098 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:09:08] "OPTIONS /import/mapping/323 HTTP/1.1" 200 -
+2019-09-02 11:09:08,960 :: INFO :: Data cleaning : missing values checked - time : 0:00:00.610945
+2019-09-02 11:09:09,341 :: INFO :: Data cleaning : type of values checked - time : 0:00:00.380621
+2019-09-02 11:09:13,669 :: INFO :: Data cleaning : cd_nom checked - time : 0:00:04.327332
+2019-09-02 11:09:13,699 :: INFO :: Data cleaning : dates checked - time : 0:00:00.029484
+2019-09-02 11:09:13,768 :: INFO :: Data cleaning : check uuid values - time : 0:00:00.067782
+2019-09-02 11:09:13,769 :: INFO :: Data cleaning : counts checked - time : 0:00:00.000033
+2019-09-02 11:09:13,769 :: INFO :: Data cleaning : altitudes checked - time : 0:00:00.000040
+2019-09-02 11:09:13,875 :: INFO :: Data cleaning : other_field operations checked - time : 0:00:00.105008
+2019-09-02 11:09:27,579 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:09:27] "POST /import/mapping/323 HTTP/1.1" 400 -
+2019-09-02 11:11:26,028 :: INFO ::  * Detected change in '/home/ju/geonature/external_modules/import/backend/transform/utils.py', reloading
+2019-09-02 11:11:26,371 :: INFO ::  * Restarting with stat
+2019-09-02 11:13:53,138 :: INFO ::  * Running on http://0.0.0.0:8000/ (Press CTRL+C to quit)
+2019-09-02 11:13:53,138 :: INFO ::  * Restarting with stat
+2019-09-02 11:13:54,491 :: WARNING ::  * Debugger is active!
+2019-09-02 11:13:54,491 :: INFO ::  * Debugger PIN: 125-826-543
+2019-09-02 11:14:03,502 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:14:03] "POST /import/uploads HTTP/1.1" 200 -
+2019-09-02 11:14:03,542 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:14:03] "GET /import/syntheseInfo HTTP/1.1" 200 -
+2019-09-02 11:14:08,314 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:14:08] "OPTIONS /import/mapping/323 HTTP/1.1" 200 -
+2019-09-02 11:14:09,111 :: INFO :: Data cleaning : missing values checked - time : 0:00:00.588548
+2019-09-02 11:14:09,443 :: INFO :: Data cleaning : type of values checked - time : 0:00:00.331393
+2019-09-02 11:14:13,673 :: INFO :: Data cleaning : cd_nom checked - time : 0:00:04.229254
+2019-09-02 11:14:13,704 :: INFO :: Data cleaning : dates checked - time : 0:00:00.030696
+2019-09-02 11:14:13,772 :: INFO :: Data cleaning : check uuid values - time : 0:00:00.067757
+2019-09-02 11:14:13,773 :: INFO :: Data cleaning : counts checked - time : 0:00:00.000019
+2019-09-02 11:14:13,773 :: INFO :: Data cleaning : altitudes checked - time : 0:00:00.000008
+2019-09-02 11:14:13,869 :: INFO :: Data cleaning : other_field operations checked - time : 0:00:00.095611
+2019-09-02 11:14:27,010 :: INFO :: 127.0.0.1 - - [02/Sep/2019 11:14:27] "POST /import/mapping/323 HTTP/1.1" 400 -

@@ -1,6 +1,7 @@
 import pdb
 from ..db.query import get_synthese_types
-from .transform import fill_col
+from .utils import fill_col
+from ..wrappers import checker
 import pandas as pd
 from uuid import uuid4, UUID
 import numpy as np
@@ -37,6 +38,7 @@ def is_uuid(value, version=4):
         return False
 
 
+@checker('Data cleaning : type of values checked')
 def check_types(df, selected_columns, synthese_info, missing_values):
 
     user_error = []

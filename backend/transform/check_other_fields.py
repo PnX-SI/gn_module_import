@@ -1,7 +1,10 @@
 import pdb
 import pandas as pd
+from ..wrappers import checker
 
-def entity_source(df, selected_columns, synthese_info):
+
+@checker('Data cleaning : other_field operations checked')
+def check_entity_source(df, selected_columns, synthese_info):
 
     fields = [field for field in synthese_info]
 

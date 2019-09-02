@@ -1,8 +1,11 @@
 from flask import (
     Blueprint,
     current_app,
-    request
+    request,
+    jsonify,
+    abort
 )
+import traceback
 
 from werkzeug.utils import secure_filename
 
@@ -24,8 +27,6 @@ import threading
 import dask.dataframe as dd
 import dask
 import d6tstack
-
-import turbodbc
 
 #import ast
 
@@ -82,18 +83,20 @@ from .utils.clean_names import*
 from .upload.upload_process import upload
 from .upload.upload_errors import*
 from .goodtables_checks.check_user_file import check_user_file
-from .transform.clean_cd_nom import cleaning_cd_nom
-from .transform.clean_dates import cleaning_dates
-from .transform.check_missing import format_missing, check_missing
-from .transform.check_id_sinp import check_uuid
-from .transform.check_types import check_types
-from .transform.check_other_fields import entity_source
-from .transform.check_numerics import check_counts, check_altitudes
+from .transform.transform import data_cleaning
+from .logs import logger
+from .api_error import GeonatureImportApiError
 
 import pdb
 
-
 blueprint = Blueprint('import', __name__)
+
+
+@blueprint.errorhandler(GeonatureImportApiError)
+def handle_geonature_import_api(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
 
 
 @blueprint.route('', methods=['GET'])
@@ -549,113 +552,21 @@ def postMapping(info_role, import_id):
 
         # (transform = data wrangling using Dask dataframe API)
 
-        # get synthese fields filled in the user form
-        selected_columns = {key:value for key, value in data.items() if value}
-
-        # set gn_is_valid and gn_invalid_reason
-        df['gn_is_valid'] = True
-        df['gn_invalid_reason'] = ''
-
-        # get synthese column info:
-        selected_synthese_cols = [*list(selected_columns.keys())]
-        synthese_info = get_synthese_info(selected_synthese_cols)
-        synthese_info['cd_nom']['is_nullable'] = 'NO' # mettre en conf?
-
- 
-
-
-        # check missing
         try:
-            deb = datetime.datetime.now()
-            format_missing(df, selected_columns, synthese_info, MISSING_VALUES)
-            error_missing = check_missing(df, selected_columns, synthese_info, MISSING_VALUES)
-            fin = datetime.datetime.now()
-            print('check missing in {} secondes'.format(fin-deb))
-            if error_missing != '':
-                for error in error_missing:
-                    errors.append(error)
-        except Exception:
-            raise
-            return 'INTERNAL SERVER ERROR ("postMapping() - check missing - error")', 500
+            transform_errors = data_cleaning(df, data, MISSING_VALUES, DEFAULT_COUNT_VALUE)
+        except Exception as e:
+            logger.exception(e)
+            raise GeonatureImportApiError(\
+                message='INTERNAL SERVER ERROR : data cleaning - contacter l\'administrateur',
+                details=str(e))
 
-        # check types
-        try:
-            deb = datetime.datetime.now()
-            format_missing(df, selected_columns, synthese_info, MISSING_VALUES)
-            error_types = check_types(df, selected_columns, synthese_info, MISSING_VALUES)
-            fin = datetime.datetime.now()
-            print('check types in {} secondes'.format(fin-deb))
-            if error_types != '':
-                for error in error_types:
-                    errors.append(error)
-        except Exception:
-            raise
-            return 'INTERNAL SERVER ERROR ("postMapping() - check missing - error")', 500                   
-        
-        # cd_nom checks
-        try:
-            deb = datetime.datetime.now()
-            error_cd_nom = cleaning_cd_nom(df, selected_columns, MISSING_VALUES)
-            fin = datetime.datetime.now()
-            print('cd nom cleaning in {} secondes'.format(fin-deb))
-            if error_cd_nom != '':
-                errors.append(error_cd_nom)
-        except Exception:
-            return 'INTERNAL SERVER ERROR ("postMapping() - cleaning cd_nom - error")', 500
+        if len(transform_errors) > 0:
+            for error in transform_errors:
+                errors.append(error)
 
-        # date checks
-        try:
-            deb = datetime.datetime.now()
-            error_dates = cleaning_dates(df, selected_columns, synthese_info)
-            fin = datetime.datetime.now()
-            print('cleaning_dates in {} secondes'.format(fin-deb))
-            if error_dates != '':
-                for error in error_dates:
-                    errors.append(error)
-        except Exception:
-            raise
-            return 'INTERNAL SERVER ERROR ("postMapping() - cleaning dates - error")', 500
-
-        # unique_id_sinp
-        try:
-            deb = datetime.datetime.now()
-            error_uuid = check_uuid(df,selected_columns,synthese_info)
-            fin = datetime.datetime.now()
-            print('check uuid in {} secondes'.format(fin-deb))
-            if error_uuid != '':
-                for error in error_uuid:
-                    errors.append(error)
-        except Exception:
-            raise
-            return 'INTERNAL SERVER ERROR ("postMapping() - unique_id_SINP - error")', 500
-        
-        # check other fields
-        try:
-            deb = datetime.datetime.now()
-            entity_source(df, selected_columns, synthese_info)
-            fin = datetime.datetime.now()
-            print('check other fields in {} secondes'.format(fin-deb))
-        except Exception:
-            raise
-            return 'INTERNAL SERVER ERROR ("postMapping() - other fields - error")', 500
-
-        # check numerics
-        try:
-            deb = datetime.datetime.now()
-            error_check_counts = check_counts(df, selected_columns, synthese_info, DEFAULT_COUNT_VALUE)
-            check_altitudes(df, selected_columns, synthese_info, calcul=False)
-            fin = datetime.datetime.now()
-            print('check numerics in {} secondes'.format(fin-deb))
-            if error_check_counts != '':
-                for error in error_check_counts:
-                    errors.append(error)
-        except Exception:
-            raise
-            return 'INTERNAL SERVER ERROR ("postMapping() - check numerics - error")', 500
-
-        df = df.drop('check_dates', axis=1)
-        df = df.drop('temp', axis=1)
-
+        if 'temp' in df.columns:
+            df = df.drop('temp', axis=1)
+            
 
         ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
 
@@ -673,8 +584,8 @@ def postMapping(info_role, import_id):
         perf = fin-deb
         print("end convert df dask to sql table")
         print('convert df dask to sql table: {} secondes'.format(perf))
-        DB.session.commit()
-        DB.session.close()
+        #DB.session.commit()
+        #DB.session.close()
 
         print('alter la table')
         DB.session.execute("ALTER TABLE ONLY {} ADD CONSTRAINT pk_gn_imports_{} PRIMARY KEY ({});".format(table_names['imports_full_table_name'], table_names['imports_table_name'], index_col))

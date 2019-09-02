@@ -4,12 +4,15 @@ import numpy as np
 from geonature.utils.env import DB
 
 from ..db.query import get_synthese_info
-from .transform import fill_col
+from .utils import fill_col
+from ..wrappers import checker
+
 
 import pdb
 
 
-def cleaning_cd_nom(df, selected_columns, missing_values):
+@checker('Data cleaning : cd_nom checked')
+def check_cd_nom(df, selected_columns, missing_values):
 
     # note : améliorer performances du comptage d'erreurs
     

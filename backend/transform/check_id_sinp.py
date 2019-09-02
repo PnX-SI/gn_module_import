@@ -1,5 +1,6 @@
 from uuid import uuid4
-from .transform import fill_col
+from .utils import fill_col
+from ..wrappers import checker
 import numpy as np
 import pandas as pd
 
@@ -13,6 +14,7 @@ def fill_nan_uuid(value):
         return value  
 
 
+@checker('Data cleaning : check uuid values')
 def check_uuid(df,selected_columns,synthese_info):
 
     user_error = []

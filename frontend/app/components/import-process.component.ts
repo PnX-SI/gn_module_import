@@ -185,7 +185,7 @@ export class ImportProcessComponent implements OnInit {
           if (error.status == 500) {
             // show error message if other server error
             console.log(error.error)
-            this.toastr.error(error.error);
+            this.toastr.error(error.error.message);
           }
           if (error.status == 400) {
             this.isMappingError = true;
