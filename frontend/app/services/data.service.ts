@@ -1,71 +1,51 @@
-import { OnInit } from '@angular/core';
 import { Injectable } from '@angular/core';
-import { HttpClient,HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AppConfig } from '@geonature_config/app.config';
-import { CommonService } from '@geonature_common/service/common.service';
-import { ModuleConfig } from "../module.config";
+import { ModuleConfig } from '../module.config';
 
 const HttpUploadOptions = {
-    headers: new HttpHeaders({ "Accept": "application/json" })
-  }
-
-const HttpFormOptions = {
-    headers: new HttpHeaders({ 'Content-Type': 'x-www-form-urlencoded'})
-  }
+	headers: new HttpHeaders({ Accept: 'application/json' })
+};
+const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 
 @Injectable()
 export class DataService {
+	constructor(private _http: HttpClient) {}
 
-    private fd: FormData;
-    private IMPORT_CONFIG = ModuleConfig;
+	getImportList() {
+		return this._http.get<any>(urlApi);
+	}
 
-    constructor(
-        private _http: HttpClient, 
-        private _commonService: CommonService
-    ) {}
+	postUserFile(value, datasetId, importId) {
+		const urlStatus = `${urlApi}/uploads`;
+		let fd = new FormData();
+		fd.append('File', value.file, value.file['name']);
+		fd.append('encodage', value.encodage);
+		fd.append('srid', value.srid);
+		fd.append('separator', value.separator);
+		fd.append('datasetId', datasetId);
+		fd.append('importId', importId);
+		return this._http.post<any>(urlStatus, fd, HttpUploadOptions);
+	}
 
+	getUserDatasets() {
+		return this._http.get<any>(`${urlApi}/datasets`);
+	}
 
-    getImportList() {
-        return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}`);
-    }
+	cancelImport(importId: number) {
+		return this._http.get<any>(`${urlApi}/cancel_import/${importId}`);
+	}
 
+	getSynColumnNames() {
+		return this._http.get<any>(`${urlApi}/syntheseInfo`);
+	}
 
-    postUserFile(value,datasetId,importId) {
-        console.log(value);
-        const urlStatus = `${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/uploads`;
-        this.fd = new FormData();
-        this.fd.append('File', value.file, value.file['name']);
-        this.fd.append('encodage', value.encodage);
-        this.fd.append('srid', value.srid);
-        this.fd.append('separator', value.separator);
-        this.fd.append('datasetId', datasetId);
-        this.fd.append('importId', importId);
-        console.log(this.fd);
-        return this._http.post<any>(urlStatus, this.fd, HttpUploadOptions);
-    }
+	postMapping(value, importId: number) {
+		const urlMapping = `${urlApi}/mapping/${importId}`;
+		return this._http.post<any>(urlMapping, value);
+	}
 
-
-    getUserDatasets() {
-        return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/datasets`);
-    }
-
-    
-    cancelImport(importId:number) {
-        return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/cancel_import/${importId}`);
-    }
-
-    getSynColumnNames() {
-        return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/syntheseInfo`);
-    }
-
-    postMapping(value, importId:number) {
-        //console.log(value);
-        const urlMapping = `${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/mapping/${importId}`;        
-        return this._http.post<any>(urlMapping, value);
-    }
-
-    delete_aborted_step1() {
-        return this._http.get<any>(`${AppConfig.API_ENDPOINT}/${this.IMPORT_CONFIG.MODULE_URL}/delete_step1`);
-    }
-
+	delete_aborted_step1() {
+		return this._http.get<any>(`${urlApi}/delete_step1`);
+	}
 }

@@ -1,20 +1,19 @@
 import { NgModule } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { GN2CommonModule } from "@geonature_common/GN2Common.module";
-import { Routes, RouterModule, ActivatedRoute } from "@angular/router";
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { Routes, RouterModule, } from "@angular/router";
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDialogModule } from "@angular/material";
-import { ImportComponent } from "./components/import.component";
-import { ImportProcessComponent } from "./components/import-process.component";
-import { ImportModalDatasetComponent } from "./components/import-modal-dataset.component";
+import {MatStepperModule} from '@angular/material/stepper';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import { ImportComponent } from "./components/import/import.component";
+import { ImportProcessComponent } from "./components/import_process/import-process.component";
+import { ImportModalDatasetComponent } from "./components/modal_dataset/import-modal-dataset.component";
 import { DataService } from "./services/data.service";
 
 // my module routing
 const routes: Routes = [
   { path: "", component: ImportComponent },
-  { path: "process/:datasetId", component: ImportProcessComponent}
+  { path: "process", component: ImportProcessComponent}
 ];
 
 @NgModule({
@@ -29,11 +28,8 @@ const routes: Routes = [
     RouterModule.forChild(routes), 
     CommonModule,
     MatProgressSpinnerModule,
-    MatDialogModule
-  ],
-
-  entryComponents: [
-    ImportModalDatasetComponent
+    MatStepperModule,
+    MatCheckboxModule
   ],
 
   providers: [

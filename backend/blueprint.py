@@ -28,7 +28,7 @@ import ast
 import datetime
 
 import sqlalchemy
-from sqlalchemy import func, text, select, update,create_engine, event
+from sqlalchemy import func, text, select, update, create_engine, event
 from sqlalchemy.sql.elements import quoted_name
 from sqlalchemy.sql import column
 
@@ -90,7 +90,6 @@ from .goodtables_checks.check_user_file import check_user_file
 blueprint = Blueprint('import', __name__)
 
 
-
 @blueprint.route('', methods=['GET'])
 @permissions.check_cruved_scope('R', True, module_code="IMPORT")
 @json_resp
@@ -120,8 +119,10 @@ def get_import_list(info_role):
                 "import_table": r.import_table,
                 "id_dataset": r.id_dataset,
                 "id_mapping": r.id_mapping,
-                "date_create_import": str(r.date_create_import),#recupérer seulement date et pas heure
-                "date_update_import": str(r.date_update_import),#recupérer seulement date et pas heure
+                # recupérer seulement date et pas heure
+                "date_create_import": str(r.date_create_import),
+                # recupérer seulement date et pas heure
+                "date_update_import": str(r.date_update_import),
                 "date_end_import": str(date_end_import),
                 "source_count": r.source_count,
                 "import_count": r.import_count,
@@ -130,15 +131,15 @@ def get_import_list(info_role):
                 "date_max_data": str(r.date_max_data),
                 "step": r.step,
                 "dataset_name": DB.session\
-                    .query(TDatasets.dataset_name)\
-                    .filter(TDatasets.id_dataset == r.id_dataset)\
-                    .one()[0]
+                .query(TDatasets.dataset_name)\
+                .filter(TDatasets.id_dataset == r.id_dataset)\
+                .one()[0]
             }
             history.append(prop)
         return {
-                   "empty": False,
-                   "history": history,
-               }, 200
+            "empty": False,
+            "history": history,
+        }, 200
     except Exception:
         raise
         return 'INTERNAL SERVER ERROR ("get_import_list() error"): contactez l\'administrateur du site', 500
@@ -155,9 +156,9 @@ def delete_step1(info_role):
     """
     try:
         list_to_delete = DB.session.query(TImports.id_import)\
-                            .filter(CorRoleImport.id_import == TImports.id_import)\
-                            .filter(CorRoleImport.id_role == info_role.id_role)\
-                            .filter(TImports.step == 1)\
+            .filter(CorRoleImport.id_import == TImports.id_import)\
+            .filter(CorRoleImport.id_role == info_role.id_role)\
+            .filter(TImports.step == 1)\
 
         ids = []
 
@@ -168,7 +169,7 @@ def delete_step1(info_role):
             ids.append(id.id_import)
             DB.session.commit()
 
-        return {"deleted_step1_imports":ids},200
+        return {"deleted_step1_imports": ids}, 200
 
     except Exception:
         return 'INTERNAL SERVER ERROR ("delete_step1() error"): contactez l\'administrateur du site', 500
@@ -191,10 +192,10 @@ def get_user_datasets(info_role):
         if results:
             datasets = []
             for row in results:
-                d = {'datasetId': row.id_dataset,\
+                d = {'datasetId': row.id_dataset,
                      'datasetName': row.dataset_name}
                 datasets.append(d)
-            return datasets,200
+            return datasets, 200
         else:
             return 'Attention, vous n\'avez aucun jeu de données déclaré', 400
     except Exception:
@@ -206,11 +207,10 @@ def get_user_datasets(info_role):
 @json_resp
 def cancel_import(info_role, import_id):
     try:
-        
+
         if import_id == "undefined":
             server_response = {'deleted_id_import': "canceled"}
-            return server_response,200
-        
+            return server_response, 200
 
         # get step number
         step = DB.session.query(TImports.step)\
@@ -225,19 +225,24 @@ def cancel_import(info_role, import_id):
                 .one()[0]
 
             # set data table names
-            archives_full_name = get_full_table_name(blueprint.config['ARCHIVES_SCHEMA_NAME'],user_data_name)
+            archives_full_name = get_full_table_name(
+                blueprint.config['ARCHIVES_SCHEMA_NAME'], user_data_name)
             imports_table_name = set_imports_table_name(user_data_name)
-            imports_full_name = get_full_table_name('gn_imports', imports_table_name)
+            imports_full_name = get_full_table_name(
+                'gn_imports', imports_table_name)
 
             # delete tables
             DB.session.execute("DROP TABLE {}".format(archives_full_name))
             DB.session.execute("DROP TABLE {}".format(imports_full_name))
 
         # delete metadata
-        DB.session.query(TImports).filter(TImports.id_import == import_id).delete()
-        DB.session.query(CorRoleImport).filter(CorRoleImport.id_import == import_id).delete()
-        DB.session.query(CorImportArchives).filter(CorImportArchives.id_import == import_id).delete()
-        
+        DB.session.query(TImports).filter(
+            TImports.id_import == import_id).delete()
+        DB.session.query(CorRoleImport).filter(
+            CorRoleImport.id_import == import_id).delete()
+        DB.session.query(CorImportArchives).filter(
+            CorImportArchives.id_import == import_id).delete()
+
         DB.session.commit()
         DB.session.close()
         server_response = {'deleted_id_import': import_id}
@@ -282,7 +287,8 @@ def post_user_file(info_role):
         SAVES USER FILE IN UPLOAD DIRECTORY
         """
 
-        uploaded_file = upload(request, MAX_FILE_SIZE, ALLOWED_EXTENSIONS, DIRECTORY_NAME, MODULE_URL)
+        uploaded_file = upload(request, MAX_FILE_SIZE,
+                               ALLOWED_EXTENSIONS, DIRECTORY_NAME, MODULE_URL)
 
         # checks if error in user file or user http request:
         if uploaded_file['error'] == 'no_file':
@@ -294,12 +300,12 @@ def post_user_file(info_role):
         if uploaded_file['error'] == 'long_name':
             errors.append(long_name)
         if uploaded_file['error'] == 'max_size':
-            errors.append(max_size)  
+            errors.append(max_size)
         if uploaded_file['error'] == 'unknown':
-            errors.append(unkown)        
-        
+            errors.append(unkown)
+
         if uploaded_file['error'] != '':
-            return errors,400
+            return errors, 400
 
         full_path = uploaded_file['full_path']
 
@@ -313,37 +319,38 @@ def post_user_file(info_role):
 
         # reports user file errors:
         if len(report['errors']) > 0:
-            return report['errors'],400
+            return report['errors'], 400
 
         """
         CREATES CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
         """
-        
+
         # get form data
         metadata = dict(request.form.to_dict())
         print(metadata)
 
         # Check if id_dataset value is allowed (prevent from forbidden manual change in url (url/process/N))
-        is_dataset_allowed = test_user_dataset(info_role.id_role, metadata['datasetId'])
+        is_dataset_allowed = test_user_dataset(
+            info_role.id_role, metadata['datasetId'])
         if not is_dataset_allowed:
             return \
-            'L\'utilisateur {} n\'est pas autorisé à importer des données vers l\'id_dataset {}'\
-            .format(info_role.id_role, int(metadata['datasetId']))\
-            ,403
+                'L\'utilisateur {} n\'est pas autorisé à importer des données vers l\'id_dataset {}'\
+                .format(info_role.id_role, int(metadata['datasetId'])), 403
 
         # start t_imports filling and fill cor_role_import
         if metadata['importId'] == 'undefined':
             # if first file uploaded by the user in the current import process :
             init_date = datetime.datetime.now()
             insert_t_imports = TImports(
-                date_create_import = init_date,
-                date_update_import = init_date,
+                date_create_import=init_date,
+                date_update_import=init_date,
             )
             DB.session.add(insert_t_imports)
             DB.session.flush()
             id_import = insert_t_imports.id_import
             # fill cor_role_import
-            insert_cor_role_import = CorRoleImport(id_role=info_role.id_role, id_import=id_import)
+            insert_cor_role_import = CorRoleImport(
+                id_role=info_role.id_role, id_import=id_import)
             DB.session.add(insert_cor_role_import)
             DB.session.flush()
         else:
@@ -352,39 +359,41 @@ def post_user_file(info_role):
             DB.session.query(TImports)\
                 .filter(TImports.id_import == id_import)\
                 .update({
-                    TImports.date_update_import:datetime.datetime.now()
-                    })
+                    TImports.date_update_import: datetime.datetime.now()
+                })
 
-        if isinstance(id_import,int):
+        if isinstance(id_import, int):
             is_id_import = True
 
         # set step to 1 in t_imports table
         DB.session.query(TImports)\
             .filter(TImports.id_import == id_import)\
             .update({
-                TImports.step:1
-                })
+                TImports.step: 1
+            })
 
         """
         GET/SET FILE,SCHEMA,TABLE,COLUMN NAMES
         """
 
         # file name treatment
-        file_name_cleaner = clean_file_name(uploaded_file['file_name'], uploaded_file['extension'], id_import)
+        file_name_cleaner = clean_file_name(
+            uploaded_file['file_name'], uploaded_file['extension'], id_import)
         if len(file_name_cleaner['errors']) > 0:
             # if user file name is not valid, an error is returned
-            return file_name_cleaner['errors'],400
+            return file_name_cleaner['errors'], 400
         cleaned_file_name = file_name_cleaner['clean_name']
         print('cleaned_file_name:')
         print(cleaned_file_name)
 
-        ## get/set table and column names
+        # get/set table and column names
         separator = metadata['separator']
         archives_table_name = cleaned_file_name
         #imports_table_name = set_imports_table_name(cleaned_file_name)
 
         # set schema.table names
-        archives_full_name = get_full_table_name(ARCHIVES_SCHEMA_NAME, archives_table_name)
+        archives_full_name = get_full_table_name(
+            ARCHIVES_SCHEMA_NAME, archives_table_name)
         #imports_full_name = get_full_table_name(IMPORTS_SCHEMA_NAME, imports_table_name)
 
         # pk name to include (because copy_from method requires a primary_key)
@@ -396,7 +405,8 @@ def post_user_file(info_role):
         # check for reserved sql word in column names
         column_check = check_sql_words(columns)
         if len(column_check) > 0:
-            forbidden_names = [report['column_names'][position] for position in column_check]
+            forbidden_names = [report['column_names'][position]
+                               for position in column_check]
             errors = []
             error = {
                 'code': 'forbidden_colum_names',
@@ -404,35 +414,36 @@ def post_user_file(info_role):
                 'message_data': forbidden_names
             }
             errors.append(error)
-            return errors,400
-
+            return errors, 400
 
         """
         CREATES TABLES CONTAINING RAW USER DATA IN GEONATURE DB
         """
 
-        ## if existing, delete all tables already uploaded which have the same id_import suffix
+        # if existing, delete all tables already uploaded which have the same id_import suffix
         delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
         DB.session.commit()
 
-        ## create user table classes (1 for gn_import_archives schema, 1 for gn_imports schema) corresponding to the user file structure (csv)
-        user_class_gn_import_archives = generate_user_table_class(ARCHIVES_SCHEMA_NAME, archives_table_name,\
-                                                                      pk_name, columns, id_import, schema_type='archives')
-        #user_class_gn_imports = generate_user_table_class(IMPORTS_SCHEMA_NAME, imports_table_name,\
+        # create user table classes (1 for gn_import_archives schema, 1 for gn_imports schema) corresponding to the user file structure (csv)
+        user_class_gn_import_archives = generate_user_table_class(ARCHIVES_SCHEMA_NAME, archives_table_name,
+                                                                  pk_name, columns, id_import, schema_type='archives')
+        # user_class_gn_imports = generate_user_table_class(IMPORTS_SCHEMA_NAME, imports_table_name,\
         #                                                              pk_name, columns, id_import, schema_type='gn_imports')
 
-        ## create 2 empty tables in geonature db (in gn_import_archives and gn_imports schemas)
+        # create 2 empty tables in geonature db (in gn_import_archives and gn_imports schemas)
         engine = DB.engine
-        user_class_gn_import_archives.__table__.create(bind=engine, checkfirst=True)
+        user_class_gn_import_archives.__table__.create(
+            bind=engine, checkfirst=True)
         #user_class_gn_imports.__table__.create(bind=engine, checkfirst=True)
 
-        ## fill the user table (copy_from function is equivalent to COPY function of postgresql)
+        # fill the user table (copy_from function is equivalent to COPY function of postgresql)
         conn = engine.raw_connection()
         cur = conn.cursor()
 
         with open(full_path, 'r') as f:
             next(f)
-            cur.copy_from(f, archives_full_name, sep=separator, columns=columns)
+            cur.copy_from(f, archives_full_name,
+                          sep=separator, columns=columns)
 
         """
         with open(full_path, 'r') as f:
@@ -447,14 +458,15 @@ def post_user_file(info_role):
         """
         FILLS CorImportArchives AND UPDATES TImports
         """
-        
+
         delete_import_CorImportArchives(id_import)
-        cor_import_archives = CorImportArchives(id_import=id_import, table_archive=archives_table_name)
+        cor_import_archives = CorImportArchives(
+            id_import=id_import, table_archive=archives_table_name)
         DB.session.add(cor_import_archives)
 
         # update gn_import.t_imports with cleaned file name and step = 2
         DB.session.query(TImports)\
-            .filter(TImports.id_import==id_import)\
+            .filter(TImports.id_import == id_import)\
             .update({
                 TImports.import_table: cleaned_file_name,
                 TImports.step: 2,
@@ -462,15 +474,15 @@ def post_user_file(info_role):
                 TImports.srid: int(metadata['srid']),
                 TImports.format_source_file: report['file_format'],
                 TImports.source_count: report['row_count']-1
-                })
-        
+            })
+
         DB.session.commit()
 
         return {
             "importId": id_import,
             "columns": columns,
-        },200
-               
+        }, 200
+
     except psycopg2.errors.BadCopyFileFormat as e:
         DB.session.rollback()
         if is_id_import:
@@ -478,11 +490,11 @@ def post_user_file(info_role):
         DB.session.commit()
         errors = []
         errors.append({
-                'code': 'psycopg2.errors.BadCopyFileFormat',
-                'message': 'Erreur probablement due à un problème de separateur',
-                'message_data': e.diag.message_primary
+            'code': 'psycopg2.errors.BadCopyFileFormat',
+            'message': 'Erreur probablement due à un problème de separateur',
+            'message_data': e.diag.message_primary
         })
-        return errors,400
+        return errors, 400
 
     except Exception:
         DB.session.rollback()
@@ -507,24 +519,27 @@ def postMapping(info_role, import_id):
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
         ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
         PREFIX = blueprint.config['PREFIX']
-        index_col = ''.join([PREFIX,'pk'])
+        index_col = ''.join([PREFIX, 'pk'])
         archives_table_name = get_import_table_name(import_id)
         imports_table_name = set_imports_table_name(archives_table_name)
-        imports_full_table_name = get_full_table_name(IMPORTS_SCHEMA_NAME,imports_table_name)
+        imports_full_table_name = get_full_table_name(
+            IMPORTS_SCHEMA_NAME, imports_table_name)
 
         # EXTRACT (from postgresql table to dask dataframe)
 
         print("start load table data in df")
         deb = datetime.datetime.now()
         # create empty dataframe as model for importing data from sql table to dask dataframe (for meta argument in read_sql_table method)
-        column_names = get_table_info(archives_table_name,'column_name')
-        empty_df = pd.DataFrame(columns=column_names,dtype='object')
-        empty_df[index_col] = pd.to_numeric(empty_df[index_col],errors='coerce')
+        column_names = get_table_info(archives_table_name, 'column_name')
+        empty_df = pd.DataFrame(columns=column_names, dtype='object')
+        empty_df[index_col] = pd.to_numeric(
+            empty_df[index_col], errors='coerce')
 
         # get number of cores to set npartitions:
         ncores = psutil.cpu_count(logical=False)
         index_dask = sqlalchemy.sql.column(index_col).label("gn_id")
-        df = dd.read_sql_table(table=archives_table_name, index_col=index_dask, meta=empty_df, npartitions=ncores, uri=str(DB.engine.url), schema=ARCHIVES_SCHEMA_NAME, bytes_per_chunk=100000)
+        df = dd.read_sql_table(table=archives_table_name, index_col=index_dask, meta=empty_df, npartitions=ncores, uri=str(
+            DB.engine.url), schema=ARCHIVES_SCHEMA_NAME, bytes_per_chunk=100000)
         print("end load table data in df")
         fin = datetime.datetime.now()
         perf = fin-deb
@@ -534,43 +549,44 @@ def postMapping(info_role, import_id):
         data = dict(request.get_json())
 
         # get non empty synthese fields
-        selected_columns = {key:value for key, value in data.items() if value}
-        #selected_columns.update({'gn_is_valid':'gn_is_valid'})
-        selected_columns.update({index_col:index_col})
+        selected_columns = {key: value for key, value in data.items() if value}
+        # selected_columns.update({'gn_is_valid':'gn_is_valid'})
+        selected_columns.update({index_col: index_col})
         #cols = ','.join(selected_columns.values())
 
-        df2 = df.loc[:,[*list(selected_columns.values())]]
+        df2 = df.loc[:, [*list(selected_columns.values())]]
         del(df)
         gn_is_valid = False
         df2['gn_is_valid'] = gn_is_valid
         df2['gn_invalid_reason'] = ''
 
-
         # TRANSFORM (data wrangling with Dask dataframe)
-        
+
         print("start data wrangling")
         deb = datetime.datetime.now()
-        df2['nom_scientifique'] = df2['nom_scientifique'].apply(lambda x: __test(x))
+        df2['nom_scientifique'] = df2['nom_scientifique'].apply(
+            lambda x: __test(x))
         fin = datetime.datetime.now()
         perf = fin-deb
         print("end data wrangling")
         print('data wrangling: {} secondes'.format(perf))
-        
 
         # LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
 
         # df to sql avec d6tstack avec dask delayed
         # create engine url for d6tstack:
         engine = DB.engine
-        str_engine = "postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver,engine.url.username,engine.url.password,engine.url.host,engine.url.port,engine.url.database)
-        my_engine = create_engine("postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver,engine.url.username,engine.url.password,engine.url.host,engine.url.port,engine.url.database))
+        str_engine = "postgresql+{}://{}:{}@{}:{}/{}".format(
+            engine.driver, engine.url.username, engine.url.password, engine.url.host, engine.url.port, engine.url.database)
+        my_engine = create_engine("postgresql+{}://{}:{}@{}:{}/{}".format(engine.driver, engine.url.username,
+                                                                          engine.url.password, engine.url.host, engine.url.port, engine.url.database))
         print("start convert df dask to pandas df")
         deb = datetime.datetime.now()
-       
 
-        #d6tstack.utils.pd_to_psql(df.compute(),str_engine,imports_table_name,schema_name=IMPORTS_SCHEMA_NAME,if_exists='append',sep='\t')
+        # d6tstack.utils.pd_to_psql(df.compute(),str_engine,imports_table_name,schema_name=IMPORTS_SCHEMA_NAME,if_exists='append',sep='\t')
         dto_sql = dask.delayed(d6tstack.utils.pd_to_psql)
-        [dask.compute(dto_sql(d,str(my_engine.url),imports_table_name,schema_name=IMPORTS_SCHEMA_NAME,if_exists='append',sep='\t')) for d in df2.to_delayed()]
+        [dask.compute(dto_sql(d, str(my_engine.url), imports_table_name,
+                              schema_name=IMPORTS_SCHEMA_NAME, if_exists='append', sep='\t')) for d in df2.to_delayed()]
 
         del df2
 
@@ -581,7 +597,8 @@ def postMapping(info_role, import_id):
         # suppression si retour
         # verifier memoire sur tres gros fichiers
 
-        DB.session.execute("ALTER TABLE ONLY {} ADD CONSTRAINT pk_gn_imports_{} PRIMARY KEY ({});".format(imports_full_table_name,imports_table_name,'gn_pk'))
+        DB.session.execute("ALTER TABLE ONLY {} ADD CONSTRAINT pk_gn_imports_{} PRIMARY KEY ({});".format(
+            imports_full_table_name, imports_table_name, 'gn_pk'))
         fin = datetime.datetime.now()
         perf = fin-deb
         print("end convert dask df to pandas df")
@@ -590,8 +607,10 @@ def postMapping(info_role, import_id):
         DB.session.close()
 
         # check entire df is loaded :
-        n_original_rows = DB.session.execute("SELECT source_count FROM gn_imports.t_imports WHERE id_import=198;").fetchone()[0]
-        n_loaded_rows = DB.session.execute("SELECT count(*) FROM {}".format(imports_full_table_name)).fetchone()[0]
+        n_original_rows = DB.session.execute(
+            "SELECT source_count FROM gn_imports.t_imports WHERE id_import=198;").fetchone()[0]
+        n_loaded_rows = DB.session.execute(
+            "SELECT count(*) FROM {}".format(imports_full_table_name)).fetchone()[0]
         if n_original_rows != n_loaded_rows:
             return 'INTERNAL SERVER ERROR ("postMapping() error"): lignes manquantes dans {} - refaire le matching'.format(imports_full_table_name), 500
 
@@ -654,7 +673,7 @@ def postMapping(info_role, import_id):
         DB.session.commit()
         raise
         return 'INTERNAL SERVER ERROR ("postMapping() error"): contactez l\'administrateur du site', 500
-    
+
 
 @blueprint.route('/syntheseInfo', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
@@ -666,10 +685,10 @@ def getSyntheseInfo(info_role):
 
         synthese_info = []
 
-        data = DB.session.execute(\
-                    "SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
+        data = DB.session.execute(
+            "SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
                      FROM INFORMATION_SCHEMA.COLUMNS\
-                     WHERE table_name = 'synthese';"\
+                     WHERE table_name = 'synthese';"
         )
 
         for d in data:
