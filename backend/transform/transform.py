@@ -15,18 +15,14 @@ from .check_altitudes import check_altitudes
 from ..logs import logger
 
 
-def data_cleaning(df, data, missing_val, def_count_val):
+def data_cleaning(df, selected_columns, missing_val, def_count_val):
 
     try:
 
         user_error = []
 
-        # get synthese fields filled in the user form:
-        selected_columns = {key:value for key, value in data.items() if value}
-        logger.debug('selected columns in correspondance mapping = %s', selected_columns)
-
         # set gn_is_valid and gn_invalid_reason:
-        df['gn_is_valid'] = True
+        df['gn_is_valid'] = True # à mettre dans la bdd à true avant
         df['gn_invalid_reason'] = ''
 
         # get synthese column info:
@@ -34,6 +30,7 @@ def data_cleaning(df, data, missing_val, def_count_val):
         synthese_info = get_synthese_info(selected_synthese_cols)
         synthese_info['cd_nom']['is_nullable'] = 'NO' # mettre en conf?
 
+        
         # Check data:
         error_missing = check_missing(df, selected_columns, synthese_info, missing_val)
         error_types = check_types(df, selected_columns, synthese_info, missing_val)
@@ -44,6 +41,8 @@ def data_cleaning(df, data, missing_val, def_count_val):
         error_altitudes = check_altitudes(df, selected_columns, synthese_info, calcul=False)
         check_entity_source(df, selected_columns, synthese_info)
 
+
+        
         # User error to front interface:
         if error_missing != '':
             for error in error_missing:
@@ -62,6 +61,9 @@ def data_cleaning(df, data, missing_val, def_count_val):
         if error_check_counts != '':
             for error in error_check_counts:
                 user_error.append(error)
+        
+
+        #ajouter altitudes
         
         return user_error
 

@@ -1,11 +1,13 @@
 import pandas as pd
-import pdb
 import datetime
 import dask
 import dask.dataframe as dd
 
 from .utils import fill_col
 from ..wrappers import checker
+from ..logs import logger
+
+import pdb
 
 
 def is_negative_date(value):
@@ -26,6 +28,7 @@ def check_dates(df, selected_columns, synthese_info):
 
     try:
 
+        logger.info('checking date validity :')
         # get user synthese fields having timestamp type
         date_fields = [field for field in synthese_info if synthese_info[field]['data_type'] == 'timestamp without time zone']
 
@@ -36,8 +39,9 @@ def check_dates(df, selected_columns, synthese_info):
 
         # set date_max (=if data_max not existing, then set equal to date_min)
         if 'date_max' not in date_fields:
+            logger.info('- checking if date_max column is missing')
             selected_columns['date_max'] = selected_columns['date_min']
-            df['date_max'] = df[selected_columns['date_min']] # utile?
+            #df['date_max'] = df[selected_columns['date_min']] # utile?
             synthese_info.update({'date_max': synthese_info['date_min']}) # utile?
 
         # ajouter verif que date min <= date max
@@ -46,15 +50,21 @@ def check_dates(df, selected_columns, synthese_info):
             df['temp'] = ''
             df['check_dates'] = ''
             df['check_dates'] = dd.to_datetime(df[selected_columns['date_max']], errors='coerce') - dd.to_datetime(df[selected_columns['date_min']], errors='coerce')
-            df['temp'] = df['temp'].where(
-                cond=df['check_dates'].apply(lambda x: is_negative_date(x), meta=False), 
-                other=False)
+            df['temp'] = df['temp']\
+                .where(
+                    cond=df['check_dates'].apply(lambda x: is_negative_date(x)), 
+                    other=False)\
+                .map(fill_map)\
+                .astype('bool')
+            
             df['gn_is_valid'] = df['gn_is_valid'].where(
-                cond=df['temp'].apply(lambda x: fill_col(x), meta=False), 
+                cond=df['temp'], 
                 other=False)
+            
             df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
-                cond=df['temp'].apply(lambda x: fill_col(x), meta=False), 
-                other=df['gn_invalid_reason'] + 'date_min ({}) > date_max ({}) -- '.format(selected_columns['date_min'],selected_columns['date_max']))
+                cond=df['temp'], 
+                other=df['gn_invalid_reason'] + 'date_min ({}) > date_max ({}) -- '\
+                    .format(selected_columns['date_min'],selected_columns['date_max']))
 
             n_date_min_sup = df['temp'].astype(str).str.contains('False').sum()
 

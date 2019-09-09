@@ -8,19 +8,25 @@ import pdb
 
 """
 Vérifications :
-- doublon de nom colonne
-- aucun nom de colonne
-- un nom de colonne manquant
-- fichier vide (ni nom de colonne, ni ligne)
-- pas de données (noms de colonne mais pas de ligne contenant les données)
-- doublon ligne
-- extra-value : une ligne a une valeur en trop
-- less-value : une ligne a moins de colonnes que de noms de colonnes
+    https://github.com/frictionlessdata/goodtables-py :
+    - all basic checks:
+        -> encoding-error is not utf-8 or utf-16
+        -> source-error
+        -> format-error
+    - all structural checks:
+        -> blank-header
+        -> duplicate header
+        -> blank_row
+        -> duplicate-row
+        -> extra-value
+        -> missing-value
+    - no schema checks
+    - no custom checks
 
 Notes encodages :
 - encodage : utf8 et 16 : pas d'erreur
 - encodage : Europe occidentale ISO-8859-15/EURO (=latin-9) et ISO-8859-1 (=latin-1) : erreur ('source-error')
-- Donc il faut convertir en utf-8 avant de passer dans goodtables
+- pb : il faut donc convertir en utf-8 avant de passer dans goodtables
 """
 
 

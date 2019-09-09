@@ -9,9 +9,10 @@ from geonature.utils.env import DB
 from ..wrappers import checker
 from ..logs import logger
 
+import pdb
 
-@checker('Extract : from DB table to Python dataframe')
-def extract(table_name, schema_name, column_names, index_col):
+@checker('Extracted (from DB table to Dask dataframe)')
+def extract(table_name, schema_name, column_names, index_col, id):
 
     try:
 
@@ -27,9 +28,7 @@ def extract(table_name, schema_name, column_names, index_col):
         index_dask = sqlalchemy.sql.column(index_col).label("gn_id")
 
         # get user table row data as a dask dataframe
-        df = dd.read_sql_table(table=table_name, index_col=index_dask, meta=empty_df, npartitions=ncores, uri=str(DB.engine.url), schema=schema_name, bytes_per_chunk=100000)
-
-        #df = df.compute()
+        df = dd.read_sql_table(table=table_name, index_col=index_dask, meta=empty_df, npartitions=10, uri=str(DB.engine.url), schema=schema_name, bytes_per_chunk=100000)
 
         return df
 

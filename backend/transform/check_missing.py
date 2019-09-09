@@ -1,15 +1,12 @@
 import pandas as pd 
 import numpy as np
 import datetime
-from .utils import fill_col
+
+from .utils import fill_map, set_is_valid
 from ..wrappers import checker
+from ..logs import logger
 
 import pdb
-
-import traceback
-
-from ..logs import logger
-from ..api_error import GeonatureImportApiError
 
 
 def format_missing(df, selected_columns, synthese_info, missing_values):
@@ -28,6 +25,7 @@ def format_missing(df, selected_columns, synthese_info, missing_values):
 def check_missing(df, selected_columns, synthese_info, missing_values):
 
     try:
+        logger.info('checking missing values : ')
 
         format_missing(df, selected_columns, synthese_info, missing_values)
 
@@ -38,24 +36,36 @@ def check_missing(df, selected_columns, synthese_info, missing_values):
         #df[selected_columns[field]].isnull().any()
 
         for field in fields:
+
+            logger.info('- checking missing values for %s column', field)
             
-            df['temp'] = ''
-            df['temp'] = df[selected_columns[field]].replace(missing_values,np.nan).notnull()
-            df['gn_is_valid'] = df['gn_is_valid'].where(cond=df['temp'].apply(lambda x: fill_col(x), meta=False), other=False)
-            df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
-                cond=df['temp'].apply(lambda x: fill_col(x), meta=False), 
-                other=df['gn_invalid_reason'] + 'missing value in {} column -- '.format(selected_columns[field]))
-        
-            df.drop('temp',axis=1)
+            if df[selected_columns[field]].isnull().any():
 
-            n_missing_value = df['temp'].astype(str).str.contains('False').sum()
+                df['temp'] = ''
+                df['temp'] = df[selected_columns[field]]\
+                    .replace(missing_values,np.nan)\
+                    .notnull()\
+                    .map(fill_map)\
+                    .astype('bool')
 
-            if n_missing_value > 0:
-                user_error.append({
-                    'code': 'valeur manquante',
-                    'message': 'Des valeurs manquantes dans la colonne {}'.format(selected_columns[field]),
-                    'message_data': 'nombre de lignes avec erreurs : {}'.format(n_missing_value)
-                })
+                set_is_valid(df, 'temp')
+
+                df['gn_invalid_reason'] = df['gn_invalid_reason']\
+                    .where(
+                        cond=df['temp'], 
+                        other=df['gn_invalid_reason'] + 'missing value in {} column -- '\
+                            .format(selected_columns[field]))
+            
+                df.drop('temp',axis=1)
+
+                n_missing_value = df['temp'].astype(str).str.contains('False').sum()
+
+                if n_missing_value > 0:
+                    user_error.append({
+                        'code': 'valeur manquante',
+                        'message': 'Des valeurs manquantes dans la colonne {}'.format(selected_columns[field]),
+                        'message_data': 'nombre de lignes avec erreurs : {}'.format(n_missing_value)
+                    })
         
         if len(user_error) == 0:
             user_error = ''

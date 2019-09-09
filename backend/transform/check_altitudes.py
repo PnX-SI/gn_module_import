@@ -56,10 +56,10 @@ def check_altitudes(df, selected_columns, synthese_info, calcul):
         
                 # check max >= min
                 df['temp'] = ''
-                df['temp'] = df.apply(lambda x: check_alt_min_max(x[selected_columns['altitude_min']], x[selected_columns['altitude_max']]), axis=1, meta=False)
-                df['gn_is_valid'] = df['gn_is_valid'].where(cond=df['temp'].apply(lambda x: fill_col(x), meta=False), other=False)
+                df['temp'] = df.apply(lambda x: check_alt_min_max(x[selected_columns['altitude_min']], x[selected_columns['altitude_max']]), axis=1)
+                df['gn_is_valid'] = df['gn_is_valid'].where(cond=df['temp'].apply(lambda x: fill_col(x)), other=False)
                 df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
-                    cond=df['temp'].apply(lambda x: fill_col(x), meta=False),
+                    cond=df['temp'].apply(lambda x: fill_col(x)),
                     other=df['gn_invalid_reason'] + 'altitude_min ({}) > altitude_max ({}) -- '.format(selected_columns['altitude_min'],selected_columns['altitude_max']))
 
                 n_alt_min_sup = df['temp'].astype(str).str.contains('False').sum()

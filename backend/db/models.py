@@ -70,7 +70,7 @@ def generate_user_table_class(schema_name,table_name,pk_name,user_columns,id,sch
     }
     
     if schema_type == 'gn_imports':
-        user_table.update({'gn_is_valid' : DB.Column(DB.Boolean,nullable=True)})
+        user_table.update({'gn_is_valid' : DB.Column(DB.Text,nullable=True)})
         user_table.update({'gn_invalid_reason' : DB.Column(DB.Text,nullable=True)})
 
     user_table.update({pk_name : DB.Column(DB.Integer,autoincrement=True)})

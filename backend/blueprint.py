@@ -63,7 +63,8 @@ from .db.query import (
     get_full_table_name,
     set_imports_table_name,
     get_synthese_info,
-    load_csv_to_db
+    load_csv_to_db,
+    get_row_number
 )
 
 from .utils.clean_names import*
@@ -76,6 +77,7 @@ from .api_error import GeonatureImportApiError
 from .extract.extract import extract
 from .load.load import load
 from .wrappers import checker
+from .load.utils import compute_df
 
 import pdb
 
@@ -534,22 +536,42 @@ def postMapping(info_role, import_id):
         data = dict(request.get_json())
         MISSING_VALUES = ['', 'NA', 'NaN', 'na'] # mettre en conf
         DEFAULT_COUNT_VALUE = 1 # mettre en conf
+        MODULE_URL = blueprint.config["MODULE_URL"]
+        DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
 
         logger.debug('import_id = %s', import_id)
         logger.debug('DB tabel name = %s', table_names['imports_table_name'])
 
+        # get synthese fields filled in the user form:
+        selected_columns = {key:value for key, value in data.items() if value}
+        selected_user_cols = [*list(selected_columns.values())]
+        logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
-        ### EXTRACT (from postgresql table to dask dataframe)
+        # choose pandas if small dataset
+        """
+        n = get_row_number(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+        logger.debug('row number = %s', n)
+        if n < 50:
+            df_type = 'pandas'
+        else:
+            df_type = 'dask'
+        logger.info('type of dataframe = %s', df_type)
+        """
 
+        # extract
         logger.info('* START EXTRACT FROM DB TABLE TO PYTHON')
-        df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col)
-        logger.info('* END EXTRACT FROM DB TABLE TO PYTHON')
+        df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col, import_id)
+        original_cols = df.columns.tolist()
 
+        #selected_user_cols.append('gn_pk')
+        #pdb.set_trace()
+        #df = df[selected_user_cols]
 
         ### TRANSFORM (data checking and cleaning)
 
+        
         logger.info('* START DATA CLEANING')
-        transform_errors = data_cleaning(df, data, MISSING_VALUES, DEFAULT_COUNT_VALUE)
+        transform_errors = data_cleaning(df, selected_columns, MISSING_VALUES, DEFAULT_COUNT_VALUE)
 
         if len(transform_errors) > 0:
             for error in transform_errors:
@@ -560,14 +582,13 @@ def postMapping(info_role, import_id):
             df = df.drop('temp', axis=1)
 
         logger.info('* END DATA CLEANING')
-            
+
 
         ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
 
         logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE')
         load(df, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, table_names['imports_full_table_name'], import_id, engine, index_col)
         logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE')
-
 
         ### UPDATE METADATA
 
@@ -630,6 +651,7 @@ def postMapping(info_role, import_id):
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l\'administrateur',
             details=str(e))
+
 
 @blueprint.route('/syntheseInfo', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
