@@ -42,6 +42,7 @@ export class ImportProcessComponent implements OnInit {
   private isStep4Disabled: Boolean = true;
   private isStep1: boolean;
   private impatient;
+  private nInvalidRows;
 
   @ViewChild(NgbTabset)
   private tabset: NgbTabset;
@@ -198,8 +199,9 @@ export class ImportProcessComponent implements OnInit {
         this.isMapping = false;
         this.isMappingError = false;
         console.log(this.mappingResponse);
-        this.tabset.tabs._results[2].disabled = false;
-        this.tabset.select('content-mapping');
+        this.nInvalidRows = Number(this.mappingResponse);
+        //this.tabset.tabs._results[2].disabled = false;
+        //this.tabset.select('content-mapping');
       }
     );
     

@@ -404,20 +404,6 @@ def post_user_file(info_role):
         # clean column names
         columns = [clean_string(x) for x in report['column_names']]
 
-        # check for reserved sql word in column names
-        column_check = check_sql_words(columns)
-        if len(column_check) > 0:
-            forbidden_names = [report['column_names'][position] for position in column_check]
-            errors = []
-            error = {
-                'code': 'forbidden_colum_names',
-                'message': 'Vous ne pouvez pas utiliser certains noms de colonnes car ils sont reservés à sql',
-                'message_data': forbidden_names
-            }
-            errors.append(error)
-            logger.debug('forbidden column names in user file : %s', forbidden_names)
-            return errors,400
-
 
         """
         CREATES TABLES CONTAINING RAW USER DATA IN GEONATURE DB
@@ -567,9 +553,9 @@ def postMapping(info_role, import_id):
         #pdb.set_trace()
         #df = df[selected_user_cols]
 
+
         ### TRANSFORM (data checking and cleaning)
 
-        
         logger.info('* START DATA CLEANING')
         transform_errors = data_cleaning(df, selected_columns, MISSING_VALUES, DEFAULT_COUNT_VALUE)
 
@@ -589,6 +575,7 @@ def postMapping(info_role, import_id):
         logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE')
         load(df, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, table_names['imports_full_table_name'], import_id, engine, index_col)
         logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE')
+        
 
         ### UPDATE METADATA
 
@@ -601,6 +588,8 @@ def postMapping(info_role, import_id):
 
         DB.session.commit()
         DB.session.close()
+
+        n_invalid_rows = str(df['gn_is_valid'].astype(str).str.contains('False').sum().compute())
 
         logger.info('*** END CORRESPONDANCE MAPPING')
 
@@ -627,11 +616,12 @@ def postMapping(info_role, import_id):
         DB.session.close()
         """
         
-        
+        """
         if len(errors) > 0:
             return errors,400
+        """
 
-        return data
+        return n_invalid_rows
 
     except Exception as e:
         logger.error('*** ERROR IN CORRESPONDANCE MAPPING')

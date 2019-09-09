@@ -290,9 +290,16 @@ def get_synthese_types():
 
 @checker('CSV loaded to DB table')
 def load_csv_to_db(full_path, cur, full_table_name, separator, columns):
-    with open(full_path, 'r') as f:
-        next(f)
-        cur.copy_from(f, full_table_name, sep=separator, columns=columns)
+    #pdb.set_trace()
+    with open(full_path, 'rb') as f:
+        cmd = """
+            COPY {}({}) FROM STDIN WITH (
+                FORMAT CSV,
+                HEADER TRUE,
+                DELIMITER '{}'
+            )
+            """.format(full_table_name, ','.join(columns), separator)
+        cur.copy_expert(cmd, f)
 
 
 def get_row_number(archives_schema_name, imports_schema_name, id):
