@@ -47,7 +47,7 @@ def check_counts(df, selected_columns, synthese_info, def_count_val):
     """
     - every time :
         -> count_min = def_count_val if NA
-        -> if count_min < 0 or count_max < 0 : send error
+        -> if count_min < 0 or count_max < 0 (previously check during integer type checks)
     - if only count_min column is provided : count_max column = count_min column
     - if only count_max column is provided : count_min column = default count_min value (defined in parameters)
     - if both count_min and max columns are provided :

@@ -19,7 +19,6 @@ from .models import (
     generate_user_table_class
 )
 
-from .reserved_sql_words import words
 from ..wrappers import checker
 
 import pdb
@@ -290,7 +289,6 @@ def get_synthese_types():
 
 @checker('CSV loaded to DB table')
 def load_csv_to_db(full_path, cur, full_table_name, separator, columns):
-    #pdb.set_trace()
     with open(full_path, 'rb') as f:
         cmd = """
             COPY {}({}) FROM STDIN WITH (

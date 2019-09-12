@@ -533,6 +533,7 @@ def postMapping(info_role, import_id):
         selected_user_cols = [*list(selected_columns.values())]
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
+
         # choose pandas if small dataset
         """
         n = get_row_number(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
@@ -548,10 +549,7 @@ def postMapping(info_role, import_id):
         logger.info('* START EXTRACT FROM DB TABLE TO PYTHON')
         df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col, import_id)
         original_cols = df.columns.tolist()
-
-        #selected_user_cols.append('gn_pk')
-        #pdb.set_trace()
-        #df = df[selected_user_cols]
+        logger.info('* END EXTRACT FROM DB TABLE TO PYTHON')
 
 
         ### TRANSFORM (data checking and cleaning)
@@ -571,9 +569,9 @@ def postMapping(info_role, import_id):
 
 
         ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
-
+        
         logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE')
-        load(df, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, table_names['imports_full_table_name'], import_id, engine, index_col)
+        df = load(df, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, table_names['imports_full_table_name'], import_id, engine, index_col)
         logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE')
         
 
@@ -585,20 +583,13 @@ def postMapping(info_role, import_id):
                 TImports.step: 3,
                 })
         
-
         DB.session.commit()
         DB.session.close()
 
-        n_invalid_rows = str(df['gn_is_valid'].astype(str).str.contains('False').sum().compute())
+        n_invalid_rows = str(df['gn_is_valid'].astype(str).str.contains('False').sum())
 
         logger.info('*** END CORRESPONDANCE MAPPING')
 
-        """
-        def save_frame():
-            db_pool = get_db_pool()
-            records = df.to_dict(orient='records')
-            result = db_pool.execute(entity.__table__.insert(), records)
-        """
 
         """
         ### importer les données dans synthese
