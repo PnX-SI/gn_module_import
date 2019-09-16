@@ -302,5 +302,6 @@ def load_csv_to_db(full_path, cur, full_table_name, separator, columns):
 
 def get_row_number(archives_schema_name, imports_schema_name, id):
     table_names = get_table_names(archives_schema_name, imports_schema_name, id)
-    n = DB.session.execute("SELECT count(*) FROM {};".format(table_names['imports_full_table_name'])).fetchone()[0]
-    return n
+    nrows = DB.session.execute("SELECT count(*) AS count_1 FROM {};".format(table_names['imports_full_table_name'])).scalar()
+    DB.session.close()
+    return nrows

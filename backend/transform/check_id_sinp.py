@@ -17,7 +17,7 @@ def fill_nan_uuid(value):
 
 
 @checker('Data cleaning : uuid values checked')
-def check_uuid(df,selected_columns,synthese_info):
+def check_uuid(df,selected_columns,synthese_info, df_type):
 
     try:
 
@@ -66,7 +66,9 @@ def check_uuid(df,selected_columns,synthese_info):
                                 .format(col))
 
                 n_missing_uuid = df['temp'].astype(str).str.contains('False').sum()
-                # si trop long de compter les lignes, parcourir temp et stop des que trouve false
+                
+                if df_type == 'dask':
+                    n_missing_uuid = n_missing_uuid.compute()
 
                 if n_missing_uuid > 0:
                     user_error.append({

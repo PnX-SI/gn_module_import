@@ -22,7 +22,7 @@ def format_missing(df, selected_columns, synthese_info, missing_values):
 
 
 @checker('Data cleaning : missing values checked')
-def check_missing(df, selected_columns, synthese_info, missing_values):
+def check_missing(df, selected_columns, synthese_info, missing_values, df_type):
 
     try:
         logger.info('checking missing values : ')
@@ -59,6 +59,9 @@ def check_missing(df, selected_columns, synthese_info, missing_values):
                 df.drop('temp',axis=1)
 
                 n_missing_value = df['temp'].astype(str).str.contains('False').sum()
+                
+                if df_type == 'dask':
+                    n_missing_value = n_missing_value.compute()
 
                 if n_missing_value > 0:
                     user_error.append({

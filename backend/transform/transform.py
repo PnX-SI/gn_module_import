@@ -15,7 +15,7 @@ from .check_altitudes import check_altitudes
 from ..logs import logger
 
 
-def data_cleaning(df, selected_columns, missing_val, def_count_val):
+def data_cleaning(df, selected_columns, missing_val, def_count_val, df_type):
 
     try:
 
@@ -32,15 +32,14 @@ def data_cleaning(df, selected_columns, missing_val, def_count_val):
 
         
         # Check data:
-        error_missing = check_missing(df, selected_columns, synthese_info, missing_val)
-        error_types = check_types(df, selected_columns, synthese_info, missing_val)
-        error_cd_nom = check_cd_nom(df, selected_columns, missing_val)
-        error_dates = check_dates(df, selected_columns, synthese_info)
-        error_uuid = check_uuid(df,selected_columns,synthese_info)
-        error_check_counts = check_counts(df, selected_columns, synthese_info, def_count_val)
+        error_missing = check_missing(df, selected_columns, synthese_info, missing_val, df_type)
+        error_types = check_types(df, selected_columns, synthese_info, missing_val, df_type)
+        error_cd_nom = check_cd_nom(df, selected_columns, missing_val, df_type)
+        error_dates = check_dates(df, selected_columns, synthese_info, df_type)
+        error_uuid = check_uuid(df,selected_columns,synthese_info, df_type)
+        error_check_counts = check_counts(df, selected_columns, synthese_info, def_count_val, df_type)
         error_altitudes = check_altitudes(df, selected_columns, synthese_info, calcul=False)
         check_entity_source(df, selected_columns, synthese_info)
-
 
         
         # User error to front interface:

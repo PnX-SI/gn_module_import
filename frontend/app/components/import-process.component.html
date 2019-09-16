@@ -160,7 +160,7 @@
                         Précédent
                     </button>
                     <button *ngIf="nInvalidRows>0" class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"> 
-                        {{nInvalidRows}} erreurs
+                        {{nInvalidRows}} lignes avec erreurs
                     </button>
                     <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!this.syntheseForm.valid" (click)="onMapping(syntheseForm.value)"> 
                         Valider le mapping

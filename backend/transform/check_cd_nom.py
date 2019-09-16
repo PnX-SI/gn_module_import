@@ -12,7 +12,7 @@ import pdb
 
 
 @checker('Data cleaning : cd_nom checked')
-def check_cd_nom(df, selected_columns, missing_values):
+def check_cd_nom(df, selected_columns, missing_values, df_type):
 
     try:
 
@@ -50,6 +50,9 @@ def check_cd_nom(df, selected_columns, missing_values):
                     .format(selected_columns['cd_nom']))
 
         n_cd_nom_error = df['temp'].astype(str).str.contains('False').sum()
+
+        if df_type == 'dask':
+                    n_cd_nom_error = n_cd_nom_error.compute()
 
         if n_cd_nom_error > 0:
             user_error = {

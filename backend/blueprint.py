@@ -533,29 +533,34 @@ def postMapping(info_role, import_id):
         selected_user_cols = [*list(selected_columns.values())]
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
-
         # choose pandas if small dataset
-        """
-        n = get_row_number(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
-        logger.debug('row number = %s', n)
-        if n < 50:
+        
+        nrows = get_row_number(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+        
+        logger.debug('row number = %s', nrows)
+        if nrows < 200000:
             df_type = 'pandas'
         else:
             df_type = 'dask'
         logger.info('type of dataframe = %s', df_type)
-        """
+        
+        
 
         # extract
         logger.info('* START EXTRACT FROM DB TABLE TO PYTHON')
+
         df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col, import_id)
-        original_cols = df.columns.tolist()
+
+        if df_type == 'pandas':
+            df = compute_df(df)
+
         logger.info('* END EXTRACT FROM DB TABLE TO PYTHON')
 
 
         ### TRANSFORM (data checking and cleaning)
 
         logger.info('* START DATA CLEANING')
-        transform_errors = data_cleaning(df, selected_columns, MISSING_VALUES, DEFAULT_COUNT_VALUE)
+        transform_errors = data_cleaning(df, selected_columns, MISSING_VALUES, DEFAULT_COUNT_VALUE, df_type)
 
         if len(transform_errors) > 0:
             for error in transform_errors:
@@ -571,7 +576,7 @@ def postMapping(info_role, import_id):
         ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
         
         logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE')
-        df = load(df, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, table_names['imports_full_table_name'], import_id, engine, index_col)
+        df = load(df, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, table_names['imports_full_table_name'], import_id, engine, index_col, df_type)
         logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE')
         
 
@@ -612,7 +617,10 @@ def postMapping(info_role, import_id):
             return errors,400
         """
 
-        return n_invalid_rows
+        return {
+            'user_error_details' : transform_errors,
+            'n_user_errors' : n_invalid_rows
+        }
 
     except Exception as e:
         logger.error('*** ERROR IN CORRESPONDANCE MAPPING')

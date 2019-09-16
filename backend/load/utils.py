@@ -1,7 +1,5 @@
 from ..wrappers import checker
 
-
-
-@checker('dask dataframe computed')
+@checker('dask df converted in pandas df')
 def compute_df(df):
     return df.compute()

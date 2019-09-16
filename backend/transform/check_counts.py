@@ -42,7 +42,7 @@ def check_negative(val):
 
 
 @checker('Data cleaning : counts checked')
-def check_counts(df, selected_columns, synthese_info, def_count_val):
+def check_counts(df, selected_columns, synthese_info, def_count_val, df_type):
 
     """
     - every time :
@@ -118,10 +118,17 @@ def check_counts(df, selected_columns, synthese_info, def_count_val):
                 logger.info('checking if count_max >= count_min')
 
                 df['temp'] = ''
-                df['temp'] = df\
-                    .apply(lambda x: check_count_min_max(x[selected_columns['count_min']], x[selected_columns['count_max']]), axis=1)\
-                    .map(fill_map)\
-                    .astype('bool')
+
+                if df_type == 'pandas':
+                    df['temp'] = pd.to_numeric(df[selected_columns['count_max']], errors='coerce') - pd.to_numeric(df[selected_columns['count_min']], errors='coerce') < 0
+                    df['temp'] = -df['temp']\
+                                .map(fill_map)\
+                                .astype('bool')
+                else:
+                    df['temp'] = df\
+                        .apply(lambda x: check_count_min_max(x[selected_columns['count_min']], x[selected_columns['count_max']]), axis=1)\
+                        .map(fill_map)\
+                        .astype('bool')
 
                 df['gn_is_valid'] = df['gn_is_valid']\
                     .where(
@@ -134,6 +141,9 @@ def check_counts(df, selected_columns, synthese_info, def_count_val):
                         .format(selected_columns['count_min'],selected_columns['count_max']))
 
                 n_count_min_sup = df['temp'].astype(str).str.contains('False').sum()
+
+                if df_type == 'dask':
+                    n_count_min_sup = n_count_min_sup.compute()
 
                 if n_count_min_sup > 0:
                     user_error.append({

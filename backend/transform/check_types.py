@@ -40,7 +40,7 @@ def is_uuid(value, version=4):
 
 
 @checker('Data cleaning : type of values checked')
-def check_types(df, selected_columns, synthese_info, missing_values):
+def check_types(df, selected_columns, synthese_info, missing_values, df_type):
 
     try:
 
@@ -90,6 +90,10 @@ def check_types(df, selected_columns, synthese_info, missing_values):
             #n_invalid_date_error = count_false(df['temp']).compute()
             n_invalid_date_error = df['temp'].astype(str).str.contains('False').sum()
             #n_invalid_date_error = df['temp'].compute().value_counts()[False]
+
+            if df_type == 'dask':
+                n_invalid_date_error = n_invalid_date_error.compute()
+
             selected_columns['date_min'] = col_name
 
             if n_invalid_date_error > 0:
@@ -137,6 +141,9 @@ def check_types(df, selected_columns, synthese_info, missing_values):
 
                 n_invalid_uuid = df['temp'].astype(str).str.contains('False').sum()
 
+                if df_type == 'dask':
+                    n_invalid_uuid = n_invalid_uuid.compute()
+
                 if n_invalid_uuid > 0:
                     user_error.append({
                         'code': 'uuid error',
@@ -161,7 +168,7 @@ def check_types(df, selected_columns, synthese_info, missing_values):
                 df['temp'] = ''
                 df['temp'] = df['temp']\
                     .where(
-                        cond=df[selected_columns[col]].str.len() < n_char, 
+                        cond=df[selected_columns[col]].str.len().fillna(0) < n_char,
                         other=False)\
                     .map(fill_map)\
                     .astype('bool')
@@ -178,6 +185,9 @@ def check_types(df, selected_columns, synthese_info, missing_values):
                             .format(selected_columns[col]))
 
                 n_invalid_string = df['temp'].astype(str).str.contains('False').sum()
+
+                if df_type == 'dask':
+                    n_invalid_string = n_invalid_string.compute()
 
                 if n_invalid_string > 0:
                     user_error.append({
@@ -226,6 +236,9 @@ def check_types(df, selected_columns, synthese_info, missing_values):
                             .format(selected_columns[col]))
 
                 n_invalid_int = df['temp'].astype(str).str.contains('False').sum()
+
+                if df_type == 'dask':
+                    n_invalid_int = n_invalid_int.compute()
 
                 if n_invalid_int > 0:
                     user_error.append({

@@ -24,7 +24,7 @@ def is_negative_date(value):
 
 
 @checker('Data cleaning : dates checked')
-def check_dates(df, selected_columns, synthese_info):
+def check_dates(df, selected_columns, synthese_info, df_type):
 
     try:
 
@@ -67,6 +67,9 @@ def check_dates(df, selected_columns, synthese_info):
                     .format(selected_columns['date_min'],selected_columns['date_max']))
 
             n_date_min_sup = df['temp'].astype(str).str.contains('False').sum()
+
+            if df_type == 'dask':
+                    n_date_min_sup = n_date_min_sup.compute()
 
             if n_date_min_sup > 0:
                 user_error.append({

@@ -1,5 +1,4 @@
 import dask
-import d6tstack
 from sqlalchemy import create_engine
 import os
 import shutil
@@ -15,6 +14,8 @@ from ..api_error import GeonatureImportApiError
 from ..logs import logger
 from ..db.query import check_row_number, get_full_table_name, load_csv_to_db
 from ..db.models import generate_user_table_class
+from ..load.utils import compute_df
+
 import psycopg2.extras as ex
 import pdb
 
@@ -26,11 +27,11 @@ def load_df_to_sql(df, table_name, full_table_name, engine, schema_name, separat
     #trans = connection.begin()
 
     try:
+        conn = engine.raw_connection()
         create_empty_table(df, table_name, engine, schema_name)
         fbuf = io.StringIO()
         df.to_csv(fbuf, index=False, header=True, sep=separator)
         fbuf.seek(0)
-        conn = engine.raw_connection()
         cur = conn.cursor()
         cmd = """
             COPY {}({}) FROM STDIN WITH (
@@ -41,13 +42,11 @@ def load_df_to_sql(df, table_name, full_table_name, engine, schema_name, separat
             """.format(full_table_name, ','.join(df.columns.tolist()), separator)
         cur.copy_expert(cmd, fbuf)
         conn.commit()
+        cur.close()
+        conn.close()
     except Exception:
         conn.rollback()
         raise
-    finally:
-        cur.close()
-        conn.close()
-
 
 
 def create_empty_table(df, table_name, engine, schema_name):
@@ -65,23 +64,26 @@ def create_empty_table(df, table_name, engine, schema_name):
         trans.close()
 
 
+"""
 @checker('dask df converted in pandas df')
 def convert_to_pandas(df):
     return df.compute()
+"""
 
 
 @checker('Loaded (from Python dataframe to DB table)')
-def load(df, table_name, schema_name, full_table_name, import_id, engine, index_col):
+def load(df, table_name, schema_name, full_table_name, import_id, engine, index_col, df_type):
 
     try:
 
         # convert dask df to pandas df
-        logger.info('converting dask dataframe to pandas dataframe:')
-        df2 = convert_to_pandas(df)
+        if df_type == 'dask':
+            logger.info('converting dask dataframe to pandas dataframe:')
+            df = convert_to_pandas(df)
 
         # create empty db table
         logger.info('loading dataframe into DB table:')
-        load_df_to_sql(df2, table_name, full_table_name, engine, schema_name, ';', import_id)
+        load_df_to_sql(df, table_name, full_table_name, engine, schema_name, ';', import_id)
 
         # set gn_pk as primary key:
         DB.session.execute("ALTER TABLE ONLY {} ADD CONSTRAINT pk_gn_imports_{} PRIMARY KEY ({});".format(full_table_name, table_name, index_col))
@@ -96,9 +98,9 @@ def load(df, table_name, schema_name, full_table_name, import_id, engine, index_
                 message='INTERNAL SERVER ERROR ("postMapping() error"): lignes manquantes dans {} - refaire le matching'.format(full_table_name),
                 details='')
 
-        del df
+        #del df
         
-        return df2
+        return df
 
     except Exception:
         raise
