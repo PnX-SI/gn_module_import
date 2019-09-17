@@ -128,12 +128,15 @@ export class ImportProcessComponent implements OnInit {
 	}
 
 	onMapping(value, stepper: MatStepper) {
+		this.isUploading = true;
 		this._ds.postMapping(value, this.importId).subscribe(
 			(res) => {
 				this.mappingResponse = res as JSON;
+				this.isUploading = false;
 				stepper.next();
 			},
 			(error) => {
+				this.isUploading = false;
 				if (error.statusText === 'Unknown Error') {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');

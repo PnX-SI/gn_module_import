@@ -3,7 +3,7 @@ import datetime
 import dask
 import dask.dataframe as dd
 
-from .utils import fill_col
+from .utils import fill_col, fill_map
 from ..wrappers import checker
 from ..logs import logger
 

@@ -151,7 +151,7 @@ export const ModuleConfig = {
     {
      "label": "Cd nom taxref",
      "name": "cd_nom",
-     "required": false
+     "required": true
     },
     {
      "label": "M\u00e9thode d'observation",

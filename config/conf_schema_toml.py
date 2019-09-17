@@ -96,7 +96,7 @@ MAPPING_DATA = [
             {
                 'name': 'date_max',
                 'label': 'Date fin',
-                'required': True
+                'required': False
             },
             {
                 'name': 'altitude_min',
@@ -142,7 +142,7 @@ MAPPING_DATA = [
             {
                 'name': 'cd_nom',
                 'label': 'Cd nom taxref',
-                'required': False
+                'required': True
             },
             {
                 'name': 'id_nomenclature_obs_meth',
