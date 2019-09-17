@@ -15,6 +15,17 @@ def set_is_valid(df, column_name):
             other=False
         )
 
+
+def set_invalid_reason(df, source_col_name, message, col_name):
+    df['gn_invalid_reason'] = df['gn_invalid_reason']\
+        .where(
+            cond=df[source_col_name], 
+            other=df['gn_invalid_reason'] + message\
+                .format(col_name)
+                + ' *** '
+        )
+
+
 def get_types(synthese_info):
     return [synthese_info[field]['data_type'] for field in synthese_info]
 

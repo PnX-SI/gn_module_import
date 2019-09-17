@@ -4,7 +4,7 @@ import numpy as np
 from geonature.utils.env import DB
 
 from ..db.query import get_synthese_info
-from .utils import fill_col, fill_map, set_is_valid, set_user_error
+from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
@@ -41,12 +41,7 @@ def check_cd_nom(df, selected_columns, missing_values, df_type):
 
         # set gn_is_valid and invalid_reason
         set_is_valid(df, 'temp')
-
-        df['gn_invalid_reason'] = df['gn_invalid_reason']\
-            .where(
-                cond=df['temp'], 
-                other=df['gn_invalid_reason'] + 'invalid cd_nom value in {} column -- '\
-                    .format(selected_columns['cd_nom']))
+        set_invalid_reason(df, 'temp', 'invalid cd_nom value in {} column', selected_columns['cd_nom'])
 
         n_cd_nom_error = df['temp'].astype(str).str.contains('False').sum()
 

@@ -8,7 +8,7 @@ import datetime
 from ..db.query import get_synthese_types
 from ..wrappers import checker
 from ..logs import logger
-from .utils import fill_map, get_types, set_is_valid, set_user_error
+from .utils import fill_map, get_types, set_is_valid, set_invalid_reason, set_user_error
 
 import pdb
 
@@ -76,17 +76,9 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                 .astype('bool')
 
             set_is_valid(df, 'temp')
+            set_invalid_reason(df, 'temp', 'invalid date for {} column', selected_columns[field])
 
-            df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                .where(
-                    cond=df['temp'], 
-                    other=df['gn_invalid_reason'] + 'invalid date for {} column -- '\
-                        .format(selected_columns[field]))
-
-            #n_invalid_date_error = df['temp'].count().compute()
-            #n_invalid_date_error = count_false(df['temp']).compute()
             n_invalid_date_error = df['temp'].astype(str).str.contains('False').sum()
-            #n_invalid_date_error = df['temp'].compute().value_counts()[False]
 
             if df_type == 'dask':
                 n_invalid_date_error = n_invalid_date_error.compute()
@@ -97,7 +89,7 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                 user_error.append(
                         set_user_error(
                             'invalid date type',
-                            field,
+                            selected_columns[field],
                             n_invalid_date_error
                         )
                     )
@@ -128,12 +120,7 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                     .astype('bool')
 
                 set_is_valid(df, 'temp')
-
-                df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                    .where(
-                        cond=df['temp'],
-                        other=df['gn_invalid_reason'] + 'invalid uuid in {} column -- '\
-                            .format(selected_columns[col]))
+                set_invalid_reason(df, 'temp', 'invalid uuid in {} column', selected_columns[col])
 
                 n_invalid_uuid = df['temp'].astype(str).str.contains('False').sum()
 
@@ -144,7 +131,7 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                     user_error.append(
                         set_user_error(
                             'invalid uuid type',
-                            col,
+                            selected_columns[col],
                             n_invalid_uuid
                         )
                     )
@@ -172,12 +159,7 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                     .astype('bool')
 
                 set_is_valid(df, 'temp')
-
-                df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                    .where(
-                        cond=df['temp'],
-                        other=df['gn_invalid_reason'] + 'string too long in {} column -- '\
-                            .format(selected_columns[col]))
+                set_invalid_reason(df, 'temp', 'string too long in {} column', selected_columns[col])
 
                 n_invalid_string = df['temp'].astype(str).str.contains('False').sum()
 
@@ -188,7 +170,7 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                     user_error.append(
                         set_user_error(
                             'invalid character varying length',
-                            col,
+                            selected_columns[col],
                             n_invalid_string
                         )
                     )
@@ -222,12 +204,7 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                     .astype('bool')
 
                 set_is_valid(df, 'temp')
-
-                df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                    .where(
-                        cond=df['temp'],
-                        other=df['gn_invalid_reason'] + 'invalid integer in {} column; '\
-                            .format(selected_columns[col]))
+                set_invalid_reason(df, 'temp', 'invalid integer in {} column', selected_columns[col])
 
                 n_invalid_int = df['temp'].astype(str).str.contains('False').sum()
 
@@ -238,7 +215,7 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                     user_error.append(
                         set_user_error(
                             'invalid integer type',
-                            col,
+                            selected_columns[col],
                             n_invalid_int
                         )
                     )

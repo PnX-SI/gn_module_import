@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import datetime
 
-from .utils import fill_map, set_is_valid, set_user_error
+from .utils import fill_map, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
@@ -49,12 +49,7 @@ def check_missing(df, selected_columns, synthese_info, missing_values, df_type):
                     .astype('bool')
 
                 set_is_valid(df, 'temp')
-
-                df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                    .where(
-                        cond=df['temp'], 
-                        other=df['gn_invalid_reason'] + 'missing value in {} column -- '\
-                            .format(selected_columns[field]))
+                set_invalid_reason(df, 'temp', 'missing value in {} column', selected_columns[field])
             
                 df.drop('temp',axis=1)
 
@@ -67,7 +62,7 @@ def check_missing(df, selected_columns, synthese_info, missing_values, df_type):
                     user_error.append(
                         set_user_error(
                             'missing value in required field',
-                            field,
+                            selected_columns[field],
                             n_missing_value
                         )
                     )

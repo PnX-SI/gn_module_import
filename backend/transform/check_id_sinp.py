@@ -2,7 +2,7 @@ from uuid import uuid4
 import numpy as np
 import pandas as pd
 
-from .utils import fill_col, set_is_valid, set_user_error
+from .utils import fill_col, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
@@ -49,11 +49,8 @@ def check_uuid(df,selected_columns,synthese_info, df_type):
 
                     logger.info('unique_id_sinp provided in user data: checking if not missing')
 
-                    df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                        .where(
-                            cond=df['temp'],
-                            other=df['gn_invalid_reason'] + 'warning : champ uuid vide dans colonne {} : un uuid a été créé -- '.format(col))
-                    
+                    set_invalid_reason(df, 'temp', 'warning : champ uuid vide dans colonne {} : un uuid a été créé', selected_columns[col])
+
                     df[selected_columns[col]] = df[selected_columns[col]]\
                         .apply(lambda x: fill_nan_uuid(x))
 

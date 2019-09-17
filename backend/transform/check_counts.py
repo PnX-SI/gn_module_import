@@ -1,7 +1,7 @@
 import pandas as pd
 import dask
 
-from .utils import fill_col, fill_map, set_is_valid, set_user_error
+from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
@@ -131,11 +131,12 @@ def check_counts(df, selected_columns, synthese_info, def_count_val, df_type):
                         .astype('bool')
 
                 set_is_valid(df, 'temp')
-                
-                df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
-                    cond=df['temp'],
-                    other=df['gn_invalid_reason'] + 'count_min ({}) > count_max ({}) -- '\
-                        .format(selected_columns['count_min'],selected_columns['count_max']))
+                set_invalid_reason(
+                    df, 
+                    'temp', 
+                    'count_min > count_max ({} columns)', 
+                    ','.join([selected_columns['count_min'],selected_columns['count_max']])
+                    )
 
                 n_count_min_sup = df['temp'].astype(str).str.contains('False').sum()
 

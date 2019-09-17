@@ -3,7 +3,7 @@ import datetime
 import dask
 import dask.dataframe as dd
 
-from .utils import fill_col, fill_map, set_is_valid
+from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason
 from ..wrappers import checker
 from ..logs import logger
 
@@ -58,11 +58,7 @@ def check_dates(df, selected_columns, synthese_info, df_type):
                 .astype('bool')
             
             set_is_valid(df, 'temp')
-            
-            df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
-                cond=df['temp'], 
-                other=df['gn_invalid_reason'] + 'date_min ({}) > date_max ({}) -- '\
-                    .format(selected_columns['date_min'],selected_columns['date_max']))
+            set_invalid_reason(df, 'temp', 'date_min > date_max ({} columns)', ','.join([selected_columns['date_min'],selected_columns['date_max']]))
 
             n_date_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
