@@ -77,7 +77,6 @@ from .api_error import GeonatureImportApiError
 from .extract.extract import extract
 from .load.load import load
 from .wrappers import checker
-from .load.utils import compute_df
 
 import pdb
 

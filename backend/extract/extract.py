@@ -8,6 +8,7 @@ from geonature.utils.env import DB
 
 from ..wrappers import checker
 from ..logs import logger
+from ..load.utils import compute_df
 
 import pdb
 
