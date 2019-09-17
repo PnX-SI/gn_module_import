@@ -53,10 +53,6 @@
                             </select>
                             <div class="invalid-feedback">Sélectionnez un séparateur</div>
                         </div>
-                        <div class="file-validation">
-                            <mat-checkbox color='primary'>Vérfication avancée de la validité du fichier</mat-checkbox>
-                        </div>
-
                     </form>
                     <!-- Navigation buttons -->
                     <div class="navigate-btn">
@@ -110,7 +106,7 @@
                                             <select class="form-control form-control-sm" id="{{field.label}}"
                                                 placeholder="Open this select menu" formControlName="{{field.name}}"
                                                 [required]=field.required>
-                                                <option selected [value]=""> </option>
+                                                <option selected >{{syntheseForm.value[field.name]}}</option>
                                                 <option *ngFor="let column of columns" [value]="column">{{column}}
                                                 </option>
                                             </select>
