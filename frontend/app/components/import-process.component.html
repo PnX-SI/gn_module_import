@@ -1,0 +1,295 @@
+
+<div class=container>
+
+    <ngb-tabset #tabset type="pills" activeId="upload" (tabChange)="beforeChange($event)" justify="fill">
+
+        <!-- STEP 1 -->
+
+        <ngb-tab id="upload" title="1- Upload du fichier">
+
+            <ng-template ngbTabContent>
+
+                <br>
+                <h4> UPLOAD DU FICHIER </h4>
+                <br>
+
+                <form [formGroup]="uploadForm" class="was-validated">
+
+                    <!-- File upload field -->
+                    <div id="upload" class="form-group">
+                    <div class="custom-file col-sm-5" id="upload_files">
+                        <input class="custom-file-input" type=file (change)="onFileSelected($event)" id="selectedFile" name="file" required>
+                        <label class="custom-file-label" for="selectedFile">{{fileName}}</label>
+                        <label *ngIf="!fileName" class="custom-file-label" for="selectedFile"> Choisissez votre fichier</label>
+                    </div>
+                    </div>
+
+                    <p></p>
+                    <br>
+
+                    <!-- Encoding field -->
+                    <div class="col-auto form-group row">
+                        <label class="col-sm-3 col-form-label" for="encodage"> Encodage de votre fichier </label>
+                        <div class="col-sm-3">
+                        <select class="custom-select mr-sm-2" id="encodage" formControlName="encodage" required>
+                            <option *ngFor="let encodage of IMPORT_CONFIG.ENCODAGE" [value]="encodage">{{encodage}}</option>
+                        </select>
+                        <div class="invalid-feedback">Sélectionnez un encodage</div>
+                        </div>
+                    </div>
+
+                    <!-- SRID field -->
+                    <div class="col-auto form-group row">
+                        <label class="col-sm-3 col-form-label" for="srid"> SRID de vos données géographiques </label>
+                        <div class="col-sm-3">
+                        <select class="custom-select mr-sm-2" id="srid" formControlName="srid" required>
+                            <option *ngFor="let srid of IMPORT_CONFIG.SRID" [value]="srid.code">{{srid.name}}</option>
+                        </select>
+                        <div class="invalid-feedback">Sélectionnez un SRID</div>
+                        </div>
+                    </div>
+
+                    <!-- separator field -->
+                    <div class="col-auto form-group row">
+                        <label class="col-sm-3 col-form-label" for="srid"> Séparateur de votre fichier </label>
+                        <div class="col-sm-3">
+                            <select class="custom-select mr-sm-2" id="separator" formControlName="separator" required>
+                                <option *ngFor="let separator of IMPORT_CONFIG.SEPARATOR" [value]="separator.code">{{separator.name}}</option>
+                            </select>
+                            <div class="invalid-feedback">Sélectionnez un séparateur</div>
+                        </div>
+                    </div>
+
+                    <br>
+                    
+                    <!-- Navigation buttons -->
+                    <div class="float-right">
+                        <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!this.uploadForm.valid" (click)="onUpload(uploadForm.value)" id="validate">
+                            Suivant
+                            <i class="material-icons"> navigate_next </i>
+                        </button>
+                    </div>
+
+                    <!-- Spinner -->
+                    <div *ngIf="isUploading" class="spinner">
+                        <mat-spinner class="upload-spinner" 
+                            [color]="color"
+                            [diameter]="150"
+                            [strokeWidth]="12">
+                        </mat-spinner>
+                    </div>
+
+                <br>
+
+                <!-- Error list in table -->
+                <div id="errorList" *ngIf="isUserError">
+
+                        <div> Attention, erreurs detectées dans le fichier uploadé : </div>
+
+                        <table >
+                            <thead>
+                                <tr>
+                                <th class="Code"> Code </th>
+                                <th class="Message"> Message </th>
+                                <th class="MessageData"> Message Data </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr *ngFor="let error of userErrors">
+                                <td> {{error.code}} </td>
+                                <td> {{error.message}} </td>
+                                <td> {{error.message_data}} </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                
+
+                </form>
+            
+                <br>
+
+            </ng-template>
+
+        </ngb-tab>
+
+
+
+        <!-- STEP 2 -->
+        
+        <ngb-tab id="field-mapping" title="2- Mapping des champs" disabled="isStep2Disabled">
+
+            <ng-template ngbTabContent>
+
+                <br>
+                <h4> MAPPING DES CHAMPS </h4>
+                <br>
+
+                <form [formGroup]="syntheseForm" class="was-validated">             
+
+                    <!-- List of synthese fields -->
+
+                    <div  *ngFor="let col of synColumnNames">
+                        <div class="col-auto form-group row">
+                            <label class="col-sm-3 col-form-label" for="{{col.column_name}}"> {{col.column_name}} </label>
+                            <div class="col-sm-3">
+                            <select *ngIf="col.is_nullable == 'NO';else YES" class="custom-select mr-sm-2" id="{{col.column_name}}" placeholder="Open this select menu" formControlName="{{col.column_name}}" required>
+                                <option selected [value]=""> </option>
+                                <option *ngFor="let column of columns" [value]="column">{{column}}</option>
+                            </select>
+                            <ng-template #YES>
+                                <select class="custom-select mr-sm-2" id="{{col.column_name}}" placeholder="Open this select menu" formControlName="{{col.column_name}}">
+                                    <option selected [value]=""> </option>
+                                    <option *ngFor="let column of columns" [value]="column">{{column}}</option>
+                                </select>
+                            </ng-template>
+                            <div class="invalid-feedback">Sélectionnez {{col.column_name}}</div>
+                            </div>
+                        </div>
+                    </div>
+                <br>
+            
+                
+                <!-- Navigation buttons -->
+
+                <div class="d-flex flex-row justify-content-between">
+                    <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between" (click)="tabset.select('upload')"> 
+                        <i class="material-icons"> navigate_before </i> 
+                        Précédent
+                    </button>
+                    <button *ngIf="nInvalidRows>0" class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"> 
+                        {{nInvalidRows}} lignes avec erreurs
+                    </button>
+                    <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!this.syntheseForm.valid" (click)="onMapping(syntheseForm.value)"> 
+                        Valider le mapping
+                    </button>
+                    <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" [disabled]="!this.syntheseForm.valid" (click)="onMapping(syntheseForm.value)"> 
+                        Suivant
+                        <i class="material-icons"> navigate_next </i> 
+                    </button>
+                </div>
+
+                <!-- Spinner -->
+                <div *ngIf="isMapping" class="spinner">
+                    <mat-spinner class="upload-spinner" 
+                        [color]="color"
+                        [diameter]="150"
+                        [strokeWidth]="12">
+                    </mat-spinner>
+                </div>
+
+                <br>
+
+                <!-- Error list in table -->
+                <div id="mappingErrorList" *ngIf="isMappingError">
+
+                        <div> Attention, erreurs detectées pendant la vérification du mapping : </div>
+
+                        <table >
+                            <thead>
+                                <tr>
+                                <th class="Code"> Code </th>
+                                <th class="Message"> Message </th>
+                                <th class="MessageData"> Message Data </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr *ngFor="let error of mappingErrors">
+                                <td> {{error.code}} </td>
+                                <td> {{error.message}} </td>
+                                <td> {{error.message_data}} </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </form>
+                
+                <br>
+
+            </ng-template>
+
+        </ngb-tab>
+            
+
+        <!-- STEP 3 -->
+
+        <ngb-tab id="content-mapping" title="3- Mapping des contenus" disabled="isStep3Disabled">
+
+            <ng-template ngbTabContent>
+
+                <br>
+                <h4> MAPPING DES CONTENUS </h4>
+                <br>
+
+                <div> Pas à faire dans iteration 1 </div>
+
+                <br>
+
+                <div class="d-flex flex-row justify-content-between">
+                        <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between" (click)="tabset.select('field-mapping')"> 
+                            <i class="material-icons"> navigate_before </i> 
+                            Précédent
+                        </button>
+                        <button (click)="onFinalStep()" class="btn btn-success box-shadow d-flex justify-content-center align-content-between"> 
+                            Suivant
+                            <i class="material-icons"> navigate_next </i> 
+                        </button>
+                    </div>
+                <br>
+
+            </ng-template>
+
+        </ngb-tab>
+
+
+        <!-- STEP 4 -->
+        
+        <ngb-tab id="final" title="4- Importer" disabled="isStep4Disabled">
+
+            <ng-template ngbTabContent>
+                
+            <br>
+            <h4> TERMINER L'IMPORT </h4>
+            <br>
+
+            <div>
+                Preview des données avant import dans la synthèse
+            </div>
+
+
+            <br>
+
+            <div class="d-flex flex-row justify-content-between">
+                <button (click)="tabset.select('content-mapping')" class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"> 
+                    <i class="material-icons"> navigate_before </i> 
+                    Précédent
+                </button> 
+                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between" (click)="onFinalImport()"> 
+                    <i class="material-icons"> done </i> 
+                    Importer les données dans Geonature
+                </button>                  
+            </div>
+            <br>
+
+            </ng-template>
+
+        </ngb-tab>
+
+    </ngb-tabset>
+
+
+    <br>
+    <footer>
+
+    <div class="d-flex flex-row justify-content-between" id="bottomButtons">
+        <button type="button" id="cancelImport" (click)="cancelImport()" class="btn btn-danger box-shadow btn-sm">Annuler l'import</button>
+        <button *ngIf="!isStep1" type="button" id="importListPage" (click)="onImportList()" class="btn btn-secondary box-shadow btn-sm">Enregistrer et quitter</button>
+    </div>
+
+    </footer>
+
+</div>
