@@ -27,6 +27,7 @@ export class ImportProcessComponent implements OnInit {
 	public columns;
 
 	public impatient: boolean = false;
+	step1_btn: boolean = true;
 
 	constructor(
 		private _router: Router,
@@ -44,7 +45,9 @@ export class ImportProcessComponent implements OnInit {
 			separator: [ null, Validators.required ],
 			stepper: [ null, Validators.required ] // hack for matrial 2.0.0 beta
 		});
-		this.syntheseForm = this._fb.group({});
+		this.syntheseForm = this._fb.group({
+			stepper: [ null, Validators.required ] 
+		});
 		for (let col of this.IMPORT_CONFIG.MAPPING_DATA_FRONTEND) {
 			for (let field of col.fields) {
 				if (field.required) {
@@ -54,6 +57,7 @@ export class ImportProcessComponent implements OnInit {
 				}
 			}
 		}
+		this.Formlistener();
 	}
 
 	onFileSelected(event) {
@@ -176,6 +180,17 @@ export class ImportProcessComponent implements OnInit {
 		stepper.previous();
 	}
 
+	Formlistener() {
+		this.uploadForm.valueChanges.subscribe((result) => {
+			if (
+				this.uploadForm.get('file').valid &&
+				this.uploadForm.get('encodage').valid &&
+				this.uploadForm.get('separator').valid &&
+				this.uploadForm.get('separator').valid
+			)
+				this.step1_btn = false
+		});
+	}
 	/*les colonnes sont récupérées à partir de la conf !!!
 	getSynColumnNames() {
 		// attention

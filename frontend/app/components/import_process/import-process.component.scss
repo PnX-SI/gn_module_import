@@ -94,6 +94,10 @@ tr:nth-child(even) {
   margin: 10px 0
 }
 
+/deep/.mat-step-header .mat-step-icon {
+  background-color: #28a745;
+}
+
 .navigate-btn {
   width: 100%;
   display: flex;

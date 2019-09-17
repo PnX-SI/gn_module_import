@@ -5,7 +5,7 @@
         </mat-spinner>
     </div>
     <mat-horizontal-stepper linear #stepper>
-        <mat-step label="Upload du fichier" [stepControl]="uploadForm" [completed]= 'false'>
+        <mat-step label="Upload du fichier" [stepControl]="uploadForm" >
             <!-- STEP 1 -->
             <div class="card">
                 <div class="card-header">
@@ -62,7 +62,7 @@
                     <div class="navigate-btn">
                         <button type="submit"
                             class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                            (click)="onUpload(uploadForm.value, stepper)" id="validate">
+                            (click)="onUpload(uploadForm.value, stepper)" [disabled]="step1_btn" id="validate">
                             Suivant
                             <i class="material-icons"> navigate_next </i>
                         </button>
@@ -114,7 +114,9 @@
                                                 <option *ngFor="let column of columns" [value]="column">{{column}}
                                                 </option>
                                             </select>
-                                            <div *ngIf="field.required" [class.d-block]="syntheseForm.controls[field.name].hasError('required')" class="invalid-feedback">Sélectionnez
+                                            <div *ngIf="field.required"
+                                                [class.d-block]="syntheseForm.controls[field.name].hasError('required')"
+                                                class="invalid-feedback">Sélectionnez
                                                 {{field.label}}</div>
                                         </div>
                                     </div>

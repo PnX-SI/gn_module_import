@@ -5,7 +5,7 @@
         </div>
         <div class="card-body">
             <div *ngIf="!empty">
-                <ngx-datatable #table class="material striped box-shadow" [rows]="history" [columnMode]="'force'"
+                <ngx-datatable #table class="material striped" [rows]="history" [columnMode]="'force'"
                     [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" [limit]="15" [selectionType]='single'>
                     <ngx-datatable-column *ngFor="let col of config.LIST_COLUMNS_FRONTEND" name="{{col.name}}"
                         prop="{{col.prop}}" maxWidth="{{col.max_width}}">
