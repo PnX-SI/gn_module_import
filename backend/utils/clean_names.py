@@ -1,8 +1,6 @@
 import unicodedata
 import re
-from .goodtables_checks.goodtables_errors import digit_name
-from .reserved_sql_words import words
-import pdb
+from ..goodtables_checks.goodtables_errors import digit_name
 
 def clean_string(my_string):
     """ Clean strings (file or column names) from user data:
@@ -57,34 +55,3 @@ def clean_file_name(my_string, extension, id_import):
         'clean_name': my_string,
         'errors': errors
     }
-
-
-def check_sql_words(my_string_list):
-    forbidden_word_positions = []
-    for my_string in my_string_list:
-        if my_string.upper() in words:
-            forbidden_word_positions.append(my_string_list.index(my_string))
-    return forbidden_word_positions
-
-
-def get_full_table_name(schema_name, table_name):
-    """ Get full table name (schema_name.table_name)
-
-    Args:
-        - schema_name (str)
-        - table_name (str)
-    Returns:
-        - full name (str)
-    """
-    return '.'.join([schema_name, table_name])
-
-
-def set_imports_table_name(table_name):
-    """ Set imports table name (prefixed with 'i_')
-
-    Args:
-        - table_name (str)
-    Returns:
-        - table name with 'i_' prefix (str)
-    """
-    return ''.join(['i_', table_name])

@@ -1,73 +1,60 @@
 from flask import (
     Blueprint,
     current_app,
-    request
+    request,
+    jsonify
 )
-from dask.distributed import Client
+
 from werkzeug.utils import secure_filename
 
 import os
+
 import pathlib
-import psycopg2
-import psutil
+
 import pandas as pd
-import pandas.io.sql as psql
+
 import numpy as np
 
 import threading
 
-import io
-import tempfile
-import dask.dataframe as dd
-import dask
-import d6tstack
-
-
-import ast
-
 import datetime
 
 import sqlalchemy
+<<<<<<< HEAD
 from sqlalchemy import func, text, select, update, create_engine, event
+=======
+from sqlalchemy import func, text, select, update, event
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
 from sqlalchemy.sql.elements import quoted_name
 from sqlalchemy.sql import column
 
-from geonature.utils.utilssqlalchemy import json_resp
-
-from geonature.utils.env import DB
-
+import psycopg2
 from psycopg2 import sql
-from psycopg2.extensions import QuotedString
+from psycopg2.extensions import QuotedString, AsIs, quote_ident
+from psycopg2.extras import execute_values
 
-
-import pdb
-
-from .transform import __test
-
+from geonature.utils.utilssqlalchemy import json_resp
+from geonature.utils.env import DB
 from geonature.core.gn_meta.models import TDatasets
-
 from geonature.core.gn_synthese.models import (
     Synthese,
     TSources,
     CorObserverSynthese
 )
-
 from geonature.core.gn_commons.models import BibTablesLocation
-
 from geonature.utils.env import DB
-
 from geonature.core.gn_permissions import decorators as permissions
 
 from pypnnomenclature.models import TNomenclatures
 
-from .models import (
+from .db.models import (
     TImports,
     CorRoleImport,
     CorImportArchives,
     generate_user_table_class
 )
 
-from .query import (
+from .db.query import (
     get_table_info,
     get_table_list,
     test_user_dataset,
@@ -75,21 +62,41 @@ from .query import (
     delete_import_CorRoleImport,
     delete_import_TImports,
     delete_tables,
-    get_import_table_name
+    get_table_names,
+    check_sql_words,
+    get_full_table_name,
+    set_imports_table_name,
+    get_synthese_info,
+    load_csv_to_db,
+    get_row_number
 )
 
-from .utils import*
-# ameliorer prise en charge des erreurs
-
+from .utils.clean_names import*
 from .upload.upload_process import upload
-
 from .upload.upload_errors import*
-
 from .goodtables_checks.check_user_file import check_user_file
+from .transform.transform import data_cleaning
+from .logs import logger
+from .api_error import GeonatureImportApiError
+from .extract.extract import extract
+from .load.load import load
+from .wrappers import checker
+
+import pdb
 
 blueprint = Blueprint('import', __name__)
 
 
+<<<<<<< HEAD
+=======
+@blueprint.errorhandler(GeonatureImportApiError)
+def handle_geonature_import_api(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
 @blueprint.route('', methods=['GET'])
 @permissions.check_cruved_scope('R', True, module_code="IMPORT")
 @json_resp
@@ -141,7 +148,6 @@ def get_import_list(info_role):
             "history": history,
         }, 200
     except Exception:
-        raise
         return 'INTERNAL SERVER ERROR ("get_import_list() error"): contactez l\'administrateur du site', 500
 
 
@@ -232,8 +238,12 @@ def cancel_import(info_role, import_id):
                 'gn_imports', imports_table_name)
 
             # delete tables
+            engine = DB.engine
+            is_gn_imports_table_exist = engine.has_table(imports_table_name, schema=blueprint.config['IMPORTS_SCHEMA_NAME'])
+            if is_gn_imports_table_exist:
+                DB.session.execute("DROP TABLE {}".format(imports_full_name))
+
             DB.session.execute("DROP TABLE {}".format(archives_full_name))
-            DB.session.execute("DROP TABLE {}".format(imports_full_name))
 
         # delete metadata
         DB.session.query(TImports).filter(
@@ -256,11 +266,12 @@ def cancel_import(info_role, import_id):
 @blueprint.route('/uploads', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
+@checker('Total time to post user file and fill metadata')
 def post_user_file(info_role):
     """
         - load user file in "upload" directory
-        - check data in the userfile (column names, row duplicates, ...)
-        - copy user file raw data in 2 geonature db tables
+        - check user file data with goodtables library (column names, row duplicates, ...)
+        - copy user file raw data in 2 geonature db tables (in archives and imports schemas)
         - fill t_imports, cor_role_import, cor_archive_import
         - return id_import and column names list
         - delete user file in upload directory
@@ -271,6 +282,11 @@ def post_user_file(info_role):
     """
 
     try:
+
+        logger.info('*** START UPLOAD USER FILE')
+
+        ### INITIALIZE VARIABLES
+
         is_file_saved = False
         is_id_import = False
         errors = []
@@ -282,10 +298,12 @@ def post_user_file(info_role):
         PREFIX = blueprint.config['PREFIX']
         ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        N_MAX_ROWS_CHECK = 100000000
 
-        """
-        SAVES USER FILE IN UPLOAD DIRECTORY
-        """
+        
+        ### SAVES USER FILE IN UPLOAD DIRECTORY
+        
+        logger.info('* START SAVE USER FILE IN UPLOAD DIRECTORY')
 
         uploaded_file = upload(request, MAX_FILE_SIZE,
                                ALLOWED_EXTENSIONS, DIRECTORY_NAME, MODULE_URL)
@@ -305,34 +323,53 @@ def post_user_file(info_role):
             errors.append(unkown)
 
         if uploaded_file['error'] != '':
+<<<<<<< HEAD
             return errors, 400
+=======
+            logger.error('Saving user file : %s', errors)
+            return errors,400
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
 
         full_path = uploaded_file['full_path']
 
         is_file_saved = uploaded_file['is_uploaded']
 
-        """
-        CHECKS USER FILE
-        """
+        logger.info('* END SAVE USER FILE IN UPLOAD DIRECTORY')
 
-        report = check_user_file(full_path, 100000000)
+
+        ### CHECKS USER FILE
+
+        logger.info('* START CHECK USER FILE VALIDITY')
+
+        report = check_user_file(full_path, N_MAX_ROWS_CHECK)
 
         # reports user file errors:
         if len(report['errors']) > 0:
+<<<<<<< HEAD
             return report['errors'], 400
 
         """
         CREATES CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
         """
 
+=======
+            logger.error(report['errors'])
+            return report['errors'],400
+
+        logger.info('* END CHECK USER FILE VALIDITY')
+
+
+        ### CREATES CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
+        
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
         # get form data
-        metadata = dict(request.form.to_dict())
-        print(metadata)
+        metadata = request.form.to_dict()
 
         # Check if id_dataset value is allowed (prevent from forbidden manual change in url (url/process/N))
         is_dataset_allowed = test_user_dataset(
             info_role.id_role, metadata['datasetId'])
         if not is_dataset_allowed:
+            logger.error('Provided dataset is not allowed')
             return \
                 'L\'utilisateur {} n\'est pas autorisé à importer des données vers l\'id_dataset {}'\
                 .format(info_role.id_role, int(metadata['datasetId'])), 403
@@ -348,6 +385,8 @@ def post_user_file(info_role):
             DB.session.add(insert_t_imports)
             DB.session.flush()
             id_import = insert_t_imports.id_import
+            logger.debug('id_import = %s', id_import)
+            logger.debug('id_role = %s', info_role.id_role)
             # fill cor_role_import
             insert_cor_role_import = CorRoleImport(
                 id_role=info_role.id_role, id_import=id_import)
@@ -372,22 +411,26 @@ def post_user_file(info_role):
                 TImports.step: 1
             })
 
-        """
-        GET/SET FILE,SCHEMA,TABLE,COLUMN NAMES
-        """
+        
+        # GET/SET FILE,SCHEMA,TABLE,COLUMN NAMES
 
         # file name treatment
         file_name_cleaner = clean_file_name(
             uploaded_file['file_name'], uploaded_file['extension'], id_import)
         if len(file_name_cleaner['errors']) > 0:
             # if user file name is not valid, an error is returned
+<<<<<<< HEAD
             return file_name_cleaner['errors'], 400
         cleaned_file_name = file_name_cleaner['clean_name']
         print('cleaned_file_name:')
         print(cleaned_file_name)
+=======
+            return file_name_cleaner['errors'],400
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
 
         # get/set table and column names
         separator = metadata['separator']
+<<<<<<< HEAD
         archives_table_name = cleaned_file_name
         #imports_table_name = set_imports_table_name(cleaned_file_name)
 
@@ -395,6 +438,10 @@ def post_user_file(info_role):
         archives_full_name = get_full_table_name(
             ARCHIVES_SCHEMA_NAME, archives_table_name)
         #imports_full_name = get_full_table_name(IMPORTS_SCHEMA_NAME, imports_table_name)
+=======
+        table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, file_name_cleaner['clean_name'])
+        logger.debug('full DB user table name = %s', table_names['imports_full_table_name'])
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
 
         # pk name to include (because copy_from method requires a primary_key)
         pk_name = "".join([PREFIX, 'pk'])
@@ -402,6 +449,7 @@ def post_user_file(info_role):
         # clean column names
         columns = [clean_string(x) for x in report['column_names']]
 
+<<<<<<< HEAD
         # check for reserved sql word in column names
         column_check = check_sql_words(columns)
         if len(column_check) > 0:
@@ -415,6 +463,8 @@ def post_user_file(info_role):
             }
             errors.append(error)
             return errors, 400
+=======
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
 
         """
         CREATES TABLES CONTAINING RAW USER DATA IN GEONATURE DB
@@ -424,32 +474,49 @@ def post_user_file(info_role):
         delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
         DB.session.commit()
 
+<<<<<<< HEAD
         # create user table classes (1 for gn_import_archives schema, 1 for gn_imports schema) corresponding to the user file structure (csv)
         user_class_gn_import_archives = generate_user_table_class(ARCHIVES_SCHEMA_NAME, archives_table_name,
                                                                   pk_name, columns, id_import, schema_type='archives')
         # user_class_gn_imports = generate_user_table_class(IMPORTS_SCHEMA_NAME, imports_table_name,\
         #                                                              pk_name, columns, id_import, schema_type='gn_imports')
+=======
+        ## create user table classes (1 for gn_import_archives schema, 1 for gn_imports schema) corresponding to the user file structure (csv)
+        user_class_gn_import_archives = generate_user_table_class(\
+            ARCHIVES_SCHEMA_NAME, table_names['archives_table_name'], pk_name, columns, id_import, schema_type='archives')
+        user_class_gn_imports = generate_user_table_class(\
+            IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], pk_name, columns, id_import, schema_type='gn_imports')
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
 
         # create 2 empty tables in geonature db (in gn_import_archives and gn_imports schemas)
         engine = DB.engine
+<<<<<<< HEAD
         user_class_gn_import_archives.__table__.create(
             bind=engine, checkfirst=True)
         #user_class_gn_imports.__table__.create(bind=engine, checkfirst=True)
+=======
+        user_class_gn_import_archives.__table__.create(bind=engine, checkfirst=True)
+        user_class_gn_imports.__table__.create(bind=engine, checkfirst=True)
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
 
         # fill the user table (copy_from function is equivalent to COPY function of postgresql)
         conn = engine.raw_connection()
         cur = conn.cursor()
 
+<<<<<<< HEAD
         with open(full_path, 'r') as f:
             next(f)
             cur.copy_from(f, archives_full_name,
                           sep=separator, columns=columns)
+=======
+        logger.info('* START COPY FROM CSV TO ARCHIVES SCHEMA')
+        load_csv_to_db(full_path, cur, table_names['archives_full_table_name'], separator, columns)
+        logger.info('* END COPY FROM CSV TO ARCHIVES SCHEMA')
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
 
-        """
-        with open(full_path, 'r') as f:
-            next(f)
-            cur.copy_from(f, imports_full_name, sep=separator, columns=columns)
-        """
+        logger.info('* START COPY FROM CSV TO IMPORTS SCHEMA')
+        load_csv_to_db(full_path, cur, table_names['imports_full_table_name'], separator, columns)
+        logger.info('* END COPY FROM CSV TO IMPORTS SCHEMA')
 
         conn.commit()
         conn.close()
@@ -460,15 +527,19 @@ def post_user_file(info_role):
         """
 
         delete_import_CorImportArchives(id_import)
+<<<<<<< HEAD
         cor_import_archives = CorImportArchives(
             id_import=id_import, table_archive=archives_table_name)
+=======
+        cor_import_archives = CorImportArchives(id_import=id_import, table_archive=table_names['archives_table_name'])
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
         DB.session.add(cor_import_archives)
 
         # update gn_import.t_imports with cleaned file name and step = 2
         DB.session.query(TImports)\
             .filter(TImports.id_import == id_import)\
             .update({
-                TImports.import_table: cleaned_file_name,
+                TImports.import_table: table_names['archives_table_name'],
                 TImports.step: 2,
                 TImports.id_dataset: int(metadata['datasetId']),
                 TImports.srid: int(metadata['srid']),
@@ -478,12 +549,15 @@ def post_user_file(info_role):
 
         DB.session.commit()
 
+        logger.info('*** END UPLOAD USER FILE')
+
         return {
             "importId": id_import,
             "columns": columns,
         }, 200
 
     except psycopg2.errors.BadCopyFileFormat as e:
+        logger.exception(e)
         DB.session.rollback()
         if is_id_import:
             delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
@@ -494,15 +568,23 @@ def post_user_file(info_role):
             'message': 'Erreur probablement due à un problème de separateur',
             'message_data': e.diag.message_primary
         })
+<<<<<<< HEAD
         return errors, 400
+=======
+        logger.error(errors)
+        return errors,400
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
 
-    except Exception:
+    except Exception as e:
+        logger.error('*** ERROR WHEN POSTING FILE')
+        logger.exception(e)
         DB.session.rollback()
         if is_id_import:
             delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
         DB.session.commit()
-        return 'INTERNAL SERVER ERROR ("post_user_file() error"): contactez l\'administrateur du site', 500
-
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR : Erreur pendant l\'enregistrement du fichier - contacter l\'administrateur',
+            details=str(e))
     finally:
         if is_file_saved:
             os.remove(full_path)
@@ -515,10 +597,16 @@ def post_user_file(info_role):
 @json_resp
 def postMapping(info_role, import_id):
     try:
-        # set table names and index col
+
+        ### INITIALIZE VARIABLES
+
+        logger.info('*** START CORRESPONDANCE MAPPING')
+
+        errors = []
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
         ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
         PREFIX = blueprint.config['PREFIX']
+<<<<<<< HEAD
         index_col = ''.join([PREFIX, 'pk'])
         archives_table_name = get_import_table_name(import_id)
         imports_table_name = set_imports_table_name(archives_table_name)
@@ -546,8 +634,22 @@ def postMapping(info_role, import_id):
         print('load table data in df: {} secondes'.format(perf))
 
         # create df2 containing only selected columns + gn_is_valid + gn_invalid_reason:
+=======
+        index_col = ''.join([PREFIX,'pk'])
+        table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+        engine = DB.engine
+        column_names = get_table_info(table_names['imports_table_name'], 'column_name')
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
         data = dict(request.get_json())
+        MISSING_VALUES = ['', 'NA', 'NaN', 'na'] # mettre en conf
+        DEFAULT_COUNT_VALUE = 1 # mettre en conf
+        MODULE_URL = blueprint.config["MODULE_URL"]
+        DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
 
+        logger.debug('import_id = %s', import_id)
+        logger.debug('DB tabel name = %s', table_names['imports_table_name'])
+
+<<<<<<< HEAD
         # get non empty synthese fields
         selected_columns = {key: value for key, value in data.items() if value}
         # selected_columns.update({'gn_is_valid':'gn_is_valid'})
@@ -570,9 +672,58 @@ def postMapping(info_role, import_id):
         perf = fin-deb
         print("end data wrangling")
         print('data wrangling: {} secondes'.format(perf))
+=======
+        # get synthese fields filled in the user form:
+        selected_columns = {key:value for key, value in data.items() if value}
+        selected_user_cols = [*list(selected_columns.values())]
+        logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
-        # LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
+        # choose pandas if small dataset
+        
+        nrows = get_row_number(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+        
+        logger.debug('row number = %s', nrows)
+        if nrows < 200000:
+            df_type = 'pandas'
+        else:
+            df_type = 'dask'
+        logger.info('type of dataframe = %s', df_type)
+        
+        
 
+        # extract
+        logger.info('* START EXTRACT FROM DB TABLE TO PYTHON')
+        df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col, import_id, df_type)
+        logger.info('* END EXTRACT FROM DB TABLE TO PYTHON')
+
+
+        ### TRANSFORM (data checking and cleaning)
+
+        logger.info('* START DATA CLEANING')
+        transform_errors = data_cleaning(df, selected_columns, MISSING_VALUES, DEFAULT_COUNT_VALUE, df_type)
+
+        if len(transform_errors) > 0:
+            for error in transform_errors:
+                logger.debug('USER ERRORS : %s', error['message'])
+                errors.append(error)
+
+        if 'temp' in df.columns:
+            df = df.drop('temp', axis=1)
+
+        logger.info('* END DATA CLEANING')
+
+
+        ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
+        
+        logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE')
+        df = load(df, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, table_names['imports_full_table_name'], import_id, engine, index_col, df_type)
+        logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE')
+        
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
+
+        ### UPDATE METADATA
+
+<<<<<<< HEAD
         # df to sql avec d6tstack avec dask delayed
         # create engine url for d6tstack:
         engine = DB.engine
@@ -613,66 +764,75 @@ def postMapping(info_role, import_id):
             "SELECT count(*) FROM {}".format(imports_full_table_name)).fetchone()[0]
         if n_original_rows != n_loaded_rows:
             return 'INTERNAL SERVER ERROR ("postMapping() error"): lignes manquantes dans {} - refaire le matching'.format(imports_full_table_name), 500
-
-        pdb.set_trace()
-
-        """
-        # get synthese column names
-        info_synth = get_table_info('synthese','type')
-        print('info_synth : ')
-        print(info_synth)
-        print(info_synth['id_source'])
-
-        #data wrangling
-        #push vers i_table en modifiant le type
-
-        keys = [key for key in data]
+=======
+        DB.session.query(TImports)\
+            .filter(TImports.id_import==import_id)\
+            .update({
+                TImports.step: 3,
+                })
         
-        filled = []
-        for key in keys:
-            if data[key] != '':
-                filled.append(key)
-        print(filled)
-
-        # get table name
-        table = DB.session.query(TImports.import_table).filter(TImports.id_import == import_id).one()[0]
-
-        # construct gn_imports.tablename
-        table_name = '_'.join(['i',table])
-        schema_table_name = '.'.join(['gn_imports',table_name])
-        print(schema_table_name)
-
-
-        results = DB.session.execute("SELECT* FROM gn_imports.i_data_exemple_549")
-        for v in results:
-            for column, value in v.items():
-                print('{0}: {1}'.format(column, value))
-        return data
-        """
-
-    except psycopg2.errors.UniqueViolation as e:
-        DB.session.rollback()
-        DB.session.execute("DROP TABLE {}".format(imports_full_table_name))
         DB.session.commit()
-        raise
+        DB.session.close()
+
+        n_invalid_rows = str(df['gn_is_valid'].astype(str).str.contains('False').sum())
+
+        logger.info('*** END CORRESPONDANCE MAPPING')
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
+
+
         """
-        a corriger, erreur ne s'affiche pas
-        errors = []
-        errors.append({
-                'code': 'psycopg2.errors.UniqueViolation',
-                'message': 'Doublon - erreur serveur',
-                'message_data': e.diag.message_primary
-        })
-        return errors,500
+        ### importer les données dans synthese
+        selected_columns = {key:value for key, value in data.items() if value}
+
+        selected_synthese_cols = ','.join(selected_columns.keys())
+        selected_user_cols = ','.join(selected_columns.values())
+
+        # ok ça marche
+        print('fill synthese')
+        DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid=TRUE;".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
+        #INSERT INTO gn_synthese.synthese (cd_nom,nom_cite,date_min,date_max) SELECT species_id,nom_scientifique,my_timestamp::timestamp,date_max FROM gn_imports.i_data_pf_observado_corrected_303 WHERE gn_is_valid=TRUE;
+        print('synthese filled')
+        DB.session.commit()      
+        DB.session.close()
         """
-    except Exception:
+        
+        """
+        if len(errors) > 0:
+            return errors,400
+        """
+
+        return {
+            'user_error_details' : transform_errors,
+            'n_user_errors' : n_invalid_rows
+        }
+
+    except Exception as e:
+        logger.error('*** ERROR IN CORRESPONDANCE MAPPING')
+        logger.exception(e)
         DB.session.rollback()
+<<<<<<< HEAD
         print('full table name :')
         print(imports_full_table_name)
         DB.session.execute("DROP TABLE {}".format(imports_full_table_name))
         DB.session.commit()
         raise
         return 'INTERNAL SERVER ERROR ("postMapping() error"): contactez l\'administrateur du site', 500
+=======
+        DB.session.close()
+
+        n_loaded_rows = DB.session.execute(
+            "SELECT count(*) FROM {}".format(table_names['imports_full_table_name'])
+            ).fetchone()[0]
+        if n_loaded_rows == 0:
+            logger.error('Table %s vide à cause d\'une erreur de copie, refaire l\'upload et le mapping', table_names['imports_full_table_name'])
+            raise GeonatureImportApiError(\
+                message='INTERNAL SERVER ERROR :: Erreur pendant le mapping de correspondance :: Table {} vide à cause d\'une erreur de copie, refaire l\'upload et le mapping, ou contactez l\'administrateur du site'.format(table_names['imports_full_table_name']),
+                details='')
+    
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l\'administrateur',
+            details=str(e))
+>>>>>>> ff337616398f146fce0a01c4be42f0acd8e6bafc
 
 
 @blueprint.route('/syntheseInfo', methods=['GET'])
@@ -705,7 +865,7 @@ def getSyntheseInfo(info_role):
                 }
                 synthese_info.append(prop)
         #names2 = ['nom_cite', 'date_min', 'date_max']
-        print(synthese_info)
+        #print(synthese_info)
         return synthese_info, 200
     except Exception:
         raise

@@ -1,0 +1,149 @@
+[33mcommit 907cd3ba834fda11380efda62237a4bd230bb01d[m[33m ([m[1;36mHEAD -> [m[1;32miteration1[m[33m, [m[1;31morigin/iteration1[m[33m)[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Fri Aug 23 16:55:06 2019 +0200
+
+    data cleaning : cd_nom and dates; work in progress
+
+[33mcommit 32569635646a43a124258552e9da1660c66cf905[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Fri Aug 2 16:08:52 2019 +0200
+
+    light refactoring of backend directories
+
+[33mcommit 2672a26225a6b0e85341a20a1c8a83d1e2e37c68[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Fri Aug 2 10:52:39 2019 +0200
+
+    data flow : working if user send field mapping form several times
+
+[33mcommit 34df6e7dc03088cb944cd0a6a0614fe99b75aad8[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Thu Aug 1 17:36:45 2019 +0200
+
+    data flow (postgresql table -> python df for data wrangling -> postgresql table) : work in progress 2
+
+[33mcommit 449dcabb4b418b789268c8bcc9bbaee61275551a[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Thu Aug 1 10:04:54 2019 +0200
+
+    data flow (postgresql table -> python df for data wrangling -> postgresql table) : work in progress
+
+[33mcommit 279a01ba2293ef9facd7f3a38b254873d4aea2cc[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Fri Jun 14 09:23:50 2019 +0200
+
+    schema toml correction and install goodtables in requirements.txt
+
+[33mcommit 471d5c3ad856d44d269dd636aae787314df76502[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Thu Jun 13 11:06:55 2019 +0200
+
+    navigation basics through the steps and install modif
+
+[33mcommit 6cd72bba1d32fae338a0c8dc28072a96e6bcd337[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Wed Jun 12 15:46:13 2019 +0200
+
+    ngb-tabset instead of mat-stepper; not designed yet
+
+[33mcommit 5f6f58f2a8ad45b1a25211886ed4a0fb85e26c73[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Tue Jun 11 17:59:52 2019 +0200
+
+    code refact for upload route
+
+[33mcommit d8d9c7446d50f643f1e36e9943deae3caae06301[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Thu Jun 6 17:30:34 2019 +0200
+
+    fix bug when several files uploaded during the same import (delete previous imported tables)
+
+[33mcommit fd806f89103529741c63c6f93595ad1506b05629[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Fri May 31 14:29:20 2019 +0200
+
+    cancel import front and back
+
+[33mcommit d82918a572de73eee6dbacd3e86f9b9d53ff94d9[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Fri May 31 12:48:40 2019 +0200
+
+    separateur en menu deroulant, amelioration historique, formulaires en bootstrap
+
+[33mcommit beb3a11c9d0743dabb2709dbba51aa4a48935c9b[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Wed May 29 17:51:23 2019 +0200
+
+    improved upload file security
+
+[33mcommit 22bc23adff654c9133659e8f1497d13d567e20f2[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Tue May 28 17:30:29 2019 +0200
+
+    upload routes : gestion des tables et metadonnees si plusieurs appels en front + goodtable check; work in progress
+
+[33mcommit 1d94805fd4db1f2dfae67b09e6948e5b1672c109[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Wed May 22 17:37:16 2019 +0200
+
+    goodtable checks and metadata filling in upload route
+
+[33mcommit e2875bca6c63719652a010cc436ef97c5275be64[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Wed May 22 11:58:20 2019 +0200
+
+    install goodtables
+
+[33mcommit 4fa1179076591e081f411a7aa65bacc1170e63bf[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Wed May 22 10:32:34 2019 +0200
+
+    added blueprint.config variables for the upload route
+
+[33mcommit ec89770ce6e21553d3e88b67128c663cc333bb40[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Tue May 21 17:30:10 2019 +0200
+
+    iteration 1 : upload process, work in progress
+
+[33mcommit 71a96eb6f29c79d9b753f69b0751f904fcd27f29[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Thu May 9 17:18:46 2019 +0200
+
+    data flow modif : start from uplad step : work in progress
+
+[33mcommit 848d1da42293ccc36343624fc06f305474208148[m[33m ([m[1;31morigin/emptyFront[m[33m)[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Fri May 3 15:46:32 2019 +0200
+
+    bdd install test
+
+[33mcommit c5b12e1867a906371f788f250583a994715ee27d[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Thu May 2 17:06:30 2019 +0200
+
+    start filling bdd modif + cancel creation import
+
+[33mcommit a484577c85ce0ab97ed6b32912c2c753f017f2d6[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Tue Apr 30 16:48:25 2019 +0200
+
+    modal jdd and start filling bdd : work in progress
+
+[33mcommit d30655ec05a8fd40ae583799211c4cf192f845fa[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Tue Apr 16 17:18:26 2019 +0200
+
+    empty front in progress + save user file in upload directory
+
+[33mcommit 3c527ee9bf467a673d4f19b3cbcca0da7f987afd[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Mon Apr 15 17:36:20 2019 +0200
+
+    empty steps - work in progress
+
+[33mcommit d2205baba8a569f4bf3ca82f7f50664a4f8d7dbb[m[33m ([m[1;31morigin/develop[m[33m)[m
+Author: ju <julien_corny@natural-solutions.eu>
+Date:   Mon Apr 15 14:41:04 2019 +0200
+
+    create and install empty gn_module_import
