@@ -1,3 +1,6 @@
+from ..db.query import get_synthese_types, get_user_error
+
+
 def fill_col(value):
     if value is not False:
         return True
@@ -18,3 +21,13 @@ def get_types(synthese_info):
     
 fill_map = {'':True, False:False}
 
+
+def set_user_error(error_name, column_name, n_errors):
+    error_details = get_user_error(error_name)
+    return {
+        'id' : str(error_details.id_error),
+        'type' : error_details.error_type,
+        'message' : error_details.description,
+        'column' : column_name,
+        'n_errors' : str(n_errors)
+    }

@@ -4,7 +4,7 @@ import numpy as np
 from geonature.utils.env import DB
 
 from ..db.query import get_synthese_info
-from .utils import fill_col, fill_map
+from .utils import fill_col, fill_map, set_is_valid, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
@@ -18,6 +18,8 @@ def check_cd_nom(df, selected_columns, missing_values, df_type):
 
         # note : améliorer performances du comptage d'erreurs
         logger.info('checking cd_nom validity for %s column', selected_columns['cd_nom'])
+
+        user_error = []
 
         # get cd_nom list
         cd_nom_taxref = DB.session.execute(\
@@ -38,10 +40,7 @@ def check_cd_nom(df, selected_columns, missing_values, df_type):
             .astype('bool')
 
         # set gn_is_valid and invalid_reason
-        df['gn_is_valid'] = df['gn_is_valid']\
-            .where(
-                cond=df['temp'], 
-                other=False)
+        set_is_valid(df, 'temp')
 
         df['gn_invalid_reason'] = df['gn_invalid_reason']\
             .where(
@@ -55,12 +54,15 @@ def check_cd_nom(df, selected_columns, missing_values, df_type):
                     n_cd_nom_error = n_cd_nom_error.compute()
 
         if n_cd_nom_error > 0:
-            user_error = {
-                'code': 'cd_nom error',
-                'message': 'Des cd_nom sont invalides',
-                'message_data': 'nombre de lignes avec erreurs : {}'.format(n_cd_nom_error)
-            }
-        else:
+            user_error.append(
+                set_user_error(
+                    'invalid cd_nom',
+                    selected_columns['cd_nom'],
+                    n_cd_nom_error
+                )
+            )
+
+        if len(user_error) == 0:
             user_error = ''
 
         return user_error

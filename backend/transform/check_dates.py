@@ -3,7 +3,7 @@ import datetime
 import dask
 import dask.dataframe as dd
 
-from .utils import fill_col, fill_map
+from .utils import fill_col, fill_map, set_is_valid
 from ..wrappers import checker
 from ..logs import logger
 
@@ -57,9 +57,7 @@ def check_dates(df, selected_columns, synthese_info, df_type):
                 .map(fill_map)\
                 .astype('bool')
             
-            df['gn_is_valid'] = df['gn_is_valid'].where(
-                cond=df['temp'], 
-                other=False)
+            set_is_valid(df, 'temp')
             
             df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
                 cond=df['temp'], 
@@ -72,11 +70,13 @@ def check_dates(df, selected_columns, synthese_info, df_type):
                     n_date_min_sup = n_date_min_sup.compute()
 
             if n_date_min_sup > 0:
-                user_error.append({
-                    'code': 'date error',
-                    'message': 'Des dates min sont supérieures à date max',
-                    'message_data': 'nombre de lignes avec erreurs : {}'.format(n_date_min_sup)
-                })
+                user_error.append(
+                        set_user_error(
+                            'date_min > date_max',
+                            ','.join([selected_columns['date_min'], selected_columns['date_max']]),
+                            n_date_min_sup
+                        )
+                    )
         
 
         ## meta_create_date and meta_update_date :

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import datetime
 
-from .utils import fill_map, set_is_valid
+from .utils import fill_map, set_is_valid, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
@@ -64,11 +64,13 @@ def check_missing(df, selected_columns, synthese_info, missing_values, df_type):
                     n_missing_value = n_missing_value.compute()
 
                 if n_missing_value > 0:
-                    user_error.append({
-                        'code': 'valeur manquante',
-                        'message': 'Des valeurs manquantes dans la colonne {}'.format(selected_columns[field]),
-                        'message_data': 'nombre de lignes avec erreurs : {}'.format(n_missing_value)
-                    })
+                    user_error.append(
+                        set_user_error(
+                            'missing value in required field',
+                            field,
+                            n_missing_value
+                        )
+                    )
         
         if len(user_error) == 0:
             user_error = ''

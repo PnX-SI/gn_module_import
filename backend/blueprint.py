@@ -551,10 +551,9 @@ def postMapping(info_role, import_id):
         else:
             df_type = 'dask'
         logger.info('type of dataframe = %s', df_type)
-        
-        
 
-        # extract
+
+        # EXTRACT
         logger.info('* START EXTRACT FROM DB TABLE TO PYTHON')
         df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col, import_id, df_type)
         logger.info('* END EXTRACT FROM DB TABLE TO PYTHON')

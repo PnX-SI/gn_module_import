@@ -14,6 +14,8 @@ from .check_counts import check_counts
 from .check_altitudes import check_altitudes
 from ..logs import logger
 
+import pdb
+
 
 def data_cleaning(df, selected_columns, missing_val, def_count_val, df_type):
 
@@ -41,7 +43,6 @@ def data_cleaning(df, selected_columns, missing_val, def_count_val, df_type):
         error_altitudes = check_altitudes(df, selected_columns, synthese_info, calcul=False)
         check_entity_source(df, selected_columns, synthese_info)
 
-        
         # User error to front interface:
         if error_missing != '':
             for error in error_missing:
@@ -50,7 +51,8 @@ def data_cleaning(df, selected_columns, missing_val, def_count_val, df_type):
             for error in error_types:
                 user_error.append(error)
         if error_cd_nom != '':
-            user_error.append(error_cd_nom)
+            for error in error_cd_nom:
+                user_error.append(error)
         if error_dates != '':
             for error in error_dates:
                 user_error.append(error)

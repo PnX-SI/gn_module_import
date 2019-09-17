@@ -38,4 +38,3 @@ def extract(table_name, schema_name, column_names, index_col, id, df_type):
 
     except Exception:
         raise
-
