@@ -12,7 +12,7 @@ from ..logs import logger
 import pdb
 
 @checker('Extracted (from DB table to Dask dataframe)')
-def extract(table_name, schema_name, column_names, index_col, id):
+def extract(table_name, schema_name, column_names, index_col, id, df_type):
 
     try:
 
@@ -30,31 +30,10 @@ def extract(table_name, schema_name, column_names, index_col, id):
         # get user table row data as a dask dataframe
         df = dd.read_sql_table(table=table_name, index_col=index_dask, meta=empty_df, npartitions=ncores, uri=str(DB.engine.url), schema=schema_name, bytes_per_chunk=100000)
 
-
-        """
-        taxref_info = DB.session.execute("
-                            SELECT *
-                            FROM information_schema.columns
-                            WHERE table_schema = 'taxonomie'
-                            AND table_name   = 'taxref';
-                            ").fetchall()
-        taxref_col_names = [i.column_name for i in taxref_info]
-        empty_taxref_df = pd.DataFrame(columns=taxref_col_names, dtype='object')
-        taxref_index_dask = sqlalchemy.sql.column('cd_nom').label("gn_id")
-        taxref_df = dd.read_sql_table(table='taxref', index_col='cd_nom', npartitions=ncores, uri=str(DB.engine.url), schema='taxonomie', bytes_per_chunk=100000)
-        
-        
-        pdb.set_trace()
-        taxref_df['cd_nom2'] = str(taxref_df['cd_noms'])
-        df.merge(taxref_df,left_on='species_id',right_on='cd_nom',how='left')
-
-        df['species_id'].isin(taxref_df['cd_nom'])
-        """
-
+        if df_type == 'pandas':
+            df = compute_df(df)
 
         return df
-
-
 
     except Exception:
         raise

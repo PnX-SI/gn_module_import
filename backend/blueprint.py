@@ -548,12 +548,7 @@ def postMapping(info_role, import_id):
 
         # extract
         logger.info('* START EXTRACT FROM DB TABLE TO PYTHON')
-
-        df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col, import_id)
-
-        if df_type == 'pandas':
-            df = compute_df(df)
-
+        df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col, import_id, df_type)
         logger.info('* END EXTRACT FROM DB TABLE TO PYTHON')
 
 
