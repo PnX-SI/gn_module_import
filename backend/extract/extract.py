@@ -8,12 +8,11 @@ from geonature.utils.env import DB
 
 from ..wrappers import checker
 from ..logs import logger
-from ..load.utils import compute_df
 
 import pdb
 
 @checker('Extracted (from DB table to Dask dataframe)')
-def extract(table_name, schema_name, column_names, index_col, id, df_type):
+def extract(table_name, schema_name, column_names, index_col, id):
 
     try:
 
@@ -29,13 +28,10 @@ def extract(table_name, schema_name, column_names, index_col, id, df_type):
         index_dask = sqlalchemy.sql.column(index_col).label("gn_id")
 
         # get user table row data as a dask dataframe
-        df = dd.read_sql_table(table=table_name, index_col=index_dask, meta=empty_df, npartitions=ncores, uri=str(DB.engine.url), schema=schema_name, bytes_per_chunk=100000)
-
-        if df_type == 'pandas':
-            df = compute_df(df)
+        df = dd.read_sql_table(table=table_name, index_col=index_dask, uri=str(DB.engine.url), schema=schema_name, bytes_per_chunk=10000000)
+        #300000000
 
         return df
 
     except Exception:
         raise
-

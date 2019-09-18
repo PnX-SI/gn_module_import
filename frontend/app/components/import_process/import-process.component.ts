@@ -144,7 +144,10 @@ export class ImportProcessComponent implements OnInit {
 					this.isUserError = true;
 					this.userErrors = error.error;
 				}
-			}
+            },
+            () => {
+                console.log(this.mappingResponse)
+            }
 		);
 	}
 

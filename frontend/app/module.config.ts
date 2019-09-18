@@ -17,7 +17,7 @@ export const ModuleConfig = {
   "the_geom_local",
   "last_action"
  ],
- "ID_MODULE": 5,
+ "ID_MODULE": 15,
  "IMPORTS_SCHEMA_NAME": "gn_imports",
  "LIST_COLUMNS_FRONTEND": [
   {
@@ -69,7 +69,7 @@ export const ModuleConfig = {
     {
      "label": "Identifiant source",
      "name": "entity_source_pk_value",
-     "required": true
+     "required": false
     },
     {
      "label": "Identifiant SINP (uuid)",

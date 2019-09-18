@@ -2,7 +2,7 @@ from uuid import uuid4
 import numpy as np
 import pandas as pd
 
-from .utils import fill_col
+from .utils import fill_col, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
@@ -17,11 +17,9 @@ def fill_nan_uuid(value):
 
 
 @checker('Data cleaning : uuid values checked')
-def check_uuid(df,selected_columns,synthese_info, df_type):
+def check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info):
 
     try:
-
-        user_error = []
 
         # send warnings if some uuid are missing :
 
@@ -49,11 +47,8 @@ def check_uuid(df,selected_columns,synthese_info, df_type):
 
                     logger.info('unique_id_sinp provided in user data: checking if not missing')
 
-                    df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                        .where(
-                            cond=df['temp'],
-                            other=df['gn_invalid_reason'] + 'warning : champ uuid vide dans colonne {} : un uuid a été créé -- '.format(col))
-                    
+                    set_invalid_reason(df, 'temp', 'warning : champ uuid vide dans colonne {} : un uuid a été créé', selected_columns[col])
+
                     df[selected_columns[col]] = df[selected_columns[col]]\
                         .apply(lambda x: fill_nan_uuid(x))
 
@@ -63,20 +58,14 @@ def check_uuid(df,selected_columns,synthese_info, df_type):
                         .where(
                             cond=df['temp'],
                             other=df['gn_invalid_reason'] + 'warning : champ uuid vide dans colonne {} -- '\
-                                .format(col))
+                                .format(selected_columns[col]))
 
                 n_missing_uuid = df['temp'].astype(str).str.contains('False').sum()
-                
-                if df_type == 'dask':
-                    n_missing_uuid = n_missing_uuid.compute()
 
                 if n_missing_uuid > 0:
-                    user_error.append({
-                        'code': 'uuid warning',
-                        'message': 'uuid manquants dans la colonne {}'.format(selected_columns[col]),
-                        'message_data': 'nombre de lignes avec erreurs : {}'.format(n_missing_uuid)
-                    })
-        
+                    set_user_error(dc_user_errors, 6, selected_columns[col], n_missing_uuid)  
+
+
         # create unique_id_sinp column with uuid values if not existing :
 
         if 'unique_id_sinp' not in uuid_cols:
@@ -84,12 +73,7 @@ def check_uuid(df,selected_columns,synthese_info, df_type):
             df['unique_id_sinp'] = ''
             df['unique_id_sinp'] = df['unique_id_sinp']\
                 .apply(lambda x: str(uuid4()))
-            selected_columns['unique_id_sinp'] = 'unique_id_sinp'
-
-        if len(user_error) == 0:
-            user_error = ''
-
-        return user_error
+            added_cols['unique_id_sinp'] = 'unique_id_sinp'
 
     except Exception:
         raise

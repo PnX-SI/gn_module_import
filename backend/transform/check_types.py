@@ -8,7 +8,7 @@ import datetime
 from ..db.query import get_synthese_types
 from ..wrappers import checker
 from ..logs import logger
-from .utils import fill_map, get_types
+from .utils import fill_map, get_types, set_is_valid, set_invalid_reason, set_user_error
 
 import pdb
 
@@ -40,12 +40,11 @@ def is_uuid(value, version=4):
 
 
 @checker('Data cleaning : type of values checked')
-def check_types(df, selected_columns, synthese_info, missing_values, df_type):
+def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_values):
 
     try:
 
         logger.info('checking types : ')
-        user_error = []
         types = get_types(synthese_info)
         #types = list(dict.fromkeys(get_synthese_types()))
 
@@ -62,7 +61,7 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
             # ok : df['test'] = dd.to_datetime(df['my_timestamp'],unit='datetime64[ns]')
             col_name = '_'.join(['gn',selected_columns[field]])
 
-            df[col_name] = dd.to_datetime(df[selected_columns[field]], errors='coerce')
+            df[col_name] = pd.to_datetime(df[selected_columns[field]], errors='coerce')
             # datetime conversion
             #df[selected_columns[field]] = df[selected_columns[field]].apply(lambda x: convert_to_datetime(x))
             #df[selected_columns[field]] = df['test_date']
@@ -75,36 +74,14 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                 .map(fill_map)\
                 .astype('bool')
 
-            df['gn_is_valid'] = df['gn_is_valid']\
-                .where(
-                    cond=df['temp'], 
-                    other=False)
-
-            df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                .where(
-                    cond=df['temp'], 
-                    other=df['gn_invalid_reason'] + 'invalid date for {} column -- '\
-                        .format(selected_columns[field]))
-
-            #n_invalid_date_error = df['temp'].count().compute()
-            #n_invalid_date_error = count_false(df['temp']).compute()
+            set_is_valid(df, 'temp')
+            set_invalid_reason(df, 'temp', 'invalid date for {} column', selected_columns[field])
             n_invalid_date_error = df['temp'].astype(str).str.contains('False').sum()
-            #n_invalid_date_error = df['temp'].compute().value_counts()[False]
 
-            if df_type == 'dask':
-                n_invalid_date_error = n_invalid_date_error.compute()
-
-            selected_columns['date_min'] = col_name
+            added_cols['date_min'] = col_name
 
             if n_invalid_date_error > 0:
-                user_error.append({
-                    'code': 'date error',
-                    'message': 'Des dates sont invalides dans la colonne {}'.format(selected_columns[field]),
-                    'message_data': 'nombre de lignes avec erreurs : {}'.format(n_invalid_date_error)
-                })
-            
-
-        
+                set_user_error(dc_user_errors, 2, selected_columns[field], n_invalid_date_error)     
 
 
         # UUID TYPE COLUMNS :
@@ -128,29 +105,12 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                     .map(fill_map)\
                     .astype('bool')
 
-                df['gn_is_valid'] = df['gn_is_valid']\
-                    .where(
-                        cond=df['temp'], 
-                        other=False)
-
-                df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                    .where(
-                        cond=df['temp'],
-                        other=df['gn_invalid_reason'] + 'invalid uuid in {} column -- '\
-                            .format(selected_columns[col]))
-
+                set_is_valid(df, 'temp')
+                set_invalid_reason(df, 'temp', 'invalid uuid in {} column', selected_columns[col])
                 n_invalid_uuid = df['temp'].astype(str).str.contains('False').sum()
 
-                if df_type == 'dask':
-                    n_invalid_uuid = n_invalid_uuid.compute()
-
                 if n_invalid_uuid > 0:
-                    user_error.append({
-                        'code': 'uuid error',
-                        'message': 'uuid invalides dans la colonne {}'.format(selected_columns[col]),
-                        'message_data': 'nombre de lignes avec erreurs : {}'.format(n_invalid_uuid)
-                    })
-
+                    set_user_error(dc_user_errors, 3, selected_columns[col], n_invalid_uuid)   
 
         
         # CHARACTER VARYING TYPE COLUMNS : 
@@ -173,29 +133,13 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                     .map(fill_map)\
                     .astype('bool')
 
-                df['gn_is_valid'] = df['gn_is_valid']\
-                    .where(
-                        cond=df['temp'], 
-                        other=False)
-
-                df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                    .where(
-                        cond=df['temp'],
-                        other=df['gn_invalid_reason'] + 'string too long in {} column -- '\
-                            .format(selected_columns[col]))
-
+                set_is_valid(df, 'temp')
+                set_invalid_reason(df, 'temp', 'string too long in {} column', selected_columns[col])
                 n_invalid_string = df['temp'].astype(str).str.contains('False').sum()
 
-                if df_type == 'dask':
-                    n_invalid_string = n_invalid_string.compute()
-
                 if n_invalid_string > 0:
-                    user_error.append({
-                        'code': 'character varying error',
-                        'message': 'texte trop long dans la colonne {}'.format(selected_columns[col]),
-                        'message_data': 'nombre de lignes avec erreurs : {}'.format(n_invalid_string)
-                    })
-        
+                    set_user_error(dc_user_errors, 4, selected_columns[col], n_invalid_string)
+
 
         # INTEGER TYPE COLUMNS :
 
@@ -224,33 +168,12 @@ def check_types(df, selected_columns, synthese_info, missing_values, df_type):
                     .map(fill_map)\
                     .astype('bool')
 
-                df['gn_is_valid'] = df['gn_is_valid']\
-                    .where(
-                        cond=df['temp'], 
-                        other=False)
-
-                df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                    .where(
-                        cond=df['temp'],
-                        other=df['gn_invalid_reason'] + 'invalid integer in {} column; '\
-                            .format(selected_columns[col]))
-
+                set_is_valid(df, 'temp')
+                set_invalid_reason(df, 'temp', 'invalid integer in {} column', selected_columns[col])
                 n_invalid_int = df['temp'].astype(str).str.contains('False').sum()
 
-                if df_type == 'dask':
-                    n_invalid_int = n_invalid_int.compute()
-
                 if n_invalid_int > 0:
-                    user_error.append({
-                        'code': 'integer error',
-                        'message': 'integer invalides dans la colonne {}'.format(selected_columns[col]),
-                        'message_data': 'nombre de lignes avec erreurs : {}'.format(n_invalid_int)
-                    })
-
-        if len(user_error) == 0:
-            user_error = ''
-
-        return user_error
+                    set_user_error(dc_user_errors, 1, selected_columns[col], n_invalid_int)  
 
     except Exception:
         raise

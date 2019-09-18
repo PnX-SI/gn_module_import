@@ -12,7 +12,7 @@ SET default_with_oids = false;
 --TABLES AND SEQUENCES--
 ------------------------
 
-CREATE TABLE gn_imports.t_imports(
+CREATE TABLE t_imports(
   id_import serial NOT NULL,
   format_source_file character varying(5),
   SRID integer,
@@ -31,11 +31,18 @@ CREATE TABLE gn_imports.t_imports(
 );
 
 
-CREATE TABLE gn_imports.cor_role_import(
+CREATE TABLE cor_role_import(
   id_role integer NOT NULL,
   id_import integer NOT NULL
 );
 
+
+CREATE TABLE user_errors(
+  id_error integer NOT NULL,
+  error_type character varying(100) NOT NULL,
+  name character varying(255) NOT NULL UNIQUE,
+  description character varying(255) NOT NULL
+);
 
 
 
@@ -50,6 +57,9 @@ ALTER TABLE ONLY t_imports
 
 ALTER TABLE ONLY cor_role_import 
     ADD CONSTRAINT pk_cor_role_import PRIMARY KEY (id_role, id_import);
+
+ALTER TABLE ONLY user_errors 
+    ADD CONSTRAINT pk_user_errors PRIMARY KEY (id_error);
 
 
 ---------------
@@ -73,6 +83,33 @@ ALTER TABLE ONLY cor_role_import
 -------------
 --FUNCTIONS--
 -------------
+
+
+--------------
+--INSERTIONS--
+--------------
+
+INSERT INTO user_errors (id_error, error_type, name, description) VALUES
+	(1, 'invalid type error', 'invalid integer type', 'type integer invalide'),
+	(2, 'invalid type error', 'invalid date type', 'type date invalide'),
+	(3, 'invalid type error', 'invalid uuid type', 'type uuid invalide'),
+	(4, 'invalid type error', 'invalid character varying length', 'champs de type character varying trop long'),
+	(5, 'missing value error', 'missing value in required field', 'valeur manquante dans un champs obligatoire'),
+	(6, 'missing value warning', 'warning : missing uuid type value', 'warning : valeur de type uuid manquante (non bloquant)'),
+	(7, 'inconsistency error', 'date_min > date_max', 'date_min > date_max'),
+	(8, 'inconsistency error', 'count_min > count_max', 'count_min > count_max'),
+	(9, 'invalid value', 'invalid cd_nom', 'cd_nom invalide (absent de TaxRef)');
+
+
+
+
+
+
+
+
+
+
+
 
 
 

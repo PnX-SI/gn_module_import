@@ -1,7 +1,7 @@
 import pandas as pd
 import dask
 
-from .utils import fill_col, fill_map
+from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
@@ -42,7 +42,7 @@ def check_negative(val):
 
 
 @checker('Data cleaning : counts checked')
-def check_counts(df, selected_columns, synthese_info, def_count_val, df_type):
+def check_counts(df, selected_columns, dc_user_errors, synthese_info, def_count_val):
 
     """
     - every time :
@@ -61,8 +61,6 @@ def check_counts(df, selected_columns, synthese_info, def_count_val, df_type):
         # remark : negative values previously checked during check_types step
 
         logger.info('checking count_min and count_max : ')
-        
-        user_error = []
 
         # define combination of counts provided:
         if 'count_min' in list(selected_columns.keys())\
@@ -118,45 +116,23 @@ def check_counts(df, selected_columns, synthese_info, def_count_val, df_type):
                 logger.info('checking if count_max >= count_min')
 
                 df['temp'] = ''
+                df['temp'] = pd.to_numeric(df[selected_columns['count_max']], errors='coerce') - pd.to_numeric(df[selected_columns['count_min']], errors='coerce') < 0
+                df['temp'] = -df['temp']\
+                            .map(fill_map)\
+                            .astype('bool')
 
-                if df_type == 'pandas':
-                    df['temp'] = pd.to_numeric(df[selected_columns['count_max']], errors='coerce') - pd.to_numeric(df[selected_columns['count_min']], errors='coerce') < 0
-                    df['temp'] = -df['temp']\
-                                .map(fill_map)\
-                                .astype('bool')
-                else:
-                    df['temp'] = df\
-                        .apply(lambda x: check_count_min_max(x[selected_columns['count_min']], x[selected_columns['count_max']]), axis=1)\
-                        .map(fill_map)\
-                        .astype('bool')
-
-                df['gn_is_valid'] = df['gn_is_valid']\
-                    .where(
-                        cond=df['temp'], 
-                        other=False)
-                
-                df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
-                    cond=df['temp'],
-                    other=df['gn_invalid_reason'] + 'count_min ({}) > count_max ({}) -- '\
-                        .format(selected_columns['count_min'],selected_columns['count_max']))
+                set_is_valid(df, 'temp')
+                set_invalid_reason(
+                    df, 
+                    'temp', 
+                    'count_min > count_max ({} columns)', 
+                    ','.join([selected_columns['count_min'],selected_columns['count_max']])
+                    )
 
                 n_count_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
-                if df_type == 'dask':
-                    n_count_min_sup = n_count_min_sup.compute()
-
                 if n_count_min_sup > 0:
-                    user_error.append({
-                        'code': 'count error',
-                        'message': 'Des count min sont supérieurs à count max',
-                        'message_data': 'nombre de lignes avec erreurs : {}'.format(n_count_min_sup)
-                    })
-
-
-        if len(user_error) == 0:
-            user_error = ''
-
-        return user_error
+                    set_user_error(dc_user_errors, 8, ','.join([selected_columns['count_min'], selected_columns['count_max']]), n_count_min_sup)    
     
     except Exception:
         raise

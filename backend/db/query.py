@@ -305,3 +305,9 @@ def get_row_number(archives_schema_name, imports_schema_name, id):
     nrows = DB.session.execute("SELECT count(*) AS count_1 FROM {};".format(table_names['imports_full_table_name'])).scalar()
     DB.session.close()
     return nrows
+
+
+def get_user_error(description):
+    error = DB.session.execute("SELECT * FROM gn_imports.user_errors WHERE name = {};".format(QuotedString(description))).fetchone()
+    DB.session.close()
+    return error

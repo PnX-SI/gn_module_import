@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import datetime
 
-from .utils import fill_map, set_is_valid
+from .utils import fill_map, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
@@ -18,18 +18,17 @@ def format_missing(df, selected_columns, synthese_info, missing_values):
             df[selected_columns[field]] = df[selected_columns[field]].replace(missing_values,pd.np.nan).fillna(value=pd.np.nan)
 
     except Exception as e:
+        pdb.set_trace()
         raise 
 
 
 @checker('Data cleaning : missing values checked')
-def check_missing(df, selected_columns, synthese_info, missing_values, df_type):
+def check_missing(df, selected_columns, dc_user_errors, synthese_info, missing_values):
 
     try:
         logger.info('checking missing values : ')
 
         format_missing(df, selected_columns, synthese_info, missing_values)
-
-        user_error = []
 
         fields = [field for field in synthese_info if synthese_info[field]['is_nullable'] == 'NO']
 
@@ -49,31 +48,13 @@ def check_missing(df, selected_columns, synthese_info, missing_values, df_type):
                     .astype('bool')
 
                 set_is_valid(df, 'temp')
+                set_invalid_reason(df, 'temp', 'missing value in {} column', selected_columns[field])
+                n_missing_value = df['temp'].astype(str).str.contains('False').sum()
 
-                df['gn_invalid_reason'] = df['gn_invalid_reason']\
-                    .where(
-                        cond=df['temp'], 
-                        other=df['gn_invalid_reason'] + 'missing value in {} column -- '\
-                            .format(selected_columns[field]))
-            
                 df.drop('temp',axis=1)
 
-                n_missing_value = df['temp'].astype(str).str.contains('False').sum()
-                
-                if df_type == 'dask':
-                    n_missing_value = n_missing_value.compute()
-
                 if n_missing_value > 0:
-                    user_error.append({
-                        'code': 'valeur manquante',
-                        'message': 'Des valeurs manquantes dans la colonne {}'.format(selected_columns[field]),
-                        'message_data': 'nombre de lignes avec erreurs : {}'.format(n_missing_value)
-                    })
-        
-        if len(user_error) == 0:
-            user_error = ''
-
-        return user_error
+                    set_user_error(dc_user_errors, 5, selected_columns[field], n_missing_value)    
 
     except Exception:
         raise
