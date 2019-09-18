@@ -27,7 +27,7 @@ export const ModuleConfig = {
    "show": true
   },
   {
-   "max_width": 50,
+   "max_width": 100,
    "name": "File format",
    "prop": "format_source_file",
    "show": false
@@ -39,13 +39,13 @@ export const ModuleConfig = {
    "show": true
   },
   {
-   "max_width": 200,
+   "max_width": 100,
    "name": "Nb de taxons",
    "prop": "taxa_count",
    "show": true
   },
   {
-   "max_width": 200,
+   "max_width": 100,
    "name": "Nb de donnees",
    "prop": "import_count",
    "show": true

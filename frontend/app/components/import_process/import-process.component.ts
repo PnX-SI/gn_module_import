@@ -14,8 +14,8 @@ import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms'
 export class ImportProcessComponent implements OnInit {
 	public fileName;
 	private uploadResponse;
-	private cancelResponse;
-	private mappingResponse: JSON;
+	public cancelResponse;
+	public mappingResponse;
 	public isUploading: Boolean = false;
 	public IMPORT_CONFIG = ModuleConfig;
 	public uploadForm: FormGroup;
@@ -46,7 +46,7 @@ export class ImportProcessComponent implements OnInit {
 			stepper: [ null, Validators.required ] // hack for matrial 2.0.0 beta
 		});
 		this.syntheseForm = this._fb.group({
-			stepper: [ null, Validators.required ] 
+			stepper: [ null, Validators.required ]
 		});
 		for (let col of this.IMPORT_CONFIG.MAPPING_DATA_FRONTEND) {
 			for (let field of col.fields) {
@@ -95,7 +95,6 @@ export class ImportProcessComponent implements OnInit {
 		this._ds.postUserFile(value, this._activatedRoute.snapshot.queryParams['datasetId'], this.importId).subscribe(
 			(res) => {
 				this.uploadResponse = res;
-
 				this.IMPORT_CONFIG;
 				this.uploadForm.removeControl('stepper');
 				stepper.next();
@@ -131,7 +130,7 @@ export class ImportProcessComponent implements OnInit {
 		this.isUploading = true;
 		this._ds.postMapping(value, this.importId).subscribe(
 			(res) => {
-				this.mappingResponse = res as JSON;
+				this.mappingResponse = res;
 				this.isUploading = false;
 				stepper.next();
 			},
@@ -194,9 +193,15 @@ export class ImportProcessComponent implements OnInit {
 				this.uploadForm.get('separator').valid &&
 				this.uploadForm.get('separator').valid
 			)
-				this.step1_btn = false
+				this.step1_btn = false;
+		});
+		this.syntheseForm.valueChanges.subscribe((result) => {
+			this.columns = this.columns.filter(function(ele) {
+				return !Object.values(result).includes(ele);
+			});
 		});
 	}
+
 	/*les colonnes sont récupérées à partir de la conf !!!
 	getSynColumnNames() {
 		// attention
