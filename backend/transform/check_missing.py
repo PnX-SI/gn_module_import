@@ -23,14 +23,12 @@ def format_missing(df, selected_columns, synthese_info, missing_values):
 
 
 @checker('Data cleaning : missing values checked')
-def check_missing(df, selected_columns, synthese_info, missing_values):
+def check_missing(df, selected_columns, dc_user_errors, synthese_info, missing_values):
 
     try:
         logger.info('checking missing values : ')
 
         format_missing(df, selected_columns, synthese_info, missing_values)
-
-        user_error = []
 
         fields = [field for field in synthese_info if synthese_info[field]['is_nullable'] == 'NO']
 
@@ -55,20 +53,8 @@ def check_missing(df, selected_columns, synthese_info, missing_values):
 
                 df.drop('temp',axis=1)
 
-
                 if n_missing_value > 0:
-                    user_error.append(
-                        set_user_error(
-                            'missing value in required field',
-                            selected_columns[field],
-                            n_missing_value
-                        )
-                    )
-        
-        if len(user_error) == 0:
-            user_error = ''
-
-        return user_error
+                    set_user_error(dc_user_errors, 5, selected_columns[field], n_missing_value)    
 
     except Exception:
         raise

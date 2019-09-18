@@ -557,20 +557,37 @@ def postMapping(info_role, import_id):
             "SELECT cd_nom \
              FROM taxonomie.taxref")
         cd_nom_list = [str(row.cd_nom) for row in cd_nom_taxref]
+        DB.session.close()
 
 
         ### TRANSFORM (data checking and cleaning)
 
+        # set empty data cleaning user error report :
+        dc_user_errors = []
+        user_error = {}
+        dc_errors = DB.session.execute("SELECT * FROM gn_imports.user_errors;").fetchall()
+        for error in dc_errors:
+            for field in selected_columns.values():
+                dc_user_errors.append({
+                    'id': error.id_error,
+                    'type': error.error_type,
+                    'name': error.name,
+                    'description': error.description,
+                    'column': field,
+                    'n_errors': 0
+                })
+
 
         print(df.map_partitions(len).compute())
         
+        # start process (transform and load)
         for i in range(df.npartitions):
 
             logger.info('* START DATA CLEANING partition %s', i)
 
             partition = df.get_partition(i)
             partition_df = compute_df(partition)
-            transform_errors = data_cleaning(partition_df, selected_columns, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list)
+            transform_errors = data_cleaning(partition_df, selected_columns, dc_user_errors, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list)
 
             if len(transform_errors['user_errors']) > 0:
                 for error in transform_errors['user_errors']:
@@ -594,6 +611,13 @@ def postMapping(info_role, import_id):
             logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE partition %s', i)
         
 
+        # filters dc_user_errors to get error report:
+        error_report = []
+        for error in dc_user_errors:
+            if error['n_errors'] > 0:
+                error['n_errors'] = int(error['n_errors'])
+                error_report.append(error)
+
         # set gn_pk as primary key:
         DB.session.execute("DROP TABLE {};".format(table_names['imports_full_table_name']))
         DB.session.execute("ALTER TABLE {}.{} RENAME TO {};".format(IMPORTS_SCHEMA_NAME, temp_table_name, table_names['imports_table_name']))
@@ -607,9 +631,6 @@ def postMapping(info_role, import_id):
             raise GeonatureImportApiError(
                 message='INTERNAL SERVER ERROR ("postMapping() error"): lignes manquantes dans {} - refaire le matching'.format(table_names['imports_full_table_name']),
                 details='')
-
-        print('is_nrows_ok :')
-        print(is_nrows_ok)
         
 
         """
@@ -628,9 +649,6 @@ def postMapping(info_role, import_id):
         
         DB.session.commit()
         DB.session.close()
-
-        print('n_invalid_rows :')
-        print(n_invalid_rows)
 
         logger.info('*** END CORRESPONDANCE MAPPING')
 
@@ -656,10 +674,8 @@ def postMapping(info_role, import_id):
             return errors,400
         """
 
-        pdb.set_trace()
-
         return {
-            'user_error_details' : errors,
+            'user_error_details' : error_report,
             'n_user_errors' : n_invalid_rows
         }
 

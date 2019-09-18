@@ -33,12 +33,7 @@ def get_types(synthese_info):
 fill_map = {'':True, False:False}
 
 
-def set_user_error(error_name, column_name, n_errors):
-    error_details = get_user_error(error_name)
-    return {
-        'id' : str(error_details.id_error),
-        'type' : error_details.error_type,
-        'message' : error_details.description,
-        'column' : column_name,
-        'n_errors' : str(n_errors)
-    }
+def set_user_error(dc_user_errors, id, col_name, n_errors):
+    for error in dc_user_errors:
+        if error['id'] == id and error['column'] == col_name:
+            error['n_errors'] = error['n_errors'] + n_errors  

@@ -40,12 +40,11 @@ def is_uuid(value, version=4):
 
 
 @checker('Data cleaning : type of values checked')
-def check_types(df, added_cols, selected_columns, synthese_info, missing_values):
+def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_values):
 
     try:
 
         logger.info('checking types : ')
-        user_error = []
         types = get_types(synthese_info)
         #types = list(dict.fromkeys(get_synthese_types()))
 
@@ -82,16 +81,7 @@ def check_types(df, added_cols, selected_columns, synthese_info, missing_values)
             added_cols['date_min'] = col_name
 
             if n_invalid_date_error > 0:
-                user_error.append(
-                        set_user_error(
-                            'invalid date type',
-                            selected_columns[field],
-                            n_invalid_date_error
-                        )
-                    )
-            
-
-        
+                set_user_error(dc_user_errors, 2, selected_columns[field], n_invalid_date_error)     
 
 
         # UUID TYPE COLUMNS :
@@ -120,14 +110,7 @@ def check_types(df, added_cols, selected_columns, synthese_info, missing_values)
                 n_invalid_uuid = df['temp'].astype(str).str.contains('False').sum()
 
                 if n_invalid_uuid > 0:
-                    user_error.append(
-                        set_user_error(
-                            'invalid uuid type',
-                            selected_columns[col],
-                            n_invalid_uuid
-                        )
-                    )
-
+                    set_user_error(dc_user_errors, 3, selected_columns[col], n_invalid_uuid)   
 
         
         # CHARACTER VARYING TYPE COLUMNS : 
@@ -155,14 +138,8 @@ def check_types(df, added_cols, selected_columns, synthese_info, missing_values)
                 n_invalid_string = df['temp'].astype(str).str.contains('False').sum()
 
                 if n_invalid_string > 0:
-                    user_error.append(
-                        set_user_error(
-                            'invalid character varying length',
-                            selected_columns[col],
-                            n_invalid_string
-                        )
-                    )
-        
+                    set_user_error(dc_user_errors, 4, selected_columns[col], n_invalid_string)
+
 
         # INTEGER TYPE COLUMNS :
 
@@ -196,18 +173,7 @@ def check_types(df, added_cols, selected_columns, synthese_info, missing_values)
                 n_invalid_int = df['temp'].astype(str).str.contains('False').sum()
 
                 if n_invalid_int > 0:
-                    user_error.append(
-                        set_user_error(
-                            'invalid integer type',
-                            selected_columns[col],
-                            n_invalid_int
-                        )
-                    )
-
-        if len(user_error) == 0:
-            user_error = ''
-
-        return user_error
+                    set_user_error(dc_user_errors, 1, selected_columns[col], n_invalid_int)  
 
     except Exception:
         raise

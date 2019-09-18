@@ -1,7 +1,7 @@
 import pdb
 import pandas as pd
 import dask
-from .utils import fill_col
+from .utils import fill_col, set_user_error
 from ..wrappers import checker
 
 
@@ -19,7 +19,7 @@ def check_alt_min_max(min_val, max_val):
 
 
 @checker('Data cleaning : altitudes checked')
-def check_altitudes(df, selected_columns, synthese_info, calcul):
+def check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul):
 
     """
     A FAIRE QUAND DATA CLEANING DONNEES GEO :
@@ -42,8 +42,6 @@ def check_altitudes(df, selected_columns, synthese_info, calcul):
 
     try:
 
-        user_error = []
-
         altitudes = []
 
         for element in list(selected_columns.keys()):
@@ -65,16 +63,7 @@ def check_altitudes(df, selected_columns, synthese_info, calcul):
                 n_alt_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
                 if n_alt_min_sup > 0:
-                    user_error.append({
-                        'code': 'altitude error',
-                        'message': 'Des altitude min sont supérieurs à altitude max',
-                        'message_data': 'nombre de lignes avec erreurs : {}'.format(n_alt_min_sup)
-                    })
-
-        if len(user_error) == 0:
-            user_error = ''
-
-        return user_error
+                    set_user_error(dc_user_errors, 10, ','.join([selected_columns['altitude_min'], selected_columns['altitude_max']]), n_alt_min_sup)    
 
     except Exception:
         raise

@@ -3,7 +3,7 @@ import datetime
 import dask
 import dask.dataframe as dd
 
-from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason
+from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
@@ -24,16 +24,13 @@ def is_negative_date(value):
 
 
 @checker('Data cleaning : dates checked')
-def check_dates(df, added_cols, selected_columns, synthese_info):
+def check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info):
 
     try:
 
         logger.info('checking date validity :')
         # get user synthese fields having timestamp type
         date_fields = [field for field in synthese_info if synthese_info[field]['data_type'] == 'timestamp without time zone']
-
-        user_error = []
-
 
         ## date_min and date_max :
 
@@ -62,26 +59,13 @@ def check_dates(df, added_cols, selected_columns, synthese_info):
             n_date_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
             if n_date_min_sup > 0:
-                user_error.append(
-                        set_user_error(
-                            'date_min > date_max',
-                            ','.join([selected_columns['date_min'], selected_columns['date_max']]),
-                            n_date_min_sup
-                        )
-                    )
+                set_user_error(dc_user_errors, 7, ','.join([selected_columns['date_min'], selected_columns['date_max']]), n_date_min_sup)    
         
 
         ## meta_create_date and meta_update_date :
 
-        
-
-        if len(user_error) == 0:
-            user_error = ''
-
         if 'check_dates' in df.columns:
             df = df.drop('check_dates', axis=1)
-
-        return user_error
 
     except Exception:
         raise

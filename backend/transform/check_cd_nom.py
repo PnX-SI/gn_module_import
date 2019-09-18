@@ -12,14 +12,12 @@ import pdb
 
 
 @checker('Data cleaning : cd_nom checked')
-def check_cd_nom(df, selected_columns, missing_values, cd_nom_list):
+def check_cd_nom(df, selected_columns, dc_user_errors, missing_values, cd_nom_list):
 
     try:
 
         # note : améliorer performances du comptage d'erreurs
         logger.info('checking cd_nom validity for %s column', selected_columns['cd_nom'])
-
-        user_error = []
 
         # return False if invalid cd_nom, else (including missing values) return True
         df['temp'] = ''
@@ -38,19 +36,9 @@ def check_cd_nom(df, selected_columns, missing_values, cd_nom_list):
         set_invalid_reason(df, 'temp', 'invalid cd_nom value in {} column', selected_columns['cd_nom'])
         n_cd_nom_error = df['temp'].astype(str).str.contains('False').sum()
 
+        # set front interface error
         if n_cd_nom_error > 0:
-            user_error.append(
-                set_user_error(
-                    'invalid cd_nom',
-                    selected_columns['cd_nom'],
-                    n_cd_nom_error
-                )
-            )
-
-        if len(user_error) == 0:
-            user_error = ''
-
-        return user_error
+            set_user_error(dc_user_errors, 9, selected_columns['cd_nom'], n_cd_nom_error)
 
     except Exception:
         raise

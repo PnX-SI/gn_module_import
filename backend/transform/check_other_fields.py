@@ -5,7 +5,7 @@ from ..wrappers import checker
 
 
 @checker('Data cleaning : other_field operations checked')
-def check_entity_source(df, added_cols, selected_columns, synthese_info):
+def check_entity_source(df, added_cols, selected_columns, dc_user_errors, synthese_info):
 
     try:
         fields = [field for field in synthese_info]

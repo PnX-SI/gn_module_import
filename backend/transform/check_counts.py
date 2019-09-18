@@ -42,7 +42,7 @@ def check_negative(val):
 
 
 @checker('Data cleaning : counts checked')
-def check_counts(df, selected_columns, synthese_info, def_count_val):
+def check_counts(df, selected_columns, dc_user_errors, synthese_info, def_count_val):
 
     """
     - every time :
@@ -61,8 +61,6 @@ def check_counts(df, selected_columns, synthese_info, def_count_val):
         # remark : negative values previously checked during check_types step
 
         logger.info('checking count_min and count_max : ')
-        
-        user_error = []
 
         # define combination of counts provided:
         if 'count_min' in list(selected_columns.keys())\
@@ -134,19 +132,7 @@ def check_counts(df, selected_columns, synthese_info, def_count_val):
                 n_count_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
                 if n_count_min_sup > 0:
-                    user_error.append(
-                        set_user_error(
-                            'count_min > count_max',
-                            ','.join([selected_columns['count_min'], selected_columns['count_max']]),
-                            n_count_min_sup
-                        )
-                    )
-
-
-        if len(user_error) == 0:
-            user_error = ''
-
-        return user_error
+                    set_user_error(dc_user_errors, 8, ','.join([selected_columns['count_min'], selected_columns['count_max']]), n_count_min_sup)    
     
     except Exception:
         raise
