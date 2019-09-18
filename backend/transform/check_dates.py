@@ -24,7 +24,7 @@ def is_negative_date(value):
 
 
 @checker('Data cleaning : dates checked')
-def check_dates(df, selected_columns, synthese_info, df_type):
+def check_dates(df, added_cols, selected_columns, synthese_info):
 
     try:
 
@@ -40,7 +40,7 @@ def check_dates(df, selected_columns, synthese_info, df_type):
         # set date_max (=if data_max not existing, then set equal to date_min)
         if 'date_max' not in date_fields:
             logger.info('- checking if date_max column is missing')
-            selected_columns['date_max'] = selected_columns['date_min']
+            added_cols['date_max'] = selected_columns['date_min']
             #df['date_max'] = df[selected_columns['date_min']] # utile?
             synthese_info.update({'date_max': synthese_info['date_min']}) # utile?
 
@@ -59,11 +59,7 @@ def check_dates(df, selected_columns, synthese_info, df_type):
             
             set_is_valid(df, 'temp')
             set_invalid_reason(df, 'temp', 'date_min > date_max ({} columns)', ','.join([selected_columns['date_min'],selected_columns['date_max']]))
-
             n_date_min_sup = df['temp'].astype(str).str.contains('False').sum()
-
-            if df_type == 'dask':
-                    n_date_min_sup = n_date_min_sup.compute()
 
             if n_date_min_sup > 0:
                 user_error.append(

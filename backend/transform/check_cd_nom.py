@@ -12,7 +12,7 @@ import pdb
 
 
 @checker('Data cleaning : cd_nom checked')
-def check_cd_nom(df, selected_columns, missing_values, df_type):
+def check_cd_nom(df, selected_columns, missing_values, cd_nom_list):
 
     try:
 
@@ -20,12 +20,6 @@ def check_cd_nom(df, selected_columns, missing_values, df_type):
         logger.info('checking cd_nom validity for %s column', selected_columns['cd_nom'])
 
         user_error = []
-
-        # get cd_nom list
-        cd_nom_taxref = DB.session.execute(\
-            "SELECT cd_nom \
-             FROM taxonomie.taxref")
-        cd_nom_list = [str(row.cd_nom) for row in cd_nom_taxref]
 
         # return False if invalid cd_nom, else (including missing values) return True
         df['temp'] = ''
@@ -42,11 +36,7 @@ def check_cd_nom(df, selected_columns, missing_values, df_type):
         # set gn_is_valid and invalid_reason
         set_is_valid(df, 'temp')
         set_invalid_reason(df, 'temp', 'invalid cd_nom value in {} column', selected_columns['cd_nom'])
-
         n_cd_nom_error = df['temp'].astype(str).str.contains('False').sum()
-
-        if df_type == 'dask':
-                    n_cd_nom_error = n_cd_nom_error.compute()
 
         if n_cd_nom_error > 0:
             user_error.append(

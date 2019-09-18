@@ -17,7 +17,7 @@ def fill_nan_uuid(value):
 
 
 @checker('Data cleaning : uuid values checked')
-def check_uuid(df,selected_columns,synthese_info, df_type):
+def check_uuid(df, added_cols, selected_columns, synthese_info):
 
     try:
 
@@ -63,9 +63,6 @@ def check_uuid(df,selected_columns,synthese_info, df_type):
                                 .format(col))
 
                 n_missing_uuid = df['temp'].astype(str).str.contains('False').sum()
-                
-                if df_type == 'dask':
-                    n_missing_uuid = n_missing_uuid.compute()
 
                 if n_missing_uuid > 0:
                     user_error.append(
@@ -84,7 +81,7 @@ def check_uuid(df,selected_columns,synthese_info, df_type):
             df['unique_id_sinp'] = ''
             df['unique_id_sinp'] = df['unique_id_sinp']\
                 .apply(lambda x: str(uuid4()))
-            selected_columns['unique_id_sinp'] = 'unique_id_sinp'
+            added_cols['unique_id_sinp'] = 'unique_id_sinp'
 
         if len(user_error) == 0:
             user_error = ''

@@ -90,8 +90,15 @@ ALTER TABLE ONLY cor_role_import
 --------------
 
 INSERT INTO user_errors (id_error, error_type, name, description) VALUES
-	(1, 'invalid type', 'invalid integer type', 'type integer invalide')
-	(2, 'invalid type', 'invalid date type', 'type date invalide');
+	(1, 'invalid type error', 'invalid integer type', 'type integer invalide'),
+	(2, 'invalid type error', 'invalid date type', 'type date invalide'),
+	(3, 'invalid type error', 'invalid uuid type', 'type uuid invalide'),
+	(4, 'invalid type error', 'invalid character varying length', 'champs de type character varying trop long'),
+	(5, 'missing value error', 'missing value in required field', 'valeur manquante dans un champs obligatoire'),
+	(6, 'missing value warning', 'warning : missing uuid type value', 'warning : valeur de type uuid manquante (non bloquant)'),
+	(7, 'inconsistency error', 'date_min > date_max', 'date_min > date_max'),
+	(8, 'inconsistency error', 'count_min > count_max', 'count_min > count_max'),
+	(9, 'invalid value', 'invalid cd_nom', 'cd_nom invalide (absent de TaxRef)');
 
 
 

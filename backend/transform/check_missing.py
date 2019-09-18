@@ -18,11 +18,12 @@ def format_missing(df, selected_columns, synthese_info, missing_values):
             df[selected_columns[field]] = df[selected_columns[field]].replace(missing_values,pd.np.nan).fillna(value=pd.np.nan)
 
     except Exception as e:
+        pdb.set_trace()
         raise 
 
 
 @checker('Data cleaning : missing values checked')
-def check_missing(df, selected_columns, synthese_info, missing_values, df_type):
+def check_missing(df, selected_columns, synthese_info, missing_values):
 
     try:
         logger.info('checking missing values : ')
@@ -50,13 +51,10 @@ def check_missing(df, selected_columns, synthese_info, missing_values, df_type):
 
                 set_is_valid(df, 'temp')
                 set_invalid_reason(df, 'temp', 'missing value in {} column', selected_columns[field])
-            
+                n_missing_value = df['temp'].astype(str).str.contains('False').sum()
+
                 df.drop('temp',axis=1)
 
-                n_missing_value = df['temp'].astype(str).str.contains('False').sum()
-                
-                if df_type == 'dask':
-                    n_missing_value = n_missing_value.compute()
 
                 if n_missing_value > 0:
                     user_error.append(

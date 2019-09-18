@@ -64,7 +64,8 @@ from .db.query import (
     set_imports_table_name,
     get_synthese_info,
     load_csv_to_db,
-    get_row_number
+    get_row_number,
+    check_row_number
 )
 
 from .utils.clean_names import*
@@ -77,6 +78,7 @@ from .api_error import GeonatureImportApiError
 from .extract.extract import extract
 from .load.load import load
 from .wrappers import checker
+from .load.utils import compute_df
 
 import pdb
 
@@ -528,6 +530,7 @@ def postMapping(info_role, import_id):
         engine = DB.engine
         column_names = get_table_info(table_names['imports_table_name'], 'column_name')
         data = dict(request.get_json())
+        temp_table_name = '_'.join(['temp', table_names['imports_table_name']])
         MISSING_VALUES = ['', 'NA', 'NaN', 'na'] # mettre en conf
         DEFAULT_COUNT_VALUE = 1 # mettre en conf
         MODULE_URL = blueprint.config["MODULE_URL"]
@@ -541,47 +544,75 @@ def postMapping(info_role, import_id):
         selected_user_cols = [*list(selected_columns.values())]
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
-        # choose pandas if small dataset
-        
-        nrows = get_row_number(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
-        
-        logger.debug('row number = %s', nrows)
-        if nrows < 200000:
-            df_type = 'pandas'
-        else:
-            df_type = 'dask'
-        logger.info('type of dataframe = %s', df_type)
 
+        ### EXTRACT
 
-        # EXTRACT
         logger.info('* START EXTRACT FROM DB TABLE TO PYTHON')
-        df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col, import_id, df_type)
+        df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col, import_id)
         logger.info('* END EXTRACT FROM DB TABLE TO PYTHON')
+        
+
+        # get cd_nom list
+        cd_nom_taxref = DB.session.execute(\
+            "SELECT cd_nom \
+             FROM taxonomie.taxref")
+        cd_nom_list = [str(row.cd_nom) for row in cd_nom_taxref]
 
 
         ### TRANSFORM (data checking and cleaning)
 
-        logger.info('* START DATA CLEANING')
-        transform_errors = data_cleaning(df, selected_columns, MISSING_VALUES, DEFAULT_COUNT_VALUE, df_type)
 
-        if len(transform_errors) > 0:
-            for error in transform_errors:
-                logger.debug('USER ERRORS : %s', error['message'])
-                errors.append(error)
+        print(df.map_partitions(len).compute())
+        
+        for i in range(df.npartitions):
 
-        if 'temp' in df.columns:
-            df = df.drop('temp', axis=1)
+            logger.info('* START DATA CLEANING partition %s', i)
 
-        logger.info('* END DATA CLEANING')
+            partition = df.get_partition(i)
+            partition_df = compute_df(partition)
+            transform_errors = data_cleaning(partition_df, selected_columns, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list)
+
+            if len(transform_errors['user_errors']) > 0:
+                for error in transform_errors['user_errors']:
+                    logger.debug('USER ERRORS : %s', error['message'])
+                    errors.append(error)
+
+            added_cols = transform_errors['added_cols']
+
+            if 'temp' in df.columns:
+                df = df.drop('temp', axis=1)
+
+            logger.info('* END DATA CLEANING partition %s', i)
 
 
         ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
-        
-        logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE')
-        df = load(df, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, table_names['imports_full_table_name'], import_id, engine, index_col, df_type)
-        logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE')
+
+            logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s', i)
+            load(partition_df, i, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, 
+                table_names['imports_full_table_name'], temp_table_name, import_id, engine, 
+                index_col, MODULE_URL, DIRECTORY_NAME)
+            logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE partition %s', i)
         
 
+        # set gn_pk as primary key:
+        DB.session.execute("DROP TABLE {};".format(table_names['imports_full_table_name']))
+        DB.session.execute("ALTER TABLE {}.{} RENAME TO {};".format(IMPORTS_SCHEMA_NAME, temp_table_name, table_names['imports_table_name']))
+        DB.session.execute("ALTER TABLE ONLY {}.{} ADD CONSTRAINT pk_{}_{} PRIMARY KEY ({});".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, index_col))
+
+        
+        # check if df is fully loaded in postgresql table :
+        is_nrows_ok = check_row_number(import_id, table_names['imports_full_table_name'])
+        if not is_nrows_ok:
+            logger.error('missing rows because of loading server error')
+            raise GeonatureImportApiError(
+                message='INTERNAL SERVER ERROR ("postMapping() error"): lignes manquantes dans {} - refaire le matching'.format(table_names['imports_full_table_name']),
+                details='')
+
+        print('is_nrows_ok :')
+        print(is_nrows_ok)
+        
+
+        """
         ### UPDATE METADATA
 
         DB.session.query(TImports)\
@@ -589,11 +620,17 @@ def postMapping(info_role, import_id):
             .update({
                 TImports.step: 3,
                 })
+        """
+
+
+        n_invalid_rows = DB.session.execute("SELECT count(*) FROM {} WHERE gn_is_valid = FALSE;".format(table_names['imports_full_table_name'])).fetchone()[0]
+
         
         DB.session.commit()
         DB.session.close()
 
-        n_invalid_rows = str(df['gn_is_valid'].astype(str).str.contains('False').sum())
+        print('n_invalid_rows :')
+        print(n_invalid_rows)
 
         logger.info('*** END CORRESPONDANCE MAPPING')
 
@@ -619,8 +656,10 @@ def postMapping(info_role, import_id):
             return errors,400
         """
 
+        pdb.set_trace()
+
         return {
-            'user_error_details' : transform_errors,
+            'user_error_details' : errors,
             'n_user_errors' : n_invalid_rows
         }
 
