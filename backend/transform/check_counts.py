@@ -130,9 +130,8 @@ def check_counts(df, selected_columns, dc_user_errors, synthese_info, def_count_
                     )
 
                 n_count_min_sup = df['temp'].astype(str).str.contains('False').sum()
-
                 if n_count_min_sup > 0:
-                    set_user_error(dc_user_errors, 8, ','.join([selected_columns['count_min'], selected_columns['count_max']]), n_count_min_sup)    
+                    set_user_error(dc_user_errors, 8, selected_columns['count_min'], n_count_min_sup)    
     
     except Exception:
         raise

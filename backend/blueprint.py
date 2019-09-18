@@ -668,11 +668,6 @@ def postMapping(info_role, import_id):
         DB.session.commit()      
         DB.session.close()
         """
-        
-        """
-        if len(errors) > 0:
-            return errors,400
-        """
 
         return {
             'user_error_details' : error_report,

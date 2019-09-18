@@ -49,5 +49,4 @@ def data_cleaning(df, selected_columns, dc_user_errors, missing_val, def_count_v
         }
 
     except Exception:
-        pdb.set_trace()
         raise

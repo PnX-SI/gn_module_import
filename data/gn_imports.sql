@@ -98,10 +98,9 @@ INSERT INTO user_errors (id_error, error_type, name, description) VALUES
 	(6, 'missing value warning', 'warning : missing uuid type value', 'warning : valeur de type uuid manquante (non bloquant)'),
 	(7, 'inconsistency error', 'date_min > date_max', 'date_min > date_max'),
 	(8, 'inconsistency error', 'count_min > count_max', 'count_min > count_max'),
-	(9, 'invalid value', 'invalid cd_nom', 'cd_nom invalide (absent de TaxRef)');
-
-
-
+	(9, 'invalid value', 'invalid cd_nom', 'cd_nom invalide (absent de TaxRef)'),
+	(10, 'inconsistency error', 'altitude min > altitude max', 'altitude min > altitude max'),
+	(11, 'duplicates error', 'entitiy_source_pk_value duplicates', 'des valeurs de entity_source_pk_value ne sont pas uniques');
 
 
 

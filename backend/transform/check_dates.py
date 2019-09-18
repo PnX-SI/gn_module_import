@@ -59,7 +59,7 @@ def check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info)
             n_date_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
             if n_date_min_sup > 0:
-                set_user_error(dc_user_errors, 7, ','.join([selected_columns['date_min'], selected_columns['date_max']]), n_date_min_sup)    
+                set_user_error(dc_user_errors, 7, selected_columns['date_min'], n_date_min_sup)    
         
 
         ## meta_create_date and meta_update_date :

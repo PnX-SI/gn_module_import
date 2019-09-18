@@ -2,7 +2,7 @@ from uuid import uuid4
 import numpy as np
 import pandas as pd
 
-from .utils import fill_col, set_is_valid, set_invalid_reason, set_user_error
+from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
@@ -51,6 +51,7 @@ def check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info):
 
                     df[selected_columns[col]] = df[selected_columns[col]]\
                         .apply(lambda x: fill_nan_uuid(x))
+                    # !!! attention de pas les générer si pas coché
 
                 # pour les autres colonnes : on envoie un warning sans créer un uuid pour les champs manquants:
                 else:

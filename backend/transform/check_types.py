@@ -100,7 +100,7 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
                 df['temp'] = ''
                 df['temp'] = df['temp']\
                     .where(
-                        cond=df[selected_columns[col]].apply(lambda x: is_uuid(x), meta=False), 
+                        cond=df[selected_columns[col]].apply(lambda x: is_uuid(x)), 
                         other=False)\
                     .map(fill_map)\
                     .astype('bool')

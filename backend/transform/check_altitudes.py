@@ -63,7 +63,7 @@ def check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul)
                 n_alt_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
                 if n_alt_min_sup > 0:
-                    set_user_error(dc_user_errors, 10, ','.join([selected_columns['altitude_min'], selected_columns['altitude_max']]), n_alt_min_sup)    
+                    set_user_error(dc_user_errors, 10, selected_columns['altitude_min'], n_alt_min_sup)    
 
     except Exception:
         raise
