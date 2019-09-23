@@ -7,6 +7,8 @@ from flask import (
 
 from werkzeug.utils import secure_filename
 
+import geopandas
+
 import os
 
 import pathlib
@@ -65,7 +67,8 @@ from .db.query import (
     get_synthese_info,
     load_csv_to_db,
     get_row_number,
-    check_row_number
+    check_row_number,
+    get_local_srid
 )
 
 from .utils.clean_names import*
@@ -535,7 +538,8 @@ def postMapping(info_role, import_id):
         DEFAULT_COUNT_VALUE = 1 # mettre en conf
         MODULE_URL = blueprint.config["MODULE_URL"]
         DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
-
+        srid = 4326
+        local_srid = get_local_srid()
         logger.debug('import_id = %s', import_id)
         logger.debug('DB tabel name = %s', table_names['imports_table_name'])
 
@@ -577,7 +581,6 @@ def postMapping(info_role, import_id):
                     'n_errors': 0
                 })
 
-
         print(df.map_partitions(len).compute())
         
         # start process (transform and load)
@@ -587,7 +590,7 @@ def postMapping(info_role, import_id):
 
             partition = df.get_partition(i)
             partition_df = compute_df(partition)
-            transform_errors = data_cleaning(partition_df, selected_columns, dc_user_errors, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list)
+            transform_errors = data_cleaning(partition_df, import_id, selected_columns, dc_user_errors, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid)
 
             if len(transform_errors['user_errors']) > 0:
                 for error in transform_errors['user_errors']:
@@ -601,8 +604,13 @@ def postMapping(info_role, import_id):
 
             logger.info('* END DATA CLEANING partition %s', i)
 
+            partition_df = partition_df.drop('temp_longitude', axis=1)
+            partition_df = partition_df.drop('temp_latitude', axis=1)
+            partition_df = partition_df.drop('geometry', axis=1)
+            partition_df = partition_df.drop('temp', axis=1)
 
-        ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
+
+            ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
 
             logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s', i)
             load(partition_df, i, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, 
@@ -618,12 +626,25 @@ def postMapping(info_role, import_id):
                 error['n_errors'] = int(error['n_errors'])
                 error_report.append(error)
 
+
         # set gn_pk as primary key:
         DB.session.execute("DROP TABLE {};".format(table_names['imports_full_table_name']))
         DB.session.execute("ALTER TABLE {}.{} RENAME TO {};".format(IMPORTS_SCHEMA_NAME, temp_table_name, table_names['imports_table_name']))
         DB.session.execute("ALTER TABLE ONLY {}.{} ADD CONSTRAINT pk_{}_{} PRIMARY KEY ({});".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, index_col))
 
-        
+
+        start = datetime.datetime.now()
+        logger.info('creating postgis from wkt:')
+        # create geom_4326
+        DB.session.execute("UPDATE {}.{} SET the_geom_4326 = ST_SetSRID(the_geom_4326, 4326);".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name']))
+        # create geom_point
+        DB.session.execute("UPDATE {}.{} SET the_geom_point = ST_SetSRID(the_geom_point, 4326);".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name']))
+        # create geom_local
+        DB.session.execute("UPDATE {}.{} SET the_geom_local = ST_SetSRID(the_geom_local, {});".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid))
+        end = datetime.datetime.now()
+        temps = end-start
+        logger.info('wkt to postgis in %s secondes', temps)
+
         # check if df is fully loaded in postgresql table :
         is_nrows_ok = check_row_number(import_id, table_names['imports_full_table_name'])
         if not is_nrows_ok:
@@ -653,17 +674,19 @@ def postMapping(info_role, import_id):
         logger.info('*** END CORRESPONDANCE MAPPING')
 
 
-        """
+        
         ### importer les données dans synthese
-        selected_columns = {key:value for key, value in data.items() if value}
+        #selected_columns = {key:value for key, value in data.items() if value}
 
         selected_synthese_cols = ','.join(selected_columns.keys())
         selected_user_cols = ','.join(selected_columns.values())
 
+
+        """
         # ok ça marche
         print('fill synthese')
-        DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid=TRUE;".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
-        #INSERT INTO gn_synthese.synthese (cd_nom,nom_cite,date_min,date_max) SELECT species_id,nom_scientifique,my_timestamp::timestamp,date_max FROM gn_imports.i_data_pf_observado_corrected_303 WHERE gn_is_valid=TRUE;
+        #DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid=TRUE;".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
+        #INSERT INTO gn_synthese.synthese (cd_nom,nom_cite,date_min,date_max, the_geom_4326) SELECT species_id::integer,nom_scientifique,gn_timestamp::timestamp,gn_timestamp::timestamp,the_geom_4326::geometry FROM gn_imports.i_data_pf_observado_original_447 WHERE gn_is_valid=TRUE;
         print('synthese filled')
         DB.session.commit()      
         DB.session.close()

@@ -109,6 +109,21 @@ MAPPING_DATA = [
                 'required': False
             },
             {
+                'name': 'longitude',
+                'label': 'Longitude (coord x)',
+                'required': True
+            },
+            {
+                'name': 'latitude',
+                'label': 'Latitude (coord y)',
+                'required': True
+            },
+            {
+                'name': 'altitude_max',
+                'label': 'Altitude max',
+                'required': False
+            },
+            {
                 'name': 'observers',
                 'label': 'Observateur(s)',
                 'required': False

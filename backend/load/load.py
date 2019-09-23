@@ -72,7 +72,7 @@ def load(df, i, table_name, schema_name, full_table_name, temp_table_name, impor
             create_empty_table(df, temp_table_name, engine, schema_name)
 
         load_df_to_sql(df, temp_table_name, full_table_name, engine, schema_name, ';', import_id)
-        
+              
         #return df
 
     except Exception:

@@ -311,3 +311,9 @@ def get_user_error(description):
     error = DB.session.execute("SELECT * FROM gn_imports.user_errors WHERE name = {};".format(QuotedString(description))).fetchone()
     DB.session.close()
     return error
+
+
+def get_local_srid():
+    local_srid = DB.session.execute("""SELECT parameter_value FROM gn_commons.t_parameters WHERE parameter_name = 'local_srid';""").fetchone()[0]
+    DB.session.close()
+    return int(local_srid)

@@ -108,6 +108,16 @@ export const ModuleConfig = {
      "required": false
     },
     {
+    'name': 'longitude',
+    'label': 'Longitude (coord x)',
+    'required': true
+    },
+    {
+    'name': 'latitude',
+    'label': 'Latitude (coord y)',
+    'required': true
+    },
+    {
      "label": "Altitude min",
      "name": "altitude_min",
      "required": false
