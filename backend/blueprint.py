@@ -692,7 +692,7 @@ def postMapping(info_role, import_id):
         if generate_alt:
 
             if 'altitude_min' not in selected_columns.keys():
-                create_col_name(selected_columns, 'altitude_min', 'gn_altitude_min', import_id)
+                create_col_name(df, selected_columns, 'altitude_min', 'gn_altitude_min', import_id)
                 create_column(
                     full_table_name = table_names['imports_full_table_name'], 
                     alt_col = selected_columns['altitude_min'])
@@ -705,7 +705,7 @@ def postMapping(info_role, import_id):
                 geom_col = 'the_geom_local')
 
             if 'altitude_max' not in selected_columns.keys():
-                create_col_name(selected_columns, 'altitude_max', 'gn_altitude_max', import_id)
+                create_col_name(df, selected_columns, 'altitude_max', 'gn_altitude_max', import_id)
                 create_column(
                     full_table_name = table_names['imports_full_table_name'], 
                     alt_col = selected_columns['altitude_max'])
@@ -727,7 +727,9 @@ def postMapping(info_role, import_id):
         if not is_nrows_ok:
             logger.error('missing rows because of loading server error')
             raise GeonatureImportApiError(
-                message='INTERNAL SERVER ERROR ("postMapping() error"): lignes manquantes dans {} - refaire le matching'.format(table_names['imports_full_table_name']),
+                message='INTERNAL SERVER ERROR ("postMapping() error"): \
+                            lignes manquantes dans {} - refaire le matching'\
+                    .format(table_names['imports_full_table_name']),
                 details='')
         
 
@@ -777,6 +779,8 @@ def postMapping(info_role, import_id):
         logger.exception(e)
         DB.session.rollback()
         DB.session.close()
+
+        pdb.set_trace()
 
         n_loaded_rows = DB.session.execute(
             "SELECT count(*) FROM {}".format(table_names['imports_full_table_name'])
