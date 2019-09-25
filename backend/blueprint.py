@@ -68,10 +68,13 @@ from .db.query import (
     load_csv_to_db,
     get_row_number,
     check_row_number,
-    get_local_srid
+    get_local_srid,
+    generate_altitudes,
+    create_column
 )
 
 from .utils.clean_names import*
+from .utils.utils import create_col_name
 from .upload.upload_process import upload
 from .upload.upload_errors import*
 from .goodtables_checks.check_user_file import check_user_file
@@ -538,8 +541,13 @@ def postMapping(info_role, import_id):
         DEFAULT_COUNT_VALUE = 1 # mettre en conf
         MODULE_URL = blueprint.config["MODULE_URL"]
         DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
-        srid = 4326
         local_srid = get_local_srid()
+
+        srid = 4326
+        generate_uuid = True
+        generate_alt = True
+
+
         logger.debug('import_id = %s', import_id)
         logger.debug('DB tabel name = %s', table_names['imports_table_name'])
 
@@ -628,9 +636,16 @@ def postMapping(info_role, import_id):
 
 
         # set gn_pk as primary key:
-        DB.session.execute("DROP TABLE {};".format(table_names['imports_full_table_name']))
-        DB.session.execute("ALTER TABLE {}.{} RENAME TO {};".format(IMPORTS_SCHEMA_NAME, temp_table_name, table_names['imports_table_name']))
-        DB.session.execute("ALTER TABLE ONLY {}.{} ADD CONSTRAINT pk_{}_{} PRIMARY KEY ({});".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, index_col))
+        DB.session.execute("DROP TABLE {};"\
+            .format(table_names['imports_full_table_name']))
+        DB.session.execute("""
+            ALTER TABLE {}.{} 
+            RENAME TO {};"""\
+                .format(IMPORTS_SCHEMA_NAME, temp_table_name, table_names['imports_table_name']))
+        DB.session.execute("""
+            ALTER TABLE ONLY {}.{} 
+            ADD CONSTRAINT pk_{}_{} PRIMARY KEY ({});"""\
+                .format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, index_col))
 
 
         start = datetime.datetime.now()
@@ -642,8 +657,48 @@ def postMapping(info_role, import_id):
         # create geom_local
         DB.session.execute("UPDATE {}.{} SET the_geom_local = ST_SetSRID(the_geom_local, {});".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid))
         end = datetime.datetime.now()
-        temps = end-start
-        logger.info('wkt to postgis in %s secondes', temps)
+        chrono = end-start
+        logger.info('wkt to postgis in %s secondes', chrono)
+
+
+        # calcul altitudes min
+        logger.info('calculating altitudes:')
+        start = datetime.datetime.now()
+
+        if generate_alt:
+
+            if 'altitude_min' not in selected_columns.keys():
+                create_col_name(selected_columns, 'altitude_min', 'gn_altitude_min', import_id)
+                create_column(
+                    full_table_name = table_names['imports_full_table_name'], 
+                    alt_col = selected_columns['altitude_min']
+                )
+
+            generate_altitudes(
+                schema = IMPORTS_SCHEMA_NAME, 
+                table = table_names['imports_table_name'], 
+                alt_col = selected_columns['altitude_min'], 
+                table_pk = index_col,
+                geom_col = 'the_geom_local')
+
+            if 'altitude_max' not in selected_columns.keys():
+                create_col_name(selected_columns, 'altitude_max', 'gn_altitude_max', import_id)
+                create_column(
+                    full_table_name = table_names['imports_full_table_name'], 
+                    alt_col = selected_columns['altitude_max']
+                )
+            
+            generate_altitudes(
+                schema = IMPORTS_SCHEMA_NAME, 
+                table = table_names['imports_table_name'], 
+                alt_col = selected_columns['altitude_max'], 
+                table_pk = index_col,
+                geom_col = 'the_geom_local')
+
+        end = datetime.datetime.now()
+        chrono = end-start
+        logger.info('altitudes calculated in %s secondes', chrono)
+
 
         # check if df is fully loaded in postgresql table :
         is_nrows_ok = check_row_number(import_id, table_names['imports_full_table_name'])
@@ -673,8 +728,9 @@ def postMapping(info_role, import_id):
 
         logger.info('*** END CORRESPONDANCE MAPPING')
 
-
+        pdb.set_trace()
         
+        """
         ### importer les données dans synthese
         #selected_columns = {key:value for key, value in data.items() if value}
 
@@ -682,7 +738,6 @@ def postMapping(info_role, import_id):
         selected_user_cols = ','.join(selected_columns.values())
 
 
-        """
         # ok ça marche
         print('fill synthese')
         #DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid=TRUE;".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
@@ -706,6 +761,8 @@ def postMapping(info_role, import_id):
         n_loaded_rows = DB.session.execute(
             "SELECT count(*) FROM {}".format(table_names['imports_full_table_name'])
             ).fetchone()[0]
+
+        pdb.set_trace()
         if n_loaded_rows == 0:
             logger.error('Table %s vide à cause d\'une erreur de copie, refaire l\'upload et le mapping', table_names['imports_full_table_name'])
             raise GeonatureImportApiError(\

@@ -2,8 +2,9 @@ import geopandas as gpd
 import pandas as pd
 
 from ..logs import logger
-from .utils import fill_map, get_types, set_is_valid, set_invalid_reason, set_user_error, create_col_name
+from .utils import fill_map, get_types, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
+from ..utils.utils import create_col_name
 
 import pdb
 

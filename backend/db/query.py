@@ -317,3 +317,36 @@ def get_local_srid():
     local_srid = DB.session.execute("""SELECT parameter_value FROM gn_commons.t_parameters WHERE parameter_name = 'local_srid';""").fetchone()[0]
     DB.session.close()
     return int(local_srid)
+
+
+def generate_altitudes(schema, table, alt_col, table_pk, geom_col):
+    DB.session.execute("""
+        UPDATE {schema}.{table} as T
+        SET {alt_col} = 
+            CASE WHEN (COALESCE({alt_col}, '') = '') 
+                THEN (
+                    SELECT (ref_geo.fct_get_altitude_intersection({geom_col})).altitude_min::text
+                    FROM {schema}.{table}
+                    WHERE {table_pk} = T.{table_pk}
+                    )
+                ELSE T.{alt_col}
+            END
+    """.format(
+        schema = schema, 
+        table = table, 
+        alt_col = alt_col, 
+        table_pk = table_pk,
+        geom_col = geom_col
+        )
+    )
+
+
+def create_column(full_table_name, alt_col):
+    DB.session.execute("""
+        ALTER TABLE {full_table_name} 
+        ADD COLUMN {alt_col} text"""\
+        .format(
+            full_table_name=full_table_name, 
+            alt_col=alt_col
+        )
+    )
