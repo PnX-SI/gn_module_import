@@ -533,10 +533,11 @@ def postMapping(info_role, import_id):
         PREFIX = blueprint.config['PREFIX']
         index_col = ''.join([PREFIX,'pk'])
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+        temp_table_name = '_'.join(['temp', table_names['imports_table_name']])
+
         engine = DB.engine
         column_names = get_table_info(table_names['imports_table_name'], 'column_name')
         data = dict(request.get_json())
-        temp_table_name = '_'.join(['temp', table_names['imports_table_name']])
         MISSING_VALUES = ['', 'NA', 'NaN', 'na'] # mettre en conf
         DEFAULT_COUNT_VALUE = 1 # mettre en conf
         MODULE_URL = blueprint.config["MODULE_URL"]
@@ -607,15 +608,14 @@ def postMapping(info_role, import_id):
 
             added_cols = transform_errors['added_cols']
 
-            if 'temp' in df.columns:
-                df = df.drop('temp', axis=1)
+            if 'temp' in partition_df.columns:
+                partition_df = partition_df.drop('temp', axis=1)
 
             logger.info('* END DATA CLEANING partition %s', i)
 
             partition_df = partition_df.drop('temp_longitude', axis=1)
             partition_df = partition_df.drop('temp_latitude', axis=1)
             partition_df = partition_df.drop('geometry', axis=1)
-            partition_df = partition_df.drop('temp', axis=1)
 
 
             ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
@@ -638,24 +638,48 @@ def postMapping(info_role, import_id):
         # set gn_pk as primary key:
         DB.session.execute("DROP TABLE {};"\
             .format(table_names['imports_full_table_name']))
+
         DB.session.execute("""
             ALTER TABLE {}.{} 
             RENAME TO {};"""\
-                .format(IMPORTS_SCHEMA_NAME, temp_table_name, table_names['imports_table_name']))
+                .format(
+                    IMPORTS_SCHEMA_NAME, 
+                    temp_table_name, 
+                    table_names['imports_table_name']))
+
         DB.session.execute("""
             ALTER TABLE ONLY {}.{} 
             ADD CONSTRAINT pk_{}_{} PRIMARY KEY ({});"""\
-                .format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, index_col))
+                .format(
+                    IMPORTS_SCHEMA_NAME, 
+                    table_names['imports_table_name'], 
+                    table_names['imports_table_name'], 
+                    IMPORTS_SCHEMA_NAME, index_col))
 
 
         start = datetime.datetime.now()
         logger.info('creating postgis from wkt:')
         # create geom_4326
-        DB.session.execute("UPDATE {}.{} SET the_geom_4326 = ST_SetSRID(the_geom_4326, 4326);".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name']))
+        DB.session.execute("""
+            UPDATE {}.{} 
+            SET the_geom_4326 = ST_SetSRID(the_geom_4326, 4326);"""\
+                .format(
+                    IMPORTS_SCHEMA_NAME, 
+                    table_names['imports_table_name']))
         # create geom_point
-        DB.session.execute("UPDATE {}.{} SET the_geom_point = ST_SetSRID(the_geom_point, 4326);".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name']))
+        DB.session.execute("""
+            UPDATE {}.{} SET the_geom_point = ST_SetSRID(the_geom_point, 4326);"""\
+                .format(
+                    IMPORTS_SCHEMA_NAME, 
+                    table_names['imports_table_name']))
         # create geom_local
-        DB.session.execute("UPDATE {}.{} SET the_geom_local = ST_SetSRID(the_geom_local, {});".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid))
+        DB.session.execute("""
+            UPDATE {}.{} 
+            SET the_geom_local = ST_SetSRID(the_geom_local, {});"""\
+                .format(
+                    IMPORTS_SCHEMA_NAME, 
+                    table_names['imports_table_name'], 
+                    local_srid))
         end = datetime.datetime.now()
         chrono = end-start
         logger.info('wkt to postgis in %s secondes', chrono)
@@ -671,8 +695,7 @@ def postMapping(info_role, import_id):
                 create_col_name(selected_columns, 'altitude_min', 'gn_altitude_min', import_id)
                 create_column(
                     full_table_name = table_names['imports_full_table_name'], 
-                    alt_col = selected_columns['altitude_min']
-                )
+                    alt_col = selected_columns['altitude_min'])
 
             generate_altitudes(
                 schema = IMPORTS_SCHEMA_NAME, 
@@ -685,8 +708,7 @@ def postMapping(info_role, import_id):
                 create_col_name(selected_columns, 'altitude_max', 'gn_altitude_max', import_id)
                 create_column(
                     full_table_name = table_names['imports_full_table_name'], 
-                    alt_col = selected_columns['altitude_max']
-                )
+                    alt_col = selected_columns['altitude_max'])
             
             generate_altitudes(
                 schema = IMPORTS_SCHEMA_NAME, 
@@ -727,8 +749,6 @@ def postMapping(info_role, import_id):
         DB.session.close()
 
         logger.info('*** END CORRESPONDANCE MAPPING')
-
-        pdb.set_trace()
         
         """
         ### importer les données dans synthese
@@ -762,7 +782,6 @@ def postMapping(info_role, import_id):
             "SELECT count(*) FROM {}".format(table_names['imports_full_table_name'])
             ).fetchone()[0]
 
-        pdb.set_trace()
         if n_loaded_rows == 0:
             logger.error('Table %s vide à cause d\'une erreur de copie, refaire l\'upload et le mapping', table_names['imports_full_table_name'])
             raise GeonatureImportApiError(\
