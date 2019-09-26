@@ -54,7 +54,7 @@ def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors,
             logger.info('%s inconsistant values detected in %s synthese column (= %s user column)', n_bad_coo, col, selected_columns[col])
 
             if n_bad_coo > 0:
-                set_user_error(dc_user_errors, 1, selected_columns[col], n_bad_coo)  
+                set_user_error(dc_user_errors, 12, selected_columns[col], n_bad_coo)  
 
 
         # create wkt with crs provided by user

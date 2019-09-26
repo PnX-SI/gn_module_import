@@ -193,7 +193,7 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
                 logger.info('- checking real type in %s synthese column (= %s user column)', col, selected_columns[col])
 
                 # replace eventual commas by points
-                df[selected_columns[col]] = df[selected_columns[col]].str.replace(',', '.')
+                df[selected_columns[col]] = df[selected_columns[col]].astype('object').str.replace(',', '.')
 
                 # check valid real type
                 df['temp'] = pd.to_numeric(\

@@ -49,6 +49,9 @@ from .db.models import (
     TImports,
     CorRoleImport,
     CorImportArchives,
+    BibMappings,
+    CorRoleMapping,
+    TMappingsFields,
     generate_user_table_class
 )
 
@@ -207,6 +210,61 @@ def get_user_datasets(info_role):
             return 'Attention, vous n\'avez aucun jeu de données déclaré', 400
     except Exception:
         return 'INTERNAL SERVER ERROR ("get_user_datasets() error"): contactez l\'administrateur du site', 500
+
+
+@blueprint.route('/field_mappings', methods=['GET'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def get_field_mappings(info_role):
+    """
+        load user field mappings
+    """
+
+    try:
+        results = DB.session.query(BibMappings).filter(CorRoleMapping.id_role == info_role.id_role).all()
+
+        if results:
+            mappings = []
+            for row in results:
+                d = {'id_mapping': row.id_mapping,
+                     'mapping_label': row.mapping_label}
+                mappings.append(d)
+            return mappings, 200
+        else:
+            return 'Vous n\'avez pas encore enregistré de mapping', 200
+    except Exception:
+        return 'INTERNAL SERVER ERROR ("get_user_datasets() error"): contactez l\'administrateur du site', 500
+
+
+
+@blueprint.route('/field_mappings/<id_mapping>', methods=['GET'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def get_mapping_fields(info_role, id_mapping):
+    """
+        load source and target fields from an id_mapping
+    """
+
+    try:
+        fields = DB.session.query(TMappingsFields).filter(TMappingsFields.id_mapping == id_mapping).all()
+
+        if fields:
+            mapping_fields = []
+            for field in fields:
+                d = {
+                    'id_match_fields': field.id_match_fields,
+                    'id_mapping': field.id_mapping,
+                    'source_field': field.source_field,
+                    'target_field': field.target_field
+                    }
+                mapping_fields.append(d)
+            return mapping_fields, 200
+        else:
+            return 'Le mapping sélectionné est vide', 200
+    except Exception:
+        raise
+        return 'INTERNAL SERVER ERROR ("get_user_datasets() error"): contactez l\'administrateur du site', 500
+
 
 
 @blueprint.route('/cancel_import/<import_id>', methods=['GET'])
@@ -546,7 +604,7 @@ def postMapping(info_role, import_id):
 
         srid = 4326
         generate_uuid = True
-        generate_alt = True
+        generate_alt = False
 
 
         logger.debug('import_id = %s', import_id)
@@ -769,9 +827,12 @@ def postMapping(info_role, import_id):
         DB.session.close()
         """
 
+        n_table_rows = get_row_number(table_names['imports_full_table_name'])
+
         return {
             'user_error_details' : error_report,
-            'n_user_errors' : n_invalid_rows
+            'n_user_errors' : n_invalid_rows,
+            'n_table_rows': n_table_rows
         }
 
     except Exception as e:

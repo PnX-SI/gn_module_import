@@ -93,6 +93,27 @@
                     <h5 class="card-title mb-0"> Mapping des champs </h5>
                 </div>
                 <div class="card-body">
+
+                    <!-- Choix du mapping -->
+
+                    <form *ngIf="userFieldMappingsResponse" [formGroup]="selectFieldMappingForm" class="was-validated">
+                        <fieldset>
+                            <legend class="px-1">
+                                    Choix du mapping
+                            </legend>
+                            <div class="form-group">
+                                
+                                <select class="form-control form-control-sm" id="fieldMappingSelection" formControlName="fieldMapping" required>
+                                    <option *ngFor="let data of userFieldMappingsResponse" [value]="data.id_mapping">{{data.mapping_label}}</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between">
+                                Nouveau mapping
+                            </button>
+                        </fieldset>
+
+                    </form>
+
                     <form [formGroup]="syntheseForm">
                         <div *ngFor="let col of IMPORT_CONFIG.MAPPING_DATA_FRONTEND">
                             <fieldset>
@@ -119,7 +140,9 @@
                                 </div>
                             </fieldset>
                         </div>
+
                         <br>
+
                         <div class="d-flex flex-row justify-content-between">
                             <button
                                 class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
@@ -127,15 +150,54 @@
                                 <i class="material-icons"> navigate_before </i>
                                 Précédent
                             </button>
+                            <button *ngIf="n_error_lines >= 0"
+                                class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
+                                (click)="ErrorButtonClicked()">
+                                {{n_error_lines}} lignes avec erreurs
+                            </button>
                             <button
                                 class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                                  (click)="onMapping(syntheseForm.value, stepper)">
+                                Valider le mapping
+                            </button>
+                            <button
+                                class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
+                                [disabled]="!step2_btn || isFullError">
                                 Suivant
-                                <i class="material-icons"> navigate_next </i>
+                            <i class="material-icons"> navigate_next </i>
                             </button>
                         </div>
 
                     </form>
+
+                    <!-- Error list in table -->
+                    <br>
+                    <div id="dataCleaningErrorList" *ngIf="isErrorButtonClicked">
+                        
+                        <div> Attention, des erreurs ont été détectées dans le fichier : </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="ErrorId"> Id Erreur </th>
+                                    <th class="ErrorType"> Type </th>
+                                    <th class="ErrorDescription"> Description </th>
+                                    <th class="ErrorColumnName"> Nom colonne</th>
+                                    <th class="ErrorCount"> Nombre d'erreurs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let error of dataCleaningErrors">
+                                    <td> {{error.id}} </td>
+                                    <td> {{error.type}} </td>
+                                    <td> {{error.description}} </td>
+                                    <td> {{error.column}} </td>
+                                    <td> {{error.n_errors}} </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                    </div>
+
                 </div>
             </div>
         </mat-step>

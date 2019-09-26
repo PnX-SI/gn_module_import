@@ -30,6 +30,14 @@ export class DataService {
 
 	getUserDatasets() {
 		return this._http.get<any>(`${urlApi}/datasets`);
+    }
+    
+	getFieldMappings() {
+		return this._http.get<any>(`${urlApi}/field_mappings`);
+    }
+    
+    getMappingFields(id_mapping: number) {
+		return this._http.get<any>(`${urlApi}/field_mappings/${id_mapping}`);
 	}
 
 	cancelImport(importId: number) {
