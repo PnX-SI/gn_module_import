@@ -688,8 +688,8 @@ def postMapping(info_role, import_id, id_mapping):
         DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
         local_srid = get_local_srid()
 
-        generate_uuid = True
-        generate_alt = True
+        is_generate_uuid = True
+        is_generate_alt = False
 
 
         logger.debug('import_id = %s', import_id)
@@ -743,7 +743,7 @@ def postMapping(info_role, import_id, id_mapping):
 
             partition = df.get_partition(i)
             partition_df = compute_df(partition)
-            transform_errors = data_cleaning(partition_df, import_id, selected_columns, dc_user_errors, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid)
+            transform_errors = data_cleaning(partition_df, import_id, selected_columns, dc_user_errors, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid, is_generate_uuid)
 
             if len(transform_errors['user_errors']) > 0:
                 for error in transform_errors['user_errors']:
@@ -833,7 +833,7 @@ def postMapping(info_role, import_id, id_mapping):
         logger.info('calculating altitudes:')
         start = datetime.datetime.now()
 
-        if generate_alt:
+        if is_generate_alt:
 
             if 'altitude_min' not in selected_columns.keys():
                 create_col_name(df, selected_columns, 'altitude_min', 'gn_altitude_min', import_id)
