@@ -45,7 +45,6 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
         logger.info('CHECKING TYPES : ')
         types = get_types(synthese_info)
         #types = list(dict.fromkeys(get_synthese_types()))
-
         
         # DATE TYPE COLUMNS : 
 
@@ -58,6 +57,7 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
             # ok : df['my_timestamp'] = dd.to_datetime(df['my_timestamp'],unit='ns')
             # ok : df['test'] = dd.to_datetime(df['my_timestamp'],unit='datetime64[ns]')
             col_name = '_'.join(['gn',selected_columns[field]])
+
 
             df[col_name] = pd.to_datetime(df[selected_columns[field]], errors='coerce')
             # datetime conversion
@@ -76,7 +76,8 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
             set_invalid_reason(df, 'temp', 'invalid date in {} column', selected_columns[field])
             n_invalid_date_error = df['temp'].astype(str).str.contains('False').sum()
 
-            added_cols['date_min'] = col_name
+            added_cols[field] = col_name
+            selected_columns[field] = col_name
 
             logger.info('%s date type error detected in %s synthese column (= %s user column)', n_invalid_date_error, field, selected_columns[field])
 

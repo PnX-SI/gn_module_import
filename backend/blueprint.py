@@ -754,6 +754,8 @@ def postMapping(info_role, import_id, id_mapping):
 
             if 'temp' in partition_df.columns:
                 partition_df = partition_df.drop('temp', axis=1)
+            if 'check_dates' in partition_df.columns:
+                partition_df = partition_df.drop('check_dates', axis=1)
 
             logger.info('* END DATA CLEANING partition %s', i)
 
@@ -763,6 +765,8 @@ def postMapping(info_role, import_id, id_mapping):
 
 
             ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
+
+
 
             logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s', i)
             load(partition_df, i, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, 
@@ -777,7 +781,6 @@ def postMapping(info_role, import_id, id_mapping):
             if error['n_errors'] > 0:
                 error['n_errors'] = int(error['n_errors'])
                 error_report.append(error)
-
 
         # set gn_pk as primary key:
         DB.session.execute("DROP TABLE {};"\

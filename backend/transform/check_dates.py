@@ -38,7 +38,7 @@ def check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info)
         if 'date_max' not in date_fields:
             logger.info('- date_max not provided : set date_max = date_min')
             added_cols['date_max'] = selected_columns['date_min']
-            #df['date_max'] = df[selected_columns['date_min']] # utile?
+            df['date_max'] = df[selected_columns['date_min']] # utile?
             synthese_info.update({'date_max': synthese_info['date_min']}) # utile?
 
         # ajouter verif que date min <= date max
@@ -48,7 +48,8 @@ def check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info)
 
             df['temp'] = ''
             df['check_dates'] = ''
-            df['check_dates'] = dd.to_datetime(df[selected_columns['date_max']], errors='coerce') - dd.to_datetime(df[selected_columns['date_min']], errors='coerce')
+            df['check_dates'] = pd.to_datetime(df[selected_columns['date_max']], errors='coerce') - pd.to_datetime(df[selected_columns['date_min']], errors='coerce')
+            #df['check_dates'] = df['check_dates'].apply(lambda x: x.days)
             df['temp'] = df['temp']\
                 .where(
                     cond=df['check_dates'].apply(lambda x: is_negative_date(x)), 
@@ -67,9 +68,9 @@ def check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info)
         
 
         ## meta_create_date and meta_update_date :
-
         if 'check_dates' in df.columns:
             df = df.drop('check_dates', axis=1)
+
 
     except Exception:
         raise
