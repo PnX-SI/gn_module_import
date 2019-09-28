@@ -202,8 +202,10 @@ def get_user_datasets(info_role):
         if results:
             datasets = []
             for row in results:
-                d = {'datasetId': row.id_dataset,
-                     'datasetName': row.dataset_name}
+                d = {
+                    'datasetId': row.id_dataset,
+                    'datasetName': row.dataset_name
+                    }
                 datasets.append(d)
             return datasets, 200
         else:
@@ -221,20 +223,27 @@ def get_field_mappings(info_role):
     """
 
     try:
+
         results = DB.session.query(BibMappings).filter(CorRoleMapping.id_role == info_role.id_role).all()
 
-        if results:
-            mappings = []
-            for row in results:
-                d = {'id_mapping': row.id_mapping,
-                     'mapping_label': row.mapping_label}
-                mappings.append(d)
-            return mappings, 200
-        else:
-            return 'Vous n\'avez pas encore enregistré de mapping', 200
-    except Exception:
-        return 'INTERNAL SERVER ERROR ("get_user_datasets() error"): contactez l\'administrateur du site', 500
+        mappings = []
 
+        if len(results) > 0:
+            for row in results:
+                d = {
+                    'id_mapping': row.id_mapping,
+                    'mapping_label': row.mapping_label
+                    }
+                mappings.append(d)
+        else:
+            mappings.append('empty')
+
+        logger.debug('List of mappings %s', mappings)
+
+        return mappings, 200
+        
+    except Exception:
+        return 'INTERNAL SERVER ERROR ("get_field_mappings() error"): contactez l\'administrateur du site', 500
 
 
 @blueprint.route('/field_mappings/<id_mapping>', methods=['GET'])
@@ -246,10 +255,13 @@ def get_mapping_fields(info_role, id_mapping):
     """
 
     try:
-        fields = DB.session.query(TMappingsFields).filter(TMappingsFields.id_mapping == id_mapping).all()
+        logger.debug('get fields saved in id_mapping = %s', id_mapping)
 
-        if fields:
-            mapping_fields = []
+        fields = DB.session.query(TMappingsFields).filter(TMappingsFields.id_mapping == int(id_mapping)).all()
+        
+        mapping_fields = []
+
+        if len(fields) > 0:
             for field in fields:
                 d = {
                     'id_match_fields': field.id_match_fields,
@@ -258,13 +270,58 @@ def get_mapping_fields(info_role, id_mapping):
                     'target_field': field.target_field
                     }
                 mapping_fields.append(d)
-            return mapping_fields, 200
         else:
-            return 'Le mapping sélectionné est vide', 200
+            mapping_fields.append('empty')
+
+        logger.debug('mapping_fields = %s from id_mapping number %s', mapping_fields, id_mapping)
+        
+        return mapping_fields, 200
+
     except Exception:
         raise
-        return 'INTERNAL SERVER ERROR ("get_user_datasets() error"): contactez l\'administrateur du site', 500
+        return 'INTERNAL SERVER ERROR ("get_mapping_fields() error"): contactez l\'administrateur du site', 500
 
+
+@blueprint.route('/mappingFieldName', methods=['GET', 'POST'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def postMappingFieldName(info_role):
+    data = request.json
+
+    if data['mappingName'] == '':
+        return 'Vous devez donner un nom au mapping', 400
+
+    # check if name already exists
+    names_request = DB.session.query(BibMappings).all()
+    names = [name.mapping_label for name in names_request]
+
+    if data['mappingName'] in names:
+        return 'Ce nom de mapping existe déjà', 400
+
+    # fill BibMapping
+    new_name = BibMappings(
+        mapping_label = data['mappingName']
+        )
+
+    DB.session.add(new_name)
+    DB.session.flush()
+
+    # fill CorRoleMapping
+
+    id_mapping = DB.session.query(BibMappings.id_mapping)\
+        .filter(BibMappings.mapping_label == data['mappingName'])\
+        .one()[0]
+
+    new_map_role = CorRoleMapping(
+        id_role = info_role.id_role,
+        id_mapping = id_mapping
+    )
+
+    DB.session.add(new_map_role)
+    DB.session.commit()
+    DB.session.close()
+
+    return id_mapping, 200
 
 
 @blueprint.route('/cancel_import/<import_id>', methods=['GET'])
@@ -575,11 +632,40 @@ def post_user_file(info_role):
         DB.session.close()
 
 
-@blueprint.route('/mapping/<import_id>', methods=['GET', 'POST'])
+@blueprint.route('/mapping/<import_id>/<id_mapping>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def postMapping(info_role, import_id):
+def postMapping(info_role, import_id, id_mapping):
     try:
+        data = dict(request.get_json())
+
+        ### SAVE MAPPING ###
+
+        data.pop('stepper')
+
+        for col in data:
+            # mettre id_mapping + source_field en pk (ou unique ?)
+            my_query = DB.session.query(TMappingsFields).filter(TMappingsFields.id_mapping == id_mapping).filter(TMappingsFields.target_field == col).all()
+            if len(my_query) > 0:
+                for q in my_query:
+                    DB.session.query(TMappingsFields).filter(TMappingsFields.id_match_fields == q.id_match_fields)\
+                    .update({
+                        TMappingsFields.id_mapping: int(id_mapping),
+                        TMappingsFields.source_field: data[col],
+                        TMappingsFields.target_field: col
+                    })
+                    DB.session.commit()
+                    DB.session.close()
+            else:
+                new_fields = TMappingsFields(
+                    id_mapping = int(id_mapping),
+                    source_field = data[col],
+                    target_field = col
+                )
+                DB.session.add(new_fields)
+                DB.session.commit()
+                DB.session.close()
+
 
         ### INITIALIZE VARIABLES
 
@@ -595,7 +681,6 @@ def postMapping(info_role, import_id):
 
         engine = DB.engine
         column_names = get_table_info(table_names['imports_table_name'], 'column_name')
-        data = dict(request.get_json())
         MISSING_VALUES = ['', 'NA', 'NaN', 'na'] # mettre en conf
         DEFAULT_COUNT_VALUE = 1 # mettre en conf
         MODULE_URL = blueprint.config["MODULE_URL"]
@@ -604,11 +689,12 @@ def postMapping(info_role, import_id):
 
         srid = 4326
         generate_uuid = True
-        generate_alt = False
+        generate_alt = True
 
 
         logger.debug('import_id = %s', import_id)
         logger.debug('DB tabel name = %s', table_names['imports_table_name'])
+
 
         # get synthese fields filled in the user form:
         selected_columns = {key:value for key, value in data.items() if value}

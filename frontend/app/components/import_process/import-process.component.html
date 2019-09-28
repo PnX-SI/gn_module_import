@@ -96,20 +96,34 @@
 
                     <!-- Choix du mapping -->
 
-                    <form *ngIf="userFieldMappingsResponse" [formGroup]="selectFieldMappingForm" class="was-validated">
+                    <form [formGroup]="selectFieldMappingForm" class="was-validated">
                         <fieldset>
                             <legend class="px-1">
                                     Choix du mapping
                             </legend>
-                            <div class="form-group">
-                                
-                                <select class="form-control form-control-sm" id="fieldMappingSelection" formControlName="fieldMapping" required>
+                            <div *ngIf="userFieldMappingsResponse" class="form-group">
+                                <select class="form-control form-control-sm" id="fieldMappingSelection" formControlName="fieldMapping">
+                                    <option selected [value]=""> </option>
                                     <option *ngFor="let data of userFieldMappingsResponse" [value]="data.id_mapping">{{data.mapping_label}}</option>
                                 </select>
                             </div>
-                            <button class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between">
+                            <button class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between"
+                                (click)="createMapping()">
                                 Nouveau mapping
                             </button>
+                            <div *ngIf="newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
+                                <input type="text" class="form-control" value="Inconnu" formControlName="mappingName">
+                                <button
+                                    class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
+                                    (click)="onMappingFieldName(selectFieldMappingForm.value)">
+                                    ok
+                                </button>
+                                <button
+                                    class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
+                                    (click)="cancelMapping()">
+                                    annuler
+                                </button>
+                            </div>
                         </fieldset>
 
                     </form>
@@ -157,7 +171,7 @@
                             </button>
                             <button
                                 class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                                 (click)="onMapping(syntheseForm.value, stepper)">
+                                 (click)="onMapping(syntheseForm.value, stepper, id_mapping)">
                                 Valider le mapping
                             </button>
                             <button

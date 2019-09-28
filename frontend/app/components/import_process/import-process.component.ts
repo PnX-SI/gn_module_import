@@ -32,6 +32,9 @@ export class ImportProcessComponent implements OnInit {
     public isFullError = false;
     public userFieldMappingsResponse;
     public mappingFieldsResponse;
+    public mappingFieldNameResponse;
+    public newMapping: boolean = false;
+    public id_mapping;
 
 	//public impatient: boolean = false;
     step1_btn: boolean = true;
@@ -45,8 +48,9 @@ export class ImportProcessComponent implements OnInit {
 		private _fb: FormBuilder
 	) {}
 
+
 	ngOnInit() {
-        this.getFieldMappings();
+
 		this.uploadForm = this._fb.group({
 			file: [ null, Validators.required ],
 			encodage: [ null, Validators.required ],
@@ -54,12 +58,16 @@ export class ImportProcessComponent implements OnInit {
 			separator: [ null, Validators.required ],
 			stepper: [ null, Validators.required ] // hack for material 2.0.0 beta
         });
+
         this.selectFieldMappingForm = this._fb.group({
-			fieldMapping: [ null ]
-		});
+            fieldMapping: [ null ],
+            mappingName: [ '' ]
+        });
+        
 		this.syntheseForm = this._fb.group({
 			stepper: [ null, Validators.required ]
-		});
+        });
+        
 		for (let col of this.IMPORT_CONFIG.MAPPING_DATA_FRONTEND) {
 			for (let field of col.fields) {
 				if (field.required) {
@@ -68,10 +76,11 @@ export class ImportProcessComponent implements OnInit {
 					this.syntheseForm.addControl(field.name, new FormControl(''));
 				}
 			}
-		}
+        }
+        
         this.Formlistener();
-        this.onSelectFieldMappingChange();
 	}
+
 
 	onFileSelected(event) {
 		this.uploadForm.patchValue({
@@ -79,6 +88,7 @@ export class ImportProcessComponent implements OnInit {
 		});
 		this.fileName = this.uploadForm.get('file').value.name;
 	}
+
 
 	cancelImport() {
 		this._ds.cancelImport(this.importId).subscribe(
@@ -101,6 +111,7 @@ export class ImportProcessComponent implements OnInit {
 		);
 	}
 
+
 	onUpload(value, stepper: MatStepper) {
 		this.isUploading = true;
 		this.isUserError = false;
@@ -114,7 +125,9 @@ export class ImportProcessComponent implements OnInit {
 				//this.getSynColumnNames();
 				this.isUploading = false;
 				this.importId = this.uploadResponse.importId;
-				this.columns = this.uploadResponse.columns;
+                this.columns = this.uploadResponse.columns;
+                this.getFieldMappings();
+                this.onSelectFieldMappingChange();
 			},
 			(error) => {
 				this.isUploading = false;
@@ -139,9 +152,11 @@ export class ImportProcessComponent implements OnInit {
 		);
 	}
 
+
 	onMapping(value, stepper: MatStepper) {
-		this.isUploading = true;
-		this._ds.postMapping(value, this.importId).subscribe(
+        this.isUploading = true;
+        this.id_mapping = 
+		this._ds.postMapping(value, this.importId, this.id_mapping).subscribe(
 			(res) => {
                 this.mappingResponse = res;
                 console.log(this.mappingResponse);
@@ -166,6 +181,7 @@ export class ImportProcessComponent implements OnInit {
 		);
 	}
 
+
 	onFinalStep() {
 		/*
     this._ds.postMapping(value, this.importId).subscribe(
@@ -188,6 +204,7 @@ export class ImportProcessComponent implements OnInit {
     */
     }
     
+
     getFieldMappings() {
 		// get list of all declared dataset of the user
 		this._ds.getFieldMappings().subscribe(
@@ -196,6 +213,7 @@ export class ImportProcessComponent implements OnInit {
                 console.log(this.userFieldMappingsResponse);
 			},
 			(err) => {
+                console.log(err);
 				if (err.statusText === 'Unknown Error') {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
@@ -209,14 +227,28 @@ export class ImportProcessComponent implements OnInit {
     
 
     getMappingFields(id_mapping) {
+        console.log(id_mapping);
+        this.id_mapping = id_mapping;
 		// get list of all declared dataset of the user
 		this._ds.getMappingFields(id_mapping).subscribe(
 			(result) => {
                 this.mappingFieldsResponse = result;
                 console.log(this.mappingFieldsResponse);
-                for (let field of this.mappingFieldsResponse) {
-                    //this.syntheseForm.controls[field.target_field]].setValue(field.source_field);
-                    this.syntheseForm.controls[field.target_field].setValue(field.source_field);
+                console.log(this.mappingFieldsResponse.length);
+                if (this.mappingFieldsResponse[0] != 'empty') {
+                    for (let field of this.mappingFieldsResponse) {
+                        console.log(field['target_field']);
+                        //console.log(field.source_field);
+                        //console.log(this.syntheseForm.controls[field.target_field]);
+                        //this.syntheseForm.controls[field.target_field]].setValue(field.source_field);
+                        console.log(this.syntheseForm.get(field['target_field']).value);
+                        //console.log(this.syntheseForm.get(field['source_field']).value);
+                        this.syntheseForm.get(field['target_field']).setValue(field['source_field']);
+                    }
+                } else {
+                    Object.keys(this.syntheseForm.controls).forEach(key => {
+                        this.syntheseForm.get(key).setValue('');
+                      });
                 }
 			},
 			(err) => {
@@ -233,9 +265,17 @@ export class ImportProcessComponent implements OnInit {
     
 
     onSelectFieldMappingChange(): void {
-        this.selectFieldMappingForm.valueChanges.subscribe(
+        this.selectFieldMappingForm.get('fieldMapping').valueChanges.subscribe(
             (result) => {
-                this.getMappingFields(this.selectFieldMappingForm.value.fieldMapping);
+                console.log(this.selectFieldMappingForm);
+                console.log(this.selectFieldMappingForm.get('fieldMapping').value);
+                if (this.selectFieldMappingForm.get('fieldMapping').value != '') {
+                    this.getMappingFields(this.selectFieldMappingForm.get('fieldMapping').value);
+                } else {
+                    Object.keys(this.syntheseForm.controls).forEach(key => {
+                        this.syntheseForm.get(key).setValue('');
+                      });
+                }
             },
             (err) => {
 				if (err.statusText === 'Unknown Error') {
@@ -246,7 +286,44 @@ export class ImportProcessComponent implements OnInit {
 					this.toastr.error(err.error);
 				}
 			}
-        )
+        );
+    }
+
+    
+	onMappingFieldName(value) {
+		this._ds.postMappingFieldName(value).subscribe(
+			(res) => {
+                this.mappingFieldNameResponse = res;
+                console.log(this.mappingFieldNameResponse);
+                this.newMapping = false;
+                this.getFieldMappings();
+                this.selectFieldMappingForm.controls['fieldMapping'].setValue(this.mappingFieldNameResponse);
+                this.selectFieldMappingForm.controls['mappingName'].setValue('');
+			},
+			(error) => {
+				if (error.statusText === 'Unknown Error') {
+					// show error message if no connexion
+					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+				} else {
+					// show error message if other server error
+					this.isUserError = true;
+                    this.userErrors = error.error;
+                    this.toastr.error(this.userErrors);
+				}
+            }
+		);
+	}
+
+
+    createMapping() {
+        this.selectFieldMappingForm.controls['fieldMapping'].setValue('');
+        this.newMapping = true;
+    }
+
+
+    cancelMapping() {
+        this.newMapping = false;
+        this.selectFieldMappingForm.controls['mappingName'].setValue('');
     }
 
 
@@ -271,12 +348,14 @@ export class ImportProcessComponent implements OnInit {
 				this.uploadForm.get('separator').valid
 			)
 				this.step1_btn = false;
-		});
+        });
+        /*
 		this.syntheseForm.valueChanges.subscribe((result) => {
 			this.columns = this.columns.filter(function(ele) {
 				return !Object.values(result).includes(ele);
 			});
-		});
+        });
+        */
     }
     
 

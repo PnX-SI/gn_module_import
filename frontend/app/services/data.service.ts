@@ -37,8 +37,15 @@ export class DataService {
     }
     
     getMappingFields(id_mapping: number) {
+        console.log(id_mapping);
 		return this._http.get<any>(`${urlApi}/field_mappings/${id_mapping}`);
-	}
+    }
+    
+    postMappingFieldName(value) {
+        console.log(value);
+        const urlMapping = `${urlApi}/mappingFieldName`;
+        return this._http.post<any>(urlMapping, value);
+    }
 
 	cancelImport(importId: number) {
 		return this._http.get<any>(`${urlApi}/cancel_import/${importId}`);
@@ -48,8 +55,8 @@ export class DataService {
 		return this._http.get<any>(`${urlApi}/syntheseInfo`);
 	}
 
-	postMapping(value, importId: number) {
-		const urlMapping = `${urlApi}/mapping/${importId}`;
+	postMapping(value, importId: number, id_mapping: number) {
+		const urlMapping = `${urlApi}/mapping/${importId}/${id_mapping}`;
 		return this._http.post<any>(urlMapping, value);
 	}
 
