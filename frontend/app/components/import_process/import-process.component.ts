@@ -35,6 +35,7 @@ export class ImportProcessComponent implements OnInit {
     public mappingFieldNameResponse;
     public newMapping: boolean = false;
     public id_mapping;
+    public user_srid;
 
 	//public impatient: boolean = false;
     step1_btn: boolean = true;
@@ -155,8 +156,9 @@ export class ImportProcessComponent implements OnInit {
 
 	onMapping(value, stepper: MatStepper) {
         this.isUploading = true;
-        this.id_mapping = 
-		this._ds.postMapping(value, this.importId, this.id_mapping).subscribe(
+        this.user_srid = this.uploadForm.get('srid').value;
+        console.log(this.user_srid);
+		this._ds.postMapping(value, this.importId, this.id_mapping, this.user_srid).subscribe(
 			(res) => {
                 this.mappingResponse = res;
                 console.log(this.mappingResponse);

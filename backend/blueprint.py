@@ -637,11 +637,12 @@ def post_user_file(info_role):
 @json_resp
 def postMapping(info_role, import_id, id_mapping):
     try:
-        data = dict(request.get_json())
+        data = request.form.to_dict()
+        srid = int(data['srid'])
+        data.pop('stepper')
+        data.pop('srid')
 
         ### SAVE MAPPING ###
-
-        data.pop('stepper')
 
         for col in data:
             # mettre id_mapping + source_field en pk (ou unique ?)
@@ -687,7 +688,6 @@ def postMapping(info_role, import_id, id_mapping):
         DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
         local_srid = get_local_srid()
 
-        srid = 4326
         generate_uuid = True
         generate_alt = True
 
