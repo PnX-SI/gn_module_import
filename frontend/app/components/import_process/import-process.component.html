@@ -141,6 +141,7 @@
                                             <select class="form-control form-control-sm" id="{{field.label}}"
                                                 placeholder="Open this select menu" formControlName="{{field.name}}"
                                                 [required]=field.required>
+                                                <option selected [value]=""> </option>
                                                 <option selected >{{syntheseForm.value[field.name]}}</option>
                                                 <option *ngFor="let column of columns" [value]="column">{{column}}
                                                 </option>
