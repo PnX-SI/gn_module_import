@@ -156,7 +156,7 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
                 df['temp'] = ''
                 df['temp'] = df['temp']\
                     .where(
-                        cond=df[selected_columns[col]].str.isnumeric(),
+                        cond=df[selected_columns[col]].astype('object').str.isnumeric(),
                         other=False)\
                     .where(
                         cond=df[selected_columns[col]].notnull(), 

@@ -63,36 +63,36 @@ def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors,
         df['temp'] = user_gdf['geometry'].is_valid
 
         # set column names :
-        create_col_name(df=df, col_dict=selected_columns, key='the_geom_4326', value='the_geom_4326', import_id=import_id)
-        create_col_name(df=df, col_dict=selected_columns, key='the_geom_point', value='the_geom_point', import_id=import_id)
-        create_col_name(df=df, col_dict=selected_columns, key='the_geom_local', value='the_geom_local', import_id=import_id)
+        create_col_name(df=df, col_dict=added_cols, key='the_geom_4326', value='the_geom_4326', import_id=import_id)
+        create_col_name(df=df, col_dict=added_cols, key='the_geom_point', value='the_geom_point', import_id=import_id)
+        create_col_name(df=df, col_dict=added_cols, key='the_geom_local', value='the_geom_local', import_id=import_id)
 
         # convert wkt in local and 4326 crs
         if srid == 4326 and local_srid == 4326:
-            df[selected_columns['the_geom_4326']] = user_gdf['geometry'].where(df['temp'], pd.np.nan)
-            df[selected_columns['the_geom_point']] = user_gdf['geometry'].centroid.where(df['temp'], pd.np.nan)
-            df[selected_columns['the_geom_local']] = user_gdf['geometry'].where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_4326']] = user_gdf['geometry'].where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_point']] = user_gdf['geometry'].centroid.where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_local']] = user_gdf['geometry'].where(df['temp'], pd.np.nan)
 
         elif srid == 4326 and srid != local_srid:
-            df[selected_columns['the_geom_4326']] = user_gdf['geometry'].where(df['temp'], pd.np.nan)
-            df[selected_columns['the_geom_point']] = user_gdf['geometry'].centroid.where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_4326']] = user_gdf['geometry'].where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_point']] = user_gdf['geometry'].centroid.where(df['temp'], pd.np.nan)
             local_gdf = user_gdf.to_crs({'init': 'epsg:{}'.format(local_srid)})
-            df[selected_columns['the_geom_local']] = local_gdf['geometry'].where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_local']] = local_gdf['geometry'].where(df['temp'], pd.np.nan)
             del local_gdf
 
         elif srid != 4326 and srid == local_srid:
-            df[selected_columns['the_geom_local']] = user_gdf['geometry'].where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_local']] = user_gdf['geometry'].where(df['temp'], pd.np.nan)
             wgs84_gdf = user_gdf.to_crs({'init': 'epsg:4326'})
-            df[selected_columns['the_geom_4326']] = wgs84_gdf['geometry'].where(df['temp'], pd.np.nan)
-            df[selected_columns['the_geom_point']] = wgs84_gdf['geometry'].centroid.where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_4326']] = wgs84_gdf['geometry'].where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_point']] = wgs84_gdf['geometry'].centroid.where(df['temp'], pd.np.nan)
             del wgs84_gdf
 
         else:
             wgs84_gdf = user_gdf.to_crs({'init': 'epsg:4326'})
-            df[selected_columns['the_geom_4326']] = wgs84_gdf['geometry'].where(df['temp'], pd.np.nan)
-            df[selected_columns['the_geom_point']] = wgs84_gdf['geometry'].centroid.where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_4326']] = wgs84_gdf['geometry'].where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_point']] = wgs84_gdf['geometry'].centroid.where(df['temp'], pd.np.nan)
             local_gdf = user_gdf.to_crs({'init': 'epsg:{}'.format(local_srid)})
-            df[selected_columns['the_geom_local']] = local_gdf['geometry'].where(df['temp'], pd.np.nan)
+            df[added_cols['the_geom_local']] = local_gdf['geometry'].where(df['temp'], pd.np.nan)
             del local_gdf
             del wgs84_gdf
 

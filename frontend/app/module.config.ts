@@ -78,12 +78,12 @@ export const ModuleConfig = {
     },
     {
      "label": "Date de cr\u00e9ation de la donn\u00e9e",
-     "name": "meta_v_taxref",
+     "name": "meta_create_date",
      "required": false
     },
     {
      "label": "Version du r\u00e9f\u00e9rentiel taxonomique",
-     "name": "meta_create_date",
+     "name": "meta_v_taxref",
      "required": false
     },
     {

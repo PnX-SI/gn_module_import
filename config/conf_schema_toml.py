@@ -68,12 +68,12 @@ MAPPING_DATA = [
                 'required': False
             },
             {
-                'name': 'meta_v_taxref',
+                'name': 'meta_create_date',
                 'label': 'Date de création de la donnée',
                 'required': False
             },
             {
-                'name': 'meta_create_date',
+                'name': 'meta_v_taxref',
                 'label': 'Version du référentiel taxonomique',
                 'required': False
             },
