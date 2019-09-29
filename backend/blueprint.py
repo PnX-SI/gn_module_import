@@ -891,7 +891,7 @@ def postMapping(info_role, import_id, id_mapping):
         """
 
 
-        n_invalid_rows = DB.session.execute("SELECT count(*) FROM {} WHERE gn_is_valid = FALSE;".format(table_names['imports_full_table_name'])).fetchone()[0]
+        n_invalid_rows = DB.session.execute("SELECT count(*) FROM {} WHERE gn_is_valid = 'False';".format(table_names['imports_full_table_name'])).fetchone()[0]
 
         
         DB.session.commit()

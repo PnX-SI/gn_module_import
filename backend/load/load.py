@@ -51,7 +51,8 @@ def create_empty_table(df, table_name, engine, schema_name):
         conn = engine.connect()
         trans = conn.begin()
         emp_df = pd.DataFrame(columns=df.columns.tolist())
-        emp_df = emp_df.astype(df.dtypes.to_dict())
+        emp_df = emp_df.astype('object')
+        #emp_df['gn_is_valid'].dtype = 'bool'
         emp_df[:0].to_sql(table_name, engine, schema=schema_name, if_exists='replace', index=False)
         trans.commit()
     except:
