@@ -46,10 +46,10 @@ def check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info)
 
             logger.info('- checking date_min (= %s user column) <= date_max (= %s user column)', selected_columns['date_min'], selected_columns['date_max'])
 
-            df['temp'] = ''
             df['check_dates'] = ''
-            df['check_dates'] = pd.to_datetime(df[selected_columns['date_max']], errors='coerce') - pd.to_datetime(df[selected_columns['date_min']], errors='coerce')
-            #df['check_dates'] = df['check_dates'].apply(lambda x: x.days)
+            #pd.to_datetime(df[selected_columns['date_min']], errors='coerce').fillna(pd.np.nan)
+            df['check_dates'] = df[selected_columns['date_max']] - df[selected_columns['date_min']]
+            df['temp'] = ''
             df['temp'] = df['temp']\
                 .where(
                     cond=df['check_dates'].apply(lambda x: is_negative_date(x)), 
@@ -68,6 +68,9 @@ def check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info)
         
 
         ## meta_create_date and meta_update_date :
+
+
+
         if 'check_dates' in df.columns:
             df = df.drop('check_dates', axis=1)
 

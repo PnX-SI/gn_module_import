@@ -53,31 +53,22 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
         for field in date_fields:
 
             logger.info('- checking and converting to date type in %s synthese column (= %s user column)', field, selected_columns[field])
-
-            # ok : df['my_timestamp'] = dd.to_datetime(df['my_timestamp'],unit='ns')
-            # ok : df['test'] = dd.to_datetime(df['my_timestamp'],unit='datetime64[ns]')
-            col_name = '_'.join(['gn',selected_columns[field]])
-
-
-            df[col_name] = pd.to_datetime(df[selected_columns[field]], errors='coerce')
-            # datetime conversion
-            #df[selected_columns[field]] = df[selected_columns[field]].apply(lambda x: convert_to_datetime(x))
-            #df[selected_columns[field]] = df['test_date']
-            #df temp qui contient is_datetime, remplacer not datetime par na, convertir en datetime
-            #pdb.set_trace()
-            # check invalid date type and set user errors in db and front interface
+            
+            #col_name = '_'.join(['gn',selected_columns[field]])
+            if df[selected_columns[field]].dtype != 'datetime64[ns]':
+                df[selected_columns[field]] = pd.to_datetime(df[selected_columns[field]],'coerce').where(~df[selected_columns[field]].astype('object').str.isdigit().astype(bool))
             df['temp'] = ''
             df['temp'] = df['temp']\
-                .where(cond=df[col_name].notnull(), other=False)\
+                .where(cond=df[selected_columns[field]].notnull(), other=False)\
                 .map(fill_map)\
                 .astype('bool')
 
             set_is_valid(df, 'temp')
             set_invalid_reason(df, 'temp', 'invalid date in {} column', selected_columns[field])
             n_invalid_date_error = df['temp'].astype(str).str.contains('False').sum()
-
-            added_cols[field] = col_name
-            selected_columns[field] = col_name
+            #pdb.set_trace()
+            #added_cols[field] = col_name
+            #selected_columns[field] = col_name
 
             logger.info('%s date type error detected in %s synthese column (= %s user column)', n_invalid_date_error, field, selected_columns[field])
 
@@ -131,7 +122,7 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
                 df['temp'] = ''
                 df['temp'] = df['temp']\
                     .where(
-                        cond=df[selected_columns[col]].str.len().fillna(0) < n_char,
+                        cond=df[selected_columns[col]].astype('object').str.len().fillna(0) < n_char,
                         other=False)\
                     .map(fill_map)\
                     .astype('bool')
