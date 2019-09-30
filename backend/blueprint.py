@@ -801,8 +801,17 @@ def postMapping(info_role, import_id, id_mapping):
                     IMPORTS_SCHEMA_NAME, 
                     table_names['imports_table_name'], 
                     table_names['imports_table_name'], 
-                    IMPORTS_SCHEMA_NAME, index_col))
+                    IMPORTS_SCHEMA_NAME, 
+                    index_col))
 
+        DB.session.execute("""
+            ALTER TABLE {schema}.{table_name}
+            ALTER COLUMN {col_name} TYPE integer USING {col_name}::integer;"""\
+                .format(
+                    schema = IMPORTS_SCHEMA_NAME, 
+                    table_name = table_names['imports_table_name'],
+                    col_name = index_col
+                ))
 
         start = datetime.datetime.now()
         logger.info('creating postgis from wkt:')
