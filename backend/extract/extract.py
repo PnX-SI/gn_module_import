@@ -29,7 +29,6 @@ def extract(table_name, schema_name, column_names, index_col, id):
 
         # get user table row data as a dask dataframe
         df = dd.read_sql_table(table=table_name, index_col=index_dask, uri=str(DB.engine.url), schema=schema_name, bytes_per_chunk=300000000)
-        #300000000
 
         return df
 

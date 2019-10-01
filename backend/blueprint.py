@@ -645,16 +645,18 @@ def postMapping(info_role, import_id, id_mapping):
         ### SAVE MAPPING ###
 
         for col in data:
-            # mettre id_mapping + source_field en pk (ou unique ?)
-            my_query = DB.session.query(TMappingsFields).filter(TMappingsFields.id_mapping == id_mapping).filter(TMappingsFields.target_field == col).all()
+            my_query = DB.session.query(TMappingsFields)\
+                .filter(TMappingsFields.id_mapping == id_mapping)\
+                .filter(TMappingsFields.target_field == col).all()
             if len(my_query) > 0:
                 for q in my_query:
-                    DB.session.query(TMappingsFields).filter(TMappingsFields.id_match_fields == q.id_match_fields)\
-                    .update({
-                        TMappingsFields.id_mapping: int(id_mapping),
-                        TMappingsFields.source_field: data[col],
-                        TMappingsFields.target_field: col
-                    })
+                    DB.session.query(TMappingsFields)\
+                        .filter(TMappingsFields.id_match_fields == q.id_match_fields)\
+                        .update({
+                            TMappingsFields.id_mapping: int(id_mapping),
+                            TMappingsFields.source_field: data[col],
+                            TMappingsFields.target_field: col
+                        })
                     DB.session.commit()
                     DB.session.close()
             else:
@@ -673,23 +675,26 @@ def postMapping(info_role, import_id, id_mapping):
         logger.info('*** START CORRESPONDANCE MAPPING')
 
         errors = []
+
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
         ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
         PREFIX = blueprint.config['PREFIX']
+        MISSING_VALUES = blueprint.config['MISSING_VALUES']
+        DEFAULT_COUNT_VALUE = blueprint.config['DEFAULT_COUNT_VALUE']
+        MODULE_URL = blueprint.config["MODULE_URL"]
+        DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
+
         index_col = ''.join([PREFIX,'pk'])
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
         temp_table_name = '_'.join(['temp', table_names['imports_table_name']])
 
         engine = DB.engine
         column_names = get_table_info(table_names['imports_table_name'], 'column_name')
-        MISSING_VALUES = ['', 'NA', 'NaN', 'na'] # mettre en conf
-        DEFAULT_COUNT_VALUE = 1 # mettre en conf
-        MODULE_URL = blueprint.config["MODULE_URL"]
-        DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
+
         local_srid = get_local_srid()
 
-        is_generate_uuid = True
-        is_generate_alt = False
+        is_generate_uuid = True # delete when checkbox created in frontend
+        is_generate_alt = True # delete when checkbox created in frontend
 
 
         logger.debug('import_id = %s', import_id)
@@ -765,8 +770,6 @@ def postMapping(info_role, import_id, id_mapping):
 
 
             ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
-
-
 
             logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s', i)
             load(partition_df, i, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, 
