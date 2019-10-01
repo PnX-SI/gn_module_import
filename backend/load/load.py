@@ -51,7 +51,8 @@ def create_empty_table(df, table_name, engine, schema_name):
         conn = engine.connect()
         trans = conn.begin()
         emp_df = pd.DataFrame(columns=df.columns.tolist())
-        emp_df = emp_df.astype(df.dtypes.to_dict())
+        emp_df = emp_df.astype('object')
+        #emp_df['gn_is_valid'].dtype = 'bool'
         emp_df[:0].to_sql(table_name, engine, schema=schema_name, if_exists='replace', index=False)
         trans.commit()
     except:
@@ -72,7 +73,7 @@ def load(df, i, table_name, schema_name, full_table_name, temp_table_name, impor
             create_empty_table(df, temp_table_name, engine, schema_name)
 
         load_df_to_sql(df, temp_table_name, full_table_name, engine, schema_name, ';', import_id)
-        
+              
         #return df
 
     except Exception:

@@ -7,6 +7,8 @@ from flask import (
 
 from werkzeug.utils import secure_filename
 
+import geopandas
+
 import os
 
 import pathlib
@@ -47,6 +49,9 @@ from .db.models import (
     TImports,
     CorRoleImport,
     CorImportArchives,
+    BibMappings,
+    CorRoleMapping,
+    TMappingsFields,
     generate_user_table_class
 )
 
@@ -65,10 +70,14 @@ from .db.query import (
     get_synthese_info,
     load_csv_to_db,
     get_row_number,
-    check_row_number
+    check_row_number,
+    get_local_srid,
+    generate_altitudes,
+    create_column
 )
 
 from .utils.clean_names import*
+from .utils.utils import create_col_name
 from .upload.upload_process import upload
 from .upload.upload_errors import*
 from .goodtables_checks.check_user_file import check_user_file
@@ -193,14 +202,126 @@ def get_user_datasets(info_role):
         if results:
             datasets = []
             for row in results:
-                d = {'datasetId': row.id_dataset,
-                     'datasetName': row.dataset_name}
+                d = {
+                    'datasetId': row.id_dataset,
+                    'datasetName': row.dataset_name
+                    }
                 datasets.append(d)
             return datasets, 200
         else:
             return 'Attention, vous n\'avez aucun jeu de données déclaré', 400
     except Exception:
         return 'INTERNAL SERVER ERROR ("get_user_datasets() error"): contactez l\'administrateur du site', 500
+
+
+@blueprint.route('/field_mappings', methods=['GET'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def get_field_mappings(info_role):
+    """
+        load user field mappings
+    """
+
+    try:
+
+        results = DB.session.query(BibMappings).filter(CorRoleMapping.id_role == info_role.id_role).all()
+
+        mappings = []
+
+        if len(results) > 0:
+            for row in results:
+                d = {
+                    'id_mapping': row.id_mapping,
+                    'mapping_label': row.mapping_label
+                    }
+                mappings.append(d)
+        else:
+            mappings.append('empty')
+
+        logger.debug('List of mappings %s', mappings)
+
+        return mappings, 200
+        
+    except Exception:
+        return 'INTERNAL SERVER ERROR ("get_field_mappings() error"): contactez l\'administrateur du site', 500
+
+
+@blueprint.route('/field_mappings/<id_mapping>', methods=['GET'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def get_mapping_fields(info_role, id_mapping):
+    """
+        load source and target fields from an id_mapping
+    """
+
+    try:
+        logger.debug('get fields saved in id_mapping = %s', id_mapping)
+
+        fields = DB.session.query(TMappingsFields).filter(TMappingsFields.id_mapping == int(id_mapping)).all()
+        
+        mapping_fields = []
+
+        if len(fields) > 0:
+            for field in fields:
+                d = {
+                    'id_match_fields': field.id_match_fields,
+                    'id_mapping': field.id_mapping,
+                    'source_field': field.source_field,
+                    'target_field': field.target_field
+                    }
+                mapping_fields.append(d)
+        else:
+            mapping_fields.append('empty')
+
+        logger.debug('mapping_fields = %s from id_mapping number %s', mapping_fields, id_mapping)
+        
+        return mapping_fields, 200
+
+    except Exception:
+        raise
+        return 'INTERNAL SERVER ERROR ("get_mapping_fields() error"): contactez l\'administrateur du site', 500
+
+
+@blueprint.route('/mappingFieldName', methods=['GET', 'POST'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def postMappingFieldName(info_role):
+    data = request.json
+
+    if data['mappingName'] == '':
+        return 'Vous devez donner un nom au mapping', 400
+
+    # check if name already exists
+    names_request = DB.session.query(BibMappings).all()
+    names = [name.mapping_label for name in names_request]
+
+    if data['mappingName'] in names:
+        return 'Ce nom de mapping existe déjà', 400
+
+    # fill BibMapping
+    new_name = BibMappings(
+        mapping_label = data['mappingName']
+        )
+
+    DB.session.add(new_name)
+    DB.session.flush()
+
+    # fill CorRoleMapping
+
+    id_mapping = DB.session.query(BibMappings.id_mapping)\
+        .filter(BibMappings.mapping_label == data['mappingName'])\
+        .one()[0]
+
+    new_map_role = CorRoleMapping(
+        id_role = info_role.id_role,
+        id_mapping = id_mapping
+    )
+
+    DB.session.add(new_map_role)
+    DB.session.commit()
+    DB.session.close()
+
+    return id_mapping, 200
 
 
 @blueprint.route('/cancel_import/<import_id>', methods=['GET'])
@@ -511,33 +632,74 @@ def post_user_file(info_role):
         DB.session.close()
 
 
-@blueprint.route('/mapping/<import_id>', methods=['GET', 'POST'])
+@blueprint.route('/mapping/<import_id>/<id_mapping>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def postMapping(info_role, import_id):
+def postMapping(info_role, import_id, id_mapping):
     try:
+        data = request.form.to_dict()
+        srid = int(data['srid'])
+        data.pop('stepper')
+        data.pop('srid')
+
+        ### SAVE MAPPING ###
+
+        for col in data:
+            my_query = DB.session.query(TMappingsFields)\
+                .filter(TMappingsFields.id_mapping == id_mapping)\
+                .filter(TMappingsFields.target_field == col).all()
+            if len(my_query) > 0:
+                for q in my_query:
+                    DB.session.query(TMappingsFields)\
+                        .filter(TMappingsFields.id_match_fields == q.id_match_fields)\
+                        .update({
+                            TMappingsFields.id_mapping: int(id_mapping),
+                            TMappingsFields.source_field: data[col],
+                            TMappingsFields.target_field: col
+                        })
+                    DB.session.commit()
+                    DB.session.close()
+            else:
+                new_fields = TMappingsFields(
+                    id_mapping = int(id_mapping),
+                    source_field = data[col],
+                    target_field = col
+                )
+                DB.session.add(new_fields)
+                DB.session.commit()
+                DB.session.close()
+
 
         ### INITIALIZE VARIABLES
 
         logger.info('*** START CORRESPONDANCE MAPPING')
 
         errors = []
+
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
         ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
         PREFIX = blueprint.config['PREFIX']
-        index_col = ''.join([PREFIX,'pk'])
-        table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
-        engine = DB.engine
-        column_names = get_table_info(table_names['imports_table_name'], 'column_name')
-        data = dict(request.get_json())
-        temp_table_name = '_'.join(['temp', table_names['imports_table_name']])
-        MISSING_VALUES = ['', 'NA', 'NaN', 'na'] # mettre en conf
-        DEFAULT_COUNT_VALUE = 1 # mettre en conf
+        MISSING_VALUES = blueprint.config['MISSING_VALUES']
+        DEFAULT_COUNT_VALUE = blueprint.config['DEFAULT_COUNT_VALUE']
         MODULE_URL = blueprint.config["MODULE_URL"]
         DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
 
+        index_col = ''.join([PREFIX,'pk'])
+        table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+        temp_table_name = '_'.join(['temp', table_names['imports_table_name']])
+
+        engine = DB.engine
+        column_names = get_table_info(table_names['imports_table_name'], 'column_name')
+
+        local_srid = get_local_srid()
+
+        is_generate_uuid = True # delete when checkbox created in frontend
+        is_generate_alt = True # delete when checkbox created in frontend
+
+
         logger.debug('import_id = %s', import_id)
         logger.debug('DB tabel name = %s', table_names['imports_table_name'])
+
 
         # get synthese fields filled in the user form:
         selected_columns = {key:value for key, value in data.items() if value}
@@ -577,7 +739,6 @@ def postMapping(info_role, import_id):
                     'n_errors': 0
                 })
 
-
         print(df.map_partitions(len).compute())
         
         # start process (transform and load)
@@ -587,7 +748,7 @@ def postMapping(info_role, import_id):
 
             partition = df.get_partition(i)
             partition_df = compute_df(partition)
-            transform_errors = data_cleaning(partition_df, selected_columns, dc_user_errors, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list)
+            transform_errors = data_cleaning(partition_df, import_id, selected_columns, dc_user_errors, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid, is_generate_uuid)
 
             if len(transform_errors['user_errors']) > 0:
                 for error in transform_errors['user_errors']:
@@ -596,13 +757,19 @@ def postMapping(info_role, import_id):
 
             added_cols = transform_errors['added_cols']
 
-            if 'temp' in df.columns:
-                df = df.drop('temp', axis=1)
+            if 'temp' in partition_df.columns:
+                partition_df = partition_df.drop('temp', axis=1)
+            if 'check_dates' in partition_df.columns:
+                partition_df = partition_df.drop('check_dates', axis=1)
 
             logger.info('* END DATA CLEANING partition %s', i)
 
+            partition_df = partition_df.drop('temp_longitude', axis=1)
+            partition_df = partition_df.drop('temp_latitude', axis=1)
+            partition_df = partition_df.drop('geometry', axis=1)
 
-        ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
+
+            ### LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
 
             logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s', i)
             load(partition_df, i, table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, 
@@ -619,17 +786,109 @@ def postMapping(info_role, import_id):
                 error_report.append(error)
 
         # set gn_pk as primary key:
-        DB.session.execute("DROP TABLE {};".format(table_names['imports_full_table_name']))
-        DB.session.execute("ALTER TABLE {}.{} RENAME TO {};".format(IMPORTS_SCHEMA_NAME, temp_table_name, table_names['imports_table_name']))
-        DB.session.execute("ALTER TABLE ONLY {}.{} ADD CONSTRAINT pk_{}_{} PRIMARY KEY ({});".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, index_col))
+        DB.session.execute("DROP TABLE {};"\
+            .format(table_names['imports_full_table_name']))
 
-        
+        DB.session.execute("""
+            ALTER TABLE {}.{} 
+            RENAME TO {};"""\
+                .format(
+                    IMPORTS_SCHEMA_NAME, 
+                    temp_table_name, 
+                    table_names['imports_table_name']))
+
+        DB.session.execute("""
+            ALTER TABLE ONLY {}.{} 
+            ADD CONSTRAINT pk_{}_{} PRIMARY KEY ({});"""\
+                .format(
+                    IMPORTS_SCHEMA_NAME, 
+                    table_names['imports_table_name'], 
+                    table_names['imports_table_name'], 
+                    IMPORTS_SCHEMA_NAME, 
+                    index_col))
+
+        DB.session.execute("""
+            ALTER TABLE {schema}.{table_name}
+            ALTER COLUMN {col_name} TYPE integer USING {col_name}::integer;"""\
+                .format(
+                    schema = IMPORTS_SCHEMA_NAME, 
+                    table_name = table_names['imports_table_name'],
+                    col_name = index_col
+                ))
+
+        start = datetime.datetime.now()
+        logger.info('creating postgis from wkt:')
+        # create geom_4326
+        DB.session.execute("""
+            UPDATE {}.{} 
+            SET the_geom_4326 = ST_SetSRID(the_geom_4326, 4326);"""\
+                .format(
+                    IMPORTS_SCHEMA_NAME, 
+                    table_names['imports_table_name']))
+        # create geom_point
+        DB.session.execute("""
+            UPDATE {}.{} SET the_geom_point = ST_SetSRID(the_geom_point, 4326);"""\
+                .format(
+                    IMPORTS_SCHEMA_NAME, 
+                    table_names['imports_table_name']))
+        # create geom_local
+        DB.session.execute("""
+            UPDATE {}.{} 
+            SET the_geom_local = ST_SetSRID(the_geom_local, {});"""\
+                .format(
+                    IMPORTS_SCHEMA_NAME, 
+                    table_names['imports_table_name'], 
+                    local_srid))
+        end = datetime.datetime.now()
+        chrono = end-start
+        logger.info('wkt to postgis in %s secondes', chrono)
+
+
+        # calcul altitudes min
+        logger.info('calculating altitudes:')
+        start = datetime.datetime.now()
+
+        if is_generate_alt:
+
+            if 'altitude_min' not in selected_columns.keys():
+                create_col_name(df, selected_columns, 'altitude_min', 'gn_altitude_min', import_id)
+                create_column(
+                    full_table_name = table_names['imports_full_table_name'], 
+                    alt_col = selected_columns['altitude_min'])
+
+            generate_altitudes(
+                schema = IMPORTS_SCHEMA_NAME, 
+                table = table_names['imports_table_name'], 
+                alt_col = selected_columns['altitude_min'], 
+                table_pk = index_col,
+                geom_col = 'the_geom_local')
+
+            if 'altitude_max' not in selected_columns.keys():
+                create_col_name(df, selected_columns, 'altitude_max', 'gn_altitude_max', import_id)
+                create_column(
+                    full_table_name = table_names['imports_full_table_name'], 
+                    alt_col = selected_columns['altitude_max'])
+            
+            generate_altitudes(
+                schema = IMPORTS_SCHEMA_NAME, 
+                table = table_names['imports_table_name'], 
+                alt_col = selected_columns['altitude_max'], 
+                table_pk = index_col,
+                geom_col = 'the_geom_local')
+
+        end = datetime.datetime.now()
+        chrono = end-start
+        logger.info('altitudes calculated in %s secondes', chrono)
+
+
         # check if df is fully loaded in postgresql table :
         is_nrows_ok = check_row_number(import_id, table_names['imports_full_table_name'])
         if not is_nrows_ok:
             logger.error('missing rows because of loading server error')
             raise GeonatureImportApiError(
-                message='INTERNAL SERVER ERROR ("postMapping() error"): lignes manquantes dans {} - refaire le matching'.format(table_names['imports_full_table_name']),
+                message='INTERNAL SERVER ERROR ("postMapping() error"): \
+                            lignes manquantes dans {} - refaire le matching'\
+                    .format(table_names['imports_full_table_name']),
                 details='')
         
 
@@ -644,39 +903,37 @@ def postMapping(info_role, import_id):
         """
 
 
-        n_invalid_rows = DB.session.execute("SELECT count(*) FROM {} WHERE gn_is_valid = FALSE;".format(table_names['imports_full_table_name'])).fetchone()[0]
+        n_invalid_rows = DB.session.execute("SELECT count(*) FROM {} WHERE gn_is_valid = 'False';".format(table_names['imports_full_table_name'])).fetchone()[0]
 
         
         DB.session.commit()
         DB.session.close()
 
         logger.info('*** END CORRESPONDANCE MAPPING')
-
-
+        
         """
         ### importer les données dans synthese
-        selected_columns = {key:value for key, value in data.items() if value}
+        #selected_columns = {key:value for key, value in data.items() if value}
 
         selected_synthese_cols = ','.join(selected_columns.keys())
         selected_user_cols = ','.join(selected_columns.values())
 
+
         # ok ça marche
         print('fill synthese')
-        DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid=TRUE;".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
-        #INSERT INTO gn_synthese.synthese (cd_nom,nom_cite,date_min,date_max) SELECT species_id,nom_scientifique,my_timestamp::timestamp,date_max FROM gn_imports.i_data_pf_observado_corrected_303 WHERE gn_is_valid=TRUE;
+        #DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid=TRUE;".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
+        #INSERT INTO gn_synthese.synthese (cd_nom,nom_cite,date_min,date_max, the_geom_4326) SELECT species_id::integer,nom_scientifique,gn_timestamp::timestamp,gn_timestamp::timestamp,the_geom_4326::geometry FROM gn_imports.i_data_pf_observado_original_447 WHERE gn_is_valid=TRUE;
         print('synthese filled')
         DB.session.commit()      
         DB.session.close()
         """
-        
-        """
-        if len(errors) > 0:
-            return errors,400
-        """
+
+        n_table_rows = get_row_number(table_names['imports_full_table_name'])
 
         return {
             'user_error_details' : error_report,
-            'n_user_errors' : n_invalid_rows
+            'n_user_errors' : n_invalid_rows,
+            'n_table_rows': n_table_rows
         }
 
     except Exception as e:
@@ -685,9 +942,12 @@ def postMapping(info_role, import_id):
         DB.session.rollback()
         DB.session.close()
 
+        pdb.set_trace()
+
         n_loaded_rows = DB.session.execute(
             "SELECT count(*) FROM {}".format(table_names['imports_full_table_name'])
             ).fetchone()[0]
+
         if n_loaded_rows == 0:
             logger.error('Table %s vide à cause d\'une erreur de copie, refaire l\'upload et le mapping', table_names['imports_full_table_name'])
             raise GeonatureImportApiError(\

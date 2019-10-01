@@ -47,6 +47,15 @@ ALLOWED_EXTENSIONS = [
     '.json'
 ]
 
+MISSING_VALUES = [
+    '', 
+    'NA', 
+    'NaN', 
+    'na'
+]
+
+DEFAULT_COUNT_VALUE = 1
+
 EXCLUDED_SYNTHESE_FIELDS_FRONT = ['id_synthese', 'id_source', 'id_module',
                                   'id_dataset', 'the_geom_4326', 'the_geom_point', 'the_geom_local', 'last_action']
 
@@ -68,12 +77,12 @@ MAPPING_DATA = [
                 'required': False
             },
             {
-                'name': 'meta_v_taxref',
+                'name': 'meta_create_date',
                 'label': 'Date de création de la donnée',
                 'required': False
             },
             {
-                'name': 'meta_create_date',
+                'name': 'meta_v_taxref',
                 'label': 'Version du référentiel taxonomique',
                 'required': False
             },
@@ -102,6 +111,21 @@ MAPPING_DATA = [
                 'name': 'altitude_min',
                 'label': 'Altitude min',
                 'required': False
+            },
+            {
+                'name': 'altitude_max',
+                'label': 'Altitude max',
+                'required': False
+            },
+            {
+                'name': 'longitude',
+                'label': 'Longitude (coord x)',
+                'required': True
+            },
+            {
+                'name': 'latitude',
+                'label': 'Latitude (coord y)',
+                'required': True
             },
             {
                 'name': 'altitude_max',
@@ -296,6 +320,8 @@ class GnModuleSchemaConf(Schema):
     ENCODAGE = fields.List(fields.String, missing=ENCODAGE)
     MAX_FILE_SIZE = fields.Integer(missing=MAX_FILE_SIZE)
     ALLOWED_EXTENSIONS = fields.List(fields.String, missing=ALLOWED_EXTENSIONS)
+    MISSING_VALUES = fields.List(fields.String, missing=MISSING_VALUES)
+    DEFAULT_COUNT_VALUE = fields.Integer(missing=DEFAULT_COUNT_VALUE)
     EXCLUDED_SYNTHESE_FIELDS_FRONT = fields.List(
         fields.String, missing=EXCLUDED_SYNTHESE_FIELDS_FRONT)
     NOT_NULLABLE_SYNTHESE_FIELDS = fields.List(

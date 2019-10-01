@@ -38,6 +38,36 @@ class CorRoleImport(DB.Model):
     id_import = DB.Column(DB.Integer, primary_key=True)
 
 
+@serializable
+class CorRoleMapping(DB.Model):
+    __tablename__ = 'cor_role_mapping'
+    __table_args__ = {'schema': 'gn_imports', "extend_existing":True}
+
+    id_role = DB.Column(DB.Integer, primary_key=True)
+    id_mapping = DB.Column(DB.Integer, primary_key=True)
+
+
+@serializable
+class TMappingsFields(DB.Model):
+    __tablename__ = 't_mappings_fields'
+    __table_args__ = {'schema': 'gn_imports', "extend_existing":True}
+
+    id_match_fields = DB.Column(DB.Integer, primary_key=True,autoincrement=True)
+    id_mapping = DB.Column(DB.Integer, primary_key=True)
+    source_field = DB.Column(DB.Unicode,nullable=True)
+    target_field = DB.Column(DB.Unicode,nullable=True)
+
+
+@serializable
+class BibMappings(DB.Model):
+    __tablename__ = 'bib_mappings'
+    __table_args__ = {'schema': 'gn_imports', "extend_existing":True}
+
+    id_mapping = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
+    mapping_label = DB.Column(DB.Unicode,nullable=True)
+    active = DB.Column(DB.Boolean,nullable=True)
+
+
 # ne pas mettre gn_import_archives en dur
 @serializable
 class CorImportArchives(DB.Model):

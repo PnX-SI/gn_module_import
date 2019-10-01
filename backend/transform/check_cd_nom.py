@@ -17,7 +17,7 @@ def check_cd_nom(df, selected_columns, dc_user_errors, missing_values, cd_nom_li
     try:
 
         # note : améliorer performances du comptage d'erreurs
-        logger.info('checking cd_nom validity for %s column', selected_columns['cd_nom'])
+        logger.info('CHECKING CD_NOM VALIDITY in %s column', selected_columns['cd_nom'])
 
         # return False if invalid cd_nom, else (including missing values) return True
         df['temp'] = ''
@@ -35,6 +35,8 @@ def check_cd_nom(df, selected_columns, dc_user_errors, missing_values, cd_nom_li
         set_is_valid(df, 'temp')
         set_invalid_reason(df, 'temp', 'invalid cd_nom value in {} column', selected_columns['cd_nom'])
         n_cd_nom_error = df['temp'].astype(str).str.contains('False').sum()
+
+        logger.info('%s invalid cd_nom detected in %s column', n_cd_nom_error, selected_columns['cd_nom'])
 
         # set front interface error
         if n_cd_nom_error > 0:

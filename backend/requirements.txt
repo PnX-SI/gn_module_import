@@ -1,5 +1,5 @@
 goodtables==2.1.4
 pandas==0.24.2
+dask==0.19.1
 dask[dataframe]==2.0.0
-d6tstack[psql]==0.1.9
-#fastparquet==
+geopandas==0.5.1

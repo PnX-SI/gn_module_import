@@ -45,7 +45,40 @@ CREATE TABLE user_errors(
 );
 
 
+CREATE TABLE cor_role_mapping(
+  id_role integer NOT NULL,
+  id_mapping integer NOT NULL
+);
 
+
+CREATE TABLE t_mappings_fields(
+  id_match_fields serial NOT NULL,
+  id_mapping integer NOT NULL,
+  source_field character varying(255) NOT NULL,
+  target_field character varying(255) NOT NULL
+);
+
+
+CREATE TABLE t_mappings_values(
+  id_match_values serial NOT NULL,
+  id_mapping integer NOT NULL,
+  id_type_mapping integer NOT NULL,
+  !!! source_value character varying(255),
+  !!! id_target_value integer
+);
+
+
+CREATE TABLE bib_mappings(
+  id_mapping serial NOT NULL,
+  mapping_label character varying(255),
+  active boolean
+);
+
+
+CREATE TABLE bib_type_mapping_values(
+  id_type_mapping serial NOT NULL,
+  mapping_type character varying(10)
+);
 
 
 ---------------
@@ -61,6 +94,21 @@ ALTER TABLE ONLY cor_role_import
 ALTER TABLE ONLY user_errors 
     ADD CONSTRAINT pk_user_errors PRIMARY KEY (id_error);
 
+ALTER TABLE ONLY cor_role_mapping
+    ADD CONSTRAINT pk_cor_role_mapping PRIMARY KEY (id_role, id_mapping);
+
+ALTER TABLE ONLY t_mappings_fields
+    ADD CONSTRAINT pk_t_mappings_fields PRIMARY KEY (id_match_fields);
+
+ALTER TABLE ONLY t_mappings_values
+    ADD CONSTRAINT pk_t_mappings_values PRIMARY KEY (id_match_values);
+
+ALTER TABLE ONLY bib_mappings
+    ADD CONSTRAINT pk_bib_mappings PRIMARY KEY (id_mapping);
+
+ALTER TABLE ONLY bib_type_mapping_values
+    ADD CONSTRAINT pk_bib_type_mapping_values PRIMARY KEY (id_type_mapping, mapping_type);
+
 
 ---------------
 --FOREIGN KEY--
@@ -72,6 +120,27 @@ ALTER TABLE ONLY t_imports
 ALTER TABLE ONLY cor_role_import
     ADD CONSTRAINT fk_utilisateurs_t_roles FOREIGN KEY (id_role) REFERENCES utilisateurs.t_roles(id_role) ON UPDATE CASCADE ON DELETE CASCADE;
 
+ALTER TABLE ONLY cor_role_mapping
+    ADD CONSTRAINT fk_utilisateurs_t_roles FOREIGN KEY (id_role) REFERENCES utilisateurs.t_roles(id_role) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY cor_role_mapping
+    ADD CONSTRAINT fk_gn_imports_bib_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.bib_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY t_mappings_fields
+    ADD CONSTRAINT fk_gn_imports_bib_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.bib_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY t_mappings_values
+    ADD CONSTRAINT fk_gn_imports_bib_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.bib_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY t_mappings_values
+    ADD CONSTRAINT fk_gn_imports_bib_type_mappings_values_id_type_mapping FOREIGN KEY (id_type_mapping) REFERENCES gn_imports.bib_type_mappings_values(id_type_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+
+---------------------
+--OTHER CONSTRAINTS--
+---------------------
+
+ALTER TABLE ONLY bib_type_mapping_values
+    ADD CONSTRAINT check_mapping_type_in_bib_type_mapping_values CHECK (mapping_type IN ('NOMENCLATURE', 'ROLE'));
 
 ------------
 --TRIGGERS--
@@ -98,9 +167,11 @@ INSERT INTO user_errors (id_error, error_type, name, description) VALUES
 	(6, 'missing value warning', 'warning : missing uuid type value', 'warning : valeur de type uuid manquante (non bloquant)'),
 	(7, 'inconsistency error', 'date_min > date_max', 'date_min > date_max'),
 	(8, 'inconsistency error', 'count_min > count_max', 'count_min > count_max'),
-	(9, 'invalid value', 'invalid cd_nom', 'cd_nom invalide (absent de TaxRef)');
-
-
+	(9, 'invalid value', 'invalid cd_nom', 'cd_nom invalide (absent de TaxRef)'),
+	(10, 'inconsistency error', 'altitude min > altitude max', 'altitude min > altitude max'),
+	(11, 'duplicates error', 'entitiy_source_pk_value duplicates', 'des valeurs de entity_source_pk_value ne sont pas uniques');
+	(12, 'invalid type error', 'invalid real type', 'type real invalide'),
+	(13, 'inconsistency_error', 'inconsistent geographic coordinate', 'coordonnée géographique incohérente');
 
 
 

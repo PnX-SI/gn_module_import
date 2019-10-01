@@ -22,16 +22,13 @@ def check_alt_min_max(min_val, max_val):
 def check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul):
 
     """
-    A FAIRE QUAND DATA CLEANING DONNEES GEO :
-    - if user want to calculate altitudes (checked in front):
+    - if user want to calculate altitudes:
         -> if only altitude max column provided, calculates altitude min column
         -> if only altitude min column provided, calculates altitude max column
         -> if both alt_min and max columns provided, calculate missing values
         -> if no altitude column provided, calculates altitude min and max
-    """
 
-    """
-    - if user doesn't want to calculate altitudes (not checked in front):
+    - if user doesn't want to calculate altitudes:
         -> if only altitude min column provided, altitude max column = altitude min column
         -> if only altitude max column provided, altitude min column = 0
         -> if both alt_min and max columns provided :
@@ -63,7 +60,7 @@ def check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul)
                 n_alt_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
                 if n_alt_min_sup > 0:
-                    set_user_error(dc_user_errors, 10, ','.join([selected_columns['altitude_min'], selected_columns['altitude_max']]), n_alt_min_sup)    
+                    set_user_error(dc_user_errors, 10, selected_columns['altitude_min'], n_alt_min_sup)    
 
     except Exception:
         raise

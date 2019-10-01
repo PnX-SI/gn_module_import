@@ -4,6 +4,7 @@ export const ModuleConfig = {
   ".json"
  ],
  "ARCHIVES_SCHEMA_NAME": "gn_import_archives",
+ "DEFAULT_COUNT_VALUE": 1,
  "ENCODAGE": [
   "UTF-8"
  ],
@@ -27,7 +28,7 @@ export const ModuleConfig = {
    "show": true
   },
   {
-   "max_width": 100,
+   "max_width": 50,
    "name": "File format",
    "prop": "format_source_file",
    "show": false
@@ -39,13 +40,13 @@ export const ModuleConfig = {
    "show": true
   },
   {
-   "max_width": 100,
+   "max_width": 200,
    "name": "Nb de taxons",
    "prop": "taxa_count",
    "show": true
   },
   {
-   "max_width": 100,
+   "max_width": 200,
    "name": "Nb de donnees",
    "prop": "import_count",
    "show": true
@@ -69,7 +70,7 @@ export const ModuleConfig = {
     {
      "label": "Identifiant source",
      "name": "entity_source_pk_value",
-     "required": false
+     "required": true
     },
     {
      "label": "Identifiant SINP (uuid)",
@@ -78,12 +79,12 @@ export const ModuleConfig = {
     },
     {
      "label": "Date de cr\u00e9ation de la donn\u00e9e",
-     "name": "meta_v_taxref",
+     "name": "meta_create_date",
      "required": false
     },
     {
      "label": "Version du r\u00e9f\u00e9rentiel taxonomique",
-     "name": "meta_create_date",
+     "name": "meta_v_taxref",
      "required": false
     },
     {
@@ -111,6 +112,21 @@ export const ModuleConfig = {
      "label": "Altitude min",
      "name": "altitude_min",
      "required": false
+    },
+    {
+     "label": "Altitude max",
+     "name": "altitude_max",
+     "required": false
+    },
+    {
+     "label": "Longitude (coord x)",
+     "name": "longitude",
+     "required": true
+    },
+    {
+     "label": "Latitude (coord y)",
+     "name": "latitude",
+     "required": true
     },
     {
      "label": "Altitude max",
@@ -294,6 +310,12 @@ export const ModuleConfig = {
   }
  ],
  "MAX_FILE_SIZE": 500,
+ "MISSING_VALUES": [
+  "",
+  "NA",
+  "NaN",
+  "na"
+ ],
  "MODULE_CODE": "IMPORT",
  "MODULE_URL": "import",
  "NOT_NULLABLE_SYNTHESE_FIELDS": [
