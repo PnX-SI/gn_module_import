@@ -683,6 +683,7 @@ def postMapping(info_role, import_id, id_mapping):
         DEFAULT_COUNT_VALUE = blueprint.config['DEFAULT_COUNT_VALUE']
         MODULE_URL = blueprint.config["MODULE_URL"]
         DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
+        SINP_COLS = blueprint.config['SINP_SYNTHESE_NOMENCLATURES']
 
         index_col = ''.join([PREFIX,'pk'])
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
@@ -748,7 +749,7 @@ def postMapping(info_role, import_id, id_mapping):
 
             partition = df.get_partition(i)
             partition_df = compute_df(partition)
-            transform_errors = data_cleaning(partition_df, import_id, selected_columns, dc_user_errors, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid, is_generate_uuid)
+            transform_errors = data_cleaning(partition_df, import_id, selected_columns, dc_user_errors, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid, is_generate_uuid, SINP_COLS)
 
             if len(transform_errors['user_errors']) > 0:
                 for error in transform_errors['user_errors']:
@@ -929,6 +930,8 @@ def postMapping(info_role, import_id, id_mapping):
         """
 
         n_table_rows = get_row_number(table_names['imports_full_table_name'])
+
+
 
         return {
             'user_error_details' : error_report,

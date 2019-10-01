@@ -11,7 +11,7 @@ logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
 
 # logs to file
-file_handler = RotatingFileHandler('../external_modules/import/var/activity.log', 'a', 1000000, 1)
+file_handler = RotatingFileHandler('../external_modules/import/var/activity.log', 'a', 10000000, 1)
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
