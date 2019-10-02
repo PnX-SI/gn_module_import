@@ -932,11 +932,115 @@ def postMapping(info_role, import_id, id_mapping):
         n_table_rows = get_row_number(table_names['imports_full_table_name'])
 
 
+        # get list of synthese column names dealing with SINP nomenclatures
+        selected_SINP_nomenc = [nomenclature['nomenclature_abb'] for nomenclature in SINP_COLS\
+                                if nomenclature['synthese_col'] in selected_columns.keys()]
+
+        front_info = []
+
+        for nomenc in selected_SINP_nomenc:
+
+            # get nomenclature name and id
+            nomenc_info = DB.session.execute("""
+                SELECT 
+                    label_default as name,
+                    id_type as id
+                FROM ref_nomenclatures.bib_nomenclatures_types
+                WHERE mnemonique = {nomenc};"""\
+                    .format(nomenc = QuotedString(nomenc)))\
+                    .fetchone()
+
+            # get nomenclature values
+            nomenc_values = DB.session.execute("""
+                SELECT 
+                    nom.label_default AS nomenc_values, 
+                    nom.definition_default AS nomenc_definitions
+                FROM ref_nomenclatures.bib_nomenclatures_types AS bib
+                JOIN ref_nomenclatures.t_nomenclatures AS nom ON nom.id_type = bib.id_type
+                WHERE bib.mnemonique = {nomenc};"""\
+                    .format(nomenc = QuotedString(nomenc)))\
+                    .fetchall()
+
+            val_def_list = []
+            for val in nomenc_values:
+                d = {
+                    'value' : val.nomenc_values,
+                    'definition' : val.nomenc_definitions
+                }
+                val_def_list.append(d)
+
+            # get user_nomenclature column name and values
+            for col in SINP_COLS:
+                if col['nomenclature_abb'] == nomenc:
+                    user_nomenc_col = col['synthese_col']
+
+            nomenc_user_values = DB.session.execute("""
+                SELECT DISTINCT {user_nomenc_col} as user_val
+                FROM {schema_name}.{table_name};"""\
+                    .format(
+                        user_nomenc_col = selected_columns[user_nomenc_col],
+                        schema_name = IMPORTS_SCHEMA_NAME,
+                        table_name = table_names['imports_table_name']))\
+                    .fetchall()
+
+            user_values_list = [val.user_val for val in nomenc_user_values] 
+
+            d = {
+                    nomenc : {
+                        'nomenc_id' : nomenc_info.id,
+                        'nomenc_name' : nomenc_info.name,
+                        'nomenc_values_def' : val_def_list,
+                        'user_values' : {
+                            selected_columns[user_nomenc_col]:user_values_list
+                        }
+                    }
+                }
+            front_info.append(d)
+        # get list of values for selected nomenclatures:
+
+
+
+
+
+        """
+        nomenc_values_list = []
+            for info in selected_SINP_cols_info:
+                values_def_list = []
+                if name == info.nomenc_abbrev:
+                    val_def_dict = {
+                        info.nomenc_value:info.nomenc_value_def
+                    }
+                    values_def_list.append(val_def_dict)
+            values_dict = {
+                name : values_def_list
+            }
+            nomenc_values_list.append(values_dict)
+        """
+
+
+
+
+
+
+        """
+        datasets = []
+        for row in results:
+            d = {
+                'datasetId': row.id_dataset,
+                'datasetName': row.dataset_name
+                }
+            datasets.append(d)
+        """
+
+
+
+
 
         return {
             'user_error_details' : error_report,
             'n_user_errors' : n_invalid_rows,
-            'n_table_rows': n_table_rows
+            'n_table_rows' : n_table_rows,
+            'content_mapping_info' : front_info
         }
 
     except Exception as e:
