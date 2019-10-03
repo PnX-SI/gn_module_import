@@ -18,28 +18,27 @@ export class ImportProcessComponent implements OnInit {
 	public mappingResponse;
 	public isUploading: Boolean = false;
 	public IMPORT_CONFIG = ModuleConfig;
-    public uploadForm: FormGroup;
-    public selectFieldMappingForm: FormGroup;
+	public uploadForm: FormGroup;
+	public selectFieldMappingForm: FormGroup;
 	public syntheseForm: FormGroup;
 	public synColumnNames;
 	private importId;
 	public isUserError: boolean = false;
 	public userErrors;
-    public columns;
-    public n_error_lines;
-    public isErrorButtonClicked: boolean = false;
-    public dataCleaningErrors;
-    public isFullError = false;
-    public userFieldMappingsResponse;
-    public mappingFieldsResponse;
-    public mappingFieldNameResponse;
-    public newMapping: boolean = false;
-    public id_mapping;
-    public user_srid;
+	public columns;
+	public n_error_lines;
+	public isErrorButtonClicked: boolean = false;
+	public dataCleaningErrors;
+	public isFullError = false;
+	public userFieldMapping;
+	public mappingFieldNameResponse;
+	public newMapping: boolean = false;
+	public id_mapping;
+	public user_srid;
 
 	//public impatient: boolean = false;
-    step1_btn: boolean = true;
-    step2_btn: boolean = false;
+	step1_btn: boolean = true;
+	step2_btn: boolean = false;
 
 	constructor(
 		private _router: Router,
@@ -49,26 +48,24 @@ export class ImportProcessComponent implements OnInit {
 		private _fb: FormBuilder
 	) {}
 
-
 	ngOnInit() {
-
 		this.uploadForm = this._fb.group({
 			file: [ null, Validators.required ],
 			encodage: [ null, Validators.required ],
 			srid: [ null, Validators.required ],
 			separator: [ null, Validators.required ],
 			stepper: [ null, Validators.required ] // hack for material 2.0.0 beta
-        });
+		});
 
-        this.selectFieldMappingForm = this._fb.group({
-            fieldMapping: [ null ],
-            mappingName: [ '' ]
-        });
-        
+		this.selectFieldMappingForm = this._fb.group({
+			fieldMapping: [ null ],
+			mappingName: [ '' ]
+		});
+
 		this.syntheseForm = this._fb.group({
 			stepper: [ null, Validators.required ]
-        });
-        
+		});
+
 		for (let col of this.IMPORT_CONFIG.MAPPING_DATA_FRONTEND) {
 			for (let field of col.fields) {
 				if (field.required) {
@@ -77,11 +74,9 @@ export class ImportProcessComponent implements OnInit {
 					this.syntheseForm.addControl(field.name, new FormControl(''));
 				}
 			}
-        }
-        
-        this.Formlistener();
+		}
+		this.Formlistener();
 	}
-
 
 	onFileSelected(event) {
 		this.uploadForm.patchValue({
@@ -89,7 +84,6 @@ export class ImportProcessComponent implements OnInit {
 		});
 		this.fileName = this.uploadForm.get('file').value.name;
 	}
-
 
 	cancelImport() {
 		this._ds.cancelImport(this.importId).subscribe(
@@ -112,7 +106,6 @@ export class ImportProcessComponent implements OnInit {
 		);
 	}
 
-
 	onUpload(value, stepper: MatStepper) {
 		this.isUploading = true;
 		this.isUserError = false;
@@ -123,12 +116,16 @@ export class ImportProcessComponent implements OnInit {
 				this.IMPORT_CONFIG;
 				this.uploadForm.removeControl('stepper');
 				stepper.next();
-				//this.getSynColumnNames();
 				this.isUploading = false;
 				this.importId = this.uploadResponse.importId;
-                this.columns = this.uploadResponse.columns;
-                this.getFieldMappings();
-                this.onSelectFieldMappingChange();
+				this.columns = this.uploadResponse.columns.map((col) => {
+					return {
+						id: col,
+						selected: false
+					};
+				});
+				this.getFieldMappings();
+				this.onSelectUserMapping();
 			},
 			(error) => {
 				this.isUploading = false;
@@ -153,20 +150,17 @@ export class ImportProcessComponent implements OnInit {
 		);
 	}
 
-
 	onMapping(value, stepper: MatStepper) {
-        this.isUploading = true;
-        this.user_srid = this.uploadForm.get('srid').value;
-        console.log(this.user_srid);
+		this.isUploading = true;
+		this.user_srid = this.uploadForm.get('srid').value;
 		this._ds.postMapping(value, this.importId, this.id_mapping, this.user_srid).subscribe(
 			(res) => {
-                this.mappingResponse = res;
-                console.log(this.mappingResponse);
-                this.isUploading = false;
-                this.n_error_lines = this.mappingResponse['n_user_errors'];
-                this.dataCleaningErrors = this.mappingResponse['user_error_details'];
-                this.step2_btn = true;
-                this.isFullErrorCheck(this.mappingResponse['n_table_rows'], this.n_error_lines);
+				this.mappingResponse = res;
+				this.isUploading = false;
+				this.n_error_lines = this.mappingResponse['n_user_errors'];
+				this.dataCleaningErrors = this.mappingResponse['user_error_details'];
+				this.step2_btn = true;
+				this.isFullErrorCheck(this.mappingResponse['n_table_rows'], this.n_error_lines);
 				stepper.next();
 			},
 			(error) => {
@@ -179,10 +173,9 @@ export class ImportProcessComponent implements OnInit {
 					this.isUserError = true;
 					this.userErrors = error.error;
 				}
-            }
+			}
 		);
 	}
-
 
 	onFinalStep() {
 		/*
@@ -204,18 +197,16 @@ export class ImportProcessComponent implements OnInit {
       }
     );
     */
-    }
-    
+	}
 
-    getFieldMappings() {
+	getFieldMappings() {
 		// get list of all declared dataset of the user
 		this._ds.getFieldMappings().subscribe(
 			(result) => {
-                this.userFieldMappingsResponse = result;
-                console.log(this.userFieldMappingsResponse);
+				this.userFieldMapping = result;
 			},
 			(err) => {
-                console.log(err);
+				console.log(err);
 				if (err.statusText === 'Unknown Error') {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
@@ -225,33 +216,21 @@ export class ImportProcessComponent implements OnInit {
 				}
 			}
 		);
-    }
-    
+	}
 
-    getMappingFields(id_mapping) {
-        console.log(id_mapping);
-        this.id_mapping = id_mapping;
+	getUsersMapping(id_mapping) {
+		this.id_mapping = id_mapping;
 		// get list of all declared dataset of the user
 		this._ds.getMappingFields(id_mapping).subscribe(
-			(result) => {
-                this.mappingFieldsResponse = result;
-                console.log(this.mappingFieldsResponse);
-                console.log(this.mappingFieldsResponse.length);
-                if (this.mappingFieldsResponse[0] != 'empty') {
-                    for (let field of this.mappingFieldsResponse) {
-                        console.log(field['target_field']);
-                        //console.log(field.source_field);
-                        //console.log(this.syntheseForm.controls[field.target_field]);
-                        //this.syntheseForm.controls[field.target_field]].setValue(field.source_field);
-                        console.log(this.syntheseForm.get(field['target_field']).value);
-                        //console.log(this.syntheseForm.get(field['source_field']).value);
-                        this.syntheseForm.get(field['target_field']).setValue(field['source_field']);
-                    }
-                } else {
-                    Object.keys(this.syntheseForm.controls).forEach(key => {
-                        this.syntheseForm.get(key).setValue('');
-                      });
-                }
+			(mappingFields) => {
+				if (mappingFields[0] != 'empty') {
+					for (let field of mappingFields) {
+						this.syntheseForm.get(field['target_field']).setValue(field['source_field']);
+					}
+					this.getSelectedOptions();
+				} else {
+					this.syntheseForm.reset();
+				}
 			},
 			(err) => {
 				if (err.statusText === 'Unknown Error') {
@@ -263,23 +242,19 @@ export class ImportProcessComponent implements OnInit {
 				}
 			}
 		);
-    }
-    
+	}
 
-    onSelectFieldMappingChange(): void {
-        this.selectFieldMappingForm.get('fieldMapping').valueChanges.subscribe(
-            (result) => {
-                console.log(this.selectFieldMappingForm);
-                console.log(this.selectFieldMappingForm.get('fieldMapping').value);
-                if (this.selectFieldMappingForm.get('fieldMapping').value != '') {
-                    this.getMappingFields(this.selectFieldMappingForm.get('fieldMapping').value);
-                } else {
-                    Object.keys(this.syntheseForm.controls).forEach(key => {
-                        this.syntheseForm.get(key).setValue('');
-                      });
-                }
-            },
-            (err) => {
+	onSelectUserMapping(): void {
+		this.selectFieldMappingForm.get('fieldMapping').valueChanges.subscribe(
+			(id_mapping) => {
+				if (id_mapping) {
+					this.getUsersMapping(id_mapping);
+				} else {
+					this.syntheseForm.reset();
+					this.getSelectedOptions();
+				}
+			},
+			(err) => {
 				if (err.statusText === 'Unknown Error') {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
@@ -288,19 +263,17 @@ export class ImportProcessComponent implements OnInit {
 					this.toastr.error(err.error);
 				}
 			}
-        );
-    }
+		);
+	}
 
-    
 	onMappingFieldName(value) {
 		this._ds.postMappingFieldName(value).subscribe(
 			(res) => {
-                this.mappingFieldNameResponse = res;
-                console.log(this.mappingFieldNameResponse);
-                this.newMapping = false;
-                this.getFieldMappings();
-                this.selectFieldMappingForm.controls['fieldMapping'].setValue(this.mappingFieldNameResponse);
-                this.selectFieldMappingForm.controls['mappingName'].setValue('');
+				this.mappingFieldNameResponse = res;
+				this.newMapping = false;
+				this.getFieldMappings();
+				this.selectFieldMappingForm.controls['fieldMapping'].setValue(this.mappingFieldNameResponse);
+				this.selectFieldMappingForm.controls['mappingName'].setValue('');
 			},
 			(error) => {
 				if (error.statusText === 'Unknown Error') {
@@ -309,28 +282,25 @@ export class ImportProcessComponent implements OnInit {
 				} else {
 					// show error message if other server error
 					this.isUserError = true;
-                    this.userErrors = error.error;
-                    this.toastr.error(this.userErrors);
+					this.userErrors = error.error;
+					this.toastr.error(this.userErrors);
 				}
-            }
+			}
 		);
 	}
 
+	createMapping() {
+		this.selectFieldMappingForm.reset();
+		this.newMapping = true;
+	}
 
-    createMapping() {
-        this.selectFieldMappingForm.controls['fieldMapping'].setValue('');
-        this.newMapping = true;
-    }
-
-
-    cancelMapping() {
-        this.newMapping = false;
-        this.selectFieldMappingForm.controls['mappingName'].setValue('');
-    }
-
+	cancelMapping() {
+		this.newMapping = false;
+		this.selectFieldMappingForm.controls['mappingName'].setValue('');
+	}
 
 	onFinalImport() {
-		this.impatient = true;
+		//this.impatient = true;
 	}
 
 	onImportList() {
@@ -342,7 +312,7 @@ export class ImportProcessComponent implements OnInit {
 	}
 
 	Formlistener() {
-		this.uploadForm.valueChanges.subscribe((result) => {
+		this.uploadForm.valueChanges.subscribe(() => {
 			if (
 				this.uploadForm.get('file').valid &&
 				this.uploadForm.get('encodage').valid &&
@@ -350,52 +320,33 @@ export class ImportProcessComponent implements OnInit {
 				this.uploadForm.get('separator').valid
 			)
 				this.step1_btn = false;
-        });
-        /*
-		this.syntheseForm.valueChanges.subscribe((result) => {
-			this.columns = this.columns.filter(function(ele) {
-				return !Object.values(result).includes(ele);
-			});
-        });
-        */
-    }
-    
+		});
+	}
 
-    ErrorButtonClicked() {
-        this.isErrorButtonClicked = !this.isErrorButtonClicked;
-    }
+	onSelect() {
+		this.getSelectedOptions();
+	}
 
-    
-    isFullErrorCheck(n_table_rows, n_errors) {
-        if (n_table_rows == n_errors) {
-            this.isFullError = true;
-        }
-    }
-
-	/*les colonnes sont récupérées à partir de la conf !!!
-	getSynColumnNames() {
-		// attention
-		this._ds.getSynColumnNames().subscribe(
-			(res) => {
-				this.synColumnNames = res;
-				for (let col of this.synColumnNames) {
-					if (col.is_nullable === 'NO') {
-						this.syntheseForm.addControl(col.column_name, new FormControl('', Validators.required));
-					} else {
-						this.syntheseForm.addControl(col.column_name, new FormControl(''));
-					}
-				}
-			},
-			(error) => {
-				if (error.statusText === 'Unknown Error') {
-					// show error message if no connexion
-					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+	getSelectedOptions() {
+		let formValues = this.syntheseForm.value;
+		this.columns.map((col) => {
+			if (formValues) {
+				if (Object.values(formValues).includes(col.id)) {
+					col.selected = true;
 				} else {
-					// show error message if other server error
-					this.toastr.error(error.error.message);
+					col.selected = false;
 				}
 			}
-		);
+		});
 	}
-*/
+
+	ErrorButtonClicked() {
+		this.isErrorButtonClicked = !this.isErrorButtonClicked;
+	}
+
+	isFullErrorCheck(n_table_rows, n_errors) {
+		if (n_table_rows == n_errors) {
+			this.isFullError = true;
+		}
+	}
 }

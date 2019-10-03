@@ -38,12 +38,10 @@ export class DataService {
     }
     
     getMappingFields(id_mapping: number) {
-        console.log(id_mapping);
 		return this._http.get<any>(`${urlApi}/field_mappings/${id_mapping}`);
     }
     
     postMappingFieldName(value) {
-        console.log(value);
         const urlMapping = `${urlApi}/mappingFieldName`;
         return this._http.post<any>(urlMapping, value);
     }
