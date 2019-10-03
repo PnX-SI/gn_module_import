@@ -13,72 +13,97 @@ SET default_with_oids = false;
 ------------------------
 
 CREATE TABLE t_imports(
-  id_import serial NOT NULL,
-  format_source_file character varying(5),
-  SRID integer,
-  import_table character varying(255),
-  id_dataset integer,
-  id_mapping integer,
-  date_create_import timestamp without time zone DEFAULT now(),
-  date_update_import timestamp without time zone DEFAULT now(),
-  date_end_import timestamp without time zone,
-  source_count integer,
-  import_count integer,
-  taxa_count integer,
-  date_min_data timestamp without time zone,
-  date_max_data timestamp without time zone,
-  step integer
+    id_import serial NOT NULL,
+    format_source_file character varying(5),
+    SRID integer,
+    import_table character varying(255),
+    id_dataset integer,
+    id_mapping integer,
+    date_create_import timestamp without time zone DEFAULT now(),
+    date_update_import timestamp without time zone DEFAULT now(),
+    date_end_import timestamp without time zone,
+    source_count integer,
+    import_count integer,
+    taxa_count integer,
+    date_min_data timestamp without time zone,
+    date_max_data timestamp without time zone,
+    step integer
 );
 
 
 CREATE TABLE cor_role_import(
-  id_role integer NOT NULL,
-  id_import integer NOT NULL
+    id_role integer NOT NULL,
+    id_import integer NOT NULL
 );
 
 
 CREATE TABLE user_errors(
-  id_error integer NOT NULL,
-  error_type character varying(100) NOT NULL,
-  name character varying(255) NOT NULL UNIQUE,
-  description character varying(255) NOT NULL
+    id_error integer NOT NULL,
+    error_type character varying(100) NOT NULL,
+    name character varying(255) NOT NULL UNIQUE,
+    description character varying(255) NOT NULL
 );
 
 
 CREATE TABLE cor_role_mapping(
-  id_role integer NOT NULL,
-  id_mapping integer NOT NULL
+    id_role integer NOT NULL,
+    id_mapping integer NOT NULL
 );
 
 
 CREATE TABLE t_mappings_fields(
-  id_match_fields serial NOT NULL,
-  id_mapping integer NOT NULL,
-  source_field character varying(255) NOT NULL,
-  target_field character varying(255) NOT NULL
+    id_match_fields serial NOT NULL,
+    id_mapping integer NOT NULL,
+    source_field character varying(255) NOT NULL,
+    target_field character varying(255) NOT NULL
 );
 
 
 CREATE TABLE t_mappings_values(
-  id_match_values serial NOT NULL,
-  id_mapping integer NOT NULL,
-  id_type_mapping integer NOT NULL,
-  source_value character varying(255),
-  id_target_value integer
+    id_match_values serial NOT NULL,
+    id_mapping integer NOT NULL,
+    id_type_mapping integer NOT NULL,
+    source_value character varying(255),
+    id_target_value integer
 );
 
 
 CREATE TABLE bib_mappings(
-  id_mapping serial NOT NULL,
-  mapping_label character varying(255),
-  active boolean
+    id_mapping serial NOT NULL,
+    mapping_label character varying(255),
+    active boolean
 );
 
 
 CREATE TABLE bib_type_mapping_values(
-  id_type_mapping serial NOT NULL,
-  mapping_type character varying(10)
+    id_type_mapping integer NOT NULL,
+    mapping_type character varying(10)
 );
+
+
+CREATE TABLE bib_themes(
+    id_theme integer,
+    name_theme character varying(100) NOT NULL,
+    label_theme character varying(100) NOT NULL,
+    desc_theme character varying(1000),
+    order_theme integer NOT NULL
+);
+
+
+CREATE TABLE bib_fields(
+    id_field integer,
+    name_field character varying(100) NOT NULL,
+    fr_label character varying(100) NOT NULL,
+    eng_label character varying(100),
+    desc_field character varying(1000),
+    type_field character varying(50) NOT NULL,
+    mandatory boolean NOT NULL,
+    autogenerate boolean NOT NULL,
+    nomenclature boolean NOT NULL,
+    id_theme integer NOT NULL,
+    order_field integer NOT NULL
+);
+
 
 
 ---------------
@@ -109,6 +134,13 @@ ALTER TABLE ONLY bib_mappings
 ALTER TABLE ONLY bib_type_mapping_values
     ADD CONSTRAINT pk_bib_type_mapping_values PRIMARY KEY (id_type_mapping, mapping_type);
 
+ALTER TABLE ONLY bib_themes
+    ADD CONSTRAINT pk_bib_themes_id_theme PRIMARY KEY (id_theme);
+
+ALTER TABLE ONLY bib_fields
+    ADD CONSTRAINT pk_bib_fields_id_theme PRIMARY KEY (id_field);
+
+
 
 ---------------
 --FOREIGN KEY--
@@ -132,8 +164,12 @@ ALTER TABLE ONLY t_mappings_fields
 ALTER TABLE ONLY t_mappings_values
     ADD CONSTRAINT fk_gn_imports_bib_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.bib_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE ONLY t_mappings_values
-    ADD CONSTRAINT fk_gn_imports_bib_type_mappings_values_id_type_mapping FOREIGN KEY (id_type_mapping) REFERENCES gn_imports.bib_type_mappings_values(id_type_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+--ALTER TABLE ONLY t_mappings_values
+--    ADD CONSTRAINT fk_gn_imports_bib_type_mapping_values_id_type_mapping FOREIGN KEY (id_type_mapping) REFERENCES gn_imports.bib_type_mapping_values(id_type_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY bib_fields
+    ADD CONSTRAINT fk_gn_imports_bib_themes_id_theme FOREIGN KEY (id_theme) REFERENCES gn_imports.bib_themes(id_theme) ON UPDATE CASCADE ON DELETE CASCADE;
+
 
 ---------------------
 --OTHER CONSTRAINTS--
@@ -141,6 +177,8 @@ ALTER TABLE ONLY t_mappings_values
 
 ALTER TABLE ONLY bib_type_mapping_values
     ADD CONSTRAINT check_mapping_type_in_bib_type_mapping_values CHECK (mapping_type IN ('NOMENCLATURE', 'ROLE'));
+
+
 
 ------------
 --TRIGGERS--
