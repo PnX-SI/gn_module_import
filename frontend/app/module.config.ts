@@ -70,7 +70,7 @@ export const ModuleConfig = {
     {
      "label": "Identifiant source",
      "name": "entity_source_pk_value",
-     "required": true
+     "required": false
     },
     {
      "label": "Identifiant SINP (uuid)",
@@ -127,11 +127,6 @@ export const ModuleConfig = {
      "label": "Latitude (coord y)",
      "name": "latitude",
      "required": true
-    },
-    {
-     "label": "Altitude max",
-     "name": "altitude_max",
-     "required": false
     },
     {
      "label": "Observateur(s)",

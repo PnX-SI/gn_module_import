@@ -912,25 +912,10 @@ def postMapping(info_role, import_id, id_mapping):
 
         logger.info('*** END CORRESPONDANCE MAPPING')
         
-        """
-        ### importer les données dans synthese
-        #selected_columns = {key:value for key, value in data.items() if value}
-
-        selected_synthese_cols = ','.join(selected_columns.keys())
-        selected_user_cols = ','.join(selected_columns.values())
-
-
-        # ok ça marche
-        print('fill synthese')
-        #DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid=TRUE;".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
-        #INSERT INTO gn_synthese.synthese (cd_nom,nom_cite,date_min,date_max, the_geom_4326) SELECT species_id::integer,nom_scientifique,gn_timestamp::timestamp,gn_timestamp::timestamp,the_geom_4326::geometry FROM gn_imports.i_data_pf_observado_original_447 WHERE gn_is_valid=TRUE;
-        print('synthese filled')
-        DB.session.commit()      
-        DB.session.close()
-        """
-
         n_table_rows = get_row_number(table_names['imports_full_table_name'])
 
+
+        ### GET NOMENCLATURES INFO
 
         # get list of synthese column names dealing with SINP nomenclatures
         selected_SINP_nomenc = [nomenclature['nomenclature_abb'] for nomenclature in SINP_COLS\
@@ -991,48 +976,38 @@ def postMapping(info_role, import_id, id_mapping):
                         'nomenc_name' : nomenc_info.name,
                         'nomenc_values_def' : val_def_list,
                         'user_values' : {
-                            selected_columns[user_nomenc_col]:user_values_list
+                            'column_name' : selected_columns[user_nomenc_col],
+                            'values' : user_values_list
                         }
                     }
                 }
             front_info.append(d)
-        # get list of values for selected nomenclatures:
-
-
-
 
 
         """
-        nomenc_values_list = []
-            for info in selected_SINP_cols_info:
-                values_def_list = []
-                if name == info.nomenc_abbrev:
-                    val_def_dict = {
-                        info.nomenc_value:info.nomenc_value_def
-                    }
-                    values_def_list.append(val_def_dict)
-            values_dict = {
-                name : values_def_list
-            }
-            nomenc_values_list.append(values_dict)
+        ### IMPORT DATA IN SYNTHESE TABLE
+
+        #selected_columns = {key:value for key, value in data.items() if value}
+
+        total_columns = {**selected_columns, **added_cols}
+        pdb.set_trace()
+        #enlever les longitudes et latitudes
+
+
+
+
+        selected_synthese_cols = ','.join(selected_columns.keys())
+        selected_user_cols = ','.join(selected_columns.values())
+
+
+        # ok ça marche
+        print('fill synthese')
+        #DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid='True';".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
+        #INSERT INTO gn_synthese.synthese (cd_nom,nom_cite,date_min,date_max, the_geom_4326) SELECT species_id::integer,nom_scientifique,gn_timestamp::timestamp,gn_timestamp::timestamp,the_geom_4326::geometry FROM gn_imports.i_data_pf_observado_original_447 WHERE gn_is_valid='True';
+        print('synthese filled')
+        DB.session.commit()      
+        DB.session.close()
         """
-
-
-
-
-
-
-        """
-        datasets = []
-        for row in results:
-            d = {
-                'datasetId': row.id_dataset,
-                'datasetName': row.dataset_name
-                }
-            datasets.append(d)
-        """
-
-
 
 
 
