@@ -30,7 +30,7 @@ export class ImportProcessComponent implements OnInit {
 	public isErrorButtonClicked: boolean = false;
 	public dataCleaningErrors;
 	public isFullError = false;
-	public userFieldMappingsResponse;
+	public userFieldMapping;
 	public mappingFieldNameResponse;
 	public newMapping: boolean = false;
 	public id_mapping;
@@ -75,7 +75,6 @@ export class ImportProcessComponent implements OnInit {
 				}
 			}
 		}
-
 		this.Formlistener();
 	}
 
@@ -117,7 +116,6 @@ export class ImportProcessComponent implements OnInit {
 				this.IMPORT_CONFIG;
 				this.uploadForm.removeControl('stepper');
 				stepper.next();
-				//this.getSynColumnNames();
 				this.isUploading = false;
 				this.importId = this.uploadResponse.importId;
 				this.columns = this.uploadResponse.columns.map((col) => {
@@ -127,7 +125,7 @@ export class ImportProcessComponent implements OnInit {
 					};
 				});
 				this.getFieldMappings();
-				this.onSelectFieldMappingChange();
+				this.onSelectUserMapping();
 			},
 			(error) => {
 				this.isUploading = false;
@@ -205,7 +203,7 @@ export class ImportProcessComponent implements OnInit {
 		// get list of all declared dataset of the user
 		this._ds.getFieldMappings().subscribe(
 			(result) => {
-				this.userFieldMappingsResponse = result;
+				this.userFieldMapping = result;
 			},
 			(err) => {
 				console.log(err);
@@ -220,7 +218,7 @@ export class ImportProcessComponent implements OnInit {
 		);
 	}
 
-	getMappingFields(id_mapping) {
+	getUsersMapping(id_mapping) {
 		this.id_mapping = id_mapping;
 		// get list of all declared dataset of the user
 		this._ds.getMappingFields(id_mapping).subscribe(
@@ -229,7 +227,7 @@ export class ImportProcessComponent implements OnInit {
 					for (let field of mappingFields) {
 						this.syntheseForm.get(field['target_field']).setValue(field['source_field']);
 					}
-					this.colSelect();
+					this.getSelectedOptions();
 				} else {
 					this.syntheseForm.reset();
 				}
@@ -246,14 +244,14 @@ export class ImportProcessComponent implements OnInit {
 		);
 	}
 
-	onSelectFieldMappingChange(): void {
+	onSelectUserMapping(): void {
 		this.selectFieldMappingForm.get('fieldMapping').valueChanges.subscribe(
 			(id_mapping) => {
 				if (id_mapping) {
-					this.getMappingFields(id_mapping);
+					this.getUsersMapping(id_mapping);
 				} else {
 					this.syntheseForm.reset();
-					this.colSelect();
+					this.getSelectedOptions();
 				}
 			},
 			(err) => {
@@ -292,7 +290,7 @@ export class ImportProcessComponent implements OnInit {
 	}
 
 	createMapping() {
-		this.selectFieldMappingForm.controls['fieldMapping'].setValue('');
+		this.selectFieldMappingForm.reset();
 		this.newMapping = true;
 	}
 
@@ -326,10 +324,10 @@ export class ImportProcessComponent implements OnInit {
 	}
 
 	onSelect() {
-		this.colSelect();
+		this.getSelectedOptions();
 	}
 
-	colSelect() {
+	getSelectedOptions() {
 		let formValues = this.syntheseForm.value;
 		this.columns.map((col) => {
 			if (formValues) {

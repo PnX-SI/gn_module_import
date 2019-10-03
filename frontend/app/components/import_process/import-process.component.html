@@ -101,11 +101,11 @@
                             <legend class="px-1">
                                 Choix du mapping
                             </legend>
-                            <div *ngIf="userFieldMappingsResponse" class="form-group">
+                            <div *ngIf="userFieldMapping" class="form-group">
                                 <select class="form-control form-control-sm" id="fieldMappingSelection"
                                     formControlName="fieldMapping">
                                     <option selected [value]=""> </option>
-                                    <option *ngFor="let data of userFieldMappingsResponse" [value]="data.id_mapping">
+                                    <option *ngFor="let data of userFieldMapping" [value]="data.id_mapping">
                                         {{data.mapping_label}}</option>
                                 </select>
                             </div>
