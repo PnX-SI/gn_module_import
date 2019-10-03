@@ -1053,8 +1053,8 @@ def getSyntheseInfo(info_role):
 
         data = DB.session.execute(
             "SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
-                     FROM INFORMATION_SCHEMA.COLUMNS\
-                     WHERE table_name = 'synthese';"
+             FROM INFORMATION_SCHEMA.COLUMNS\
+             WHERE table_name = 'synthese';"
         )
 
         for d in data:

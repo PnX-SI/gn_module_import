@@ -63,8 +63,8 @@ CREATE TABLE t_mappings_values(
   id_match_values serial NOT NULL,
   id_mapping integer NOT NULL,
   id_type_mapping integer NOT NULL,
-  !!! source_value character varying(255),
-  !!! id_target_value integer
+  source_value character varying(255),
+  id_target_value integer
 );
 
 
@@ -169,7 +169,7 @@ INSERT INTO user_errors (id_error, error_type, name, description) VALUES
 	(8, 'inconsistency error', 'count_min > count_max', 'count_min > count_max'),
 	(9, 'invalid value', 'invalid cd_nom', 'cd_nom invalide (absent de TaxRef)'),
 	(10, 'inconsistency error', 'altitude min > altitude max', 'altitude min > altitude max'),
-	(11, 'duplicates error', 'entitiy_source_pk_value duplicates', 'des valeurs de entity_source_pk_value ne sont pas uniques');
+	(11, 'duplicates error', 'entitiy_source_pk_value duplicates', 'des valeurs de entity_source_pk_value ne sont pas uniques'),
 	(12, 'invalid type error', 'invalid real type', 'type real invalide'),
 	(13, 'inconsistency_error', 'inconsistent geographic coordinate', 'coordonnée géographique incohérente');
 

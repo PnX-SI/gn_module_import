@@ -161,7 +161,7 @@ export class ImportProcessComponent implements OnInit {
 				this.dataCleaningErrors = this.mappingResponse['user_error_details'];
 				this.step2_btn = true;
 				this.isFullErrorCheck(this.mappingResponse['n_table_rows'], this.n_error_lines);
-				stepper.next();
+                stepper.next();
 			},
 			(error) => {
 				this.isUploading = false;
