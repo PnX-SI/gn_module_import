@@ -5,7 +5,7 @@
         </mat-spinner>
     </div>
     <mat-horizontal-stepper linear #stepper>
-        <mat-step label="Upload du fichier" [stepControl]="uploadForm" >
+        <mat-step label="Upload du fichier" [stepControl]="uploadForm">
             <!-- STEP 1 -->
             <div class="card">
                 <div class="card-header">
@@ -99,19 +99,23 @@
                     <form [formGroup]="selectFieldMappingForm" class="was-validated">
                         <fieldset>
                             <legend class="px-1">
-                                    Choix du mapping
+                                Choix du mapping
                             </legend>
-                            <div *ngIf="userFieldMappingsResponse" class="form-group">
-                                <select class="form-control form-control-sm" id="fieldMappingSelection" formControlName="fieldMapping">
+                            <div *ngIf="userFieldMapping" class="form-group">
+                                <select class="form-control form-control-sm" id="fieldMappingSelection"
+                                    formControlName="fieldMapping">
                                     <option selected [value]=""> </option>
-                                    <option *ngFor="let data of userFieldMappingsResponse" [value]="data.id_mapping">{{data.mapping_label}}</option>
+                                    <option *ngFor="let data of userFieldMapping" [value]="data.id_mapping">
+                                        {{data.mapping_label}}</option>
                                 </select>
                             </div>
-                            <button class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between"
+                            <button
+                                class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between"
                                 (click)="createMapping()">
                                 Nouveau mapping
                             </button>
-                            <div *ngIf="newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
+                            <div *ngIf="newMapping" class="d-flex flex-row justify-content-between form_group"
+                                id="newMap">
                                 <input type="text" class="form-control" value="Inconnu" formControlName="mappingName">
                                 <button
                                     class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
@@ -140,10 +144,10 @@
                                             <small>{{field.label}} :</small>
                                             <select class="form-control form-control-sm" id="{{field.label}}"
                                                 placeholder="Open this select menu" formControlName="{{field.name}}"
-                                                [required]=field.required>
-                                                <option selected [value]=""> </option>
-                                                <option selected >{{syntheseForm.value[field.name]}}</option>
-                                                <option *ngFor="let column of columns" [value]="column">{{column}}
+                                                (change)="onSelect()" [required]=field.required>
+                                                <option *ngFor="let column of columns"
+                                                    [class.isSelected]="column.selected" [value]="column.id">
+                                                    {{column.id}}
                                                 </option>
                                             </select>
                                             <div *ngIf="field.required"
@@ -155,9 +159,7 @@
                                 </div>
                             </fieldset>
                         </div>
-
                         <br>
-
                         <div class="d-flex flex-row justify-content-between">
                             <button
                                 class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
@@ -172,23 +174,22 @@
                             </button>
                             <button
                                 class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                                 (click)="onMapping(syntheseForm.value, stepper, id_mapping)">
+                                (click)="onMapping(syntheseForm.value, stepper, id_mapping)">
                                 Valider le mapping
                             </button>
                             <button
                                 class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                                 [disabled]="!step2_btn || isFullError">
                                 Suivant
-                            <i class="material-icons"> navigate_next </i>
+                                <i class="material-icons"> navigate_next </i>
                             </button>
                         </div>
-
                     </form>
 
                     <!-- Error list in table -->
                     <br>
                     <div id="dataCleaningErrorList" *ngIf="isErrorButtonClicked">
-                        
+
                         <div> Attention, des erreurs ont été détectées dans le fichier : </div>
                         <table>
                             <thead>
@@ -210,7 +211,7 @@
                                 </tr>
                             </tbody>
                         </table>
-                        
+
                     </div>
 
                 </div>
