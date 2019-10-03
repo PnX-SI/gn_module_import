@@ -38,7 +38,7 @@ def is_uuid(value, version=4):
 
 
 @checker('Data cleaning : type of values checked')
-def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_values):
+def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_values, SINP_COLS):
 
     try:
 
@@ -142,6 +142,11 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
         if 'integer' in types:
 
             int_cols = [field for field in synthese_info if synthese_info[field]['data_type'] == 'integer']
+
+            SINP_synthese_cols = [nomenclature['synthese_col'] for nomenclature in SINP_COLS]
+            for int_col in int_cols:
+                if int_col in SINP_synthese_cols:
+                    int_cols.remove(int_col)
 
             if 'cd_nom' in int_cols: # voir si on garde (idealement faudrait plutot adapter clean_cd_nom)
                 int_cols.remove('cd_nom')

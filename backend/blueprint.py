@@ -683,6 +683,7 @@ def postMapping(info_role, import_id, id_mapping):
         DEFAULT_COUNT_VALUE = blueprint.config['DEFAULT_COUNT_VALUE']
         MODULE_URL = blueprint.config["MODULE_URL"]
         DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
+        SINP_COLS = blueprint.config['SINP_SYNTHESE_NOMENCLATURES']
 
         index_col = ''.join([PREFIX,'pk'])
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
@@ -748,7 +749,7 @@ def postMapping(info_role, import_id, id_mapping):
 
             partition = df.get_partition(i)
             partition_df = compute_df(partition)
-            transform_errors = data_cleaning(partition_df, import_id, selected_columns, dc_user_errors, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid, is_generate_uuid)
+            transform_errors = data_cleaning(partition_df, import_id, selected_columns, dc_user_errors, MISSING_VALUES, DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid, is_generate_uuid, SINP_COLS)
 
             if len(transform_errors['user_errors']) > 0:
                 for error in transform_errors['user_errors']:
@@ -911,9 +912,89 @@ def postMapping(info_role, import_id, id_mapping):
 
         logger.info('*** END CORRESPONDANCE MAPPING')
         
+        n_table_rows = get_row_number(table_names['imports_full_table_name'])
+
+
+        ### GET NOMENCLATURES INFO
+
+        # get list of synthese column names dealing with SINP nomenclatures
+        selected_SINP_nomenc = [nomenclature['nomenclature_abb'] for nomenclature in SINP_COLS\
+                                if nomenclature['synthese_col'] in selected_columns.keys()]
+
+        front_info = []
+
+        for nomenc in selected_SINP_nomenc:
+
+            # get nomenclature name and id
+            nomenc_info = DB.session.execute("""
+                SELECT 
+                    label_default as name,
+                    id_type as id
+                FROM ref_nomenclatures.bib_nomenclatures_types
+                WHERE mnemonique = {nomenc};"""\
+                    .format(nomenc = QuotedString(nomenc)))\
+                    .fetchone()
+
+            # get nomenclature values
+            nomenc_values = DB.session.execute("""
+                SELECT 
+                    nom.label_default AS nomenc_values, 
+                    nom.definition_default AS nomenc_definitions
+                FROM ref_nomenclatures.bib_nomenclatures_types AS bib
+                JOIN ref_nomenclatures.t_nomenclatures AS nom ON nom.id_type = bib.id_type
+                WHERE bib.mnemonique = {nomenc};"""\
+                    .format(nomenc = QuotedString(nomenc)))\
+                    .fetchall()
+
+            val_def_list = []
+            for val in nomenc_values:
+                d = {
+                    'value' : val.nomenc_values,
+                    'definition' : val.nomenc_definitions
+                }
+                val_def_list.append(d)
+
+            # get user_nomenclature column name and values
+            for col in SINP_COLS:
+                if col['nomenclature_abb'] == nomenc:
+                    user_nomenc_col = col['synthese_col']
+
+            nomenc_user_values = DB.session.execute("""
+                SELECT DISTINCT {user_nomenc_col} as user_val
+                FROM {schema_name}.{table_name};"""\
+                    .format(
+                        user_nomenc_col = selected_columns[user_nomenc_col],
+                        schema_name = IMPORTS_SCHEMA_NAME,
+                        table_name = table_names['imports_table_name']))\
+                    .fetchall()
+
+            user_values_list = [val.user_val for val in nomenc_user_values] 
+
+            d = {
+                    nomenc : {
+                        'nomenc_id' : nomenc_info.id,
+                        'nomenc_name' : nomenc_info.name,
+                        'nomenc_values_def' : val_def_list,
+                        'user_values' : {
+                            'column_name' : selected_columns[user_nomenc_col],
+                            'values' : user_values_list
+                        }
+                    }
+                }
+            front_info.append(d)
+
+
         """
-        ### importer les données dans synthese
+        ### IMPORT DATA IN SYNTHESE TABLE
+
         #selected_columns = {key:value for key, value in data.items() if value}
+
+        total_columns = {**selected_columns, **added_cols}
+        pdb.set_trace()
+        #enlever les longitudes et latitudes
+
+
+
 
         selected_synthese_cols = ','.join(selected_columns.keys())
         selected_user_cols = ','.join(selected_columns.values())
@@ -921,19 +1002,20 @@ def postMapping(info_role, import_id, id_mapping):
 
         # ok ça marche
         print('fill synthese')
-        #DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid=TRUE;".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
-        #INSERT INTO gn_synthese.synthese (cd_nom,nom_cite,date_min,date_max, the_geom_4326) SELECT species_id::integer,nom_scientifique,gn_timestamp::timestamp,gn_timestamp::timestamp,the_geom_4326::geometry FROM gn_imports.i_data_pf_observado_original_447 WHERE gn_is_valid=TRUE;
+        #DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid='True';".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
+        #INSERT INTO gn_synthese.synthese (cd_nom,nom_cite,date_min,date_max, the_geom_4326) SELECT species_id::integer,nom_scientifique,gn_timestamp::timestamp,gn_timestamp::timestamp,the_geom_4326::geometry FROM gn_imports.i_data_pf_observado_original_447 WHERE gn_is_valid='True';
         print('synthese filled')
         DB.session.commit()      
         DB.session.close()
         """
 
-        n_table_rows = get_row_number(table_names['imports_full_table_name'])
+
 
         return {
             'user_error_details' : error_report,
             'n_user_errors' : n_invalid_rows,
-            'n_table_rows': n_table_rows
+            'n_table_rows' : n_table_rows,
+            'content_mapping_info' : front_info
         }
 
     except Exception as e:
