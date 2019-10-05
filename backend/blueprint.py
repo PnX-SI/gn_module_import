@@ -645,6 +645,10 @@ def postMapping(info_role, import_id, id_mapping):
         ### SAVE MAPPING ###
 
         for col in data:
+            if data[col] == 'null':
+                source = ''
+            else:
+                source = data[col]
             my_query = DB.session.query(TMappingsFields)\
                 .filter(TMappingsFields.id_mapping == id_mapping)\
                 .filter(TMappingsFields.target_field == col).all()
@@ -703,7 +707,7 @@ def postMapping(info_role, import_id, id_mapping):
 
 
         # get synthese fields filled in the user form:
-        selected_columns = {key:value for key, value in data.items() if value}
+        selected_columns = {key:value for key, value in data.items() if value != 'null'}
         selected_user_cols = [*list(selected_columns.values())]
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 

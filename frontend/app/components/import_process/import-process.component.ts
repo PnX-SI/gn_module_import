@@ -162,6 +162,7 @@ export class ImportProcessComponent implements OnInit {
 				this.step2_btn = true;
 				this.isFullErrorCheck(this.mappingResponse['n_table_rows'], this.n_error_lines);
                 stepper.next();
+                console.log(this.mappingResponse);
 			},
 			(error) => {
 				this.isUploading = false;
