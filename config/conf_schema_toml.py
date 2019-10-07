@@ -87,7 +87,7 @@ SINP_SYNTHESE_NOMENCLATURES = [
     },
     {
         'synthese_col': 'id_nomenclature_valid_status',
-        'nomenclature_abb': 'PREUVE_EXIST'
+        'nomenclature_abb': 'STATUT_VALID'
     },
     {
         'synthese_col': 'id_nomenclature_diffusion_level',

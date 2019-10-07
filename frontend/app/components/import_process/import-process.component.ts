@@ -29,7 +29,7 @@ export class ImportProcessComponent implements OnInit {
 	public n_error_lines;
 	public isErrorButtonClicked: boolean = false;
 	public dataCleaningErrors;
-	public isFullError = false;
+	public isFullError: boolean = true;
 	public userFieldMapping;
 	public mappingFieldNameResponse;
 	public newMapping: boolean = false;
@@ -169,6 +169,7 @@ export class ImportProcessComponent implements OnInit {
 				this.isFullErrorCheck(this.mappingResponse['n_table_rows'], this.n_error_lines);
                 stepper.next();
                 console.log(this.mappingResponse);
+                console.log(this.isFullError);
 			},
 			(error) => {
 				this.isUploading = false;
@@ -380,6 +381,8 @@ export class ImportProcessComponent implements OnInit {
 	isFullErrorCheck(n_table_rows, n_errors) {
 		if (n_table_rows == n_errors) {
 			this.isFullError = true;
-		}
+		} else {
+            this.isFullError = false;
+        }
 	}
 }

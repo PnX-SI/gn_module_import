@@ -5,6 +5,7 @@ from ...logs import logger
 
 from ...db.queries.nomenclatures import get_nomenc_details, get_nomenc_values, get_nomenc_user_values
 
+import pdb
 
 def get_nomenc_info(form_data, SINP_COLS, schema_name):
 
