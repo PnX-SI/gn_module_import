@@ -179,7 +179,8 @@
                             </button>
                             <button
                                 class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                                [disabled]="!step2_btn || isFullError">
+                                [disabled]="!step2_btn || isFullError"
+                                (click)="onStep3()">
                                 Suivant
                                 <i class="material-icons"> navigate_next </i>
                             </button>

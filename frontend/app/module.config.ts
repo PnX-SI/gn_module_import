@@ -18,7 +18,7 @@ export const ModuleConfig = {
   "the_geom_local",
   "last_action"
  ],
- "ID_MODULE": 5,
+ "ID_MODULE": 15,
  "IMPORTS_SCHEMA_NAME": "gn_imports",
  "LIST_COLUMNS_FRONTEND": [
   {
@@ -127,6 +127,11 @@ export const ModuleConfig = {
      "label": "Latitude (coord y)",
      "name": "latitude",
      "required": true
+    },
+    {
+     "label": "Altitude max",
+     "name": "altitude_max",
+     "required": false
     },
     {
      "label": "Observateur(s)",
@@ -367,7 +372,7 @@ export const ModuleConfig = {
    "synthese_col": "id_nomenclature_exist_proof"
   },
   {
-   "nomenclature_abb": "PREUVE_EXIST",
+   "nomenclature_abb": "STATUT_VALID",
    "synthese_col": "id_nomenclature_valid_status"
   },
   {

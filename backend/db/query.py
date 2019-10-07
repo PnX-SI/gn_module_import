@@ -24,12 +24,13 @@ from ..wrappers import checker
 import pdb
 
 
-def get_table_info(table_name,info='all'):
+def get_table_info(table_name, info='all'):
     try:
-        table_info = DB.session.execute(\
-            "SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
+        table_info = DB.session.execute("""
+            SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
             FROM INFORMATION_SCHEMA.COLUMNS\
-            WHERE table_name = {};".format(QuotedString(table_name))\
+            WHERE table_name = {};"""\
+                .format(QuotedString(table_name))\
         )
 
         if info == 'all':
@@ -79,10 +80,11 @@ def get_table_list(schema_name):
     """
     
     try:
-        table_names = DB.session.execute(\
-            "SELECT table_name \
-             FROM information_schema.tables \
-             WHERE table_schema={schema};".format(schema=QuotedString(schema_name))\
+        table_names = DB.session.execute("""
+            SELECT table_name \
+            FROM information_schema.tables \
+            WHERE table_schema={schema};"""\
+                .format(schema=QuotedString(schema_name))\
         ) 
         table_names = [table.table_name for table in table_names]
         return table_names
@@ -181,8 +183,12 @@ def delete_tables(id, archives_schema, imports_schema):
             try:
                 if int(table_name.split('_')[-1]) == id:
                     imports_table_name = set_imports_table_name(table_name)
-                    DB.session.execute("DROP TABLE {}".format(get_full_table_name(archives_schema,table_name)))
-                    DB.session.execute("DROP TABLE {}".format(get_full_table_name(imports_schema,imports_table_name)))
+                    DB.session.execute("""
+                        DROP TABLE {}"""\
+                            .format(get_full_table_name(archives_schema,table_name)))
+                    DB.session.execute("""
+                        DROP TABLE {}"""\
+                            .format(get_full_table_name(imports_schema,imports_table_name)))
             except ValueError:
                 pass
 
@@ -250,8 +256,18 @@ def set_imports_table_name(table_name):
 
 
 def check_row_number(id,loaded_table):
-    n_original_rows = DB.session.execute("SELECT source_count FROM gn_imports.t_imports WHERE id_import={};".format(id)).fetchone()[0]
-    n_loaded_rows = DB.session.execute("SELECT count(*) FROM {}".format(loaded_table)).fetchone()[0]
+
+    n_original_rows = DB.session.execute("""
+        SELECT source_count 
+        FROM gn_imports.t_imports 
+        WHERE id_import={};"""\
+            .format(id)).fetchone()[0]
+
+    n_loaded_rows = DB.session.execute("""
+        SELECT count(*) 
+        FROM {}"""\
+            .format(loaded_table)).fetchone()[0]
+
     if n_original_rows != n_loaded_rows:
         return False
     else:
@@ -262,24 +278,30 @@ def get_synthese_info(selected_synthese_cols):
     formated_selected_synthese_cols = '\',\''.join(selected_synthese_cols)
     formated_selected_synthese_cols = '{}{}{}'.format('(\'',formated_selected_synthese_cols,'\')')
 
-    synthese_info = DB.session.execute(\
-        "SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
-         FROM INFORMATION_SCHEMA.COLUMNS\
-         WHERE table_name = 'synthese'\
-         AND column_name IN {};"\
-         .format(formated_selected_synthese_cols)\
+    synthese_info = DB.session.execute("""
+        SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
+        FROM INFORMATION_SCHEMA.COLUMNS\
+        WHERE table_name = 'synthese'\
+        AND column_name IN {};"""\
+            .format(formated_selected_synthese_cols)\
     ).fetchall()
 
-    my_dict = {d[0] : {'is_nullable':d[1],'column_default':d[2],'data_type':d[3],'character_max_length':d[4]} for d in synthese_info}
+    my_dict = {
+        d[0] : {
+            'is_nullable':d[1],
+            'column_default':d[2],
+            'data_type':d[3],
+            'character_max_length':d[4]
+            } for d in synthese_info}
 
     return my_dict
 
 
 def get_synthese_types():
-    synthese_info = DB.session.execute(\
-        "SELECT data_type\
-         FROM INFORMATION_SCHEMA.COLUMNS\
-         WHERE table_name = 'synthese';"
+    synthese_info = DB.session.execute("""
+        SELECT data_type\
+        FROM INFORMATION_SCHEMA.COLUMNS\
+        WHERE table_name = 'synthese';"""
     ).fetchall()
 
     types = [d.data_type for d in synthese_info]
@@ -301,51 +323,37 @@ def load_csv_to_db(full_path, cur, full_table_name, separator, columns):
 
 
 def get_row_number(full_table_name):
-    nrows = DB.session.execute("SELECT count(*) AS count_1 FROM {};".format(full_table_name)).scalar()
+    nrows = DB.session.execute("""
+        SELECT count(*) AS count_1 
+        FROM {};"""\
+            .format(full_table_name)).scalar()
     DB.session.close()
     return nrows
 
 
 def get_user_error(description):
-    error = DB.session.execute("SELECT * FROM gn_imports.user_errors WHERE name = {};".format(QuotedString(description))).fetchone()
+    error = DB.session.execute("""
+        SELECT * FROM gn_imports.user_errors 
+        WHERE name = {};"""\
+            .format(QuotedString(description))).fetchone()
     DB.session.close()
     return error
 
 
 def get_local_srid():
-    local_srid = DB.session.execute("""SELECT parameter_value FROM gn_commons.t_parameters WHERE parameter_name = 'local_srid';""").fetchone()[0]
+    local_srid = DB.session.execute("""
+        SELECT parameter_value 
+        FROM gn_commons.t_parameters 
+        WHERE parameter_name = 'local_srid';
+        """).fetchone()[0]
     DB.session.close()
     return int(local_srid)
 
 
-def generate_altitudes(schema, table, alt_col, table_pk, geom_col):
-    DB.session.execute("""
-        UPDATE {schema}.{table} as T
-        SET {alt_col} = 
-            CASE WHEN (COALESCE({alt_col}, '') = '') 
-                THEN (
-                    SELECT (ref_geo.fct_get_altitude_intersection({geom_col})).altitude_min::text
-                    FROM {schema}.{table}
-                    WHERE {table_pk} = T.{table_pk}
-                    )
-                ELSE T.{alt_col}
-            END
-    """.format(
-        schema = schema, 
-        table = table, 
-        alt_col = alt_col, 
-        table_pk = table_pk,
-        geom_col = geom_col
-        )
-    )
-
-
-def create_column(full_table_name, alt_col):
-    DB.session.execute("""
-        ALTER TABLE {full_table_name} 
-        ADD COLUMN {alt_col} text"""\
-        .format(
-            full_table_name=full_table_name, 
-            alt_col=alt_col
-        )
-    )
+def get_cd_nom_list():
+    cd_nom_taxref = DB.session.execute("""
+            SELECT cd_nom
+            FROM taxonomie.taxref""")
+    cd_nom_list = [str(row.cd_nom) for row in cd_nom_taxref]
+    DB.session.close()
+    return cd_nom_list

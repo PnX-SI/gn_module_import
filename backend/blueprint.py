@@ -72,22 +72,41 @@ from .db.query import (
     get_row_number,
     check_row_number,
     get_local_srid,
-    generate_altitudes,
-    create_column
+    get_cd_nom_list
 )
+
+from .db.queries.user_table_queries import (
+    delete_table,
+    rename_table,
+    set_primary_key,
+    alter_column_type
+)
+
+from .db.queries.save_mapping import save_field_mapping
 
 from .utils.clean_names import*
 from .utils.utils import create_col_name
+
 from .upload.upload_process import upload
 from .upload.upload_errors import*
+
 from .goodtables_checks.check_user_file import check_user_file
+
 from .transform.transform import data_cleaning
+from .transform.set_geometry import set_geometry
+from .transform.set_altitudes import set_altitudes
+from .transform.nomenclatures.nomenclatures import get_nomenc_info
+
 from .logs import logger
+
 from .api_error import GeonatureImportApiError
+
 from .extract.extract import extract
+
 from .load.load import load
-from .wrappers import checker
 from .load.utils import compute_df
+
+from .wrappers import checker
 
 import pdb
 
@@ -96,7 +115,7 @@ blueprint = Blueprint('import', __name__)
 
 @blueprint.errorhandler(GeonatureImportApiError)
 def handle_geonature_import_api(error):
-    response = jsonify(error.to_dict())
+    response = jsonify(error.mappingFto_dict())
     response.status_code = error.status_code
     return response
 
@@ -642,32 +661,12 @@ def postMapping(info_role, import_id, id_mapping):
         data.pop('stepper')
         data.pop('srid')
 
+
         ### SAVE MAPPING ###
 
-        for col in data:
-            my_query = DB.session.query(TMappingsFields)\
-                .filter(TMappingsFields.id_mapping == id_mapping)\
-                .filter(TMappingsFields.target_field == col).all()
-            if len(my_query) > 0:
-                for q in my_query:
-                    DB.session.query(TMappingsFields)\
-                        .filter(TMappingsFields.id_match_fields == q.id_match_fields)\
-                        .update({
-                            TMappingsFields.id_mapping: int(id_mapping),
-                            TMappingsFields.source_field: data[col],
-                            TMappingsFields.target_field: col
-                        })
-                    DB.session.commit()
-                    DB.session.close()
-            else:
-                new_fields = TMappingsFields(
-                    id_mapping = int(id_mapping),
-                    source_field = data[col],
-                    target_field = col
-                )
-                DB.session.add(new_fields)
-                DB.session.commit()
-                DB.session.close()
+        #!! create a route for mapping (make promise in front)
+        logger.info('save field mapping')
+        save_field_mapping(data, id_mapping)
 
 
         ### INITIALIZE VARIABLES
@@ -716,11 +715,7 @@ def postMapping(info_role, import_id, id_mapping):
         
 
         # get cd_nom list
-        cd_nom_taxref = DB.session.execute(\
-            "SELECT cd_nom \
-             FROM taxonomie.taxref")
-        cd_nom_list = [str(row.cd_nom) for row in cd_nom_taxref]
-        DB.session.close()
+        cd_nom_list = get_cd_nom_list()
 
 
         ### TRANSFORM (data checking and cleaning)
@@ -786,100 +781,23 @@ def postMapping(info_role, import_id, id_mapping):
                 error['n_errors'] = int(error['n_errors'])
                 error_report.append(error)
 
-        # set gn_pk as primary key:
-        DB.session.execute("DROP TABLE {};"\
-            .format(table_names['imports_full_table_name']))
+        # delete original table
+        delete_table(table_names['imports_full_table_name'])
 
-        DB.session.execute("""
-            ALTER TABLE {}.{} 
-            RENAME TO {};"""\
-                .format(
-                    IMPORTS_SCHEMA_NAME, 
-                    temp_table_name, 
-                    table_names['imports_table_name']))
+        # rename temp table with original table name
+        rename_table(IMPORTS_SCHEMA_NAME, temp_table_name, table_names['imports_table_name'])
 
-        DB.session.execute("""
-            ALTER TABLE ONLY {}.{} 
-            ADD CONSTRAINT pk_{}_{} PRIMARY KEY ({});"""\
-                .format(
-                    IMPORTS_SCHEMA_NAME, 
-                    table_names['imports_table_name'], 
-                    table_names['imports_table_name'], 
-                    IMPORTS_SCHEMA_NAME, 
-                    index_col))
+        # set primary key
+        set_primary_key(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], index_col)
 
-        DB.session.execute("""
-            ALTER TABLE {schema}.{table_name}
-            ALTER COLUMN {col_name} TYPE integer USING {col_name}::integer;"""\
-                .format(
-                    schema = IMPORTS_SCHEMA_NAME, 
-                    table_name = table_names['imports_table_name'],
-                    col_name = index_col
-                ))
+        # alter primary key type into integer
+        alter_column_type(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], index_col, 'integer')
 
-        start = datetime.datetime.now()
-        logger.info('creating postgis from wkt:')
-        # create geom_4326
-        DB.session.execute("""
-            UPDATE {}.{} 
-            SET the_geom_4326 = ST_SetSRID(the_geom_4326, 4326);"""\
-                .format(
-                    IMPORTS_SCHEMA_NAME, 
-                    table_names['imports_table_name']))
-        # create geom_point
-        DB.session.execute("""
-            UPDATE {}.{} SET the_geom_point = ST_SetSRID(the_geom_point, 4326);"""\
-                .format(
-                    IMPORTS_SCHEMA_NAME, 
-                    table_names['imports_table_name']))
-        # create geom_local
-        DB.session.execute("""
-            UPDATE {}.{} 
-            SET the_geom_local = ST_SetSRID(the_geom_local, {});"""\
-                .format(
-                    IMPORTS_SCHEMA_NAME, 
-                    table_names['imports_table_name'], 
-                    local_srid))
-        end = datetime.datetime.now()
-        chrono = end-start
-        logger.info('wkt to postgis in %s secondes', chrono)
-
-
-        # calcul altitudes min
-        logger.info('calculating altitudes:')
-        start = datetime.datetime.now()
-
-        if is_generate_alt:
-
-            if 'altitude_min' not in selected_columns.keys():
-                create_col_name(df, selected_columns, 'altitude_min', 'gn_altitude_min', import_id)
-                create_column(
-                    full_table_name = table_names['imports_full_table_name'], 
-                    alt_col = selected_columns['altitude_min'])
-
-            generate_altitudes(
-                schema = IMPORTS_SCHEMA_NAME, 
-                table = table_names['imports_table_name'], 
-                alt_col = selected_columns['altitude_min'], 
-                table_pk = index_col,
-                geom_col = 'the_geom_local')
-
-            if 'altitude_max' not in selected_columns.keys():
-                create_col_name(df, selected_columns, 'altitude_max', 'gn_altitude_max', import_id)
-                create_column(
-                    full_table_name = table_names['imports_full_table_name'], 
-                    alt_col = selected_columns['altitude_max'])
-            
-            generate_altitudes(
-                schema = IMPORTS_SCHEMA_NAME, 
-                table = table_names['imports_table_name'], 
-                alt_col = selected_columns['altitude_max'], 
-                table_pk = index_col,
-                geom_col = 'the_geom_local')
-
-        end = datetime.datetime.now()
-        chrono = end-start
-        logger.info('altitudes calculated in %s secondes', chrono)
+        # calculate geometries and altitudes
+        set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid)
+        set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME, 
+                      table_names['imports_full_table_name'], table_names['imports_table_name'], 
+                      index_col, is_generate_alt)
 
 
         # check if df is fully loaded in postgresql table :
@@ -891,97 +809,24 @@ def postMapping(info_role, import_id, id_mapping):
                             lignes manquantes dans {} - refaire le matching'\
                     .format(table_names['imports_full_table_name']),
                 details='')
-        
 
-        """
-        ### UPDATE METADATA
-
-        DB.session.query(TImports)\
-            .filter(TImports.id_import==import_id)\
-            .update({
-                TImports.step: 3,
-                })
-        """
-
-
-        n_invalid_rows = DB.session.execute("SELECT count(*) FROM {} WHERE gn_is_valid = 'False';".format(table_names['imports_full_table_name'])).fetchone()[0]
+        # calculate number of invalid lines
+        n_invalid_rows = DB.session.execute("""
+            SELECT count(*) 
+            FROM {} WHERE gn_is_valid = 'False';
+            """.format(table_names['imports_full_table_name'])).fetchone()[0]
 
         
+        # check total number of lines
+        n_table_rows = get_row_number(table_names['imports_full_table_name'])
+
         DB.session.commit()
         DB.session.close()
 
         logger.info('*** END CORRESPONDANCE MAPPING')
         
-        n_table_rows = get_row_number(table_names['imports_full_table_name'])
 
 
-        ### GET NOMENCLATURES INFO
-
-        # get list of synthese column names dealing with SINP nomenclatures
-        selected_SINP_nomenc = [nomenclature['nomenclature_abb'] for nomenclature in SINP_COLS\
-                                if nomenclature['synthese_col'] in selected_columns.keys()]
-
-        front_info = []
-
-        for nomenc in selected_SINP_nomenc:
-
-            # get nomenclature name and id
-            nomenc_info = DB.session.execute("""
-                SELECT 
-                    label_default as name,
-                    id_type as id
-                FROM ref_nomenclatures.bib_nomenclatures_types
-                WHERE mnemonique = {nomenc};"""\
-                    .format(nomenc = QuotedString(nomenc)))\
-                    .fetchone()
-
-            # get nomenclature values
-            nomenc_values = DB.session.execute("""
-                SELECT 
-                    nom.label_default AS nomenc_values, 
-                    nom.definition_default AS nomenc_definitions
-                FROM ref_nomenclatures.bib_nomenclatures_types AS bib
-                JOIN ref_nomenclatures.t_nomenclatures AS nom ON nom.id_type = bib.id_type
-                WHERE bib.mnemonique = {nomenc};"""\
-                    .format(nomenc = QuotedString(nomenc)))\
-                    .fetchall()
-
-            val_def_list = []
-            for val in nomenc_values:
-                d = {
-                    'value' : val.nomenc_values,
-                    'definition' : val.nomenc_definitions
-                }
-                val_def_list.append(d)
-
-            # get user_nomenclature column name and values
-            for col in SINP_COLS:
-                if col['nomenclature_abb'] == nomenc:
-                    user_nomenc_col = col['synthese_col']
-
-            nomenc_user_values = DB.session.execute("""
-                SELECT DISTINCT {user_nomenc_col} as user_val
-                FROM {schema_name}.{table_name};"""\
-                    .format(
-                        user_nomenc_col = selected_columns[user_nomenc_col],
-                        schema_name = IMPORTS_SCHEMA_NAME,
-                        table_name = table_names['imports_table_name']))\
-                    .fetchall()
-
-            user_values_list = [val.user_val for val in nomenc_user_values] 
-
-            d = {
-                    nomenc : {
-                        'nomenc_id' : nomenc_info.id,
-                        'nomenc_name' : nomenc_info.name,
-                        'nomenc_values_def' : val_def_list,
-                        'user_values' : {
-                            'column_name' : selected_columns[user_nomenc_col],
-                            'values' : user_values_list
-                        }
-                    }
-                }
-            front_info.append(d)
 
 
         """
@@ -992,9 +837,6 @@ def postMapping(info_role, import_id, id_mapping):
         total_columns = {**selected_columns, **added_cols}
         pdb.set_trace()
         #enlever les longitudes et latitudes
-
-
-
 
         selected_synthese_cols = ','.join(selected_columns.keys())
         selected_user_cols = ','.join(selected_columns.values())
@@ -1009,13 +851,14 @@ def postMapping(info_role, import_id, id_mapping):
         DB.session.close()
         """
 
-
-
         return {
             'user_error_details' : error_report,
             'n_user_errors' : n_invalid_rows,
             'n_table_rows' : n_table_rows,
-            'content_mapping_info' : front_info
+            'import_id' : import_id,
+            'id_mapping' : id_mapping,
+            'selected_columns' : selected_columns,
+            'table_name' : table_names['imports_table_name']
         }
 
     except Exception as e:
@@ -1027,7 +870,10 @@ def postMapping(info_role, import_id, id_mapping):
         pdb.set_trace()
 
         n_loaded_rows = DB.session.execute(
-            "SELECT count(*) FROM {}".format(table_names['imports_full_table_name'])
+            """
+            SELECT count(*) 
+            FROM {};
+            """.format(table_names['imports_full_table_name'])
             ).fetchone()[0]
 
         if n_loaded_rows == 0:
@@ -1035,9 +881,54 @@ def postMapping(info_role, import_id, id_mapping):
             raise GeonatureImportApiError(\
                 message='INTERNAL SERVER ERROR :: Erreur pendant le mapping de correspondance :: Table {} vide à cause d\'une erreur de copie, refaire l\'upload et le mapping, ou contactez l\'administrateur du site'.format(table_names['imports_full_table_name']),
                 details='')
-    
+
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l\'administrateur',
+            details=str(e))
+
+
+@blueprint.route('/postMetaToStep3', methods=['GET', 'POST'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def postMetaToStep3(info_role):
+
+    try:
+
+        data = request.form.to_dict()
+        SINP_COLS = blueprint.config['SINP_SYNTHESE_NOMENCLATURES']
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+
+        nomenc_info = get_nomenc_info(data, SINP_COLS, IMPORTS_SCHEMA_NAME)
+
+
+        ### UPDATE TIMPORTS
+
+        logger.info('update t_imports from step 2 to step 3')
+        
+        DB.session.query(TImports)\
+            .filter(TImports.id_import==int(data['import_id']))\
+            .update({
+                TImports.step: 3,
+                TImports.id_mapping: int(data['id_mapping'])
+                })
+
+        DB.session.commit()
+        DB.session.close()
+
+        return {
+            'content_mapping_info' : nomenc_info
+        }
+
+    except Exception as e:
+        logger.error('*** ERROR IN STEP 2 NEXT BUTTON')
+        logger.exception(e)
+        DB.session.rollback()
+        DB.session.close()
+
+        pdb.set_trace()
+
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR : Erreur pendant le passage vers l\'étape 3 - contacter l\'administrateur',
             details=str(e))
 
 
@@ -1052,9 +943,11 @@ def getSyntheseInfo(info_role):
         synthese_info = []
 
         data = DB.session.execute(
-            "SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
-                     FROM INFORMATION_SCHEMA.COLUMNS\
-                     WHERE table_name = 'synthese';"
+            """
+            SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
+            FROM INFORMATION_SCHEMA.COLUMNS\
+            WHERE table_name = 'synthese';
+            """
         )
 
         for d in data:
