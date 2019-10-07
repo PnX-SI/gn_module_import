@@ -73,7 +73,8 @@ from .db.query import (
     check_row_number,
     get_local_srid,
     generate_altitudes,
-    create_column
+    create_column,
+    get_cd_nom_list
 )
 
 from .utils.clean_names import*
@@ -720,11 +721,7 @@ def postMapping(info_role, import_id, id_mapping):
         
 
         # get cd_nom list
-        cd_nom_taxref = DB.session.execute(\
-            "SELECT cd_nom \
-             FROM taxonomie.taxref")
-        cd_nom_list = [str(row.cd_nom) for row in cd_nom_taxref]
-        DB.session.close()
+        cd_nom_list = get_cd_nom_list()
 
 
         ### TRANSFORM (data checking and cleaning)
@@ -895,17 +892,6 @@ def postMapping(info_role, import_id, id_mapping):
                             lignes manquantes dans {} - refaire le matching'\
                     .format(table_names['imports_full_table_name']),
                 details='')
-        
-
-        """
-        ### UPDATE METADATA
-
-        DB.session.query(TImports)\
-            .filter(TImports.id_import==import_id)\
-            .update({
-                TImports.step: 3,
-                })
-        """
 
 
         n_invalid_rows = DB.session.execute("SELECT count(*) FROM {} WHERE gn_is_valid = 'False';".format(table_names['imports_full_table_name'])).fetchone()[0]
@@ -919,73 +905,6 @@ def postMapping(info_role, import_id, id_mapping):
         n_table_rows = get_row_number(table_names['imports_full_table_name'])
 
 
-        ### GET NOMENCLATURES INFO
-
-        # get list of synthese column names dealing with SINP nomenclatures
-        selected_SINP_nomenc = [nomenclature['nomenclature_abb'] for nomenclature in SINP_COLS\
-                                if nomenclature['synthese_col'] in selected_columns.keys()]
-
-        front_info = []
-
-        for nomenc in selected_SINP_nomenc:
-
-            # get nomenclature name and id
-            nomenc_info = DB.session.execute("""
-                SELECT 
-                    label_default as name,
-                    id_type as id
-                FROM ref_nomenclatures.bib_nomenclatures_types
-                WHERE mnemonique = {nomenc};"""\
-                    .format(nomenc = QuotedString(nomenc)))\
-                    .fetchone()
-
-            # get nomenclature values
-            nomenc_values = DB.session.execute("""
-                SELECT 
-                    nom.label_default AS nomenc_values, 
-                    nom.definition_default AS nomenc_definitions
-                FROM ref_nomenclatures.bib_nomenclatures_types AS bib
-                JOIN ref_nomenclatures.t_nomenclatures AS nom ON nom.id_type = bib.id_type
-                WHERE bib.mnemonique = {nomenc};"""\
-                    .format(nomenc = QuotedString(nomenc)))\
-                    .fetchall()
-
-            val_def_list = []
-            for val in nomenc_values:
-                d = {
-                    'value' : val.nomenc_values,
-                    'definition' : val.nomenc_definitions
-                }
-                val_def_list.append(d)
-
-            # get user_nomenclature column name and values
-            for col in SINP_COLS:
-                if col['nomenclature_abb'] == nomenc:
-                    user_nomenc_col = col['synthese_col']
-
-            nomenc_user_values = DB.session.execute("""
-                SELECT DISTINCT {user_nomenc_col} as user_val
-                FROM {schema_name}.{table_name};"""\
-                    .format(
-                        user_nomenc_col = selected_columns[user_nomenc_col],
-                        schema_name = IMPORTS_SCHEMA_NAME,
-                        table_name = table_names['imports_table_name']))\
-                    .fetchall()
-
-            user_values_list = [val.user_val for val in nomenc_user_values] 
-
-            d = {
-                    nomenc : {
-                        'nomenc_id' : nomenc_info.id,
-                        'nomenc_name' : nomenc_info.name,
-                        'nomenc_values_def' : val_def_list,
-                        'user_values' : {
-                            'column_name' : selected_columns[user_nomenc_col],
-                            'values' : user_values_list
-                        }
-                    }
-                }
-            front_info.append(d)
 
 
         """
@@ -1019,7 +938,10 @@ def postMapping(info_role, import_id, id_mapping):
             'user_error_details' : error_report,
             'n_user_errors' : n_invalid_rows,
             'n_table_rows' : n_table_rows,
-            'content_mapping_info' : front_info
+            'import_id' : import_id,
+            'id_mapping' : id_mapping,
+            'selected_columns' : selected_columns,
+            'table_name' : table_names['imports_table_name']
         }
 
     except Exception as e:
@@ -1043,6 +965,104 @@ def postMapping(info_role, import_id, id_mapping):
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l\'administrateur',
             details=str(e))
+
+
+@blueprint.route('/postMetaToStep3', methods=['GET', 'POST'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def postMetaToStep3(info_role):
+
+    data = request.form.to_dict()
+    SINP_COLS = blueprint.config['SINP_SYNTHESE_NOMENCLATURES']
+    IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+
+
+    ### GET NOMENCLATURES INFO
+
+    # get list of synthese column names dealing with SINP nomenclatures
+    selected_SINP_nomenc = [nomenclature['nomenclature_abb'] for nomenclature in SINP_COLS\
+                            if nomenclature['synthese_col'] in data.keys()]
+
+    front_info = []
+
+    for nomenc in selected_SINP_nomenc:
+
+        # get nomenclature name and id
+        nomenc_info = DB.session.execute("""
+            SELECT 
+                label_default as name,
+                id_type as id
+            FROM ref_nomenclatures.bib_nomenclatures_types
+            WHERE mnemonique = {nomenc};"""\
+                .format(nomenc = QuotedString(nomenc)))\
+                .fetchone()
+
+        # get nomenclature values
+        nomenc_values = DB.session.execute("""
+            SELECT 
+                nom.label_default AS nomenc_values, 
+                nom.definition_default AS nomenc_definitions
+            FROM ref_nomenclatures.bib_nomenclatures_types AS bib
+            JOIN ref_nomenclatures.t_nomenclatures AS nom ON nom.id_type = bib.id_type
+            WHERE bib.mnemonique = {nomenc};"""\
+                .format(nomenc = QuotedString(nomenc)))\
+                .fetchall()
+
+        val_def_list = []
+        for val in nomenc_values:
+            d = {
+                'value' : val.nomenc_values,
+                'definition' : val.nomenc_definitions
+            }
+            val_def_list.append(d)
+
+        # get user_nomenclature column name and values
+        for col in SINP_COLS:
+            if col['nomenclature_abb'] == nomenc:
+                user_nomenc_col = col['synthese_col']
+
+        nomenc_user_values = DB.session.execute("""
+            SELECT DISTINCT {user_nomenc_col} as user_val
+            FROM {schema_name}.{table_name};"""\
+                .format(
+                    user_nomenc_col = data[user_nomenc_col],
+                    schema_name = IMPORTS_SCHEMA_NAME,
+                    table_name = data['table_name']))\
+                .fetchall()
+
+        user_values_list = [val.user_val for val in nomenc_user_values] 
+
+        d = {
+                nomenc : {
+                    'nomenc_id' : nomenc_info.id,
+                    'nomenc_name' : nomenc_info.name,
+                    'nomenc_values_def' : val_def_list,
+                    'user_values' : {
+                        'column_name' : data[user_nomenc_col],
+                        'values' : user_values_list
+                    }
+                }
+            }
+        front_info.append(d)
+
+
+    ### UPDATE TIMPORTS
+    
+    DB.session.query(TImports)\
+        .filter(TImports.id_import==int(data['import_id']))\
+        .update({
+            TImports.step: 3,
+            TImports.id_mapping: int(data['id_mapping'])
+            })
+
+    DB.session.commit()
+    DB.session.close()
+
+    return {
+        'content_mapping_info' : front_info
+    }
+
+
 
 
 @blueprint.route('/syntheseInfo', methods=['GET'])

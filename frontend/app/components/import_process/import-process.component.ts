@@ -22,7 +22,7 @@ export class ImportProcessComponent implements OnInit {
 	public selectFieldMappingForm: FormGroup;
 	public syntheseForm: FormGroup;
 	public synColumnNames;
-	private importId;
+	public importId;
 	public isUserError: boolean = false;
 	public userErrors;
 	public columns;
@@ -34,7 +34,8 @@ export class ImportProcessComponent implements OnInit {
 	public mappingFieldNameResponse;
 	public newMapping: boolean = false;
 	public id_mapping;
-	public user_srid;
+    public user_srid;
+    public step3Response;
 
 	//public impatient: boolean = false;
 	step1_btn: boolean = true;
@@ -47,6 +48,7 @@ export class ImportProcessComponent implements OnInit {
 		private toastr: ToastrService,
 		private _fb: FormBuilder
 	) {}
+
 
 	ngOnInit() {
 		this.uploadForm = this._fb.group({
@@ -78,12 +80,14 @@ export class ImportProcessComponent implements OnInit {
 		this.Formlistener();
 	}
 
+
 	onFileSelected(event) {
 		this.uploadForm.patchValue({
 			file: <File>event.target.files[0]
 		});
 		this.fileName = this.uploadForm.get('file').value.name;
 	}
+
 
 	cancelImport() {
 		this._ds.cancelImport(this.importId).subscribe(
@@ -105,6 +109,7 @@ export class ImportProcessComponent implements OnInit {
 			}
 		);
 	}
+
 
 	onUpload(value, stepper: MatStepper) {
 		this.isUploading = true;
@@ -150,6 +155,7 @@ export class ImportProcessComponent implements OnInit {
 		);
 	}
 
+
 	onMapping(value, stepper: MatStepper) {
 		this.isUploading = true;
 		this.user_srid = this.uploadForm.get('srid').value;
@@ -176,7 +182,29 @@ export class ImportProcessComponent implements OnInit {
 				}
 			}
 		);
-	}
+    }
+    
+
+    onStep3() {
+        this._ds.postMetaToStep3(this.importId, this.id_mapping, this.mappingResponse['selected_columns'], this.mappingResponse['table_name']).subscribe(
+			(res) => {
+                this.step3Response = res;
+                console.log(this.step3Response);
+			},
+			(error) => {
+				this.isUploading = false;
+				if (error.statusText === 'Unknown Error') {
+					// show error message if no connexion
+					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+				} else {
+					// show error message if other server error
+					this.isUserError = true;
+					this.userErrors = error.error;
+				}
+			}
+		);
+    }
+
 
 	onFinalStep() {
 		/*

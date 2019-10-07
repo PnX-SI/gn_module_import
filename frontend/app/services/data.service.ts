@@ -66,5 +66,18 @@ export class DataService {
 
 	delete_aborted_step1() {
 		return this._http.get<any>(`${urlApi}/delete_step1`);
-	}
+    }
+    
+    postMetaToStep3(import_id, id_mapping, selected_columns, table_name) {
+        console.log(import_id, id_mapping);
+        let fd = new FormData();
+        fd.append('import_id', import_id);
+        fd.append('id_mapping', id_mapping);
+        for (let key of Object.keys(selected_columns)) {
+            fd.append(key, selected_columns[key]);
+        }
+        fd.append('table_name', table_name);
+        return this._http.post<any>(`${urlApi}/postMetaToStep3`, fd, HttpUploadOptions);
+    }
+
 }
