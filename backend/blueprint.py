@@ -72,24 +72,31 @@ from .db.query import (
     get_row_number,
     check_row_number,
     get_local_srid,
-    generate_altitudes,
-    create_column,
     get_cd_nom_list
 )
 
 from .utils.clean_names import*
 from .utils.utils import create_col_name
+
 from .upload.upload_process import upload
 from .upload.upload_errors import*
+
 from .goodtables_checks.check_user_file import check_user_file
+
 from .transform.transform import data_cleaning
 from .transform.set_geometry import set_geometry
+from .transform.set_altitudes import set_altitudes
+
 from .logs import logger
+
 from .api_error import GeonatureImportApiError
+
 from .extract.extract import extract
+
 from .load.load import load
-from .wrappers import checker
 from .load.utils import compute_df
+
+from .wrappers import checker
 
 import pdb
 
@@ -820,42 +827,9 @@ def postMapping(info_role, import_id, id_mapping):
                 ))
 
         set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid)
-
-        # calcul altitudes min
-        logger.info('calculating altitudes:')
-        start = datetime.datetime.now()
-
-        if is_generate_alt:
-
-            if 'altitude_min' not in selected_columns.keys():
-                create_col_name(df, selected_columns, 'altitude_min', 'gn_altitude_min', import_id)
-                create_column(
-                    full_table_name = table_names['imports_full_table_name'], 
-                    alt_col = selected_columns['altitude_min'])
-
-            generate_altitudes(
-                schema = IMPORTS_SCHEMA_NAME, 
-                table = table_names['imports_table_name'], 
-                alt_col = selected_columns['altitude_min'], 
-                table_pk = index_col,
-                geom_col = 'the_geom_local')
-
-            if 'altitude_max' not in selected_columns.keys():
-                create_col_name(df, selected_columns, 'altitude_max', 'gn_altitude_max', import_id)
-                create_column(
-                    full_table_name = table_names['imports_full_table_name'], 
-                    alt_col = selected_columns['altitude_max'])
-            
-            generate_altitudes(
-                schema = IMPORTS_SCHEMA_NAME, 
-                table = table_names['imports_table_name'], 
-                alt_col = selected_columns['altitude_max'], 
-                table_pk = index_col,
-                geom_col = 'the_geom_local')
-
-        end = datetime.datetime.now()
-        chrono = end-start
-        logger.info('altitudes calculated in %s secondes', chrono)
+        set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME, 
+                      table_names['imports_full_table_name'], table_names['imports_table_name'], 
+                      index_col, is_generate_alt)
 
 
         # check if df is fully loaded in postgresql table :
@@ -1007,14 +981,13 @@ def postMetaToStep3(info_role):
             user_values_list = [val.user_val for val in nomenc_user_values] 
 
             d = {
-                    nomenc : {
-                        'nomenc_id' : nomenc_info.id,
-                        'nomenc_name' : nomenc_info.name,
-                        'nomenc_values_def' : val_def_list,
-                        'user_values' : {
-                            'column_name' : data[user_nomenc_col],
-                            'values' : user_values_list
-                        }
+                    'nomenc_abbr' : nomenc,
+                    'nomenc_id' : nomenc_info.id,
+                    'nomenc_name' : nomenc_info.name,
+                    'nomenc_values_def' : val_def_list,
+                    'user_values' : {
+                        'column_name' : data[user_nomenc_col],
+                        'values' : user_values_list
                     }
                 }
             front_info.append(d)
@@ -1022,9 +995,7 @@ def postMetaToStep3(info_role):
 
         ### UPDATE TIMPORTS
 
-        logger.info('update t_imports from step 2 to step 3 :')
-        logger.debug('- step : %s', data['import_id'])
-        logger.debug('- id mapping : %s', data['id_mapping'])
+        logger.info('update t_imports from step 2 to step 3')
         
         DB.session.query(TImports)\
             .filter(TImports.id_import==int(data['import_id']))\
