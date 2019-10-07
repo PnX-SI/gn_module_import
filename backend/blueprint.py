@@ -86,6 +86,7 @@ from .goodtables_checks.check_user_file import check_user_file
 from .transform.transform import data_cleaning
 from .transform.set_geometry import set_geometry
 from .transform.set_altitudes import set_altitudes
+from .transform.nomenclatures.nomenclatures import get_nomenc_info
 
 from .logs import logger
 
@@ -922,75 +923,7 @@ def postMetaToStep3(info_role):
         SINP_COLS = blueprint.config['SINP_SYNTHESE_NOMENCLATURES']
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
-
-        ### GET NOMENCLATURES INFO
-
-        logger.info('get nomenclature info')
-
-        # get list of synthese column names dealing with SINP nomenclatures
-        selected_SINP_nomenc = [nomenclature['nomenclature_abb'] for nomenclature in SINP_COLS\
-                                if nomenclature['synthese_col'] in data.keys()]
-
-        front_info = []
-
-        for nomenc in selected_SINP_nomenc:
-
-            # get nomenclature name and id
-            nomenc_info = DB.session.execute("""
-                SELECT 
-                    label_default as name,
-                    id_type as id
-                FROM ref_nomenclatures.bib_nomenclatures_types
-                WHERE mnemonique = {nomenc};"""\
-                    .format(nomenc = QuotedString(nomenc)))\
-                    .fetchone()
-
-            # get nomenclature values
-            nomenc_values = DB.session.execute("""
-                SELECT 
-                    nom.label_default AS nomenc_values, 
-                    nom.definition_default AS nomenc_definitions
-                FROM ref_nomenclatures.bib_nomenclatures_types AS bib
-                JOIN ref_nomenclatures.t_nomenclatures AS nom ON nom.id_type = bib.id_type
-                WHERE bib.mnemonique = {nomenc};"""\
-                    .format(nomenc = QuotedString(nomenc)))\
-                    .fetchall()
-
-            val_def_list = []
-            for val in nomenc_values:
-                d = {
-                    'value' : val.nomenc_values,
-                    'definition' : val.nomenc_definitions
-                }
-                val_def_list.append(d)
-
-            # get user_nomenclature column name and values
-            for col in SINP_COLS:
-                if col['nomenclature_abb'] == nomenc:
-                    user_nomenc_col = col['synthese_col']
-
-            nomenc_user_values = DB.session.execute("""
-                SELECT DISTINCT {user_nomenc_col} as user_val
-                FROM {schema_name}.{table_name};"""\
-                    .format(
-                        user_nomenc_col = data[user_nomenc_col],
-                        schema_name = IMPORTS_SCHEMA_NAME,
-                        table_name = data['table_name']))\
-                    .fetchall()
-
-            user_values_list = [val.user_val for val in nomenc_user_values] 
-
-            d = {
-                    'nomenc_abbr' : nomenc,
-                    'nomenc_id' : nomenc_info.id,
-                    'nomenc_name' : nomenc_info.name,
-                    'nomenc_values_def' : val_def_list,
-                    'user_values' : {
-                        'column_name' : data[user_nomenc_col],
-                        'values' : user_values_list
-                    }
-                }
-            front_info.append(d)
+        nomenc_info = get_nomenc_info(data, SINP_COLS, IMPORTS_SCHEMA_NAME)
 
 
         ### UPDATE TIMPORTS
@@ -1008,7 +941,7 @@ def postMetaToStep3(info_role):
         DB.session.close()
 
         return {
-            'content_mapping_info' : front_info
+            'content_mapping_info' : nomenc_info
         }
 
     except Exception as e:
@@ -1022,8 +955,6 @@ def postMetaToStep3(info_role):
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR : Erreur pendant le passage vers l\'étape 3 - contacter l\'administrateur',
             details=str(e))
-
-
 
 
 @blueprint.route('/syntheseInfo', methods=['GET'])
