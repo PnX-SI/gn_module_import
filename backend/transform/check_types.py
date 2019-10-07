@@ -144,39 +144,39 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
             int_cols = [field for field in synthese_info if synthese_info[field]['data_type'] == 'integer']
 
             SINP_synthese_cols = [nomenclature['synthese_col'] for nomenclature in SINP_COLS]
-            for int_col in int_cols:
-                if int_col in SINP_synthese_cols:
-                    int_cols.remove(int_col)
+                
 
             if 'cd_nom' in int_cols: # voir si on garde (idealement faudrait plutot adapter clean_cd_nom)
                 int_cols.remove('cd_nom')
 
             for col in int_cols:
 
-                logger.info('- checking integer type in %s synthese column (= %s user column)', col, selected_columns[col])
+                if col not in SINP_synthese_cols:
 
-                df[selected_columns[col]] = df[selected_columns[col]]\
-                    .replace(missing_values, np.nan) # utile?
+                    logger.info('- checking integer type in %s synthese column (= %s user column)', col, selected_columns[col])
 
-                df['temp'] = ''
-                df['temp'] = df['temp']\
-                    .where(
-                        cond=df[selected_columns[col]].astype('object').str.isnumeric(),
-                        other=False)\
-                    .where(
-                        cond=df[selected_columns[col]].notnull(), 
-                        other='')\
-                    .map(fill_map)\
-                    .astype('bool')
+                    df[selected_columns[col]] = df[selected_columns[col]]\
+                        .replace(missing_values, np.nan) # utile?
 
-                set_is_valid(df, 'temp')
-                set_invalid_reason(df, 'temp', 'invalid integer in {} column', selected_columns[col])
-                n_invalid_int = df['temp'].astype(str).str.contains('False').sum()
+                    df['temp'] = ''
+                    df['temp'] = df['temp']\
+                        .where(
+                            cond=df[selected_columns[col]].astype('object').str.isnumeric(),
+                            other=False)\
+                        .where(
+                            cond=df[selected_columns[col]].notnull(), 
+                            other='')\
+                        .map(fill_map)\
+                        .astype('bool')
 
-                logger.info('%s integer type errors detected in %s synthese column (= %s user column)', n_invalid_int, col, selected_columns[col])
+                    set_is_valid(df, 'temp')
+                    set_invalid_reason(df, 'temp', 'invalid integer in {} column', selected_columns[col])
+                    n_invalid_int = df['temp'].astype(str).str.contains('False').sum()
 
-                if n_invalid_int > 0:
-                    set_user_error(dc_user_errors, 1, selected_columns[col], n_invalid_int)  
+                    logger.info('%s integer type errors detected in %s synthese column (= %s user column)', n_invalid_int, col, selected_columns[col])
+
+                    if n_invalid_int > 0:
+                        set_user_error(dc_user_errors, 1, selected_columns[col], n_invalid_int)  
 
 
         # REAL TYPE COLUMNS :

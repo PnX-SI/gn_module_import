@@ -82,6 +82,8 @@ from .db.queries.user_table_queries import (
     alter_column_type
 )
 
+from .db.queries.save_mapping import save_field_mapping
+
 from .utils.clean_names import*
 from .utils.utils import create_col_name
 
@@ -659,37 +661,12 @@ def postMapping(info_role, import_id, id_mapping):
         data.pop('stepper')
         data.pop('srid')
 
+
         ### SAVE MAPPING ###
 
-        # create a route for mapping (make promise in front)
-        for col in data:
-            if col == 'null':
-                source = ''
-            else:
-                source = data[col]
-            my_query = DB.session.query(TMappingsFields)\
-                .filter(TMappingsFields.id_mapping == id_mapping)\
-                .filter(TMappingsFields.target_field == col).all()
-            if len(my_query) > 0:
-                for q in my_query:
-                    DB.session.query(TMappingsFields)\
-                        .filter(TMappingsFields.id_match_fields == q.id_match_fields)\
-                        .update({
-                            TMappingsFields.id_mapping: int(id_mapping),
-                            TMappingsFields.source_field: data[col],
-                            TMappingsFields.target_field: col
-                        })
-                    DB.session.commit()
-                    DB.session.close()
-            else:
-                new_fields = TMappingsFields(
-                    id_mapping = int(id_mapping),
-                    source_field = data[col],
-                    target_field = col
-                )
-                DB.session.add(new_fields)
-                DB.session.commit()
-                DB.session.close()
+        #!! create a route for mapping (make promise in front)
+        logger.info('save field mapping')
+        save_field_mapping(data, id_mapping)
 
 
         ### INITIALIZE VARIABLES
@@ -725,7 +702,7 @@ def postMapping(info_role, import_id, id_mapping):
 
 
         # get synthese fields filled in the user form:
-        selected_columns = {key:value for key, value in data.items() if value!= 'null'}
+        selected_columns = {key:value for key, value in data.items() if value}
         selected_user_cols = [*list(selected_columns.values())]
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
