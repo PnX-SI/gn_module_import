@@ -83,6 +83,7 @@ from .upload.upload_process import upload
 from .upload.upload_errors import*
 from .goodtables_checks.check_user_file import check_user_file
 from .transform.transform import data_cleaning
+from .transform.set_geometry import set_geometry
 from .logs import logger
 from .api_error import GeonatureImportApiError
 from .extract.extract import extract
@@ -818,33 +819,7 @@ def postMapping(info_role, import_id, id_mapping):
                     col_name = index_col
                 ))
 
-        start = datetime.datetime.now()
-        logger.info('creating postgis from wkt:')
-        # create geom_4326
-        DB.session.execute("""
-            UPDATE {}.{} 
-            SET the_geom_4326 = ST_SetSRID(the_geom_4326, 4326);"""\
-                .format(
-                    IMPORTS_SCHEMA_NAME, 
-                    table_names['imports_table_name']))
-        # create geom_point
-        DB.session.execute("""
-            UPDATE {}.{} SET the_geom_point = ST_SetSRID(the_geom_point, 4326);"""\
-                .format(
-                    IMPORTS_SCHEMA_NAME, 
-                    table_names['imports_table_name']))
-        # create geom_local
-        DB.session.execute("""
-            UPDATE {}.{} 
-            SET the_geom_local = ST_SetSRID(the_geom_local, {});"""\
-                .format(
-                    IMPORTS_SCHEMA_NAME, 
-                    table_names['imports_table_name'], 
-                    local_srid))
-        end = datetime.datetime.now()
-        chrono = end-start
-        logger.info('wkt to postgis in %s secondes', chrono)
-
+        set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid)
 
         # calcul altitudes min
         logger.info('calculating altitudes:')
@@ -916,9 +891,6 @@ def postMapping(info_role, import_id, id_mapping):
         pdb.set_trace()
         #enlever les longitudes et latitudes
 
-
-
-
         selected_synthese_cols = ','.join(selected_columns.keys())
         selected_user_cols = ','.join(selected_columns.values())
 
@@ -931,8 +903,6 @@ def postMapping(info_role, import_id, id_mapping):
         DB.session.commit()      
         DB.session.close()
         """
-
-
 
         return {
             'user_error_details' : error_report,
