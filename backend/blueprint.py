@@ -75,6 +75,13 @@ from .db.query import (
     get_cd_nom_list
 )
 
+from .db.queries.user_table_queries import (
+    delete_table,
+    rename_table,
+    set_primary_key,
+    alter_column_type
+)
+
 from .utils.clean_names import*
 from .utils.utils import create_col_name
 
@@ -654,6 +661,7 @@ def postMapping(info_role, import_id, id_mapping):
 
         ### SAVE MAPPING ###
 
+        # create a route for mapping (make promise in front)
         for col in data:
             if data[col] == 'null':
                 source = ''
@@ -796,37 +804,19 @@ def postMapping(info_role, import_id, id_mapping):
                 error['n_errors'] = int(error['n_errors'])
                 error_report.append(error)
 
-        # set gn_pk as primary key:
-        DB.session.execute("DROP TABLE {};"\
-            .format(table_names['imports_full_table_name']))
+        # delete original table
+        delete_table(table_names['imports_full_table_name'])
 
-        DB.session.execute("""
-            ALTER TABLE {}.{} 
-            RENAME TO {};"""\
-                .format(
-                    IMPORTS_SCHEMA_NAME, 
-                    temp_table_name, 
-                    table_names['imports_table_name']))
+        # rename temp table with original table name
+        rename_table(IMPORTS_SCHEMA_NAME, temp_table_name, table_names['imports_table_name'])
 
-        DB.session.execute("""
-            ALTER TABLE ONLY {}.{} 
-            ADD CONSTRAINT pk_{}_{} PRIMARY KEY ({});"""\
-                .format(
-                    IMPORTS_SCHEMA_NAME, 
-                    table_names['imports_table_name'], 
-                    table_names['imports_table_name'], 
-                    IMPORTS_SCHEMA_NAME, 
-                    index_col))
+        # set primary key
+        set_primary_key(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], index_col)
 
-        DB.session.execute("""
-            ALTER TABLE {schema}.{table_name}
-            ALTER COLUMN {col_name} TYPE integer USING {col_name}::integer;"""\
-                .format(
-                    schema = IMPORTS_SCHEMA_NAME, 
-                    table_name = table_names['imports_table_name'],
-                    col_name = index_col
-                ))
+        # alter primary key type into integer
+        alter_column_type(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], index_col, 'integer')
 
+        # calculate geometries and altitudes
         set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid)
         set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME, 
                       table_names['imports_full_table_name'], table_names['imports_table_name'], 
@@ -843,16 +833,21 @@ def postMapping(info_role, import_id, id_mapping):
                     .format(table_names['imports_full_table_name']),
                 details='')
 
-
-        n_invalid_rows = DB.session.execute("SELECT count(*) FROM {} WHERE gn_is_valid = 'False';".format(table_names['imports_full_table_name'])).fetchone()[0]
+        # calculate number of invalid lines
+        n_invalid_rows = DB.session.execute("""
+            SELECT count(*) 
+            FROM {} WHERE gn_is_valid = 'False';
+            """.format(table_names['imports_full_table_name'])).fetchone()[0]
 
         
+        # check total number of lines
+        n_table_rows = get_row_number(table_names['imports_full_table_name'])
+
         DB.session.commit()
         DB.session.close()
 
         logger.info('*** END CORRESPONDANCE MAPPING')
         
-        n_table_rows = get_row_number(table_names['imports_full_table_name'])
 
 
 
@@ -898,7 +893,10 @@ def postMapping(info_role, import_id, id_mapping):
         pdb.set_trace()
 
         n_loaded_rows = DB.session.execute(
-            "SELECT count(*) FROM {}".format(table_names['imports_full_table_name'])
+            """
+            SELECT count(*) 
+            FROM {};
+            """.format(table_names['imports_full_table_name'])
             ).fetchone()[0]
 
         if n_loaded_rows == 0:
@@ -906,7 +904,7 @@ def postMapping(info_role, import_id, id_mapping):
             raise GeonatureImportApiError(\
                 message='INTERNAL SERVER ERROR :: Erreur pendant le mapping de correspondance :: Table {} vide à cause d\'une erreur de copie, refaire l\'upload et le mapping, ou contactez l\'administrateur du site'.format(table_names['imports_full_table_name']),
                 details='')
-    
+
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l\'administrateur',
             details=str(e))
@@ -968,9 +966,11 @@ def getSyntheseInfo(info_role):
         synthese_info = []
 
         data = DB.session.execute(
-            "SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
-             FROM INFORMATION_SCHEMA.COLUMNS\
-             WHERE table_name = 'synthese';"
+            """
+            SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
+            FROM INFORMATION_SCHEMA.COLUMNS\
+            WHERE table_name = 'synthese';
+            """
         )
 
         for d in data:
