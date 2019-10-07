@@ -258,7 +258,9 @@ export class ImportProcessComponent implements OnInit {
 					}
 					this.getSelectedOptions();
 				} else {
-					this.syntheseForm.reset();
+					Object.keys(this.syntheseForm.controls).forEach((key) => {
+						this.syntheseForm.get(key).setValue('');
+					});
 				}
 			},
 			(err) => {
@@ -279,7 +281,9 @@ export class ImportProcessComponent implements OnInit {
 				if (id_mapping) {
 					this.getUsersMapping(id_mapping);
 				} else {
-					this.syntheseForm.reset();
+					Object.keys(this.syntheseForm.controls).forEach((key) => {
+						this.syntheseForm.get(key).setValue('');
+					});
 					this.getSelectedOptions();
 				}
 			},
