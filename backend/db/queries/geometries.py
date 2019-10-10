@@ -1,5 +1,9 @@
 from geonature.utils.env import DB
 
+"""
+correct error : the_geom_4326 doit pas etre fix
+"""
+
 
 def set_geom_4326(schema_name, table_name):
     DB.session.execute("""
@@ -9,6 +13,7 @@ def set_geom_4326(schema_name, table_name):
                 schema_name = schema_name, 
                 table_name = table_name
                 ))
+    DB.session.flush()
 
 
 def set_geom_point(schema_name, table_name):
@@ -17,6 +22,7 @@ def set_geom_point(schema_name, table_name):
             .format(
                 schema_name = schema_name, 
                 table_name = table_name))
+    DB.session.flush()
 
 
 def set_geom_local(schema_name, table_name, local_srid):
@@ -27,3 +33,4 @@ def set_geom_local(schema_name, table_name, local_srid):
                 schema_name = schema_name, 
                 table_name = table_name, 
                 local_srid = local_srid))
+    DB.session.flush()
