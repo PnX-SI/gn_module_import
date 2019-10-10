@@ -796,7 +796,8 @@ def postMapping(info_role, import_id, id_mapping):
         alter_column_type(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], index_col, 'integer')
 
         # calculate geometries and altitudes
-        set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid)
+        set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid,
+            added_cols['the_geom_4326'], added_cols['the_geom_point'], added_cols['the_geom_local'])
         set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME, 
             table_names['imports_full_table_name'], table_names['imports_table_name'], 
             index_col, is_generate_alt)
