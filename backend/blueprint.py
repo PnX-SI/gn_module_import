@@ -826,18 +826,52 @@ def postMapping(info_role, import_id, id_mapping):
         logger.info('*** END CORRESPONDANCE MAPPING')
         
 
-        """
+        
         ### IMPORT DATA IN SYNTHESE TABLE
 
-        #selected_columns = {key:value for key, value in data.items() if value}
-
         total_columns = {**selected_columns, **added_cols}
+
+        # remove longitude and latitude from dict
+        if 'longitude' in total_columns.keys():
+            del total_columns['longitude']
+        if 'latitude' in total_columns.keys():
+            del total_columns['latitude']
+
+        # add key type info to value ('value::type')
+        select_part = []
+        for key, value in total_columns.items():
+            if key == 'the_geom_4326':
+                key_type = 'geometry(Geometry,4326)'
+            elif key == 'the_geom_point':
+                key_type = 'geometry(Point,4326)'
+            elif key == 'the_geom_local':
+                key_type = 'geometry(Geometry,2154)'
+            else:
+                key_type = DB.session.execute("""
+                    SELECT data_type 
+                    FROM information_schema.columns
+                    WHERE table_name = 'synthese'
+                    AND column_name = '{key}';
+                """.format(key = key)).fetchone()[0]
+            select_part.append('::'.join([value, key_type]))
+
+        # insert into synthese
+        DB.session.execute("""
+            INSERT INTO gn_synthese.synthese ({into_part})
+            SELECT {select_part}
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid='True';
+            """.format(
+                into_part = ','.join(total_columns.keys()),
+                select_part = ','.join(select_part),
+                schema_name = IMPORTS_SCHEMA_NAME,
+                table_name = table_names['imports_table_name']
+            ))
+
+        DB.session.commit()
+        DB.session.close()
+
         pdb.set_trace()
-        #enlever les longitudes et latitudes
-
-        selected_synthese_cols = ','.join(selected_columns.keys())
-        selected_user_cols = ','.join(selected_columns.values())
-
 
         # ok ça marche
         print('fill synthese')
@@ -846,7 +880,7 @@ def postMapping(info_role, import_id, id_mapping):
         print('synthese filled')
         DB.session.commit()      
         DB.session.close()
-        """
+
 
         return {
             'user_error_details' : error_report,
