@@ -865,6 +865,11 @@ def postMapping(info_role, import_id, id_mapping):
         logger.error('*** ERROR IN CORRESPONDANCE MAPPING')
         logger.exception(e)
         DB.session.rollback()
+
+        DB.session.execute("""
+            DROP TABLE IF EXISTS {}.{};
+            """.format(IMPORTS_SCHEMA_NAME, temp_table_name))
+        DB.session.commit()
         DB.session.close()
 
         pdb.set_trace()

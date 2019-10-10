@@ -6,6 +6,7 @@ def delete_table(full_table_name):
         DB.session.execute("""
             DROP TABLE {};
             """.format(full_table_name))
+        DB.session.flush()
     except Exception:
         raise
 
@@ -19,9 +20,9 @@ def rename_table(schema_name, original_name, new_name):
                 schema_name = schema_name, 
                 original_name = original_name, 
                 new_name = new_name))
+        DB.session.flush()
     except Exception:
         raise
-
 
 def set_primary_key(schema_name, table_name, pk_col_name):
     try:
@@ -32,11 +33,13 @@ def set_primary_key(schema_name, table_name, pk_col_name):
                 schema_name = schema_name, 
                 table_name = table_name, 
                 pk_col_name = pk_col_name))
+        DB.session.flush()
     except Exception:
         raise
 
 
 def alter_column_type(schema_name, table_name, col_name, col_type):
+    try:
         DB.session.execute("""
             ALTER TABLE {schema_name}.{table_name}
             ALTER COLUMN {col_name} 
@@ -46,3 +49,7 @@ def alter_column_type(schema_name, table_name, col_name, col_type):
                 table_name = table_name,
                 col_name = col_name,
                 col_type = col_type))
+        DB.session.flush()
+    except Exception:
+        DB.session.rollback()
+        raise

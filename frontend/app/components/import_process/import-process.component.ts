@@ -122,7 +122,8 @@ export class ImportProcessComponent implements OnInit {
 				this.uploadForm.removeControl('stepper');
 				stepper.next();
 				this.isUploading = false;
-				this.importId = this.uploadResponse.importId;
+                this.importId = this.uploadResponse.importId;
+                console.log(this.uploadResponse);
 				this.columns = this.uploadResponse.columns.map((col) => {
 					return {
 						id: col,
