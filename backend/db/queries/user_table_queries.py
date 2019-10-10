@@ -53,3 +53,26 @@ def alter_column_type(schema_name, table_name, col_name, col_type):
     except Exception:
         DB.session.rollback()
         raise
+
+
+def get_n_loaded_rows(full_table_name):
+    try:
+        n_loaded_rows = DB.session.execute("""
+            SELECT count(*) 
+            FROM {};
+            """.format(full_table_name)
+            ).fetchone()[0]
+        return n_loaded_rows
+    except Exception:
+        raise
+
+
+def get_n_invalid_rows(full_table_name):
+    try:
+        n_invalid_rows = DB.session.execute("""
+            SELECT count(*) 
+            FROM {} WHERE gn_is_valid = 'False';
+            """.format(full_table_name)).fetchone()[0]
+        return n_invalid_rows
+    except Exception:
+        raise

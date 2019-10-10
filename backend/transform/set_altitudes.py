@@ -35,7 +35,7 @@ def set_altitudes(df, selected_columns, import_id, schema_name, full_table_name,
                     full_table_name = full_table_name, 
                     alt_col = selected_columns['altitude_max'])
             
-            generate_altitude(
+            generate_altitudes(
                 schema = schema_name, 
                 table = table_name, 
                 alt_col = selected_columns['altitude_max'], 

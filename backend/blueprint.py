@@ -79,7 +79,9 @@ from .db.queries.user_table_queries import (
     delete_table,
     rename_table,
     set_primary_key,
-    alter_column_type
+    alter_column_type,
+    get_n_loaded_rows,
+    get_n_invalid_rows
 )
 
 from .db.queries.save_mapping import save_field_mapping
@@ -811,11 +813,7 @@ def postMapping(info_role, import_id, id_mapping):
                 details='')
 
         # calculate number of invalid lines
-        n_invalid_rows = DB.session.execute("""
-            SELECT count(*) 
-            FROM {} WHERE gn_is_valid = 'False';
-            """.format(table_names['imports_full_table_name'])).fetchone()[0]
-
+        n_invalid_rows = get_n_invalid_rows(table_names['imports_full_table_name'])
         
         # check total number of lines
         n_table_rows = get_row_number(table_names['imports_full_table_name'])
@@ -825,9 +823,6 @@ def postMapping(info_role, import_id, id_mapping):
 
         logger.info('*** END CORRESPONDANCE MAPPING')
         
-
-
-
 
         """
         ### IMPORT DATA IN SYNTHESE TABLE
@@ -872,14 +867,7 @@ def postMapping(info_role, import_id, id_mapping):
         DB.session.commit()
         DB.session.close()
 
-        pdb.set_trace()
-
-        n_loaded_rows = DB.session.execute(
-            """
-            SELECT count(*) 
-            FROM {};
-            """.format(table_names['imports_full_table_name'])
-            ).fetchone()[0]
+        n_loaded_rows = get_n_loaded_rows(table_names['imports_full_table_name'])
 
         if n_loaded_rows == 0:
             logger.error('Table %s vide à cause d\'une erreur de copie, refaire l\'upload et le mapping', table_names['imports_full_table_name'])
