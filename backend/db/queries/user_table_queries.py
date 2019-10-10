@@ -2,16 +2,19 @@ from geonature.utils.env import DB
 
 
 def delete_table(full_table_name):
+    DB.session.begin(subtransactions=True)
     try:        
         DB.session.execute("""
             DROP TABLE {};
             """.format(full_table_name))
-        DB.session.flush()
+        DB.session.commit()
     except Exception:
+        DB.session.rollback()
         raise
 
 
 def rename_table(schema_name, original_name, new_name):
+    DB.session.begin(subtransactions=True)
     try:
         DB.session.execute("""
             ALTER TABLE {schema_name}.{original_name} 
@@ -20,11 +23,13 @@ def rename_table(schema_name, original_name, new_name):
                 schema_name = schema_name, 
                 original_name = original_name, 
                 new_name = new_name))
-        DB.session.flush()
+        DB.session.commit()
     except Exception:
+        DB.session.rollback()
         raise
 
 def set_primary_key(schema_name, table_name, pk_col_name):
+    DB.session.begin(subtransactions=True)
     try:
         DB.session.execute("""
             ALTER TABLE ONLY {schema_name}.{table_name} 
@@ -33,12 +38,14 @@ def set_primary_key(schema_name, table_name, pk_col_name):
                 schema_name = schema_name, 
                 table_name = table_name, 
                 pk_col_name = pk_col_name))
-        DB.session.flush()
+        DB.session.commit()
     except Exception:
+        DB.session.rollback()
         raise
 
 
 def alter_column_type(schema_name, table_name, col_name, col_type):
+    DB.session.begin(subtransactions=True)
     try:
         DB.session.execute("""
             ALTER TABLE {schema_name}.{table_name}
@@ -49,7 +56,7 @@ def alter_column_type(schema_name, table_name, col_name, col_type):
                 table_name = table_name,
                 col_name = col_name,
                 col_type = col_type))
-        DB.session.flush()
+        DB.session.commit()
     except Exception:
         DB.session.rollback()
         raise

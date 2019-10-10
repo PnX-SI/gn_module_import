@@ -2,6 +2,7 @@ from geonature.utils.env import DB
 
 
 def generate_altitudes(schema, table, alt_col, table_pk, geom_col):
+    DB.session.begin(subtransactions=True)
     try:
         DB.session.execute("""
             UPDATE {schema}.{table} as T
@@ -22,12 +23,14 @@ def generate_altitudes(schema, table, alt_col, table_pk, geom_col):
             geom_col = geom_col
             )
         )
-        DB.session.flush()
+        DB.session.commit()
     except Exception:
+        DB.session.rollback()
         raise
 
 
 def create_column(full_table_name, alt_col):
+    DB.session.begin(subtransactions=True)
     try:
         DB.session.execute("""
             ALTER TABLE {full_table_name} 
@@ -37,6 +40,7 @@ def create_column(full_table_name, alt_col):
                 alt_col=alt_col
             )
         )
-        DB.session.flush()
+        DB.session.commit()
     except Exception:
+        DB.session.rollback()
         raise

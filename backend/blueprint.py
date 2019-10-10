@@ -645,7 +645,7 @@ def post_user_file(info_role):
         DB.session.commit()
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR : Erreur pendant l\'enregistrement du fichier - contacter l\'administrateur',
-            details=str(e))
+            details= str(e))
     finally:
         if is_file_saved:
             os.remove(full_path)
@@ -798,9 +798,11 @@ def postMapping(info_role, import_id, id_mapping):
         # calculate geometries and altitudes
         set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid)
         set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME, 
-                      table_names['imports_full_table_name'], table_names['imports_table_name'], 
-                      index_col, is_generate_alt)
+            table_names['imports_full_table_name'], table_names['imports_table_name'], 
+            index_col, is_generate_alt)
 
+        DB.session.commit()
+        DB.session.close()
 
         # check if df is fully loaded in postgresql table :
         is_nrows_ok = check_row_number(import_id, table_names['imports_full_table_name'])
@@ -818,8 +820,7 @@ def postMapping(info_role, import_id, id_mapping):
         # check total number of lines
         n_table_rows = get_row_number(table_names['imports_full_table_name'])
 
-        DB.session.commit()
-        DB.session.close()
+
 
         logger.info('*** END CORRESPONDANCE MAPPING')
         
@@ -868,6 +869,8 @@ def postMapping(info_role, import_id, id_mapping):
         DB.session.close()
 
         n_loaded_rows = get_n_loaded_rows(table_names['imports_full_table_name'])
+
+        pdb.set_trace()
 
         if n_loaded_rows == 0:
             logger.error('Table %s vide à cause d\'une erreur de copie, refaire l\'upload et le mapping', table_names['imports_full_table_name'])
