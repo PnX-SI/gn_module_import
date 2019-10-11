@@ -843,6 +843,13 @@ def postMapping(info_role, import_id, id_mapping):
             """).fetchone()[0]
         total_columns['id_module'] = id_module
 
+        id_dataset = DB.session.query(TImports.id_dataset)\
+            .filter(TImports.id_import == import_id)\
+            .one()[0]
+        total_columns['id_dataset'] = id_dataset
+
+
+
         # add key type info to value ('value::type')
         select_part = []
         for key, value in total_columns.items():
@@ -860,7 +867,6 @@ def postMapping(info_role, import_id, id_mapping):
                     AND column_name = '{key}';
                 """.format(key = key)).fetchone()[0]
             select_part.append('::'.join([str(value), key_type]))
-
 
 
         # insert into synthese
