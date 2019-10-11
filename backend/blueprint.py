@@ -821,10 +821,7 @@ def postMapping(info_role, import_id, id_mapping):
         # check total number of lines
         n_table_rows = get_row_number(table_names['imports_full_table_name'])
 
-
-
         logger.info('*** END CORRESPONDANCE MAPPING')
-        
 
         
         ### IMPORT DATA IN SYNTHESE TABLE
@@ -836,6 +833,15 @@ def postMapping(info_role, import_id, id_mapping):
             del total_columns['longitude']
         if 'latitude' in total_columns.keys():
             del total_columns['latitude']
+
+
+        # add fixed synthese fields :
+        id_module = DB.session.execute("""
+            SELECT id_module
+            FROM gn_commons.t_modules
+            WHERE module_code = 'IMPORT';
+            """).fetchone()[0]
+        total_columns['id_module'] = id_module
 
         # add key type info to value ('value::type')
         select_part = []
@@ -853,7 +859,9 @@ def postMapping(info_role, import_id, id_mapping):
                     WHERE table_name = 'synthese'
                     AND column_name = '{key}';
                 """.format(key = key)).fetchone()[0]
-            select_part.append('::'.join([value, key_type]))
+            select_part.append('::'.join([str(value), key_type]))
+
+
 
         # insert into synthese
         DB.session.execute("""
@@ -869,16 +877,6 @@ def postMapping(info_role, import_id, id_mapping):
             ))
 
         DB.session.commit()
-        DB.session.close()
-
-        pdb.set_trace()
-
-        # ok ça marche
-        print('fill synthese')
-        #DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid='True';".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
-        #INSERT INTO gn_synthese.synthese (cd_nom,nom_cite,date_min,date_max, the_geom_4326) SELECT species_id::integer,nom_scientifique,gn_timestamp::timestamp,gn_timestamp::timestamp,the_geom_4326::geometry FROM gn_imports.i_data_pf_observado_original_447 WHERE gn_is_valid='True';
-        print('synthese filled')
-        DB.session.commit()      
         DB.session.close()
 
 
