@@ -639,7 +639,6 @@ def postMapping(info_role, import_id, id_mapping):
     try:
         data = request.form.to_dict()
         srid = int(data['srid'])
-        data.pop('stepper')
         data.pop('srid')
 
         ### SAVE MAPPING ###
@@ -971,15 +970,14 @@ def postMapping(info_role, import_id, id_mapping):
             user_values_list = [val.user_val for val in nomenc_user_values] 
 
             d = {
-                    nomenc : {
-                        'nomenc_id' : nomenc_info.id,
-                        'nomenc_name' : nomenc_info.name,
-                        'nomenc_values_def' : val_def_list,
-                        'user_values' : {
-                            'column_name' : selected_columns[user_nomenc_col],
-                            'values' : user_values_list
-                        }
-                    }
+                'nomenc_abb' : nomenc,
+                'nomenc_id' : nomenc_info.id,
+                'nomenc_name' : nomenc_info.name,
+                'nomenc_values_def' : val_def_list,
+                'user_values' : {
+                    'column_name' : selected_columns[user_nomenc_col],
+                    'values' : user_values_list
+                }
                 }
             front_info.append(d)
 

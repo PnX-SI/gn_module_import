@@ -9,6 +9,10 @@ import { ImportComponent } from "./components/import/import.component";
 import { ImportProcessComponent } from "./components/import_process/import-process.component";
 import { ImportModalDatasetComponent } from "./components/modal_dataset/import-modal-dataset.component";
 import { DataService } from "./services/data.service";
+import { StepsService } from './components/import_process/steps.service';
+import { UploadFileStepComponent } from "./components/import_process/upload-file-step/upload-file-step.component"
+import { FieldsMappingStepComponent } from "./components/import_process/fields-mapping-step/fields-mapping-step.component"
+import { ContentMappingStepComponent } from "./components/import_process/content-mapping-step/content-mapping-step.component"
 
 // my module routing
 const routes: Routes = [
@@ -20,7 +24,10 @@ const routes: Routes = [
   declarations: [
     ImportComponent,
     ImportProcessComponent,
-    ImportModalDatasetComponent
+    ImportModalDatasetComponent,
+    UploadFileStepComponent,
+    FieldsMappingStepComponent,
+    ContentMappingStepComponent
   ],
 
   imports: [
@@ -33,7 +40,8 @@ const routes: Routes = [
   ],
 
   providers: [
-    DataService
+    DataService,
+    StepsService
   ],
 
   bootstrap: []
