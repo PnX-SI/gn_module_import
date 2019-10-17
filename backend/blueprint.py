@@ -823,7 +823,7 @@ def postMapping(info_role, import_id, id_mapping):
 
         logger.info('*** END CORRESPONDANCE MAPPING')
 
-        
+        """
         ### IMPORT DATA IN SYNTHESE TABLE
 
         total_columns = {**selected_columns, **added_cols}
@@ -836,11 +836,11 @@ def postMapping(info_role, import_id, id_mapping):
 
 
         # add fixed synthese fields :
-        id_module = DB.session.execute("""
+        id_module = DB.session.execute("
             SELECT id_module
             FROM gn_commons.t_modules
             WHERE module_code = 'IMPORT';
-            """).fetchone()[0]
+            ").fetchone()[0]
         total_columns['id_module'] = id_module
 
         id_dataset = DB.session.query(TImports.id_dataset)\
@@ -860,22 +860,22 @@ def postMapping(info_role, import_id, id_mapping):
             elif key == 'the_geom_local':
                 key_type = 'geometry(Geometry,2154)'
             else:
-                key_type = DB.session.execute("""
+                key_type = DB.session.execute("
                     SELECT data_type 
                     FROM information_schema.columns
                     WHERE table_name = 'synthese'
                     AND column_name = '{key}';
-                """.format(key = key)).fetchone()[0]
+                .format(key = key)).fetchone()[0]
             select_part.append('::'.join([str(value), key_type]))
 
 
         # insert into synthese
-        DB.session.execute("""
+        DB.session.execute("
             INSERT INTO gn_synthese.synthese ({into_part})
             SELECT {select_part}
             FROM {schema_name}.{table_name}
             WHERE gn_is_valid='True';
-            """.format(
+            .format(
                 into_part = ','.join(total_columns.keys()),
                 select_part = ','.join(select_part),
                 schema_name = IMPORTS_SCHEMA_NAME,
@@ -884,7 +884,10 @@ def postMapping(info_role, import_id, id_mapping):
 
         DB.session.commit()
         DB.session.close()
+        """
 
+        DB.session.commit()
+        DB.session.close()
 
         return {
             'user_error_details' : error_report,
