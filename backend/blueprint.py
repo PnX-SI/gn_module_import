@@ -660,7 +660,6 @@ def postMapping(info_role, import_id, id_mapping):
     try:
         data = request.form.to_dict()
         srid = int(data['srid'])
-        data.pop('stepper')
         data.pop('srid')
 
 
@@ -796,7 +795,8 @@ def postMapping(info_role, import_id, id_mapping):
         alter_column_type(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], index_col, 'integer')
 
         # calculate geometries and altitudes
-        set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid)
+        set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid,
+            added_cols['the_geom_4326'], added_cols['the_geom_point'], added_cols['the_geom_local'])
         set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME, 
             table_names['imports_full_table_name'], table_names['imports_table_name'], 
             index_col, is_generate_alt)
@@ -820,32 +820,73 @@ def postMapping(info_role, import_id, id_mapping):
         # check total number of lines
         n_table_rows = get_row_number(table_names['imports_full_table_name'])
 
-
-
         logger.info('*** END CORRESPONDANCE MAPPING')
-        
 
         """
         ### IMPORT DATA IN SYNTHESE TABLE
 
-        #selected_columns = {key:value for key, value in data.items() if value}
-
         total_columns = {**selected_columns, **added_cols}
-        pdb.set_trace()
-        #enlever les longitudes et latitudes
 
-        selected_synthese_cols = ','.join(selected_columns.keys())
-        selected_user_cols = ','.join(selected_columns.values())
+        # remove longitude and latitude from dict
+        if 'longitude' in total_columns.keys():
+            del total_columns['longitude']
+        if 'latitude' in total_columns.keys():
+            del total_columns['latitude']
 
 
-        # ok ça marche
-        print('fill synthese')
-        #DB.session.execute("INSERT INTO gn_synthese.synthese ({}) SELECT {} FROM {} WHERE gn_is_valid='True';".format(selected_synthese_cols,selected_user_cols,table_names['imports_full_table_name']))
-        #INSERT INTO gn_synthese.synthese (cd_nom,nom_cite,date_min,date_max, the_geom_4326) SELECT species_id::integer,nom_scientifique,gn_timestamp::timestamp,gn_timestamp::timestamp,the_geom_4326::geometry FROM gn_imports.i_data_pf_observado_original_447 WHERE gn_is_valid='True';
-        print('synthese filled')
-        DB.session.commit()      
+        # add fixed synthese fields :
+        id_module = DB.session.execute("
+            SELECT id_module
+            FROM gn_commons.t_modules
+            WHERE module_code = 'IMPORT';
+            ").fetchone()[0]
+        total_columns['id_module'] = id_module
+
+        id_dataset = DB.session.query(TImports.id_dataset)\
+            .filter(TImports.id_import == import_id)\
+            .one()[0]
+        total_columns['id_dataset'] = id_dataset
+
+
+
+        # add key type info to value ('value::type')
+        select_part = []
+        for key, value in total_columns.items():
+            if key == 'the_geom_4326':
+                key_type = 'geometry(Geometry,4326)'
+            elif key == 'the_geom_point':
+                key_type = 'geometry(Point,4326)'
+            elif key == 'the_geom_local':
+                key_type = 'geometry(Geometry,2154)'
+            else:
+                key_type = DB.session.execute("
+                    SELECT data_type 
+                    FROM information_schema.columns
+                    WHERE table_name = 'synthese'
+                    AND column_name = '{key}';
+                .format(key = key)).fetchone()[0]
+            select_part.append('::'.join([str(value), key_type]))
+
+
+        # insert into synthese
+        DB.session.execute("
+            INSERT INTO gn_synthese.synthese ({into_part})
+            SELECT {select_part}
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid='True';
+            .format(
+                into_part = ','.join(total_columns.keys()),
+                select_part = ','.join(select_part),
+                schema_name = IMPORTS_SCHEMA_NAME,
+                table_name = table_names['imports_table_name']
+            ))
+
+        DB.session.commit()
         DB.session.close()
         """
+
+        DB.session.commit()
+        DB.session.close()
 
         return {
             'user_error_details' : error_report,
