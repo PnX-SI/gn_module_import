@@ -1,20 +1,3 @@
-.custom {
-  width: 78px !important;
-}
-
-fieldset {
-  padding: 0.35em 0.625em 0.75em !important;
-  border: 1px solid silver !important;
-  border-radius: 3px;
-  margin-bottom: 30px // background-color: #f7f7f7;
-}
-
-legend {
-  width: auto;
-  font-size: inherit;
-  color: black !important;
-}
-
 form.ng-invalid {
   border: none !important;
 }
@@ -64,7 +47,6 @@ tr:nth-child(even) {
   right: 0;
 }
 
-/* Transparent Overlay */
 .spinner:before {
   content: '';
   display: block;
@@ -85,18 +67,6 @@ tr:nth-child(even) {
   border-left: 5px solid #ff0000 !important;
 }
 
-.mat-stepper-horizontal {
-  background: none
-}
-
-/deep/.mat-horizontal-stepper-header-container {
-  margin: 10px 0
-}
-
-/deep/.mat-step-header .mat-step-icon {
-  background-color: #28a745;
-}
-
 .navigate-btn {
   width: 100%;
   display: flex;
@@ -109,20 +79,4 @@ tr:nth-child(even) {
 
 .file-validation {
   margin-top: 40px
-}
-
-.isSelected {
-  color: #b1b0b0
-}
-
-.field-header{
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  padding: 10px;
-  border-bottom: 1px solid rgba(0, 0, 0, .125);
-}
-
-.field-card{
-  margin-bottom: 30px;
 }

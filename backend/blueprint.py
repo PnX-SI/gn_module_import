@@ -660,7 +660,6 @@ def postMapping(info_role, import_id, id_mapping):
     try:
         data = request.form.to_dict()
         srid = int(data['srid'])
-        data.pop('stepper')
         data.pop('srid')
 
 
