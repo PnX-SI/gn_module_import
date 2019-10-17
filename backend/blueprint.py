@@ -117,7 +117,7 @@ blueprint = Blueprint('import', __name__)
 
 @blueprint.errorhandler(GeonatureImportApiError)
 def handle_geonature_import_api(error):
-    response = jsonify(error.mappingFto_dict())
+    response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
 
@@ -658,6 +658,9 @@ def post_user_file(info_role):
 @json_resp
 def postMapping(info_role, import_id, id_mapping):
     try:
+        is_temp_table_name = False
+        is_table_names = False
+
         data = request.form.to_dict()
         srid = int(data['srid'])
         data.pop('srid')
@@ -687,7 +690,9 @@ def postMapping(info_role, import_id, id_mapping):
 
         index_col = ''.join([PREFIX,'pk'])
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+        is_table_names = True
         temp_table_name = '_'.join(['temp', table_names['imports_table_name']])
+        is_temp_table_name = True
 
         engine = DB.engine
         column_names = get_table_info(table_names['imports_table_name'], 'column_name')
@@ -903,21 +908,22 @@ def postMapping(info_role, import_id, id_mapping):
         logger.exception(e)
         DB.session.rollback()
 
-        DB.session.execute("""
-            DROP TABLE IF EXISTS {}.{};
-            """.format(IMPORTS_SCHEMA_NAME, temp_table_name))
-        DB.session.commit()
-        DB.session.close()
+        if is_temp_table_name:
+            DB.session.execute("""
+                DROP TABLE IF EXISTS {}.{};
+                """.format(IMPORTS_SCHEMA_NAME, temp_table_name))
+            DB.session.commit()
+            DB.session.close()
 
-        n_loaded_rows = get_n_loaded_rows(table_names['imports_full_table_name'])
+        if is_table_names:
+            n_loaded_rows = get_n_loaded_rows(table_names['imports_full_table_name'])
 
-        pdb.set_trace()
-
-        if n_loaded_rows == 0:
-            logger.error('Table %s vide à cause d\'une erreur de copie, refaire l\'upload et le mapping', table_names['imports_full_table_name'])
-            raise GeonatureImportApiError(\
-                message='INTERNAL SERVER ERROR :: Erreur pendant le mapping de correspondance :: Table {} vide à cause d\'une erreur de copie, refaire l\'upload et le mapping, ou contactez l\'administrateur du site'.format(table_names['imports_full_table_name']),
-                details='')
+        if is_table_names:  
+            if n_loaded_rows == 0:
+                logger.error('Table %s vide à cause d\'une erreur de copie, refaire l\'upload et le mapping', table_names['imports_full_table_name'])
+                raise GeonatureImportApiError(\
+                    message='INTERNAL SERVER ERROR :: Erreur pendant le mapping de correspondance :: Table {} vide à cause d\'une erreur de copie, refaire l\'upload et le mapping, ou contactez l\'administrateur du site'.format(table_names['imports_full_table_name']),
+                    details='')
 
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l\'administrateur',

@@ -1,5 +1,5 @@
 from geonature.utils.env import DB
-
+import pdb
 
 def delete_table(full_table_name):
     DB.session.begin(subtransactions=True)

@@ -20,6 +20,8 @@ from .models import (
 )
 
 from ..wrappers import checker
+from ..logs import logger
+
 
 import pdb
 
@@ -229,7 +231,7 @@ def get_table_names(archives_schema_name, import_schema_name, table_identifier):
             'imports_full_table_name' : imports_full_table_name
         }
     except Exception:
-        return 'error in get_table_names()',500
+        raise
 
 
 def get_full_table_name(schema_name, table_name):
