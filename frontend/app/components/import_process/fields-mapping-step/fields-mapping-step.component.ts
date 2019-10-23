@@ -52,7 +52,9 @@ export class FieldsMappingStepComponent implements OnInit {
 		this.syntheseForm = this._fb.group({});
 
 		for (let col of this.IMPORT_CONFIG.MAPPING_DATA_FRONTEND) {
+            console.log(col);
 			for (let field of col.fields) {
+                //console.log(field)
 				if (field.required) {
 					this.syntheseForm.addControl(field.name, new FormControl('', Validators.required));
 				} else {

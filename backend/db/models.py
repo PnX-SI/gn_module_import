@@ -68,6 +68,38 @@ class BibMappings(DB.Model):
     active = DB.Column(DB.Boolean,nullable=True)
 
 
+@serializable
+class BibFields(DB.Model):
+    __tablename__ = 'bib_fields'
+    __table_args__ = {'schema': 'gn_imports', "extend_existing":True}
+
+    id_field = DB.Column(DB.Integer, primary_key=True)
+    name_field = DB.Column(DB.Unicode, nullable=False)
+    fr_label = DB.Column(DB.Unicode, nullable=False)
+    eng_label = DB.Column(DB.Unicode, nullable=True)
+    desc_field = DB.Column(DB.Unicode, nullable=True)
+    type_fields = DB.Column(DB.Unicode, nullable=True)
+    synthese_field = DB.Column(DB.Boolean, nullable=False)
+    mandatory = DB.Column(DB.Boolean, nullable=False)
+    autogenerate = DB.Column(DB.Boolean, nullable=False)
+    nomenclature = DB.Column(DB.Boolean, nullable=False)
+    id_theme = DB.Column(DB.Integer, nullable=False)
+    order_field = DB.Column(DB.Integer, nullable=False)
+
+
+@serializable
+class BibThemes(DB.Model):
+    __tablename__ = 'bib_themes'
+    __table_args__ = {'schema': 'gn_imports', "extend_existing":True}
+
+    id_theme = DB.Column(DB.Integer, primary_key=True)
+    name_theme = DB.Column(DB.Unicode, nullable=False)
+    fr_label = DB.Column(DB.Unicode, nullable=False)
+    eng_label = DB.Column(DB.Unicode, nullable=True)
+    desc_theme = DB.Column(DB.Unicode, nullable=True)
+    order_theme = DB.Column(DB.Integer, nullable=False)
+
+
 # ne pas mettre gn_import_archives en dur
 @serializable
 class CorImportArchives(DB.Model):
