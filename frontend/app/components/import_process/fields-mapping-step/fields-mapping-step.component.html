@@ -35,18 +35,23 @@
                 </div>
             </fieldset>
         </form>
+
+        
         <form [formGroup]="syntheseForm">
-            <div *ngFor="let col of IMPORT_CONFIG.MAPPING_DATA_FRONTEND">
+            <div *ngFor="let theme of bibRes">
+
                 <fieldset>
                     <legend class="px-1">
-                        {{col.label}}
+                        {{theme.theme_name}}
                     </legend>
+
                     <div class="row m-0">
-                        <div class="col-6" *ngFor="let field of col.fields">
-                            <div class="form-group">
-                                <small>{{field.label}} :</small>
-                                <select class="form-control form-control-sm" id="{{field.label}}"
-                                    placeholder="Open this select menu" formControlName="{{field.name}}"
+                        <div class="col-6" *ngFor="let field of theme.fields">
+
+                            <div *ngIf="!field.autogenerate" class="form-group">
+                                <small>{{field.fr_label}} :</small>
+                                <select class="form-control form-control-sm" id="{{field.name_field}}"
+                                    placeholder="Open this select menu" formControlName="{{field.name_field}}"
                                     (change)="onSelect()" [required]=field.required>
                                     <option [value]=""></option>
                                     <option *ngFor="let column of columns" [class.isSelected]="column.selected"
@@ -54,14 +59,22 @@
                                         {{column.id}}
                                     </option>
                                 </select>
+
                                 <div *ngIf="field.required"
-                                    [class.d-block]="syntheseForm.controls[field.name].hasError('required')"
+                                    [class.d-block]="syntheseForm.controls[field.name_field].hasError('required')"
                                     class="invalid-feedback">Sélectionnez
-                                    {{field.label}}</div>
+                                    {{field.name_field}}</div>
                             </div>
+                            <div *ngIf="field.autogenerate" class="form-group">
+                                <label for="auto_check"> <small>{{field.fr_label}} :</small> </label>
+                                <input type="checkbox" id="auto_check" formControlName="{{field.name_field}}">   
+                            </div>
+                            
                         </div>
                     </div>
+                    
                 </fieldset>
+
             </div>
             <br>
             <div class="d-flex flex-row justify-content-between">
@@ -86,6 +99,7 @@
                 </button>
             </div>
         </form>
+    
         <!-- Error list in table -->
         <br>
         <div id="dataCleaningErrorList" *ngIf="isErrorButtonClicked">

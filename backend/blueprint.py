@@ -22,7 +22,7 @@ import threading
 import datetime
 
 import sqlalchemy
-from sqlalchemy import func, text, select, update, event
+from sqlalchemy import func, text, select, update, event, join
 from sqlalchemy.sql.elements import quoted_name
 from sqlalchemy.sql import column
 
@@ -52,6 +52,8 @@ from .db.models import (
     BibMappings,
     CorRoleMapping,
     TMappingsFields,
+    BibFields,
+    BibThemes,
     generate_user_table_class
 )
 
@@ -117,7 +119,7 @@ blueprint = Blueprint('import', __name__)
 
 @blueprint.errorhandler(GeonatureImportApiError)
 def handle_geonature_import_api(error):
-    response = jsonify(error.mappingFto_dict())
+    response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
 
@@ -658,7 +660,11 @@ def post_user_file(info_role):
 @json_resp
 def postMapping(info_role, import_id, id_mapping):
     try:
+        is_temp_table_name = False
+        is_table_names = False
+
         data = request.form.to_dict()
+
         srid = int(data['srid'])
         data.pop('srid')
 
@@ -687,15 +693,24 @@ def postMapping(info_role, import_id, id_mapping):
 
         index_col = ''.join([PREFIX,'pk'])
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+        is_table_names = True
         temp_table_name = '_'.join(['temp', table_names['imports_table_name']])
+        is_temp_table_name = True
 
         engine = DB.engine
         column_names = get_table_info(table_names['imports_table_name'], 'column_name')
 
         local_srid = get_local_srid()
 
-        is_generate_uuid = True # delete when checkbox created in frontend
-        is_generate_alt = True # delete when checkbox created in frontend
+        if data['unique_id_sinp_generate'] == 'true':
+            is_generate_uuid = True
+        else:
+            is_generate_uuid = False
+
+        if data['altitudes_generate'] == 'true':
+            is_generate_alt = True
+        else:
+            is_generate_alt = False
 
 
         logger.debug('import_id = %s', import_id)
@@ -903,21 +918,22 @@ def postMapping(info_role, import_id, id_mapping):
         logger.exception(e)
         DB.session.rollback()
 
-        DB.session.execute("""
-            DROP TABLE IF EXISTS {}.{};
-            """.format(IMPORTS_SCHEMA_NAME, temp_table_name))
-        DB.session.commit()
-        DB.session.close()
+        if is_temp_table_name:
+            DB.session.execute("""
+                DROP TABLE IF EXISTS {}.{};
+                """.format(IMPORTS_SCHEMA_NAME, temp_table_name))
+            DB.session.commit()
+            DB.session.close()
 
-        n_loaded_rows = get_n_loaded_rows(table_names['imports_full_table_name'])
+        if is_table_names:
+            n_loaded_rows = get_n_loaded_rows(table_names['imports_full_table_name'])
 
-        pdb.set_trace()
-
-        if n_loaded_rows == 0:
-            logger.error('Table %s vide à cause d\'une erreur de copie, refaire l\'upload et le mapping', table_names['imports_full_table_name'])
-            raise GeonatureImportApiError(\
-                message='INTERNAL SERVER ERROR :: Erreur pendant le mapping de correspondance :: Table {} vide à cause d\'une erreur de copie, refaire l\'upload et le mapping, ou contactez l\'administrateur du site'.format(table_names['imports_full_table_name']),
-                details='')
+        if is_table_names:  
+            if n_loaded_rows == 0:
+                logger.error('Table %s vide à cause d\'une erreur de copie, refaire l\'upload et le mapping', table_names['imports_full_table_name'])
+                raise GeonatureImportApiError(\
+                    message='INTERNAL SERVER ERROR :: Erreur pendant le mapping de correspondance :: Table {} vide à cause d\'une erreur de copie, refaire l\'upload et le mapping, ou contactez l\'administrateur du site'.format(table_names['imports_full_table_name']),
+                    details='')
 
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l\'administrateur',
@@ -1008,17 +1024,54 @@ def getSyntheseInfo(info_role):
         return 'INTERNAL SERVER ERROR ("getSyntheseInfo() error"): contactez l\'administrateur du site', 500
 
 
-"""
-@blueprint.route('/return_to_list/<import_id>', methods=['GET'])
+@blueprint.route('/bibFields', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def return_to_list(info_role, import_id):
-    try:
-        
-        #Si import_id is not undefined, effacer ligne dans timports_id, cor_role_import, cor_archive_import si step = 1
-        
+def get_bib_fields(info_role):
 
-        return server_response, 200
-    except Exception:
-        return 'INTERNAL SERVER ERROR ("delete_TImportRow() error"): contactez l\'administrateur du site', 500
-"""
+    try:
+
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+
+        bibs = DB.session.execute("""
+            SELECT *
+            FROM {schema_name}.bib_fields fields
+            JOIN {schema_name}.bib_themes themes on fields.id_theme = themes.id_theme;
+            """.format(schema_name = IMPORTS_SCHEMA_NAME)
+            ).fetchall()
+
+        max_theme = DB.session.execute("""
+            SELECT max(id_theme)
+            FROM {schema_name}.bib_fields fields
+            """.format(schema_name = IMPORTS_SCHEMA_NAME)
+            ).fetchone()[0]
+
+        data_theme = []
+
+        for i in range(max_theme):
+
+            data = []
+            for row in bibs:
+                if row.id_theme == i+1:
+                    theme_name = row.fr_label_theme
+                    d = {
+                        'id_field': row.id_field,
+                        'name_field': row.name_field,
+                        'required' : row.mandatory,
+                        'fr_label' : row.fr_label,
+                        'autogenerate': row.autogenerate
+                        }
+                    data.append(d)
+            data_theme.append({
+                'theme_name' : theme_name,
+                'fields': data
+                })
+            
+        return data_theme, 200
+
+    except Exception as e:
+        logger.error('*** SERVER ERROR WHEN GETTING BIB_FIELDS AND BIB_THEMES')
+        logger.exception(e)
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR when getting bib_fields and bib_themes',
+            details=str(e))

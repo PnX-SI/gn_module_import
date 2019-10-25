@@ -60,7 +60,12 @@ export class DataService {
 
 	getSynColumnNames() {
 		return this._http.get<any>(`${urlApi}/syntheseInfo`);
-	}
+    }
+    
+
+    getBibFields() {
+        return this._http.get<any>(`${urlApi}/bibFields`);
+    }
 
 
 	postMapping(value, importId: number, id_mapping: number, user_srid) {
