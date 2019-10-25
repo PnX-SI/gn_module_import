@@ -35,6 +35,7 @@ export class FieldsMappingStepComponent implements OnInit {
 	@Input() srid: any;
 	@Input() importId: any;
     mappingRes: any;
+    bibRes: any;
 
 	constructor(
 		private _ds: DataService,
@@ -51,20 +52,35 @@ export class FieldsMappingStepComponent implements OnInit {
 
 		this.syntheseForm = this._fb.group({});
 
-		for (let col of this.IMPORT_CONFIG.MAPPING_DATA_FRONTEND) {
-            console.log(col);
-			for (let field of col.fields) {
-                //console.log(field)
-				if (field.required) {
-					this.syntheseForm.addControl(field.name, new FormControl('', Validators.required));
+        
+        this._ds.getBibFields().subscribe(
+            (res) => {
+                this.bibRes = res;
+                console.log(this.bibRes);
+                for (let theme of this.bibRes) {
+                    console.log(theme);
+                    for (let field of theme.fields) {
+                        if (field.required) {
+                            this.syntheseForm.addControl(field.name_field, new FormControl('', Validators.required));
+                        } else {
+                            this.syntheseForm.addControl(field.name_field, new FormControl(''));
+                        }
+                    }
+                }
+            },
+            (error) => {
+				if (error.statusText === 'Unknown Error') {
+					// show error message if no connexion
+					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
-					this.syntheseForm.addControl(field.name, new FormControl(''));
-				}
-			}
-		}
+					// show error message if other server error
+					//this.isUserError = error.error;
+				}                
+            }
+        )
 
 		this.getMappingList();
-		this.onSelectUserMapping();
+        this.onSelectUserMapping();
 	}
 
 	onMapping(value) {

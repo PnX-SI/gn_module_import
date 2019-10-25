@@ -1,5 +1,6 @@
 from geonature.utils.env import DB
 from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func, PrimaryKeyConstraint
+from sqlalchemy.orm import relationship
 from geonature.utils.utilssqlalchemy import (
     serializable, geoserializable
 )
@@ -78,7 +79,7 @@ class BibFields(DB.Model):
     fr_label = DB.Column(DB.Unicode, nullable=False)
     eng_label = DB.Column(DB.Unicode, nullable=True)
     desc_field = DB.Column(DB.Unicode, nullable=True)
-    type_fields = DB.Column(DB.Unicode, nullable=True)
+    type_field = DB.Column(DB.Unicode, nullable=True)
     synthese_field = DB.Column(DB.Boolean, nullable=False)
     mandatory = DB.Column(DB.Boolean, nullable=False)
     autogenerate = DB.Column(DB.Boolean, nullable=False)

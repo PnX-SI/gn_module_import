@@ -84,8 +84,8 @@ CREATE TABLE bib_type_mapping_values(
 CREATE TABLE bib_themes(
     id_theme integer,
     name_theme character varying(100) NOT NULL,
-    fr_label character varying(100) NOT NULL,
-    eng_label character varying(100),
+    fr_label_theme character varying(100) NOT NULL,
+    eng_label_theme character varying(100),
     desc_theme character varying(1000),
     order_theme integer NOT NULL
 );
@@ -214,7 +214,7 @@ INSERT INTO user_errors (id_error, error_type, name, description) VALUES
 	(13, 'inconsistency_error', 'inconsistent geographic coordinate', 'coordonnée géographique incohérente');
 
 
-INSERT INTO bib_themes (id_theme, name_theme, fr_label, eng_label, desc_theme, order_theme) VALUES
+INSERT INTO bib_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme) VALUES
 	(1, 'general_info', 'Informations générales', '', '', 1),
     (2, 'statement_info', 'Informations de relevés', '', '', 2),
     (3, 'occurrence_sensitivity', 'Informations d''occurrences & sensibilité', '', '', 3),

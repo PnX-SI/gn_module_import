@@ -22,7 +22,7 @@ import threading
 import datetime
 
 import sqlalchemy
-from sqlalchemy import func, text, select, update, event
+from sqlalchemy import func, text, select, update, event, join
 from sqlalchemy.sql.elements import quoted_name
 from sqlalchemy.sql import column
 
@@ -52,6 +52,8 @@ from .db.models import (
     BibMappings,
     CorRoleMapping,
     TMappingsFields,
+    BibFields,
+    BibThemes,
     generate_user_table_class
 )
 
@@ -662,6 +664,7 @@ def postMapping(info_role, import_id, id_mapping):
         is_table_names = False
 
         data = request.form.to_dict()
+
         srid = int(data['srid'])
         data.pop('srid')
 
@@ -699,8 +702,15 @@ def postMapping(info_role, import_id, id_mapping):
 
         local_srid = get_local_srid()
 
-        is_generate_uuid = True # delete when checkbox created in frontend
-        is_generate_alt = True # delete when checkbox created in frontend
+        if data['unique_id_sinp_generate'] == 'true':
+            is_generate_uuid = True
+        else:
+            is_generate_uuid = False
+
+        if data['altitudes_generate'] == 'true':
+            is_generate_alt = True
+        else:
+            is_generate_alt = False
 
 
         logger.debug('import_id = %s', import_id)
@@ -1014,17 +1024,54 @@ def getSyntheseInfo(info_role):
         return 'INTERNAL SERVER ERROR ("getSyntheseInfo() error"): contactez l\'administrateur du site', 500
 
 
-"""
-@blueprint.route('/return_to_list/<import_id>', methods=['GET'])
+@blueprint.route('/bibFields', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def return_to_list(info_role, import_id):
-    try:
-        
-        #Si import_id is not undefined, effacer ligne dans timports_id, cor_role_import, cor_archive_import si step = 1
-        
+def get_bib_fields(info_role):
 
-        return server_response, 200
-    except Exception:
-        return 'INTERNAL SERVER ERROR ("delete_TImportRow() error"): contactez l\'administrateur du site', 500
-"""
+    try:
+
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+
+        bibs = DB.session.execute("""
+            SELECT *
+            FROM {schema_name}.bib_fields fields
+            JOIN {schema_name}.bib_themes themes on fields.id_theme = themes.id_theme;
+            """.format(schema_name = IMPORTS_SCHEMA_NAME)
+            ).fetchall()
+
+        max_theme = DB.session.execute("""
+            SELECT max(id_theme)
+            FROM {schema_name}.bib_fields fields
+            """.format(schema_name = IMPORTS_SCHEMA_NAME)
+            ).fetchone()[0]
+
+        data_theme = []
+
+        for i in range(max_theme):
+
+            data = []
+            for row in bibs:
+                if row.id_theme == i+1:
+                    theme_name = row.fr_label_theme
+                    d = {
+                        'id_field': row.id_field,
+                        'name_field': row.name_field,
+                        'required' : row.mandatory,
+                        'fr_label' : row.fr_label,
+                        'autogenerate': row.autogenerate
+                        }
+                    data.append(d)
+            data_theme.append({
+                'theme_name' : theme_name,
+                'fields': data
+                })
+            
+        return data_theme, 200
+
+    except Exception as e:
+        logger.error('*** SERVER ERROR WHEN GETTING BIB_FIELDS AND BIB_THEMES')
+        logger.exception(e)
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR when getting bib_fields and bib_themes',
+            details=str(e))

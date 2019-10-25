@@ -63,8 +63,8 @@ export class DataService {
     }
     
 
-    getBibInfo() {
-        return this._http.get<any>(`${urlApi}/bibInfo`);
+    getBibFields() {
+        return this._http.get<any>(`${urlApi}/bibFields`);
     }
 
 
