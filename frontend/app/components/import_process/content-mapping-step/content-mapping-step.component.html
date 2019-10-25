@@ -3,44 +3,45 @@
         <h5 class="card-title mb-0"> Mapping des contenus </h5>
     </div>
     <div class="card-body">
-        <div *ngFor="let contentMapping of contentMappingInfo">
-            <div class="card field-card">
-                <div class="field-header"
-                    (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed">
-                    <div class="card-title mb-0">{{contentMapping.nomenc_name}}</div>
-                    <i *ngIf="contentMapping.isCollapsed" class="material-icons">keyboard_arrow_down</i>
-                    <i *ngIf="!contentMapping.isCollapsed" class="material-icons">keyboard_arrow_up</i>
-                </div>
-                <div [ngbCollapse]="contentMapping.isCollapsed" class="card-body">
-                    <div *ngFor="let value_def of contentMapping.nomenc_values_def">
-                        <div class="form-group row">
-                            <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
-                            <div class="col-sm-8">
-                                <select class="form-control form-control-sm"
-                                    placeholder="Open this select menu">
-                                    <option [value]=""></option>
-                                    <option *ngFor="let userValue of contentMapping.user_values.values"
-                                        [value]="userValue">
-                                        {{userValue}}
-                                    </option>
-                                </select>
+        <form [formGroup]="contentForm" *ngIf="showForm">
+            <div *ngFor="let contentMapping of contentMappingInfo">
+                <div class="card field-card">
+                    <div class="field-header" (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed">
+                        <div class="card-title mb-0">{{contentMapping.nomenc_name}}</div>
+                        <i *ngIf="contentMapping.isCollapsed" class="material-icons">keyboard_arrow_down</i>
+                        <i *ngIf="!contentMapping.isCollapsed" class="material-icons">keyboard_arrow_up</i>
+                    </div>
+                    <div [ngbCollapse]="contentMapping.isCollapsed" class="card-body">
+                        <div *ngFor="let value_def of contentMapping.nomenc_values_def">
+                            <div class="form-group row">
+                                <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
+                                <div class="col-sm-8">
+                                    <pnx-multiselect [values]="contentMapping.user_values.values"
+                                        [parentFormControl]="contentForm.controls[value_def.name]"
+                                        keyLabel="value" keyValue="value" debounceTime="500"
+                                        [searchBar]="false" [disabled]="disabled"
+                                        (onChange) = "onSelectChange($event,contentMapping)"
+                                        (onDelete) = "onSelectDelete($event,contentMapping)"
+                                        >
+                                    </pnx-multiselect>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="d-flex flex-row justify-content-between">
-            <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
-                (click)="onStepBack()">
-                <i class="material-icons"> navigate_before </i>
-                Précédent
-            </button>
-            <button (click)="onFinalStep()"
-                class="btn btn-success box-shadow d-flex justify-content-center align-content-between">
-                Suivant
-                <i class="material-icons"> navigate_next </i>
-            </button>
-        </div>
+            <div class="d-flex flex-row justify-content-between">
+                <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
+                    (click)="onStepBack()">
+                    <i class="material-icons"> navigate_before </i>
+                    Précédent
+                </button>
+                <button (click)="onFinalStep()"
+                    class="btn btn-success box-shadow d-flex justify-content-center align-content-between">
+                    Suivant
+                    <i class="material-icons"> navigate_next </i>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
