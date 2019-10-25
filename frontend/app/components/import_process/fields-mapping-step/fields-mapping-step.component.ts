@@ -29,7 +29,7 @@ export class FieldsMappingStepComponent implements OnInit {
 	step2_btn: boolean = false;
 	contentMappingInfo: any;
 	isUserError: boolean = false;
-	stepForm: FormGroup;
+
 
 	@Input() columns: any;
 	@Input() srid: any;
