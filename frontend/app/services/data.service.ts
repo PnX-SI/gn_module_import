@@ -76,6 +76,23 @@ export class DataService {
         }
         fd.append('srid', user_srid);
 		return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
+    }
+    
+
+    postContentMap(value) {
+        const contentMappingUrl = `${urlApi}/contentMapping`;
+        console.log(value)
+        let fd = new FormData();
+        for (let key of Object.keys(value)) {
+            if (value[key].length > 1) {
+                for (let val of value[key]) {
+                    fd.append(key, val);
+                }
+            } else {
+                fd.append(key, value[key]);
+            }
+        }
+		return this._http.post<any>(contentMappingUrl, fd, HttpUploadOptions);
 	}
 
 

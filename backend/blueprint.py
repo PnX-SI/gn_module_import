@@ -985,6 +985,7 @@ def postMetaToStep3(info_role):
             details=str(e))
 
 
+"""
 @blueprint.route('/syntheseInfo', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
@@ -996,11 +997,11 @@ def getSyntheseInfo(info_role):
         synthese_info = []
 
         data = DB.session.execute(
-            """
+            "
             SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
             FROM INFORMATION_SCHEMA.COLUMNS\
             WHERE table_name = 'synthese';
-            """
+            "
         )
 
         for d in data:
@@ -1022,6 +1023,7 @@ def getSyntheseInfo(info_role):
     except Exception:
         raise
         return 'INTERNAL SERVER ERROR ("getSyntheseInfo() error"): contactez l\'administrateur du site', 500
+"""
 
 
 @blueprint.route('/bibFields', methods=['GET'])
@@ -1075,3 +1077,16 @@ def get_bib_fields(info_role):
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR when getting bib_fields and bib_themes',
             details=str(e))
+
+
+@blueprint.route('/contentMapping', methods=['GET', 'POST'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def content_mapping(info_role):
+    try:
+        print('ok ça passe')
+        data = request.form.to_dict()
+        pdb.set_trace()
+
+    except Exception:
+        raise

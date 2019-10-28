@@ -32,6 +32,7 @@ def get_nomenc_info(form_data, SINP_COLS, schema_name):
             val_def_list = []
             for val in nomenc_values:
                 d = {
+                    'id' : str(val.nomenc_id),
                     'value' : val.nomenc_values,
                     'definition' : val.nomenc_definitions,
                     'name': clean_string(val.nomenc_values)
