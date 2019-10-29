@@ -21,7 +21,9 @@ export class ImportProcessComponent implements OnInit {
 	public columns;
 	public IMPORT_CONFIG = ModuleConfig;
 
-	contentMappingInfo: any;
+    contentMappingInfo: any;
+    table_name: any;
+    selected_columns: any;
 	
 	@ViewChild('stepper') stepper: MatStepper;
 	
@@ -55,7 +57,11 @@ export class ImportProcessComponent implements OnInit {
 						}
 						case 'two': {
 							this.step2Control = step.stepForm;
-							this.contentMappingInfo = step.data;
+                            this.contentMappingInfo = step.data.content_mapping_info;
+                            console.log(this.contentMappingInfo);
+                            console.log(step);
+                            this.table_name = step.data.table_name;
+                            this.selected_columns = step.data.selected_columns;
 							this.cd.detectChanges();
 							break;
 						}

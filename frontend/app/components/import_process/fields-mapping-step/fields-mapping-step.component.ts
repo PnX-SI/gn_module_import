@@ -25,6 +25,8 @@ export class FieldsMappingStepComponent implements OnInit {
 	public newMapping: boolean = false;
     public id_mapping;
     public step3Response;
+    public table_name;
+    public selected_columns;
 
 	step2_btn: boolean = false;
 	contentMappingInfo: any;
@@ -92,6 +94,10 @@ export class FieldsMappingStepComponent implements OnInit {
 				this.n_error_lines = res['n_user_errors'];
                 this.dataCleaningErrors = res['user_error_details'];
                 console.log(res);
+                this.table_name = this.mappingRes['table_name'];
+                this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
+                console.log(this.table_name);
+                console.log(this.selected_columns)
 				this.step2_btn = true;
                 this.isFullErrorCheck(res['n_table_rows'], this.n_error_lines);
 			},
@@ -117,7 +123,7 @@ export class FieldsMappingStepComponent implements OnInit {
                 this.contentMappingInfo.map((content) => {
 					content.isCollapsed = true;
                 });
-                this.stepService.nextStep(this.syntheseForm, 'two', this.contentMappingInfo);
+                this.stepService.nextStep(this.syntheseForm, 'two', res);
                 console.log(this.step3Response);
 			},
 			(error) => {

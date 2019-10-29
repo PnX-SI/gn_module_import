@@ -113,3 +113,38 @@ def get_synthese_cols():
 
     except Exception:
         raise
+
+
+def get_nomenc_abb(id_nomenclature):
+
+    try:
+        nomenc_abb = DB.session.execute("""
+            SELECT BNT.mnemonique as abb
+            FROM ref_nomenclatures.t_nomenclatures N
+            LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT on BNT.id_type = N.id_type
+            WHERE id_nomenclature = {id_nomenclature};
+        """.format(id_nomenclature=int(id_nomenclature))).fetchone()
+
+        return nomenc_abb.abb
+
+    except Exception:
+        raise
+
+
+def set_nomenclature_id(schema_name, table_name, user_col, value, id_type):
+
+    try:
+    
+        DB.session.execute("""
+            UPDATE {schema_name}.{table_name}
+            SET {user_col} = REPLACE({user_col}, '{value}', '{id_type}')
+            """.format(
+                schema_name = schema_name,
+                table_name = table_name,
+                user_col = user_col,
+                value = value,
+                id_type = id_type)
+            )
+
+    except Exception:
+        raise

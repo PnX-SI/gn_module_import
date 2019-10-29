@@ -79,7 +79,7 @@ export class DataService {
     }
     
 
-    postContentMap(value) {
+    postContentMap(value, table_name, selected_columns) {
         const contentMappingUrl = `${urlApi}/contentMapping`;
         console.log(value)
         let fd = new FormData();
@@ -92,6 +92,9 @@ export class DataService {
                 fd.append(key, value[key]);
             }
         }
+        console.log(table_name);
+        fd.append('table_name', table_name);
+        fd.append('selected_cols', JSON.stringify(selected_columns));
 		return this._http.post<any>(contentMappingUrl, fd, HttpUploadOptions);
 	}
 

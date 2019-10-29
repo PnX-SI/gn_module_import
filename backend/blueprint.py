@@ -6,20 +6,14 @@ from flask import (
 )
 
 from werkzeug.utils import secure_filename
-
 import geopandas
-
 import os
-
 import pathlib
-
 import pandas as pd
-
 import numpy as np
-
 import threading
-
 import datetime
+import ast
 
 import sqlalchemy
 from sqlalchemy import func, text, select, update, event, join
@@ -99,7 +93,7 @@ from .goodtables_checks.check_user_file import check_user_file
 from .transform.transform import data_cleaning
 from .transform.set_geometry import set_geometry
 from .transform.set_altitudes import set_altitudes
-from .transform.nomenclatures.nomenclatures import get_nomenc_info
+from .transform.nomenclatures.nomenclatures import get_nomenc_info, set_nomenclature_ids
 
 from .logs import logger
 
@@ -689,7 +683,6 @@ def postMapping(info_role, import_id, id_mapping):
         DEFAULT_COUNT_VALUE = blueprint.config['DEFAULT_COUNT_VALUE']
         MODULE_URL = blueprint.config["MODULE_URL"]
         DIRECTORY_NAME = blueprint.config["UPLOAD_DIRECTORY"]
-        SINP_COLS = blueprint.config['SINP_SYNTHESE_NOMENCLATURES']
 
         index_col = ''.join([PREFIX,'pk'])
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
@@ -967,7 +960,15 @@ def postMetaToStep3(info_role):
         DB.session.commit()
         DB.session.close()
 
+        table_name = data['table_name']
+        import_id = data['import_id']
+        data.pop('table_name')
+        data.pop('import_id')
+
         return {
+            'table_name' : table_name,
+            'import_id' : import_id,
+            'selected_columns' : data,
             'content_mapping_info' : nomenc_info
         }
 
@@ -1083,8 +1084,21 @@ def get_bib_fields(info_role):
 @json_resp
 def content_mapping(info_role):
     try:
-        data = request.form.to_dict(flat=False)
-        pdb.set_trace()
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+
+        form_data = request.form.to_dict(flat=False)
+        table_name = form_data['table_name'][0]
+        selected_cols = ast.literal_eval(form_data['selected_cols'][0])
+
+        form_data.pop('table_name')
+        form_data.pop('selected_cols')
+
+        selected_content = {key:value for key, value in form_data.items() if value != ['']}
+
+        set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, selected_cols)
+
+        return 'ok'
+
 
     except Exception:
         raise

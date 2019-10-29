@@ -8,7 +8,10 @@ from ...db.queries.nomenclatures import (
     get_nomenc_values, 
     get_nomenc_user_values,
     get_nomenc_abbs,
-    get_synthese_col
+    get_synthese_col,
+    get_nomenc_abb, 
+    get_synthese_col,
+    set_nomenclature_id
 )
 
 from ...utils.clean_names import clean_string
@@ -45,7 +48,6 @@ def get_nomenc_info(form_data, schema_name):
                 val_def_list.append(d)
 
             # get user_nomenclature column name and values:
-
             user_nomenc_col = get_synthese_col(nomenc)
 
             nomenc_user_values = get_nomenc_user_values(form_data[user_nomenc_col], schema_name, form_data['table_name'])
@@ -74,4 +76,31 @@ def get_nomenc_info(form_data, schema_name):
         return front_info
 
     except Exception:
+        raise
+
+
+def set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, selected_cols):
+
+    try:
+
+        content_list = []
+        for key,value in selected_content.items():
+            abb = get_nomenc_abb(key)
+            synthese_name = get_synthese_col(abb)
+            d = {
+                'id_type': key,
+                'user_values': value,
+                'user_col': selected_cols[synthese_name]
+            }
+            content_list.append(d)
+
+        for element in content_list:
+            for val in element['user_values']:
+                set_nomenclature_id(IMPORTS_SCHEMA_NAME, table_name, element['user_col'], val, str(element['id_type']))
+                DB.session.flush()
+
+        DB.session.commit()
+
+    except Exception:
+        DB.session.rollback()
         raise

@@ -12,7 +12,9 @@ import { ToastrService } from 'ngx-toastr';
 export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 	public isCollapsed = false;
-	@Input() contentMappingInfo: any;
+    @Input() contentMappingInfo: any;
+    @Input() selected_columns: any;
+    @Input() table_name: any;
 	contentForm: FormGroup;
 	showForm: boolean = false;
     isUserError: boolean = false;
@@ -36,8 +38,8 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 		if (this.contentMappingInfo) {
 			this.contentMappingInfo.forEach((ele) => {
 				ele['nomenc_values_def'].forEach((nomenc) => {
-					this.contentForm.addControl(nomenc.id, new FormControl(''));
-				});
+                    this.contentForm.addControl(nomenc.id, new FormControl(''));
+                });
 			});
 			this.showForm = true;
 		}
@@ -75,7 +77,9 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     
 
     onContentMapping(value) {
-        this._ds.postContentMap(value).subscribe(
+        console.log(this.table_name);
+        console.log(this.selected_columns);
+        this._ds.postContentMap(value, this.table_name, this.selected_columns).subscribe(
             (res) => {		
                 this.contentMapRes = res;
             },
