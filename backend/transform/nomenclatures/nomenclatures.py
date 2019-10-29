@@ -3,21 +3,26 @@ from geonature.utils.env import DB
 
 from ...logs import logger
 
-from ...db.queries.nomenclatures import get_nomenc_details, get_nomenc_values, get_nomenc_user_values
+from ...db.queries.nomenclatures import (
+    get_nomenc_details, 
+    get_nomenc_values, 
+    get_nomenc_user_values,
+    get_nomenc_abbs,
+    get_synthese_col
+)
 
 from ...utils.clean_names import clean_string
 
 import pdb
 
-def get_nomenc_info(form_data, SINP_COLS, schema_name):
+def get_nomenc_info(form_data, schema_name):
 
     try:
 
         logger.info('get nomenclature info')
 
-        # get list of synthese column names dealing with SINP nomenclatures
-        selected_SINP_nomenc = [nomenclature['nomenclature_abb'] for nomenclature in SINP_COLS\
-                                if nomenclature['synthese_col'] in form_data.keys()]
+        # get list of user-selected synthese column names dealing with SINP nomenclatures
+        selected_SINP_nomenc = get_nomenc_abbs(form_data)
 
         front_info = []
 
@@ -39,10 +44,9 @@ def get_nomenc_info(form_data, SINP_COLS, schema_name):
                 }
                 val_def_list.append(d)
 
-            # get user_nomenclature column name and values
-            for col in SINP_COLS:
-                if col['nomenclature_abb'] == nomenc:
-                    user_nomenc_col = col['synthese_col']
+            # get user_nomenclature column name and values:
+
+            user_nomenc_col = get_synthese_col(nomenc)
 
             nomenc_user_values = get_nomenc_user_values(form_data[user_nomenc_col], schema_name, form_data['table_name'])
             user_values_list = []

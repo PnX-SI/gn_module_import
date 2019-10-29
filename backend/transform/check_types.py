@@ -4,6 +4,7 @@ import numpy as np
 import datetime
 
 from ..db.query import get_synthese_types
+from ..db.queries.nomenclatures import get_synthese_cols
 from ..wrappers import checker
 from ..logs import logger
 from .utils import fill_map, get_types, set_is_valid, set_invalid_reason, set_user_error
@@ -38,7 +39,7 @@ def is_uuid(value, version=4):
 
 
 @checker('Data cleaning : type of values checked')
-def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_values, SINP_COLS):
+def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_values):
 
     try:
 
@@ -143,8 +144,7 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
 
             int_cols = [field for field in synthese_info if synthese_info[field]['data_type'] == 'integer']
 
-            SINP_synthese_cols = [nomenclature['synthese_col'] for nomenclature in SINP_COLS]
-                
+            SINP_synthese_cols = get_synthese_cols()            
 
             if 'cd_nom' in int_cols: # voir si on garde (idealement faudrait plutot adapter clean_cd_nom)
                 int_cols.remove('cd_nom')

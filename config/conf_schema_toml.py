@@ -56,6 +56,7 @@ MISSING_VALUES = [
 
 DEFAULT_COUNT_VALUE = 1
 
+
 SINP_SYNTHESE_NOMENCLATURES = [
     {
         'synthese_col': 'id_nomenclature_geo_object_nature',
@@ -71,15 +72,15 @@ SINP_SYNTHESE_NOMENCLATURES = [
     },
     {
         'synthese_col': 'id_nomenclature_obs_technique',
-        'nomenclature_abb': 'TECHNIQUE_OBS'
+        'nomenclature_abb': 'TECHNIQUE_OBS' 
     },
     {
-        'synthese_col': 'id_nomenclature_bio_status',
+        'synthese_col': 'id_nomenclature_bio_status', 
         'nomenclature_abb': 'STATUT_BIO'
     },
     {
-        'synthese_col': 'id_nomenclature_naturalness',
-        'nomenclature_abb': 'ETA_BIO'
+        'synthese_col': 'id_nomenclature_naturalness', 
+        'nomenclature_abb': 'ETA_BIO' 
     },
     {
         'synthese_col': 'id_nomenclature_exist_proof',
@@ -134,6 +135,7 @@ SINP_SYNTHESE_NOMENCLATURES = [
         'nomenclature_abb': 'METH_DETERMIN'
     }
 ]
+
 
 EXCLUDED_SYNTHESE_FIELDS_FRONT = ['id_synthese', 'id_source', 'id_module',
                                   'id_dataset', 'the_geom_4326', 'the_geom_point', 'the_geom_local', 'last_action']

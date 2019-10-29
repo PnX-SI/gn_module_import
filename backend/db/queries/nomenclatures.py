@@ -56,3 +56,60 @@ def get_nomenc_user_values(user_nomenc_col, schema_name, table_name):
 
     except Exception:
         raise
+
+
+def get_nomenc_abbs(form_data):
+
+    try:
+        nomenc_abbs = DB.session.execute("""
+            SELECT F.name_field as synthese_name, BNT.mnemonique as nomenc_abb
+            FROM gn_imports.bib_fields F
+            RIGHT JOIN gn_imports.cor_synthese_nomenclature CSN ON CSN.id_field = F.id_field
+            LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.id_type = CSN.id_type;
+            """).fetchall()
+
+        nomenc_list = []
+
+        for nomenc in nomenc_abbs:
+            if nomenc.synthese_name in form_data.keys():
+                nomenc_list.append(nomenc.nomenc_abb)
+
+        return nomenc_list
+
+    except Exception:
+        raise
+
+
+def get_synthese_col(abb):
+
+    try:
+        nomenc_synthese_name = DB.session.execute("""
+            SELECT F.name_field as synthese_name
+            FROM gn_imports.bib_fields F
+            RIGHT JOIN gn_imports.cor_synthese_nomenclature CSN ON CSN.id_field = F.id_field
+            LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.id_type = CSN.id_type
+            WHERE BNT.mnemonique = '{abb}';
+            """.format(abb=abb)).fetchone()
+
+        return nomenc_synthese_name.synthese_name
+
+    except Exception:
+        raise
+
+
+def get_synthese_cols():
+    
+    try:
+        nomencs = DB.session.execute("""
+            SELECT F.name_field as synthese_name
+            FROM gn_imports.bib_fields F
+            RIGHT JOIN gn_imports.cor_synthese_nomenclature CSN ON CSN.id_field = F.id_field
+            LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.id_type = CSN.id_type;
+            """).fetchall()
+
+        synthese_name_list = [nomenc.synthese_name for nomenc in nomencs]
+
+        return synthese_name_list
+
+    except Exception:
+        raise

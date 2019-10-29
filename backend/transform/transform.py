@@ -19,7 +19,7 @@ import pdb
 
 
 
-def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, def_count_val, cd_nom_list, srid, local_srid, is_generate_uuid, SINP_COLS):
+def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, def_count_val, cd_nom_list, srid, local_srid, is_generate_uuid):
 
     try:
 
@@ -41,7 +41,7 @@ def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, 
 
         # Check data:
         check_missing(df, selected_columns, dc_user_errors, synthese_info, missing_val)
-        check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_val, SINP_COLS)
+        check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_val)
         check_cd_nom(df, selected_columns, dc_user_errors, missing_val, cd_nom_list)
         check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info)
         check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, is_generate_uuid)

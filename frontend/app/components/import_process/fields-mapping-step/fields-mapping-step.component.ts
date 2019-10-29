@@ -56,9 +56,7 @@ export class FieldsMappingStepComponent implements OnInit {
         this._ds.getBibFields().subscribe(
             (res) => {
                 this.bibRes = res;
-                console.log(this.bibRes);
                 for (let theme of this.bibRes) {
-                    console.log(theme);
                     for (let field of theme.fields) {
                         if (field.required) {
                             this.syntheseForm.addControl(field.name_field, new FormControl('', Validators.required));
