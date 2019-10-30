@@ -1,5 +1,5 @@
 <div class=container>
-    <mat-horizontal-stepper>
+    <mat-horizontal-stepper linear #stepper>
         <!-- STEP 1 -->
         <mat-step label="Upload du fichier" [stepControl]="step1Control">
             <upload-file-step [importId]="importId"></upload-file-step>
@@ -9,7 +9,7 @@
             <fields-mapping-step [importId]="importId" [srid]="srid" [columns]="columns"></fields-mapping-step>
         </mat-step>
         <!-- STEP 3 -->
-        <mat-step label="Mapping des contenus" [stepControl]="">
+        <mat-step label="Mapping des contenus" [stepControl]="step3Control">
             <content-mapping-step [contentMappingInfo]="contentMappingInfo" [table_name]="table_name" [selected_columns]="selected_columns" ></content-mapping-step>
         </mat-step>
         <!-- STEP 4 -->
@@ -17,6 +17,7 @@
             <import-step></import-step>
         </mat-step>
     </mat-horizontal-stepper>
+
     <footer>
 
         <div class="d-flex flex-row justify-content-between" id="bottomButtons">

@@ -11,6 +11,7 @@ const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 
 @Injectable()
 export class DataService {
+    
 	constructor(private _http: HttpClient) {}
 
 
@@ -113,6 +114,11 @@ export class DataService {
         }
         fd.append('table_name', table_name);
         return this._http.post<any>(`${urlApi}/postMetaToStep3`, fd, HttpUploadOptions);
+    }
+
+
+    importData() {
+        return this._http.get<any>(`${urlApi}/importData`);
     }
 
 }

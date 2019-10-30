@@ -2,6 +2,9 @@ import { Component, OnInit, OnChanges, Input } from '@angular/core';
 import { StepsService } from '../steps.service';
 import { DataService } from '../../../services/data.service';
 import { ToastrService } from 'ngx-toastr';
+import { ModuleConfig } from '../../../module.config';
+import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { MatStepper } from '@angular/material';
 
 @Component({
 	selector: 'import-step',
@@ -13,17 +16,20 @@ export class ImportStepComponent implements OnInit, OnChanges {
 	public isCollapsed = false;
     //@Input() contentMappingInfo: any;
     isUserError: boolean = false;
-    contentMapRes: any;
+    importDataRes: any;
+	importForm: FormGroup;
 
 
 	constructor(
         private stepService: StepsService, 
         private _ds: DataService,
-        private toastr: ToastrService
+        private toastr: ToastrService,
+        private _fb: FormBuilder,
         ) {}
 
 
 	ngOnInit() {
+        this.importForm = this._fb.group({});
 	}
 
 
@@ -32,7 +38,23 @@ export class ImportStepComponent implements OnInit, OnChanges {
     }
 
     onImport() {
-        console.log('my import');
+        this._ds.importData().subscribe(
+            (res) => {		
+                this.importDataRes = res;
+                console.log(this.importDataRes);
+            },
+            (error) => {
+                if (error.statusText === 'Unknown Error') {
+                    // show error message if no connexion
+                    this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+                } else {
+                    // show error message if other server error
+                    this.isUserError = true;
+                    this.isUserError = error.error;
+                }
+            }
+        );
+
     }
     
 }

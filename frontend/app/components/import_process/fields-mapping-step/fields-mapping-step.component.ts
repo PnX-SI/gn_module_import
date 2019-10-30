@@ -89,15 +89,11 @@ export class FieldsMappingStepComponent implements OnInit {
 		this._ds.postMapping(value, this.importId, this.id_mapping, this.srid).subscribe(
 			(res) => {		
                 this.mappingRes =res;
-				//
 				this.isUploading = false;
 				this.n_error_lines = res['n_user_errors'];
                 this.dataCleaningErrors = res['user_error_details'];
-                console.log(res);
                 this.table_name = this.mappingRes['table_name'];
                 this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
-                console.log(this.table_name);
-                console.log(this.selected_columns)
 				this.step2_btn = true;
                 this.isFullErrorCheck(res['n_table_rows'], this.n_error_lines);
 			},

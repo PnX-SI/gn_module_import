@@ -20,7 +20,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     isUserError: boolean = false;
     contentMapRes: any;
 
-
 	constructor(
         private stepService: StepsService, 
         private _fb: FormBuilder,
@@ -77,11 +76,10 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     
 
     onContentMapping(value) {
-        console.log(this.table_name);
-        console.log(this.selected_columns);
         this._ds.postContentMap(value, this.table_name, this.selected_columns).subscribe(
             (res) => {		
                 this.contentMapRes = res;
+                console.log(this.contentMapRes);
                 this.stepService.nextStep(this.contentForm, 'three', res);
             },
             (error) => {

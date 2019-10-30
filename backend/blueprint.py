@@ -830,69 +830,6 @@ def postMapping(info_role, import_id, id_mapping):
 
         logger.info('*** END CORRESPONDANCE MAPPING')
 
-        """
-        ### IMPORT DATA IN SYNTHESE TABLE
-
-        total_columns = {**selected_columns, **added_cols}
-
-        # remove longitude and latitude from dict
-        if 'longitude' in total_columns.keys():
-            del total_columns['longitude']
-        if 'latitude' in total_columns.keys():
-            del total_columns['latitude']
-
-
-        # add fixed synthese fields :
-        id_module = DB.session.execute("
-            SELECT id_module
-            FROM gn_commons.t_modules
-            WHERE module_code = 'IMPORT';
-            ").fetchone()[0]
-        total_columns['id_module'] = id_module
-
-        id_dataset = DB.session.query(TImports.id_dataset)\
-            .filter(TImports.id_import == import_id)\
-            .one()[0]
-        total_columns['id_dataset'] = id_dataset
-
-
-
-        # add key type info to value ('value::type')
-        select_part = []
-        for key, value in total_columns.items():
-            if key == 'the_geom_4326':
-                key_type = 'geometry(Geometry,4326)'
-            elif key == 'the_geom_point':
-                key_type = 'geometry(Point,4326)'
-            elif key == 'the_geom_local':
-                key_type = 'geometry(Geometry,2154)'
-            else:
-                key_type = DB.session.execute("
-                    SELECT data_type 
-                    FROM information_schema.columns
-                    WHERE table_name = 'synthese'
-                    AND column_name = '{key}';
-                .format(key = key)).fetchone()[0]
-            select_part.append('::'.join([str(value), key_type]))
-
-
-        # insert into synthese
-        DB.session.execute("
-            INSERT INTO gn_synthese.synthese ({into_part})
-            SELECT {select_part}
-            FROM {schema_name}.{table_name}
-            WHERE gn_is_valid='True';
-            .format(
-                into_part = ','.join(total_columns.keys()),
-                select_part = ','.join(select_part),
-                schema_name = IMPORTS_SCHEMA_NAME,
-                table_name = table_names['imports_table_name']
-            ))
-
-        DB.session.commit()
-        DB.session.close()
-        """
-
         DB.session.commit()
         DB.session.close()
 
@@ -1097,8 +1034,89 @@ def content_mapping(info_role):
 
         set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, selected_cols)
 
-        return 'ok'
+        return {
+            'test' : 'ok'
+        }
 
+    except Exception:
+        raise
+
+
+@blueprint.route('/importData', methods=['GET', 'POST'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def import_data(info_role):
+    try:
+
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+
+        pdb.set_trace()
+
+        form_data = request.form.to_dict(flat=False)
+        table_name = form_data['table_name'][0]
+        selected_cols = ast.literal_eval(form_data['selected_cols'][0])
+        total_columns = {**selected_columns, **added_cols}
+
+        # remove longitude and latitude from dict
+        if 'longitude' in total_columns.keys():
+            del total_columns['longitude']
+        if 'latitude' in total_columns.keys():
+            del total_columns['latitude']
+
+
+        # add fixed synthese fields :
+        id_module = DB.session.execute("""
+            SELECT id_module
+            FROM gn_commons.t_modules
+            WHERE module_code = 'IMPORT';
+            """).fetchone()[0]
+        total_columns['id_module'] = id_module
+
+        id_dataset = DB.session.query(TImports.id_dataset)\
+            .filter(TImports.id_import == import_id)\
+            .one()[0]
+        total_columns['id_dataset'] = id_dataset
+
+
+
+        # add key type info to value ('value::type')
+        select_part = []
+        for key, value in total_columns.items():
+            if key == 'the_geom_4326':
+                key_type = 'geometry(Geometry,4326)'
+            elif key == 'the_geom_point':
+                key_type = 'geometry(Point,4326)'
+            elif key == 'the_geom_local':
+                key_type = 'geometry(Geometry,2154)'
+            else:
+                key_type = DB.session.execute("""
+                    SELECT data_type 
+                    FROM information_schema.columns
+                    WHERE table_name = 'synthese'
+                    AND column_name = '{key}';
+                    """.format(
+                        key = key)
+                    ).fetchone()[0]
+            select_part.append('::'.join([str(value), key_type]))
+
+
+        # insert into synthese
+        DB.session.execute("""
+            INSERT INTO gn_synthese.synthese ({into_part})
+            SELECT {select_part}
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid='True';
+            """.format(
+                into_part = ','.join(total_columns.keys()),
+                select_part = ','.join(select_part),
+                schema_name = IMPORTS_SCHEMA_NAME,
+                table_name = table_names['imports_table_name']
+            ))
+
+        DB.session.commit()
+        DB.session.close()
+
+        return 'ok ca passe'
 
     except Exception:
         raise

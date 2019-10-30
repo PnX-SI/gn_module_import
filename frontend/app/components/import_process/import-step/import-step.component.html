@@ -4,19 +4,23 @@
     </div>
     <div class="card-body">
 
+        <form [formGroup]="importForm">
+
             Preview des données avant import dans la synthèse
 
-        <div class="d-flex flex-row justify-content-between">
-            <button (click)="onStepBack()"
-                class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between">
-                <i class="material-icons"> navigate_before </i>
-                Précédent
-            </button>
-            <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                (click)="onImport()">
-                <i class="material-icons"> done </i>
-                Importer les données
-            </button>
-        </div>
+            <div class="d-flex flex-row justify-content-between">
+                <button (click)="onStepBack()"
+                    class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between">
+                    <i class="material-icons"> navigate_before </i>
+                    Précédent
+                </button>
+                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
+                    (click)="onImport()">
+                    <i class="material-icons"> done </i>
+                    Importer les données
+                </button>
+            </div>
+
+        </form>
     </div>
 </div>

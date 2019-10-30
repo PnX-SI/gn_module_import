@@ -17,6 +17,7 @@ export class ImportProcessComponent implements OnInit {
 	public step1Control: FormGroup;
     public step2Control: FormGroup;
     public step3Control: FormGroup;
+
 	public srid: any;
 	public importId;
 	public columns;
@@ -40,7 +41,9 @@ export class ImportProcessComponent implements OnInit {
 
 	ngAfterViewInit() {
 		this.stepService.getStep().subscribe((step) => {
+            console.log('quelque chose?');
 			if (step) {
+                console.log(step);
 				if (step.stepForm && step.type === 'next') {
 					switch (step.id) {
 						case 'one': {
