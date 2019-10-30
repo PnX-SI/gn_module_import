@@ -117,8 +117,17 @@ export class DataService {
     }
 
 
-    importData() {
-        return this._http.get<any>(`${urlApi}/importData`);
+    importData(selected_columns, added_columns, table_name, import_id) {
+        let fd = new FormData();
+        fd.append('selected_columns', JSON.stringify(selected_columns));
+        fd.append('added_columns', JSON.stringify(added_columns));
+        console.log(table_name);
+        fd.append('table_name', table_name);
+        fd.append('import_id', import_id);
+        console.log(selected_columns);
+        console.log(added_columns);
+        console.log(import_id);
+        return this._http.post<any>(`${urlApi}/importData`, fd, HttpUploadOptions);
     }
 
 }

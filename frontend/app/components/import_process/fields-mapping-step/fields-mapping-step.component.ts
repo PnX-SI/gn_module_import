@@ -27,6 +27,7 @@ export class FieldsMappingStepComponent implements OnInit {
     public step3Response;
     public table_name;
     public selected_columns;
+    public added_columns;
 
 	step2_btn: boolean = false;
 	contentMappingInfo: any;
@@ -89,11 +90,13 @@ export class FieldsMappingStepComponent implements OnInit {
 		this._ds.postMapping(value, this.importId, this.id_mapping, this.srid).subscribe(
 			(res) => {		
                 this.mappingRes =res;
+                console.log(this.mappingRes);
 				this.isUploading = false;
 				this.n_error_lines = res['n_user_errors'];
                 this.dataCleaningErrors = res['user_error_details'];
                 this.table_name = this.mappingRes['table_name'];
                 this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
+                this.added_columns = this.mappingRes['added_columns'];
 				this.step2_btn = true;
                 this.isFullErrorCheck(res['n_table_rows'], this.n_error_lines);
 			},
@@ -119,7 +122,8 @@ export class FieldsMappingStepComponent implements OnInit {
                 this.contentMappingInfo.map((content) => {
 					content.isCollapsed = true;
                 });
-                this.stepService.nextStep(this.syntheseForm, 'two', res);
+                this.step3Response['added_columns'] = this.added_columns;
+                this.stepService.nextStep(this.syntheseForm, 'two', this.step3Response);
                 console.log(this.step3Response);
 			},
 			(error) => {

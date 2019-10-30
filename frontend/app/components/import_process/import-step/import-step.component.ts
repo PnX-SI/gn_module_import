@@ -14,7 +14,10 @@ import { MatStepper } from '@angular/material';
 export class ImportStepComponent implements OnInit, OnChanges {
 
 	public isCollapsed = false;
-    //@Input() contentMappingInfo: any;
+    @Input() selected_columns: any;
+    @Input() added_columns: any;
+    @Input() table_name: any;
+    @Input() importId: any;
     isUserError: boolean = false;
     importDataRes: any;
 	importForm: FormGroup;
@@ -38,7 +41,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
     }
 
     onImport() {
-        this._ds.importData().subscribe(
+        this._ds.importData(this.selected_columns, this.added_columns, this.table_name, this.importId).subscribe(
             (res) => {		
                 this.importDataRes = res;
                 console.log(this.importDataRes);

@@ -665,7 +665,6 @@ def postMapping(info_role, import_id, id_mapping):
 
         ### SAVE MAPPING ###
 
-        #!! create a route for mapping (make promise in front)
         logger.info('save field mapping')
         save_field_mapping(data, id_mapping)
 
@@ -840,6 +839,7 @@ def postMapping(info_role, import_id, id_mapping):
             'import_id' : import_id,
             'id_mapping' : id_mapping,
             'selected_columns' : selected_columns,
+            'added_columns': added_cols,
             'table_name' : table_names['imports_table_name']
         }
 
@@ -1050,19 +1050,25 @@ def import_data(info_role):
 
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
-        pdb.set_trace()
-
         form_data = request.form.to_dict(flat=False)
         table_name = form_data['table_name'][0]
-        selected_cols = ast.literal_eval(form_data['selected_cols'][0])
-        total_columns = {**selected_columns, **added_cols}
+        import_id = int(form_data['import_id'][0])
+        selected_cols = ast.literal_eval(form_data['selected_columns'][0])
+        added_cols = ast.literal_eval(form_data['added_columns'][0])
 
-        # remove longitude and latitude from dict
+        total_columns = {**selected_cols, **added_cols}
+
+        # remove from dict :
         if 'longitude' in total_columns.keys():
             del total_columns['longitude']
         if 'latitude' in total_columns.keys():
             del total_columns['latitude']
-
+        if 'id_mapping' in total_columns.keys():
+            del total_columns['id_mapping']
+        if 'unique_id_sinp_generate' in total_columns.keys():
+            del total_columns['unique_id_sinp_generate']
+        if 'altitudes_generate' in total_columns.keys():
+            del total_columns['altitudes_generate']
 
         # add fixed synthese fields :
         id_module = DB.session.execute("""
@@ -1076,8 +1082,6 @@ def import_data(info_role):
             .filter(TImports.id_import == import_id)\
             .one()[0]
         total_columns['id_dataset'] = id_dataset
-
-
 
         # add key type info to value ('value::type')
         select_part = []
@@ -1110,13 +1114,14 @@ def import_data(info_role):
                 into_part = ','.join(total_columns.keys()),
                 select_part = ','.join(select_part),
                 schema_name = IMPORTS_SCHEMA_NAME,
-                table_name = table_names['imports_table_name']
+                table_name = table_name
             ))
 
         DB.session.commit()
         DB.session.close()
 
-        return 'ok ca passe'
+        return True
 
     except Exception:
+        DB.session.rollback()
         raise

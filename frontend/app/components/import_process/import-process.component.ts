@@ -19,13 +19,14 @@ export class ImportProcessComponent implements OnInit {
     public step3Control: FormGroup;
 
 	public srid: any;
-	public importId;
 	public columns;
 	public IMPORT_CONFIG = ModuleConfig;
 
     contentMappingInfo: any;
     table_name: any;
     selected_columns: any;
+    added_columns: any;
+    importId: any;
 	
 	@ViewChild('stepper') stepper: MatStepper;
 	
@@ -41,14 +42,13 @@ export class ImportProcessComponent implements OnInit {
 
 	ngAfterViewInit() {
 		this.stepService.getStep().subscribe((step) => {
-            console.log('quelque chose?');
 			if (step) {
-                console.log(step);
 				if (step.stepForm && step.type === 'next') {
 					switch (step.id) {
 						case 'one': {
 							this.step1Control = step.stepForm;
-							this.importId = step.data.importId;
+                            this.importId = step.data.importId;
+                            console.log(this.importId);
 							this.srid = step.data.srid;
 							this.columns = step.data.columns.map((col) => {
 								return {
@@ -64,6 +64,8 @@ export class ImportProcessComponent implements OnInit {
                             this.contentMappingInfo = step.data.content_mapping_info;
                             this.table_name = step.data.table_name;
                             this.selected_columns = step.data.selected_columns;
+                            this.added_columns = step.data.added_columns;
+                            console.log(this.added_columns);
 							this.cd.detectChanges();
 							break;
                         }
