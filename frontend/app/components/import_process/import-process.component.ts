@@ -15,7 +15,8 @@ import { StepsService } from './steps.service';
 export class ImportProcessComponent implements OnInit {
 
 	public step1Control: FormGroup;
-	public step2Control: FormGroup;
+    public step2Control: FormGroup;
+    public step3Control: FormGroup;
 	public srid: any;
 	public importId;
 	public columns;
@@ -58,13 +59,16 @@ export class ImportProcessComponent implements OnInit {
 						case 'two': {
 							this.step2Control = step.stepForm;
                             this.contentMappingInfo = step.data.content_mapping_info;
-                            console.log(this.contentMappingInfo);
-                            console.log(step);
                             this.table_name = step.data.table_name;
                             this.selected_columns = step.data.selected_columns;
 							this.cd.detectChanges();
 							break;
-						}
+                        }
+                        case 'three': {
+                            this.step3Control = step.stepForm;
+                            this.cd.detectChanges();
+							break;
+                        }
 					}
 					this.stepper.next();
 				}

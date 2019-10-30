@@ -82,6 +82,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
         this._ds.postContentMap(value, this.table_name, this.selected_columns).subscribe(
             (res) => {		
                 this.contentMapRes = res;
+                this.stepService.nextStep(this.contentForm, 'three', res);
             },
             (error) => {
                 if (error.statusText === 'Unknown Error') {

@@ -1,5 +1,5 @@
 <div class=container>
-    <mat-horizontal-stepper linear #stepper>
+    <mat-horizontal-stepper>
         <!-- STEP 1 -->
         <mat-step label="Upload du fichier" [stepControl]="step1Control">
             <upload-file-step [importId]="importId"></upload-file-step>
@@ -13,26 +13,8 @@
             <content-mapping-step [contentMappingInfo]="contentMappingInfo" [table_name]="table_name" [selected_columns]="selected_columns" ></content-mapping-step>
         </mat-step>
         <!-- STEP 4 -->
-        <mat-step>
-            <h4> TERMINER L'IMPORT </h4>
-            <div *ngIf="!impatient">
-                Preview des données avant import dans la synthèse
-            </div>
-            <div *ngIf="impatient">
-                ALLONS, NE SOYEZ PAS TROP IMPATIENT !
-            </div>
-            <div class="d-flex flex-row justify-content-between">
-                <button (click)="tabset.select('content-mapping')"
-                    class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between">
-                    <i class="material-icons"> navigate_before </i>
-                    Précédent
-                </button>
-                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                    (click)="onFinalImport()">
-                    <i class="material-icons"> done </i>
-                    Importer les données dans Geonature
-                </button>
-            </div>
+        <mat-step label="Importer les données" [stepControl]="">
+            <import-step></import-step>
         </mat-step>
     </mat-horizontal-stepper>
     <footer>
