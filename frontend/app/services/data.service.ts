@@ -121,13 +121,17 @@ export class DataService {
         let fd = new FormData();
         fd.append('selected_columns', JSON.stringify(selected_columns));
         fd.append('added_columns', JSON.stringify(added_columns));
-        console.log(table_name);
         fd.append('table_name', table_name);
         fd.append('import_id', import_id);
-        console.log(selected_columns);
-        console.log(added_columns);
-        console.log(import_id);
         return this._http.post<any>(`${urlApi}/importData`, fd, HttpUploadOptions);
+    }
+
+
+    getValidData(importId: number, selected_columns, added_columns) {
+        let fd = new FormData();
+        fd.append('selected_columns', JSON.stringify(selected_columns));
+        fd.append('added_columns', JSON.stringify(added_columns));
+        return this._http.post<any>(`${urlApi}/getValidData/${importId}`, fd, HttpUploadOptions);        
     }
 
 }

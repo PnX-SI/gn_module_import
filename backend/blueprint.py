@@ -59,6 +59,7 @@ from .db.query import (
     delete_import_CorRoleImport,
     delete_import_TImports,
     delete_tables,
+    get_table_name,
     get_table_names,
     check_sql_words,
     get_full_table_name,
@@ -1101,7 +1102,9 @@ def import_data(info_role):
 
         logger.info('-> Data imported in gn_synthese.synthese table')
 
-        return 'data import done'
+        return {
+            'total_columns' : total_columns
+        }
 
     except Exception as e:
         DB.session.rollback()
@@ -1112,3 +1115,99 @@ def import_data(info_role):
             details=str(e))
     finally:
         DB.session.close()
+
+
+@blueprint.route('/getValidData/<import_id>', methods=['GET', 'POST'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def get_valid_data(info_role, import_id):
+    try:
+        logger.info('Get valid data for preview')
+
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+
+        # get table name
+        table_name = set_imports_table_name(get_table_name(import_id))
+
+        # set total user columns
+        form_data = request.form.to_dict(flat=False)
+        selected_cols = ast.literal_eval(form_data['selected_columns'][0])
+        added_cols = ast.literal_eval(form_data['added_columns'][0])
+
+        total_columns = {**selected_cols, **added_cols}
+
+        # remove from dict :
+        if 'longitude' in total_columns.keys():
+            del total_columns['longitude']
+        if 'latitude' in total_columns.keys():
+            del total_columns['latitude']
+        if 'id_mapping' in total_columns.keys():
+            del total_columns['id_mapping']
+        if 'unique_id_sinp_generate' in total_columns.keys():
+            del total_columns['unique_id_sinp_generate']
+        if 'altitudes_generate' in total_columns.keys():
+            del total_columns['altitudes_generate']
+
+        # add fixed synthese fields :
+        id_module = DB.session.execute("""
+            SELECT id_module
+            FROM gn_commons.t_modules
+            WHERE module_code = 'IMPORT';
+            """).fetchone()[0]
+        total_columns['id_module'] = id_module
+
+        id_dataset = DB.session.query(TImports.id_dataset)\
+            .filter(TImports.id_import == import_id)\
+            .one()[0]
+        total_columns['id_dataset'] = id_dataset
+
+
+        # get valid data
+        preview = DB.session.execute("""
+            SELECT *
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid = 'True';        
+            """.format(
+                schema_name = IMPORTS_SCHEMA_NAME,
+                table_name = table_name
+            )).fetchall()
+
+
+        # set empty synthese dict
+        synthese_fields = DB.session.execute("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'synthese'
+            ORDER BY ordinal_position ASC;
+            """).fetchall()
+
+
+        # fill synthese template
+        #(faire une limite à 100)
+        valid_data_list = []
+        for row in preview:
+            print(row)
+            synthese_dict = get_synthese_dict(synthese_fields)
+            for key,value in synthese_dict.items():
+                if key in total_columns.keys():
+                    synthese_dict[key] = row[total_columns[key]]
+            valid_data_list.append(synthese_dict)
+
+        return {
+            'total_columns' : total_columns,
+            'valid_data': valid_data_list
+        }
+
+    except Exception:
+        raise
+        pdb.set_trace()
+
+
+def get_synthese_dict(synthese_fields):
+    synthese_dict = {}
+    for field in synthese_fields:
+        synthese_dict[field.column_name] = ''
+    synthese_dict.pop('id_synthese')
+    return synthese_dict
+
+

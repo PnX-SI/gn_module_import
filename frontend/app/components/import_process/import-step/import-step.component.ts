@@ -17,6 +17,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
     @Input() table_name: any;
     @Input() importId: any;
     importDataRes: any;
+    validData: any;
 
 
 	constructor(
@@ -34,6 +35,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
 		this.stepService.previousStep();
     }
 
+    
     onImport() {
         this._ds.importData(this.selected_columns, this.added_columns, this.table_name, this.importId).subscribe(
             (res) => {		
@@ -52,6 +54,26 @@ export class ImportStepComponent implements OnInit, OnChanges {
             }
         );
 
+    }
+
+
+    getValidData() {
+        this._ds.getValidData(this.importId, this.selected_columns, this.added_columns).subscribe(
+            (res) => {
+                this.validData = res;
+                console.log(this.validData);
+            },
+            (error) => {
+                if (error.statusText === 'Unknown Error') {
+                    // show error message if no connexion
+                    this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+                } else {
+                    // show error message if other server error
+                    console.log(error);
+                    this.toastr.error(error.error.message);
+                }
+            }
+        );
     }
     
 }
