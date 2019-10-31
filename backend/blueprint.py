@@ -303,42 +303,56 @@ def get_mapping_fields(info_role, id_mapping):
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
 def postMappingFieldName(info_role):
-    data = request.json
+    try:
+        logger.info('Posting mapping field name')
 
-    if data['mappingName'] == '':
-        return 'Vous devez donner un nom au mapping', 400
+        data = request.json
 
-    # check if name already exists
-    names_request = DB.session.query(BibMappings).all()
-    names = [name.mapping_label for name in names_request]
+        if data['mappingName'] == '':
+            return 'Vous devez donner un nom au mapping', 400
 
-    if data['mappingName'] in names:
-        return 'Ce nom de mapping existe déjà', 400
+        # check if name already exists
+        names_request = DB.session.query(BibMappings).all()
+        names = [name.mapping_label for name in names_request]
 
-    # fill BibMapping
-    new_name = BibMappings(
-        mapping_label = data['mappingName']
+        if data['mappingName'] in names:
+            return 'Ce nom de mapping existe déjà', 400
+
+        # fill BibMapping
+        new_name = BibMappings(
+            mapping_label = data['mappingName']
+            )
+
+        DB.session.add(new_name)
+        DB.session.flush()
+
+        # fill CorRoleMapping
+
+        id_mapping = DB.session.query(BibMappings.id_mapping)\
+            .filter(BibMappings.mapping_label == data['mappingName'])\
+            .one()[0]
+
+        new_map_role = CorRoleMapping(
+            id_role = info_role.id_role,
+            id_mapping = id_mapping
         )
 
-    DB.session.add(new_name)
-    DB.session.flush()
+        DB.session.add(new_map_role)
+        DB.session.commit()
 
-    # fill CorRoleMapping
+        logger.info('-> Mapping field name posted')
 
-    id_mapping = DB.session.query(BibMappings.id_mapping)\
-        .filter(BibMappings.mapping_label == data['mappingName'])\
-        .one()[0]
-
-    new_map_role = CorRoleMapping(
-        id_role = info_role.id_role,
-        id_mapping = id_mapping
-    )
-
-    DB.session.add(new_map_role)
-    DB.session.commit()
-    DB.session.close()
-
-    return id_mapping, 200
+        return id_mapping, 200
+    
+    except Exception as e:
+        logger.error('*** ERROR WHEN POSTING MAPPING FIELD NAME')
+        logger.exception(e)
+        DB.session.rollback()
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR : Error when posting mapping field name',
+            details=str(e))
+    finally:
+        DB.session.close()
 
 
 @blueprint.route('/cancel_import/<import_id>', methods=['GET'])
@@ -895,7 +909,6 @@ def postMetaToStep3(info_role):
                 })
 
         DB.session.commit()
-        DB.session.close()
 
         table_name = data['table_name']
         import_id = data['import_id']
@@ -908,59 +921,15 @@ def postMetaToStep3(info_role):
             'selected_columns' : data,
             'content_mapping_info' : nomenc_info
         }
-
     except Exception as e:
         logger.error('*** ERROR IN STEP 2 NEXT BUTTON')
         logger.exception(e)
         DB.session.rollback()
-        DB.session.close()
-
-        pdb.set_trace()
-
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR : Erreur pendant le passage vers l\'étape 3 - contacter l\'administrateur',
             details=str(e))
-
-
-"""
-@blueprint.route('/syntheseInfo', methods=['GET'])
-@permissions.check_cruved_scope('C', True, module_code="IMPORT")
-@json_resp
-def getSyntheseInfo(info_role):
-    try:
-        EXCLUDED_SYNTHESE_FIELDS_FRONT = blueprint.config['EXCLUDED_SYNTHESE_FIELDS_FRONT']
-        NOT_NULLABLE_SYNTHESE_FIELDS = blueprint.config['NOT_NULLABLE_SYNTHESE_FIELDS']
-
-        synthese_info = []
-
-        data = DB.session.execute(
-            "
-            SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
-            FROM INFORMATION_SCHEMA.COLUMNS\
-            WHERE table_name = 'synthese';
-            "
-        )
-
-        for d in data:
-            if d.column_name not in EXCLUDED_SYNTHESE_FIELDS_FRONT:
-                if d.column_name in NOT_NULLABLE_SYNTHESE_FIELDS:
-                    is_nullabl = 'NO'
-                else:
-                    is_nullabl = 'YES'
-                prop = {
-                    "column_name": d.column_name,
-                    "is_nullable": is_nullabl,
-                    "data_type": d.data_type,
-                    "character_maximum_length": d.character_maximum_length,
-                }
-                synthese_info.append(prop)
-        #names2 = ['nom_cite', 'date_min', 'date_max']
-        #print(synthese_info)
-        return synthese_info, 200
-    except Exception:
-        raise
-        return 'INTERNAL SERVER ERROR ("getSyntheseInfo() error"): contactez l\'administrateur du site', 500
-"""
+    finally:
+        DB.session.close()
 
 
 @blueprint.route('/bibFields', methods=['GET'])
@@ -1021,6 +990,9 @@ def get_bib_fields(info_role):
 @json_resp
 def content_mapping(info_role):
     try:
+
+        logger.info('Content mapping : transforming user values to id_types in the user table')
+
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
         form_data = request.form.to_dict(flat=False)
@@ -1034,12 +1006,18 @@ def content_mapping(info_role):
 
         set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, selected_cols)
 
-        return {
-            'test' : 'ok'
-        }
+        logger.nfo('-> Content mapping : user values transformed to id_types in the user table')
 
-    except Exception:
-        raise
+        return 'content_mapping done'
+
+    except Exception as e:
+        DB.session.rollback()
+        DB.session.close()
+        logger.error('*** SERVER ERROR DURING CONTENT MAPPING (user values to id_types')
+        logger.exception(e)
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR during content mapping (user values to id_types',
+            details=str(e))
 
 
 @blueprint.route('/importData', methods=['GET', 'POST'])
@@ -1047,6 +1025,8 @@ def content_mapping(info_role):
 @json_resp
 def import_data(info_role):
     try:
+
+        logger.info('Importing data in gn_synthese.synthese table')
 
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
@@ -1118,10 +1098,17 @@ def import_data(info_role):
             ))
 
         DB.session.commit()
-        DB.session.close()
 
-        return True
+        logger.info('-> Data imported in gn_synthese.synthese table')
 
-    except Exception:
+        return 'data import done'
+
+    except Exception as e:
         DB.session.rollback()
-        raise
+        logger.error('*** SERVER ERROR WHEN IMPORTING DATA IN GN_SYNTHESE.SYNTHESE')
+        logger.exception(e)
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR when importing data in gn_synthese.synthese',
+            details=str(e))
+    finally:
+        DB.session.close()

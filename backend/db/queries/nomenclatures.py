@@ -147,4 +147,5 @@ def set_nomenclature_id(schema_name, table_name, user_col, value, id_type):
             )
 
     except Exception:
+        DB.session.rollback()
         raise

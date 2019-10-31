@@ -18,7 +18,6 @@ export class ImportStepComponent implements OnInit, OnChanges {
     @Input() added_columns: any;
     @Input() table_name: any;
     @Input() importId: any;
-    isUserError: boolean = false;
     importDataRes: any;
 	importForm: FormGroup;
 
@@ -52,8 +51,8 @@ export class ImportStepComponent implements OnInit, OnChanges {
                     this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
                 } else {
                     // show error message if other server error
-                    this.isUserError = true;
-                    this.isUserError = error.error;
+                    console.log(error);
+                    this.toastr.error(error.error.message);
                 }
             }
         );

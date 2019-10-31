@@ -75,7 +75,8 @@ export class FieldsMappingStepComponent implements OnInit {
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
 					// show error message if other server error
-					//this.isUserError = error.error;
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}                
             }
         )
@@ -108,7 +109,9 @@ export class FieldsMappingStepComponent implements OnInit {
 				} else {
 					// show error message if other server error
 					this.isUserError = true;
-					this.isUserError = error.error;
+                    this.isUserError = error.error;
+                    console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);
@@ -133,8 +136,8 @@ export class FieldsMappingStepComponent implements OnInit {
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
 					// show error message if other server error
-					this.isUserError = true;
-					this.isUserError = error.error;
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);
@@ -146,14 +149,14 @@ export class FieldsMappingStepComponent implements OnInit {
 			(result) => {
 				this.userFieldMapping = result;
 			},
-			(err) => {
-				console.log(err);
-				if (err.statusText === 'Unknown Error') {
+			(error) => {
+				console.log(error);
+				if (error.statusText === 'Unknown Error') {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
-					// show error message if user does not have any declared dataset
-					this.toastr.error(err.error);
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);
@@ -175,13 +178,13 @@ export class FieldsMappingStepComponent implements OnInit {
 					});
 				}
 			},
-			(err) => {
-				if (err.statusText === 'Unknown Error') {
+			(error) => {
+				if (error.statusText === 'Unknown Error') {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
-					// show error message if user does not have any declared dataset
-					this.toastr.error(err.error);
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);
@@ -199,13 +202,13 @@ export class FieldsMappingStepComponent implements OnInit {
 					this.getSelectedOptions();
 				}
 			},
-			(err) => {
-				if (err.statusText === 'Unknown Error') {
+			(error) => {
+				if (error.statusText === 'Unknown Error') {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
-					// show error message if user does not have any declared dataset
-					this.toastr.error(err.error);
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);
@@ -224,7 +227,8 @@ export class FieldsMappingStepComponent implements OnInit {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
-					this.toastr.error(error.error);
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);

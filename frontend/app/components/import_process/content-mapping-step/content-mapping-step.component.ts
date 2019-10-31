@@ -17,7 +17,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     @Input() table_name: any;
 	contentForm: FormGroup;
 	showForm: boolean = false;
-    isUserError: boolean = false;
     contentMapRes: any;
 
 	constructor(
@@ -88,8 +87,8 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
                     this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
                 } else {
                     // show error message if other server error
-                    this.isUserError = true;
-                    this.isUserError = error.error;
+                    console.log(error);
+                    this.toastr.error(error.error.message);
                 }
             }
         );
