@@ -3,8 +3,6 @@ import { StepsService } from '../steps.service';
 import { DataService } from '../../../services/data.service';
 import { ToastrService } from 'ngx-toastr';
 import { ModuleConfig } from '../../../module.config';
-import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms';
-import { MatStepper } from '@angular/material';
 
 @Component({
 	selector: 'import-step',
@@ -19,19 +17,16 @@ export class ImportStepComponent implements OnInit, OnChanges {
     @Input() table_name: any;
     @Input() importId: any;
     importDataRes: any;
-	importForm: FormGroup;
 
 
 	constructor(
         private stepService: StepsService, 
         private _ds: DataService,
-        private toastr: ToastrService,
-        private _fb: FormBuilder,
+        private toastr: ToastrService
         ) {}
 
 
 	ngOnInit() {
-        this.importForm = this._fb.group({});
 	}
 
 

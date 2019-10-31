@@ -1006,7 +1006,7 @@ def content_mapping(info_role):
 
         set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, selected_cols)
 
-        logger.nfo('-> Content mapping : user values transformed to id_types in the user table')
+        logger.info('-> Content mapping : user values transformed to id_types in the user table')
 
         return 'content_mapping done'
 

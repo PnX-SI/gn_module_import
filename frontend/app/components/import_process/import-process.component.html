@@ -13,7 +13,7 @@
             <content-mapping-step [contentMappingInfo]="contentMappingInfo" [table_name]="table_name" [selected_columns]="selected_columns" ></content-mapping-step>
         </mat-step>
         <!-- STEP 4 -->
-        <mat-step label="Importer les données" [stepControl]="">
+        <mat-step label="Importer les données">
             <import-step [importId]="importId" [table_name]="table_name" [selected_columns]="selected_columns" [added_columns]="added_columns"></import-step>
         </mat-step>
     </mat-horizontal-stepper>
