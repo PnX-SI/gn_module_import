@@ -1190,8 +1190,15 @@ def get_valid_data(info_role, import_id):
             synthese_dict = get_synthese_dict(synthese_fields)
             for key,value in synthese_dict.items():
                 if value['key'] in total_columns.keys():
-                    synthese_dict[key]['value'] = row[total_columns[value['key']]]
+                    if value['key'] == 'id_module'\
+                            or value['key'] == 'id_dataset'\
+                                or value['key'] == 'id_source':
+                        synthese_dict[key]['value'] = total_columns[value['key']]
+                    else:
+                        synthese_dict[key]['value'] = row[total_columns[value['key']]]
             valid_data_list.append(synthese_dict)
+
+        logger.info('-> got valid data for preview')
 
         return {
             'total_columns' : total_columns,
