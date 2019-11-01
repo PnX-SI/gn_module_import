@@ -1215,7 +1215,7 @@ def get_synthese_dict(synthese_fields):
     for field in synthese_fields:
         synthese_dict[field.ordinal_position] = {
             'key' : field.column_name,
-            'value': ''
+            'value': None
         }
     synthese_dict.pop(1)
     return synthese_dict
