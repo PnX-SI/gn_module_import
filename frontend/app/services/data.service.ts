@@ -73,6 +73,7 @@ export class DataService {
         const urlMapping = `${urlApi}/mapping/${importId}/${id_mapping}`;
         let fd = new FormData();
         for (let key of Object.keys(value)) {
+            console.log(key, value);
             fd.append(key, value[key]);
         }
         fd.append('srid', user_srid);

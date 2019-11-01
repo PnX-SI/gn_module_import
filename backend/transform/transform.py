@@ -38,7 +38,6 @@ def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, 
             synthese_info['longitude'] = {'is_nullable': 'NO', 'column_default': None, 'data_type': 'real', 'character_max_length': None}
             synthese_info['latitude'] = {'is_nullable': 'NO', 'column_default': None, 'data_type': 'real', 'character_max_length': None}
 
-
         # Check data:
         check_missing(df, selected_columns, dc_user_errors, synthese_info, missing_val)
         check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_val)
@@ -49,7 +48,7 @@ def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, 
         check_entity_source(df, added_cols, selected_columns, dc_user_errors, synthese_info)
         check_geography(df, import_id, added_cols, selected_columns, dc_user_errors, srid, local_srid)
         check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul=False)
-
+        
         return {
             'user_errors' : user_error,
             'added_cols' : added_cols

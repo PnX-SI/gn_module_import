@@ -719,10 +719,10 @@ def postMapping(info_role, import_id, id_mapping):
         else:
             is_generate_alt = False
 
+        print('is generating altitudes : {}'.format(is_generate_alt))
 
         logger.debug('import_id = %s', import_id)
         logger.debug('DB tabel name = %s', table_names['imports_table_name'])
-
 
         # get synthese fields filled in the user form:
         selected_columns = {key:value for key, value in data.items() if value}
@@ -1166,7 +1166,8 @@ def get_valid_data(info_role, import_id):
         preview = DB.session.execute("""
             SELECT *
             FROM {schema_name}.{table_name}
-            WHERE gn_is_valid = 'True';        
+            WHERE gn_is_valid = 'True'
+            LIMIT 100;        
             """.format(
                 schema_name = IMPORTS_SCHEMA_NAME,
                 table_name = table_name
@@ -1175,7 +1176,7 @@ def get_valid_data(info_role, import_id):
 
         # set empty synthese dict
         synthese_fields = DB.session.execute("""
-            SELECT column_name
+            SELECT column_name, ordinal_position
             FROM information_schema.columns
             WHERE table_name = 'synthese'
             ORDER BY ordinal_position ASC;
@@ -1186,11 +1187,10 @@ def get_valid_data(info_role, import_id):
         #(faire une limite à 100)
         valid_data_list = []
         for row in preview:
-            print(row)
             synthese_dict = get_synthese_dict(synthese_fields)
             for key,value in synthese_dict.items():
-                if key in total_columns.keys():
-                    synthese_dict[key] = row[total_columns[key]]
+                if value['key'] in total_columns.keys():
+                    synthese_dict[key]['value'] = row[total_columns[value['key']]]
             valid_data_list.append(synthese_dict)
 
         return {
@@ -1206,8 +1206,11 @@ def get_valid_data(info_role, import_id):
 def get_synthese_dict(synthese_fields):
     synthese_dict = {}
     for field in synthese_fields:
-        synthese_dict[field.column_name] = ''
-    synthese_dict.pop('id_synthese')
+        synthese_dict[field.ordinal_position] = {
+            'key' : field.column_name,
+            'value': ''
+        }
+    synthese_dict.pop(1)
     return synthese_dict
 
 
