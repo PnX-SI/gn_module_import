@@ -6,7 +6,7 @@ from .utils import set_is_valid, set_invalid_reason, set_user_error
 from ..logs import logger
 
 
-@checker('Data cleaning : other_field operations checked')
+@checker('Data cleaning : entity source pk value checked')
 def check_entity_source(df, added_cols, selected_columns, dc_user_errors, synthese_info):
 
     try:

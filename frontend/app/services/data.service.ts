@@ -73,7 +73,6 @@ export class DataService {
         const urlMapping = `${urlApi}/mapping/${importId}/${id_mapping}`;
         let fd = new FormData();
         for (let key of Object.keys(value)) {
-            console.log(key, value);
             fd.append(key, value[key]);
         }
         fd.append('srid', user_srid);
@@ -118,13 +117,11 @@ export class DataService {
     }
 
 
-    importData(selected_columns, added_columns, table_name, import_id) {
+    importData(import_id, total_columns) {
         let fd = new FormData();
-        fd.append('selected_columns', JSON.stringify(selected_columns));
-        fd.append('added_columns', JSON.stringify(added_columns));
-        fd.append('table_name', table_name);
+        fd.append('total_columns', JSON.stringify(total_columns));
         fd.append('import_id', import_id);
-        return this._http.post<any>(`${urlApi}/importData`, fd, HttpUploadOptions);
+        return this._http.post<any>(`${urlApi}/importData/${import_id}`, fd, HttpUploadOptions);
     }
 
 

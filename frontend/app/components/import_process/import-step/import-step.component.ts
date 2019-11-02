@@ -14,10 +14,10 @@ export class ImportStepComponent implements OnInit, OnChanges {
 	public isCollapsed = false;
     @Input() selected_columns: any;
     @Input() added_columns: any;
-    @Input() table_name: any;
     @Input() importId: any;
     importDataRes: any;
     validData: any;
+    total_columns: any;
 
 
 	constructor(
@@ -37,7 +37,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
 
     
     onImport() {
-        this._ds.importData(this.selected_columns, this.added_columns, this.table_name, this.importId).subscribe(
+        this._ds.importData(this.importId, this.total_columns).subscribe(
             (res) => {		
                 this.importDataRes = res;
                 console.log(this.importDataRes);
@@ -49,7 +49,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
                 } else {
                     // show error message if other server error
                     console.log(error);
-                    this.toastr.error(error.error.message);
+                    this.toastr.error(error.error.message + ' = ' + error.error.details);
                 }
             }
         );
@@ -61,6 +61,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
         this._ds.getValidData(this.importId, this.selected_columns, this.added_columns).subscribe(
             (res) => {
                 this.validData = res;
+                this.total_columns = res['total_columns'];
                 console.log(this.validData);
             },
             (error) => {

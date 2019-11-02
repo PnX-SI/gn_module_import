@@ -94,7 +94,11 @@ from .goodtables_checks.check_user_file import check_user_file
 from .transform.transform import data_cleaning
 from .transform.set_geometry import set_geometry
 from .transform.set_altitudes import set_altitudes
-from .transform.nomenclatures.nomenclatures import get_nomenc_info, set_nomenclature_ids
+from .transform.nomenclatures.nomenclatures import (
+    get_nomenc_info, 
+    set_nomenclature_ids,
+    set_default_nomenclature_ids
+)
 
 from .logs import logger
 
@@ -104,6 +108,10 @@ from .extract.extract import extract
 
 from .load.load import load
 from .load.utils import compute_df
+
+from .data_preview.preview import get_preview, set_total_columns
+
+from .load.into_synthese.import_data import load_data_to_synthese
 
 from .wrappers import checker
 
@@ -897,7 +905,6 @@ def postMetaToStep3(info_role):
 
         nomenc_info = get_nomenc_info(data, IMPORTS_SCHEMA_NAME)
 
-
         ### UPDATE TIMPORTS
 
         logger.info('update t_imports from step 2 to step 3')
@@ -1002,10 +1009,14 @@ def content_mapping(info_role):
 
         form_data.pop('table_name')
         form_data.pop('selected_cols')
-
+        
         selected_content = {key:value for key, value in form_data.items() if value != ['']}
 
+        logger.info('Generating nomenclature ids from content mapping form values :')
         set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, selected_cols)
+        
+        logger.info('Generating default nomenclature ids :')
+        set_default_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_cols)
 
         logger.info('-> Content mapping : user values transformed to id_types in the user table')
 
@@ -1021,84 +1032,24 @@ def content_mapping(info_role):
             details=str(e))
 
 
-@blueprint.route('/importData', methods=['GET', 'POST'])
+@blueprint.route('/importData/<import_id>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def import_data(info_role):
+def import_data(info_role, import_id):
     try:
 
         logger.info('Importing data in gn_synthese.synthese table')
 
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
+        # get table name
+        table_name = set_imports_table_name(get_table_name(import_id))
+
+        # set total user columns
         form_data = request.form.to_dict(flat=False)
-        table_name = form_data['table_name'][0]
-        import_id = int(form_data['import_id'][0])
-        selected_cols = ast.literal_eval(form_data['selected_columns'][0])
-        added_cols = ast.literal_eval(form_data['added_columns'][0])
+        total_columns = ast.literal_eval(form_data['total_columns'][0])
 
-        total_columns = {**selected_cols, **added_cols}
-
-        # remove from dict :
-        if 'longitude' in total_columns.keys():
-            del total_columns['longitude']
-        if 'latitude' in total_columns.keys():
-            del total_columns['latitude']
-        if 'id_mapping' in total_columns.keys():
-            del total_columns['id_mapping']
-        if 'unique_id_sinp_generate' in total_columns.keys():
-            del total_columns['unique_id_sinp_generate']
-        if 'altitudes_generate' in total_columns.keys():
-            del total_columns['altitudes_generate']
-
-        # add fixed synthese fields :
-        id_module = DB.session.execute("""
-            SELECT id_module
-            FROM gn_commons.t_modules
-            WHERE module_code = 'IMPORT';
-            """).fetchone()[0]
-        total_columns['id_module'] = id_module
-
-        id_dataset = DB.session.query(TImports.id_dataset)\
-            .filter(TImports.id_import == import_id)\
-            .one()[0]
-        total_columns['id_dataset'] = id_dataset
-
-        # add key type info to value ('value::type')
-        select_part = []
-        for key, value in total_columns.items():
-            if key == 'the_geom_4326':
-                key_type = 'geometry(Geometry,4326)'
-            elif key == 'the_geom_point':
-                key_type = 'geometry(Point,4326)'
-            elif key == 'the_geom_local':
-                key_type = 'geometry(Geometry,2154)'
-            else:
-                key_type = DB.session.execute("""
-                    SELECT data_type 
-                    FROM information_schema.columns
-                    WHERE table_name = 'synthese'
-                    AND column_name = '{key}';
-                    """.format(
-                        key = key)
-                    ).fetchone()[0]
-            select_part.append('::'.join([str(value), key_type]))
-
-
-        # insert into synthese
-        DB.session.execute("""
-            INSERT INTO gn_synthese.synthese ({into_part})
-            SELECT {select_part}
-            FROM {schema_name}.{table_name}
-            WHERE gn_is_valid='True';
-            """.format(
-                into_part = ','.join(total_columns.keys()),
-                select_part = ','.join(select_part),
-                schema_name = IMPORTS_SCHEMA_NAME,
-                table_name = table_name
-            ))
-
-        DB.session.commit()
+        load_data_to_synthese(IMPORTS_SCHEMA_NAME, table_name, total_columns)
 
         logger.info('-> Data imported in gn_synthese.synthese table')
 
@@ -1133,70 +1084,10 @@ def get_valid_data(info_role, import_id):
         form_data = request.form.to_dict(flat=False)
         selected_cols = ast.literal_eval(form_data['selected_columns'][0])
         added_cols = ast.literal_eval(form_data['added_columns'][0])
+        total_columns = set_total_columns(selected_cols, added_cols, import_id)
 
-        total_columns = {**selected_cols, **added_cols}
-
-        # remove from dict :
-        if 'longitude' in total_columns.keys():
-            del total_columns['longitude']
-        if 'latitude' in total_columns.keys():
-            del total_columns['latitude']
-        if 'id_mapping' in total_columns.keys():
-            del total_columns['id_mapping']
-        if 'unique_id_sinp_generate' in total_columns.keys():
-            del total_columns['unique_id_sinp_generate']
-        if 'altitudes_generate' in total_columns.keys():
-            del total_columns['altitudes_generate']
-
-        # add fixed synthese fields :
-        id_module = DB.session.execute("""
-            SELECT id_module
-            FROM gn_commons.t_modules
-            WHERE module_code = 'IMPORT';
-            """).fetchone()[0]
-        total_columns['id_module'] = id_module
-
-        id_dataset = DB.session.query(TImports.id_dataset)\
-            .filter(TImports.id_import == import_id)\
-            .one()[0]
-        total_columns['id_dataset'] = id_dataset
-
-
-        # get valid data
-        preview = DB.session.execute("""
-            SELECT *
-            FROM {schema_name}.{table_name}
-            WHERE gn_is_valid = 'True'
-            LIMIT 100;        
-            """.format(
-                schema_name = IMPORTS_SCHEMA_NAME,
-                table_name = table_name
-            )).fetchall()
-
-
-        # set empty synthese dict
-        synthese_fields = DB.session.execute("""
-            SELECT column_name, ordinal_position
-            FROM information_schema.columns
-            WHERE table_name = 'synthese'
-            ORDER BY ordinal_position ASC;
-            """).fetchall()
-
-
-        # fill synthese template
-        #(faire une limite à 100)
-        valid_data_list = []
-        for row in preview:
-            synthese_dict = get_synthese_dict(synthese_fields)
-            for key,value in synthese_dict.items():
-                if value['key'] in total_columns.keys():
-                    if value['key'] == 'id_module'\
-                            or value['key'] == 'id_dataset'\
-                                or value['key'] == 'id_source':
-                        synthese_dict[key]['value'] = total_columns[value['key']]
-                    else:
-                        synthese_dict[key]['value'] = row[total_columns[value['key']]]
-            valid_data_list.append(synthese_dict)
+        # get valid data preview
+        valid_data_list = get_preview(IMPORTS_SCHEMA_NAME, table_name, total_columns)
 
         logger.info('-> got valid data for preview')
 
@@ -1205,19 +1096,9 @@ def get_valid_data(info_role, import_id):
             'valid_data': valid_data_list
         }
 
-    except Exception:
-        raise
-        pdb.set_trace()
-
-
-def get_synthese_dict(synthese_fields):
-    synthese_dict = {}
-    for field in synthese_fields:
-        synthese_dict[field.ordinal_position] = {
-            'key' : field.column_name,
-            'value': None
-        }
-    synthese_dict.pop(1)
-    return synthese_dict
-
-
+    except Exception as e:
+        logger.error('*** SERVER ERROR WHEN GETTING VALID DATA')
+        logger.exception(e)
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR when getting valid data',
+            details=str(e))
