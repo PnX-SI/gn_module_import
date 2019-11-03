@@ -29,3 +29,55 @@ def insert_into_synthese(schema_name, table_name, select_part, total_columns):
             ))
     except Exception:
         raise
+
+
+def insert_into_t_sources(schema_name, table_name, import_id, total_columns):
+    try:
+        DB.session.execute("""
+            INSERT INTO gn_synthese.t_sources(name_source,desc_source,entity_source_pk_field,url_source) VALUES
+            (
+                'Import(id={import_id})',
+                'Imported data from import module (id={import_id})',
+                '{schema_name}.{table_name}.{entity_col_name}',
+                NULL
+            )
+            """.format(
+                import_id = import_id,
+                entity_col_name = total_columns['entity_source_pk_value'],
+                schema_name = schema_name,
+                table_name = table_name,
+            ))
+        DB.session.flush()
+    except Exception:
+        DB.session.rollback()
+        raise
+
+
+def get_id_source(import_id):
+    try:
+        id_source = DB.session.execute("""
+            SELECT id_source
+            FROM gn_synthese.t_sources
+            WHERE name_source = 'Import(id={import_id})'
+            """\
+            .format(import_id = import_id))\
+            .fetchone()[0]
+        return id_source
+    except Exception:
+        raise
+
+
+def check_id_source(import_id):
+    try:
+        is_id_source = DB.session.execute("""
+            SELECT exists (
+                SELECT 1 
+                FROM gn_synthese.t_sources 
+                WHERE name_source = 'Import(id={import_id})' 
+                LIMIT 1);
+            """\
+            .format(import_id = import_id))\
+            .fetchone()[0]
+        return is_id_source
+    except Exception:
+        raise

@@ -5,6 +5,8 @@ from ..db.queries.data_preview import (
     get_id_dataset
 )
 
+import pdb
+
 
 def get_preview(schema_name, table_name, total_columns):
 
@@ -28,6 +30,8 @@ def get_preview(schema_name, table_name, total_columns):
                         synthese_dict[key]['value'] = total_columns[value['key']]
                     else:
                         synthese_dict[key]['value'] = row[total_columns[value['key']]]
+            if synthese_dict[4]['key'] == 'id_source':
+                del synthese_dict[4]
             valid_data_list.append(synthese_dict)
 
         return valid_data_list

@@ -1,8 +1,16 @@
-from ...db.queries.load_to_synthese import get_data_type, insert_into_synthese
+from ...db.queries.load_to_synthese import (
+    get_data_type, 
+    insert_into_synthese,
+    get_id_source
+)
+from geonature.core.gn_synthese.models import TSources
+from geonature.utils.env import DB
 
+import pdb
 
-def load_data_to_synthese(schema_name, table_name, total_columns):
+def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
     try:
+        total_columns['id_source'] = get_id_source(import_id)
 
         # add key type info to value ('value::type')
         select_part = []
@@ -16,8 +24,6 @@ def load_data_to_synthese(schema_name, table_name, total_columns):
             else:
                 key_type = get_data_type(key)
             select_part.append('::'.join([str(value), key_type]))
-
-        # insert into t_source
 
         # insert into synthese
         insert_into_synthese(schema_name, table_name, select_part, total_columns)

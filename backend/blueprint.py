@@ -82,6 +82,11 @@ from .db.queries.user_table_queries import (
 )
 
 from .db.queries.save_mapping import save_field_mapping
+from .db.queries.load_to_synthese import (
+    insert_into_t_sources, 
+    get_id_source,
+    check_id_source
+)
 
 from .utils.clean_names import*
 from .utils.utils import create_col_name
@@ -532,7 +537,8 @@ def post_user_file(info_role):
             logger.debug('id_role = %s', info_role.id_role)
             # fill cor_role_import
             insert_cor_role_import = CorRoleImport(
-                id_role=info_role.id_role, id_import=id_import)
+                id_role=info_role.id_role, 
+                id_import=id_import)
             DB.session.add(insert_cor_role_import)
             DB.session.flush()
         else:
@@ -1049,11 +1055,22 @@ def import_data(info_role, import_id):
         form_data = request.form.to_dict(flat=False)
         total_columns = ast.literal_eval(form_data['total_columns'][0])
 
-        load_data_to_synthese(IMPORTS_SCHEMA_NAME, table_name, total_columns)
+        # check if id_source already exists in synthese table
+        is_id_source = check_id_source(import_id)
+
+        if is_id_source:
+            return {'status':'failed : already imported'}
+        
+        # insert into t_sources
+        insert_into_t_sources(IMPORTS_SCHEMA_NAME, table_name, import_id, total_columns)
+
+        # insert into synthese
+        load_data_to_synthese(IMPORTS_SCHEMA_NAME, table_name, total_columns, import_id)
 
         logger.info('-> Data imported in gn_synthese.synthese table')
 
         return {
+            'status' : 'imported successfully',
             'total_columns' : total_columns
         }
 
