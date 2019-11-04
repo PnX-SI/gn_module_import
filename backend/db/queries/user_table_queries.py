@@ -83,3 +83,54 @@ def get_n_invalid_rows(full_table_name):
         return n_invalid_rows
     except Exception:
         raise
+
+
+def get_n_valid_rows(schema_name, table_name):
+    try:
+        n_valid_rows = DB.session.execute("""
+            SELECT count(*)
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid = 'True';
+            """.format(
+                schema_name = schema_name,
+                table_name = table_name
+            )).fetchone()[0]
+        return n_valid_rows
+    except Exception:
+        raise
+
+
+def get_n_taxa(schema_name, table_name, cd_nom_col):
+    try:
+        n_taxa = DB.session.execute("""
+            SELECT COUNT(DISTINCT {cd_nom_col})
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid = 'True';
+            """.format(
+                schema_name = schema_name,
+                table_name = table_name,
+                cd_nom_col = cd_nom_col
+            )).fetchone()[0]
+        return n_taxa
+    except Exception:
+        raise
+
+
+def get_date_ext(schema_name, table_name, date_min_col, date_max_col):
+    try:
+        dates = DB.session.execute("""
+            SELECT min(date_debut), max(date_fin)
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid = 'True';
+            """.format(
+                schema_name = schema_name,
+                table_name = table_name,
+                date_min_col = date_min_col,
+                date_max_col = date_max_col
+            )).fetchall()
+        return {
+            'date_min': dates.date_min,
+            'date_max': dates.date_max
+        }
+    except Exception:
+        raise

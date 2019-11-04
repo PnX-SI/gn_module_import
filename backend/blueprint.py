@@ -173,9 +173,9 @@ def get_import_list(info_role):
                 "date_max_data": str(r.date_max_data),
                 "step": r.step,
                 "dataset_name": DB.session\
-                .query(TDatasets.dataset_name)\
-                .filter(TDatasets.id_dataset == r.id_dataset)\
-                .one()[0]
+                    .query(TDatasets.dataset_name)\
+                    .filter(TDatasets.id_dataset == r.id_dataset)\
+                    .one()[0]
             }
             history.append(prop)
         return {
@@ -288,7 +288,10 @@ def get_mapping_fields(info_role, id_mapping):
     try:
         logger.debug('get fields saved in id_mapping = %s', id_mapping)
 
-        fields = DB.session.query(TMappingsFields).filter(TMappingsFields.id_mapping == int(id_mapping)).all()
+        fields = DB.session\
+            .query(TMappingsFields)\
+            .filter(TMappingsFields.id_mapping == int(id_mapping))\
+            .all()
         
         mapping_fields = []
 
@@ -1025,6 +1028,24 @@ def content_mapping(info_role):
         set_default_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_cols)
 
         logger.info('-> Content mapping : user values transformed to id_types in the user table')
+
+        """
+        ### UPDATE TIMPORTS
+
+        logger.info('update t_imports from step 3 to step 4')
+        
+        DB.session.query(TImports)\
+            .filter(TImports.id_import==int(data['import_id']))\
+            .update({
+                TImports.step: 4,
+                TImports.import_count: get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name),
+                TImports.taxa_count: get_n_taxa(IMPORTS_SCHEMA_NAME, table_name, selected_cols['cd_nom']),
+                TImports.date_min_data: get_date_ext(IMPORTS_SCHEMA_NAME, table_name, selected_cols['date_min'], selected_cols['date_max'])['date_min'],
+                TImports.date_max_data: get_date_ext(IMPORTS_SCHEMA_NAME, table_name, selected_cols['date_min'], selected_cols['date_max'])['date_max']
+                })
+
+        DB.session.commit()
+        """
 
         return 'content_mapping done'
 
