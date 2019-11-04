@@ -127,10 +127,11 @@ def get_date_ext(schema_name, table_name, date_min_col, date_max_col):
                 table_name = table_name,
                 date_min_col = date_min_col,
                 date_max_col = date_max_col
-            )).fetchall()
+            )).fetchall()[0]
+        
         return {
-            'date_min': dates.date_min,
-            'date_max': dates.date_max
+            'date_min': dates[0],
+            'date_max': dates[1]
         }
     except Exception:
         raise

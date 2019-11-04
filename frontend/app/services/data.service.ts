@@ -80,8 +80,8 @@ export class DataService {
     }
     
 
-    postContentMap(value, table_name, selected_columns) {
-        const contentMappingUrl = `${urlApi}/contentMapping`;
+    postContentMap(value, table_name, selected_columns, import_id) {
+        const contentMappingUrl = `${urlApi}/contentMapping/${import_id}`;
         console.log(value)
         let fd = new FormData();
         for (let key of Object.keys(value)) {

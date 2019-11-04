@@ -15,6 +15,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     @Input() contentMappingInfo: any;
     @Input() selected_columns: any;
     @Input() table_name: any;
+    @Input() importId: any;
 	contentForm: FormGroup;
 	showForm: boolean = false;
     contentMapRes: any;
@@ -75,7 +76,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     
 
     onContentMapping(value) {
-        this._ds.postContentMap(value, this.table_name, this.selected_columns).subscribe(
+        this._ds.postContentMap(value, this.table_name, this.selected_columns, this.importId).subscribe(
             (res) => {		
                 this.contentMapRes = res;
                 console.log(this.contentMapRes);

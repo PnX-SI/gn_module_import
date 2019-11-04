@@ -55,8 +55,19 @@ class TMappingsFields(DB.Model):
 
     id_match_fields = DB.Column(DB.Integer, primary_key=True,autoincrement=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
-    source_field = DB.Column(DB.Unicode,nullable=True)
-    target_field = DB.Column(DB.Unicode,nullable=True)
+    source_field = DB.Column(DB.Unicode,nullable=False)
+    target_field = DB.Column(DB.Unicode,nullable=False)
+
+
+@serializable
+class TMappingsValues(DB.Model):
+    __tablename__ = 't_mappings_values'
+    __table_args__ = {'schema': 'gn_imports', "extend_existing":True}
+
+    id_match_values = DB.Column(DB.Integer, primary_key=True,autoincrement=True)
+    id_mapping = DB.Column(DB.Integer, primary_key=True)
+    source_value = DB.Column(DB.Unicode,nullable=False)
+    id_target_value = DB.Column(DB.Integer,nullable=False)
 
 
 @serializable
@@ -66,7 +77,7 @@ class BibMappings(DB.Model):
 
     id_mapping = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     mapping_label = DB.Column(DB.Unicode,nullable=True)
-    active = DB.Column(DB.Boolean,nullable=True)
+    active = DB.Column(DB.Boolean,nullable=False)
 
 
 @serializable

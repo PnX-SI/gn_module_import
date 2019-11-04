@@ -10,7 +10,7 @@
         </mat-step>
         <!-- STEP 3 -->
         <mat-step label="Mapping des contenus" [stepControl]="step3Control">
-            <content-mapping-step [contentMappingInfo]="contentMappingInfo" [table_name]="table_name" [selected_columns]="selected_columns" ></content-mapping-step>
+            <content-mapping-step [importId]="importId" [contentMappingInfo]="contentMappingInfo" [table_name]="table_name" [selected_columns]="selected_columns" ></content-mapping-step>
         </mat-step>
         <!-- STEP 4 -->
         <mat-step label="Importer les données">

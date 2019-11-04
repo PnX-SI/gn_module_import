@@ -65,7 +65,6 @@ export class ImportProcessComponent implements OnInit {
                             this.table_name = step.data.table_name;
                             this.selected_columns = step.data.selected_columns;
                             this.added_columns = step.data.added_columns;
-                            console.log(this.added_columns);
 							this.cd.detectChanges();
 							break;
                         }

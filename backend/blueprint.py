@@ -78,7 +78,10 @@ from .db.queries.user_table_queries import (
     set_primary_key,
     alter_column_type,
     get_n_loaded_rows,
-    get_n_invalid_rows
+    get_n_invalid_rows,
+    get_n_valid_rows,
+    get_n_taxa,
+    get_date_ext
 )
 
 from .db.queries.save_mapping import save_field_mapping
@@ -337,7 +340,8 @@ def postMappingFieldName(info_role):
 
         # fill BibMapping
         new_name = BibMappings(
-            mapping_label = data['mappingName']
+            mapping_label = data['mappingName'],
+            active = True
             )
 
         DB.session.add(new_name)
@@ -1002,10 +1006,10 @@ def get_bib_fields(info_role):
             details=str(e))
 
 
-@blueprint.route('/contentMapping', methods=['GET', 'POST'])
+@blueprint.route('/contentMapping/<import_id>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def content_mapping(info_role):
+def content_mapping(info_role, import_id):
     try:
 
         logger.info('Content mapping : transforming user values to id_types in the user table')
@@ -1029,23 +1033,19 @@ def content_mapping(info_role):
 
         logger.info('-> Content mapping : user values transformed to id_types in the user table')
 
-        """
         ### UPDATE TIMPORTS
 
         logger.info('update t_imports from step 3 to step 4')
         
         DB.session.query(TImports)\
-            .filter(TImports.id_import==int(data['import_id']))\
+            .filter(TImports.id_import==int(import_id))\
             .update({
-                TImports.step: 4,
-                TImports.import_count: get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name),
-                TImports.taxa_count: get_n_taxa(IMPORTS_SCHEMA_NAME, table_name, selected_cols['cd_nom']),
-                TImports.date_min_data: get_date_ext(IMPORTS_SCHEMA_NAME, table_name, selected_cols['date_min'], selected_cols['date_max'])['date_min'],
-                TImports.date_max_data: get_date_ext(IMPORTS_SCHEMA_NAME, table_name, selected_cols['date_min'], selected_cols['date_max'])['date_max']
-                })
+                TImports.step: 4
+               })
 
         DB.session.commit()
-        """
+
+        logger.info('-> t_imports updated from step 3 to step 4')
 
         return 'content_mapping done'
 
@@ -1089,6 +1089,27 @@ def import_data(info_role, import_id):
         load_data_to_synthese(IMPORTS_SCHEMA_NAME, table_name, total_columns, import_id)
 
         logger.info('-> Data imported in gn_synthese.synthese table')
+
+
+        ### UPDATE TIMPORTS
+
+        logger.info('update t_imports on final step')
+
+        date_ext = get_date_ext(IMPORTS_SCHEMA_NAME, table_name, total_columns['date_min'], total_columns['date_max'])
+        
+        DB.session.query(TImports)\
+            .filter(TImports.id_import==int(import_id))\
+            .update({
+                TImports.import_count: get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name),
+                TImports.taxa_count: get_n_taxa(IMPORTS_SCHEMA_NAME, table_name, total_columns['cd_nom']),
+                TImports.date_min_data: date_ext['date_min'],
+                TImports.date_max_data: date_ext['date_max'],
+                TImports.date_end_import: datetime.datetime.now()
+                })
+
+        logger.info('-> t_imports updated on final step')
+
+        DB.session.commit()
 
         return {
             'status' : 'imported successfully',

@@ -27,7 +27,6 @@ def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
 
         # insert into synthese
         insert_into_synthese(schema_name, table_name, select_part, total_columns)
-        DB.session.commit()
 
     except Exception:
         DB.session.rollback()
