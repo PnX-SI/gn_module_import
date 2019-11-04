@@ -76,7 +76,8 @@ class BibMappings(DB.Model):
     __table_args__ = {'schema': 'gn_imports', "extend_existing":True}
 
     id_mapping = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
-    mapping_label = DB.Column(DB.Unicode,nullable=True)
+    mapping_label = DB.Column(DB.Unicode,nullable=False)
+    mapping_type = DB.Column(DB.Unicode,nullable=False)
     active = DB.Column(DB.Boolean,nullable=False)
 
 

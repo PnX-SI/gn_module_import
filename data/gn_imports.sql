@@ -63,15 +63,16 @@ CREATE TABLE t_mappings_values(
     id_match_values serial NOT NULL,
     id_mapping integer NOT NULL,
     --id_type_mapping integer NOT NULL,
-    source_value character varying(255),
-    id_target_value integer
+    source_value character varying(255) NOT NULL,
+    id_target_value integer NOT NULL
 );
 
 
 CREATE TABLE bib_mappings(
     id_mapping serial NOT NULL,
-    mapping_label character varying(255),
-    active boolean
+    mapping_label character varying(255) NOT NULL,
+    mapping_type character varying(10) NOT NULL,
+    active boolean NOT NULL
 );
 
 
@@ -141,8 +142,8 @@ ALTER TABLE ONLY t_mappings_values
 ALTER TABLE ONLY bib_mappings
     ADD CONSTRAINT pk_bib_mappings PRIMARY KEY (id_mapping);
 
-ALTER TABLE ONLY bib_type_mapping_values
-    ADD CONSTRAINT pk_bib_type_mapping_values PRIMARY KEY (id_type_mapping, mapping_type);
+--ALTER TABLE ONLY bib_type_mapping_values
+--    ADD CONSTRAINT pk_bib_type_mapping_values PRIMARY KEY (id_type_mapping, mapping_type);
 
 ALTER TABLE ONLY bib_themes
     ADD CONSTRAINT pk_bib_themes_id_theme PRIMARY KEY (id_theme);
@@ -194,8 +195,8 @@ ALTER TABLE ONLY cor_synthese_nomenclature
 --OTHER CONSTRAINTS--
 ---------------------
 
-ALTER TABLE ONLY bib_type_mapping_values
-    ADD CONSTRAINT check_mapping_type_in_bib_type_mapping_values CHECK (mapping_type IN ('NOMENCLATURE', 'ROLE'));
+--ALTER TABLE ONLY bib_type_mapping_values
+--    ADD CONSTRAINT check_mapping_type_in_bib_type_mapping_values CHECK (mapping_type IN ('FIELD', 'VALUE'));
 
 
 

@@ -215,7 +215,7 @@ export class FieldsMappingStepComponent implements OnInit {
 	}
 
 	onMappingFieldName(value) {
-		this._ds.postMappingFieldName(value).subscribe(
+		this._ds.postMappingName(value).subscribe(
 			(res) => {
 				this.newMapping = false;
 				this.getMappingList();

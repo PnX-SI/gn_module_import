@@ -48,8 +48,8 @@ export class DataService {
     }
     
 
-    postMappingFieldName(value) {
-        const urlMapping = `${urlApi}/mappingFieldName`;
+    postMappingName(value, step) {
+        const urlMapping = `${urlApi}/mappingName/${step}`;
         return this._http.post<any>(urlMapping, value);
     }
 

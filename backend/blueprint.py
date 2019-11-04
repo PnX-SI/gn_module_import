@@ -277,6 +277,7 @@ def get_field_mappings(info_role):
         return mappings, 200
         
     except Exception:
+        raise
         return 'INTERNAL SERVER ERROR ("get_field_mappings() error"): contactez l\'administrateur du site', 500
 
 
@@ -319,10 +320,10 @@ def get_mapping_fields(info_role, id_mapping):
         return 'INTERNAL SERVER ERROR ("get_mapping_fields() error"): contactez l\'administrateur du site', 500
 
 
-@blueprint.route('/mappingFieldName', methods=['GET', 'POST'])
+@blueprint.route('/mappingName/<step>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def postMappingFieldName(info_role):
+def postMappingName(info_role, step):
     try:
         logger.info('Posting mapping field name')
 
