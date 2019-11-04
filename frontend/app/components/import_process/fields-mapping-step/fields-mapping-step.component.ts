@@ -25,6 +25,9 @@ export class FieldsMappingStepComponent implements OnInit {
 	public newMapping: boolean = false;
     public id_mapping;
     public step3Response;
+    public table_name;
+    public selected_columns;
+    public added_columns;
 
 	step2_btn: boolean = false;
 	contentMappingInfo: any;
@@ -56,9 +59,7 @@ export class FieldsMappingStepComponent implements OnInit {
         this._ds.getBibFields().subscribe(
             (res) => {
                 this.bibRes = res;
-                console.log(this.bibRes);
                 for (let theme of this.bibRes) {
-                    console.log(theme);
                     for (let field of theme.fields) {
                         if (field.required) {
                             this.syntheseForm.addControl(field.name_field, new FormControl('', Validators.required));
@@ -74,7 +75,8 @@ export class FieldsMappingStepComponent implements OnInit {
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
 					// show error message if other server error
-					//this.isUserError = error.error;
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}                
             }
         )
@@ -89,11 +91,13 @@ export class FieldsMappingStepComponent implements OnInit {
 		this._ds.postMapping(value, this.importId, this.id_mapping, this.srid).subscribe(
 			(res) => {		
                 this.mappingRes =res;
-				//
+                console.log(this.mappingRes);
 				this.isUploading = false;
 				this.n_error_lines = res['n_user_errors'];
                 this.dataCleaningErrors = res['user_error_details'];
-                console.log(res);
+                this.table_name = this.mappingRes['table_name'];
+                this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
+                this.added_columns = this.mappingRes['added_columns'];
 				this.step2_btn = true;
                 this.isFullErrorCheck(res['n_table_rows'], this.n_error_lines);
 			},
@@ -105,7 +109,9 @@ export class FieldsMappingStepComponent implements OnInit {
 				} else {
 					// show error message if other server error
 					this.isUserError = true;
-					this.isUserError = error.error;
+                    this.isUserError = error.error;
+                    console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);
@@ -119,7 +125,8 @@ export class FieldsMappingStepComponent implements OnInit {
                 this.contentMappingInfo.map((content) => {
 					content.isCollapsed = true;
                 });
-                this.stepService.nextStep(this.syntheseForm, 'two', this.contentMappingInfo);
+                this.step3Response['added_columns'] = this.added_columns;
+                this.stepService.nextStep(this.syntheseForm, 'two', this.step3Response);
                 console.log(this.step3Response);
 			},
 			(error) => {
@@ -129,8 +136,8 @@ export class FieldsMappingStepComponent implements OnInit {
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
 					// show error message if other server error
-					this.isUserError = true;
-					this.isUserError = error.error;
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);
@@ -142,14 +149,14 @@ export class FieldsMappingStepComponent implements OnInit {
 			(result) => {
 				this.userFieldMapping = result;
 			},
-			(err) => {
-				console.log(err);
-				if (err.statusText === 'Unknown Error') {
+			(error) => {
+				console.log(error);
+				if (error.statusText === 'Unknown Error') {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
-					// show error message if user does not have any declared dataset
-					this.toastr.error(err.error);
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);
@@ -171,13 +178,13 @@ export class FieldsMappingStepComponent implements OnInit {
 					});
 				}
 			},
-			(err) => {
-				if (err.statusText === 'Unknown Error') {
+			(error) => {
+				if (error.statusText === 'Unknown Error') {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
-					// show error message if user does not have any declared dataset
-					this.toastr.error(err.error);
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);
@@ -195,13 +202,13 @@ export class FieldsMappingStepComponent implements OnInit {
 					this.getSelectedOptions();
 				}
 			},
-			(err) => {
-				if (err.statusText === 'Unknown Error') {
+			(error) => {
+				if (error.statusText === 'Unknown Error') {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
-					// show error message if user does not have any declared dataset
-					this.toastr.error(err.error);
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);
@@ -220,7 +227,8 @@ export class FieldsMappingStepComponent implements OnInit {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
-					this.toastr.error(error.error);
+					console.log(error);
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);

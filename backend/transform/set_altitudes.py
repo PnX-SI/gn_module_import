@@ -5,7 +5,7 @@ from ..db.queries.altitudes import (
     generate_altitudes
 )
 from ..utils.utils import create_col_name
-
+import pdb
 
 @checker('Data cleaning : altitudes created')
 def set_altitudes(df, selected_columns, import_id, schema_name, full_table_name, table_name, index_col, is_generate_alt):

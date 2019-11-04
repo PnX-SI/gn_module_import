@@ -17,7 +17,7 @@
                                 <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
                                 <div class="col-sm-8">
                                     <pnx-multiselect [values]="contentMapping.user_values.values"
-                                        [parentFormControl]="contentForm.controls[value_def.name]"
+                                        [parentFormControl]="contentForm.controls[value_def.id]"
                                         keyLabel="value" keyValue="value" debounceTime="500"
                                         [searchBar]="false" [disabled]="disabled"
                                         (onChange) = "onSelectChange($event,contentMapping)"
@@ -36,7 +36,7 @@
                     <i class="material-icons"> navigate_before </i>
                     Précédent
                 </button>
-                <button (click)="onFinalStep()"
+                <button (click)="onContentMapping(contentForm.value)"
                     class="btn btn-success box-shadow d-flex justify-content-center align-content-between">
                     Suivant
                     <i class="material-icons"> navigate_next </i>

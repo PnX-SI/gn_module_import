@@ -15,13 +15,18 @@ import { StepsService } from './steps.service';
 export class ImportProcessComponent implements OnInit {
 
 	public step1Control: FormGroup;
-	public step2Control: FormGroup;
+    public step2Control: FormGroup;
+    public step3Control: FormGroup;
+
 	public srid: any;
-	public importId;
 	public columns;
 	public IMPORT_CONFIG = ModuleConfig;
 
-	contentMappingInfo: any;
+    contentMappingInfo: any;
+    table_name: any;
+    selected_columns: any;
+    added_columns: any;
+    importId: any;
 	
 	@ViewChild('stepper') stepper: MatStepper;
 	
@@ -42,7 +47,8 @@ export class ImportProcessComponent implements OnInit {
 					switch (step.id) {
 						case 'one': {
 							this.step1Control = step.stepForm;
-							this.importId = step.data.importId;
+                            this.importId = step.data.importId;
+                            console.log(this.importId);
 							this.srid = step.data.srid;
 							this.columns = step.data.columns.map((col) => {
 								return {
@@ -55,10 +61,19 @@ export class ImportProcessComponent implements OnInit {
 						}
 						case 'two': {
 							this.step2Control = step.stepForm;
-							this.contentMappingInfo = step.data;
+                            this.contentMappingInfo = step.data.content_mapping_info;
+                            this.table_name = step.data.table_name;
+                            this.selected_columns = step.data.selected_columns;
+                            this.added_columns = step.data.added_columns;
+                            console.log(this.added_columns);
 							this.cd.detectChanges();
 							break;
-						}
+                        }
+                        case 'three': {
+                            this.step3Control = step.stepForm;
+                            this.cd.detectChanges();
+							break;
+                        }
 					}
 					this.stepper.next();
 				}

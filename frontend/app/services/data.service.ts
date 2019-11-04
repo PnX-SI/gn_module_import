@@ -11,6 +11,7 @@ const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 
 @Injectable()
 export class DataService {
+    
 	constructor(private _http: HttpClient) {}
 
 
@@ -76,6 +77,26 @@ export class DataService {
         }
         fd.append('srid', user_srid);
 		return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
+    }
+    
+
+    postContentMap(value, table_name, selected_columns) {
+        const contentMappingUrl = `${urlApi}/contentMapping`;
+        console.log(value)
+        let fd = new FormData();
+        for (let key of Object.keys(value)) {
+            if (value[key].length > 1) {
+                for (let val of value[key]) {
+                    fd.append(key, val);
+                }
+            } else {
+                fd.append(key, value[key]);
+            }
+        }
+        console.log(table_name);
+        fd.append('table_name', table_name);
+        fd.append('selected_cols', JSON.stringify(selected_columns));
+		return this._http.post<any>(contentMappingUrl, fd, HttpUploadOptions);
 	}
 
 
@@ -93,6 +114,22 @@ export class DataService {
         }
         fd.append('table_name', table_name);
         return this._http.post<any>(`${urlApi}/postMetaToStep3`, fd, HttpUploadOptions);
+    }
+
+
+    importData(import_id, total_columns) {
+        let fd = new FormData();
+        fd.append('total_columns', JSON.stringify(total_columns));
+        fd.append('import_id', import_id);
+        return this._http.post<any>(`${urlApi}/importData/${import_id}`, fd, HttpUploadOptions);
+    }
+
+
+    getValidData(importId: number, selected_columns, added_columns) {
+        let fd = new FormData();
+        fd.append('selected_columns', JSON.stringify(selected_columns));
+        fd.append('added_columns', JSON.stringify(added_columns));
+        return this._http.post<any>(`${urlApi}/getValidData/${importId}`, fd, HttpUploadOptions);        
     }
 
 }

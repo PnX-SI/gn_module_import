@@ -1,6 +1,8 @@
 import { Component, OnInit, OnChanges, Input } from '@angular/core';
 import { FormControl, FormGroup, FormBuilder } from '@angular/forms';
 import { StepsService } from '../steps.service';
+import { DataService } from '../../../services/data.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
 	selector: 'content-mapping-step',
@@ -10,26 +12,37 @@ import { StepsService } from '../steps.service';
 export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 	public isCollapsed = false;
-	@Input() contentMappingInfo: any;
+    @Input() contentMappingInfo: any;
+    @Input() selected_columns: any;
+    @Input() table_name: any;
 	contentForm: FormGroup;
 	showForm: boolean = false;
+    contentMapRes: any;
 
-	constructor(private stepService: StepsService, private _fb: FormBuilder) {}
+	constructor(
+        private stepService: StepsService, 
+        private _fb: FormBuilder,
+        private _ds: DataService,
+        private toastr: ToastrService
+        ) {}
+
 
 	ngOnInit() {
 		this.contentForm = this._fb.group({});
 	}
 
+
 	ngOnChanges() {
 		if (this.contentMappingInfo) {
 			this.contentMappingInfo.forEach((ele) => {
 				ele['nomenc_values_def'].forEach((nomenc) => {
-					this.contentForm.addControl(nomenc.name, new FormControl(''));
-				});
+                    this.contentForm.addControl(nomenc.id, new FormControl(''));
+                });
 			});
 			this.showForm = true;
 		}
 	}
+
 
 	onSelectChange(selectedVal, group) {
 		this.contentMappingInfo.map((ele) => {
@@ -43,6 +56,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 		})
 	}
 
+
 	onSelectDelete(deltetdVal, group) {
 		this.contentMappingInfo.map((ele) => {
 			if (ele.nomenc_abbr === group.nomenc_abbr)
@@ -54,7 +68,30 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 		})
 	}
 
+
 	onStepBack() {
 		this.stepService.previousStep();
-	}
+    }
+    
+
+    onContentMapping(value) {
+        this._ds.postContentMap(value, this.table_name, this.selected_columns).subscribe(
+            (res) => {		
+                this.contentMapRes = res;
+                console.log(this.contentMapRes);
+                this.stepService.nextStep(this.contentForm, 'three', res);
+            },
+            (error) => {
+                if (error.statusText === 'Unknown Error') {
+                    // show error message if no connexion
+                    this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+                } else {
+                    // show error message if other server error
+                    console.log(error);
+                    this.toastr.error(error.error.message);
+                }
+            }
+        );
+    }
+    
 }
