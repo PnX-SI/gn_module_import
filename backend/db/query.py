@@ -53,23 +53,6 @@ def get_table_info(table_name, info='all'):
         raise
 
 
-"""
-def delete_tables_if_existing(schema_archive, schema_gnimports, archive_table, gnimport_table):
-    engine = DB.engine
-    archive_schema_table_name = get_full_table_name(schema_archive,archive_table)
-    gn_imports_schema_table_name = get_full_table_name(schema_gnimports,gnimport_table)
-    
-    is_archive_table_exist = engine.has_table(archive_table, schema=schema_archive)
-    is_gn_imports_table_exist = engine.has_table(gnimport_table, schema=schema_gnimports)
-    
-    if is_archive_table_exist:
-        DB.session.execute("DROP TABLE {}".format(quoted_name(archive_schema_table_name, False)))
-
-    if is_gn_imports_table_exist:
-        DB.session.execute("DROP TABLE {}".format(quoted_name(gn_imports_schema_table_name, False)))
-"""
-
-
 def get_table_list(schema_name):
 
     """ List of table names from a schema.
