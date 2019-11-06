@@ -21,7 +21,7 @@ export class FieldsMappingStepComponent implements OnInit {
 	public isErrorButtonClicked: boolean = false;
 	public dataCleaningErrors;
 	public isFullError: boolean = true;
-	public userFieldMapping;
+	public userMapping;
 	public newMapping: boolean = false;
     public id_mapping;
     public step3Response;
@@ -48,6 +48,7 @@ export class FieldsMappingStepComponent implements OnInit {
 	) {}
 
 	ngOnInit() {
+
 		this.selectFieldMappingForm = this._fb.group({
 			fieldMapping: [ null ],
 			mappingName: [ '' ]
@@ -59,6 +60,7 @@ export class FieldsMappingStepComponent implements OnInit {
         this._ds.getBibFields().subscribe(
             (res) => {
                 this.bibRes = res;
+                console.log(this.bibRes);
                 for (let theme of this.bibRes) {
                     for (let field of theme.fields) {
                         if (field.required) {
@@ -81,7 +83,7 @@ export class FieldsMappingStepComponent implements OnInit {
             }
         )
 
-		this.getMappingList();
+		this.getMappingList('field');
         this.onSelectUserMapping();
 	}
 
@@ -143,11 +145,12 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
     }
 
-	getMappingList() {
+	getMappingList(mapping_type) {
 		// get list of all declared dataset of the user
-		this._ds.getFieldMappings().subscribe(
+		this._ds.getMappings(mapping_type).subscribe(
 			(result) => {
-				this.userFieldMapping = result;
+                this.userMapping = result;
+                console.log(this.userMapping);
 			},
 			(error) => {
 				console.log(error);
@@ -190,9 +193,11 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
+    
 	onSelectUserMapping(): void {
 		this.selectFieldMappingForm.get('fieldMapping').valueChanges.subscribe(
 			(id_mapping) => {
+                console.log(id_mapping);
 				if (id_mapping) {
 					this.getSelectedMapping(id_mapping);
 				} else {
@@ -214,11 +219,13 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
+
 	onMappingFieldName(value) {
-		this._ds.postMappingName(value).subscribe(
+        let mappingType = 'FIELD';
+		this._ds.postMappingName(value, mappingType).subscribe(
 			(res) => {
 				this.newMapping = false;
-				this.getMappingList();
+				this.getMappingList(mappingType);
 				this.selectFieldMappingForm.controls['fieldMapping'].setValue(res);
 				this.selectFieldMappingForm.controls['mappingName'].setValue('');
 			},
@@ -228,7 +235,7 @@ export class FieldsMappingStepComponent implements OnInit {
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
 					console.log(error);
-                    this.toastr.error(error.error.message);
+                    this.toastr.error(error.error);
 				}
 			}
 		);
@@ -262,7 +269,7 @@ export class FieldsMappingStepComponent implements OnInit {
 					col.selected = false;
 				}
 			}
-		});
+        });
 	}
 
 	ErrorButtonClicked() {

@@ -38,19 +38,30 @@ export class DataService {
     }
     
 
-	getFieldMappings() {
-		return this._http.get<any>(`${urlApi}/field_mappings`);
+	getMappings(mapping_type) {
+        console.log('get mapping : ' + mapping_type);
+		return this._http.get<any>(`${urlApi}/mappings/${mapping_type}`);
     }
     
 
     getMappingFields(id_mapping: number) {
 		return this._http.get<any>(`${urlApi}/field_mappings/${id_mapping}`);
     }
+
+
+    getMappingContents(id_mapping: number) {
+		return this._http.get<any>(`${urlApi}/content_mappings/${id_mapping}`);
+    }
     
 
-    postMappingName(value, step) {
-        const urlMapping = `${urlApi}/mappingName/${step}`;
-        return this._http.post<any>(urlMapping, value);
+    postMappingName(value, mappingType) {
+        const urlMapping = `${urlApi}/mappingName`;
+        let fd = new FormData();
+        for (let key of Object.keys(value)) {
+            fd.append(key, value[key]);
+        }
+        fd.append('mapping_type', mappingType);
+        return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
     }
 
 
@@ -79,21 +90,44 @@ export class DataService {
 		return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
     }
     
-
-    postContentMap(value, table_name, selected_columns, import_id) {
-        const contentMappingUrl = `${urlApi}/contentMapping/${import_id}`;
-        console.log(value)
+    postContentMap(value, table_name, selected_columns, import_id, id_mapping) {
+        console.log('id_mapping = ' + id_mapping);
+        const contentMappingUrl = `${urlApi}/contentMapping/${import_id}/${id_mapping}`;
+        console.log(value);
         let fd = new FormData();
         for (let key of Object.keys(value)) {
-            if (value[key].length > 1) {
-                for (let val of value[key]) {
-                    fd.append(key, val);
-                }
+            if (value[key] == null) {
+                fd.append(key, '')
             } else {
-                fd.append(key, value[key]);
+                //console.log(key);
+                //console.log(value[key]);
+                //console.log(value[key].length);
+                if (value[key].length > 1) {
+                    for (let val of value[key]) {
+                        //console.log(val);
+                        //console.log(val['value'])
+                        if (val['value'] == undefined) {
+                            //console.log(undefined)
+                            fd.append(key, val);
+                        } else {
+                            fd.append(key, val['value']);
+                        }
+                    }
+                } else {
+                    //console.log(value[key]);
+                    if (value[key] != '') {
+                        //console.log(value[key][0]['value']);
+                        if (value[key][0]['value'] == undefined) {
+                            fd.append(key, value[key])
+                        } else {
+                            fd.append(key, value[key][0]['value']);
+                        }
+                    } else {
+                        fd.append(key, '');
+                    }
+                }
             }
         }
-        console.log(table_name);
         fd.append('table_name', table_name);
         fd.append('selected_cols', JSON.stringify(selected_columns));
 		return this._http.post<any>(contentMappingUrl, fd, HttpUploadOptions);

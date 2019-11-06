@@ -14,6 +14,8 @@ import numpy as np
 import threading
 import datetime
 import ast
+import itertools
+import inspect
 
 import sqlalchemy
 from sqlalchemy import func, text, select, update, event, join
@@ -46,6 +48,7 @@ from .db.models import (
     BibMappings,
     CorRoleMapping,
     TMappingsFields,
+    TMappingsValues,
     BibFields,
     BibThemes,
     generate_user_table_class
@@ -84,7 +87,7 @@ from .db.queries.user_table_queries import (
     get_date_ext
 )
 
-from .db.queries.save_mapping import save_field_mapping
+from .db.queries.save_mapping import save_field_mapping, save_content_mapping
 from .db.queries.load_to_synthese import (
     insert_into_t_sources, 
     get_id_source,
@@ -146,17 +149,23 @@ def get_import_list(info_role):
         results = DB.session.query(TImports)\
                     .order_by(TImports.id_import)\
                     .filter(TImports.step >= 2)
+
         nrows = DB.session.query(TImports).count()
+
         history = []
+
         if not results or nrows == 0:
             return {
                 "empty": True
             }, 200
+
         for r in results:
+
             if r.date_end_import is None:
                 date_end_import = 'En cours'
             else:
                 date_end_import = r.date_end_import
+
             prop = {
                 "id_import": r.id_import,
                 "format_source_file": r.format_source_file,
@@ -181,10 +190,12 @@ def get_import_list(info_role):
                     .one()[0]
             }
             history.append(prop)
+
         return {
             "empty": False,
             "history": history,
         }, 200
+
     except Exception:
         return 'INTERNAL SERVER ERROR ("get_import_list() error"): contactez l\'administrateur du site', 500
 
@@ -205,7 +216,6 @@ def delete_step1(info_role):
             .filter(TImports.step == 1)\
 
         ids = []
-
         for id in list_to_delete:
             delete_import_CorImportArchives(id.id_import)
             delete_import_CorRoleImport(id.id_import)
@@ -248,22 +258,25 @@ def get_user_datasets(info_role):
         return 'INTERNAL SERVER ERROR ("get_user_datasets() error"): contactez l\'administrateur du site', 500
 
 
-@blueprint.route('/field_mappings', methods=['GET'])
+@blueprint.route('/mappings/<mapping_type>', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def get_field_mappings(info_role):
+def get_mappings(info_role, mapping_type):
     """
-        load user field mappings
+        Load mapping names in frontend (select)
     """
 
     try:
-
-        results = DB.session.query(BibMappings).filter(CorRoleMapping.id_role == info_role.id_role).all()
+        results = DB.session.query(BibMappings)\
+            .filter(CorRoleMapping.id_role == info_role.id_role)\
+            .filter(BibMappings.mapping_type == mapping_type.upper())\
+            .all()
 
         mappings = []
 
         if len(results) > 0:
             for row in results:
+                print(row.mapping_label)
                 d = {
                     'id_mapping': row.id_mapping,
                     'mapping_label': row.mapping_label
@@ -320,20 +333,66 @@ def get_mapping_fields(info_role, id_mapping):
         return 'INTERNAL SERVER ERROR ("get_mapping_fields() error"): contactez l\'administrateur du site', 500
 
 
-@blueprint.route('/mappingName/<step>', methods=['GET', 'POST'])
+@blueprint.route('/content_mappings/<id_mapping>', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def postMappingName(info_role, step):
+def get_mapping_contents(info_role, id_mapping):
+    """
+        load source and target contents from an id_mapping
+    """
+
+    try:
+        logger.debug('get contents saved in id_mapping = %s', id_mapping)
+
+        contents = DB.session\
+            .query(TMappingsValues)\
+            .filter(TMappingsValues.id_mapping == int(id_mapping))\
+            .all()
+        
+        mapping_contents = []
+        gb_mapping_contents = []
+
+        if len(contents) > 0:
+            for content in contents:
+                d = {
+                    'id_match_values': content.id_match_values,
+                    'id_mapping': content.id_mapping,
+                    'source_value': content.source_value,
+                    'id_target_value': content.id_target_value
+                    }
+                mapping_contents.append(d)
+            for key, group in itertools.groupby(mapping_contents, key=lambda x:x['id_target_value']):
+                gb_mapping_contents.append(list(group))
+        else:
+            gb_mapping_contents.append('empty')
+
+        logger.debug('mapping_contents = %s from id_mapping number %s', mapping_contents, id_mapping)
+
+
+        
+        return gb_mapping_contents, 200
+
+    except Exception:
+        raise
+        return 'INTERNAL SERVER ERROR ("get_mapping_contents() error"): contactez l\'administrateur du site', 500
+
+
+@blueprint.route('/mappingName', methods=['GET', 'POST'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def postMappingName(info_role):
     try:
         logger.info('Posting mapping field name')
 
-        data = request.json
+        data = request.form.to_dict()
 
         if data['mappingName'] == '':
             return 'Vous devez donner un nom au mapping', 400
 
         # check if name already exists
-        names_request = DB.session.query(BibMappings).all()
+        names_request = DB.session\
+            .query(BibMappings)\
+            .all()
         names = [name.mapping_label for name in names_request]
 
         if data['mappingName'] in names:
@@ -342,6 +401,7 @@ def postMappingName(info_role, step):
         # fill BibMapping
         new_name = BibMappings(
             mapping_label = data['mappingName'],
+            mapping_type = data['mapping_type'],
             active = True
             )
 
@@ -966,7 +1026,8 @@ def get_bib_fields(info_role):
         bibs = DB.session.execute("""
             SELECT *
             FROM {schema_name}.bib_fields fields
-            JOIN {schema_name}.bib_themes themes on fields.id_theme = themes.id_theme;
+            JOIN {schema_name}.bib_themes themes on fields.id_theme = themes.id_theme
+            WHERE fields.display = true;
             """.format(schema_name = IMPORTS_SCHEMA_NAME)
             ).fetchall()
 
@@ -977,9 +1038,7 @@ def get_bib_fields(info_role):
             ).fetchone()[0]
 
         data_theme = []
-
         for i in range(max_theme):
-
             data = []
             for row in bibs:
                 if row.id_theme == i+1:
@@ -992,6 +1051,7 @@ def get_bib_fields(info_role):
                         'autogenerated': row.autogenerated
                         }
                     data.append(d)
+            data = sorted(data, key = lambda i: i['id_field'])
             data_theme.append({
                 'theme_name' : theme_name,
                 'fields': data
@@ -1007,10 +1067,10 @@ def get_bib_fields(info_role):
             details=str(e))
 
 
-@blueprint.route('/contentMapping/<import_id>', methods=['GET', 'POST'])
+@blueprint.route('/contentMapping/<import_id>/<id_mapping>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def content_mapping(info_role, import_id):
+def content_mapping(info_role, import_id, id_mapping):
     try:
 
         logger.info('Content mapping : transforming user values to id_types in the user table')
@@ -1023,6 +1083,15 @@ def content_mapping(info_role, import_id):
 
         form_data.pop('table_name')
         form_data.pop('selected_cols')
+
+        """
+        ### SAVE MAPPING ###
+
+        logger.info('save content mapping')
+        save_content_mapping(form_data, id_mapping)
+        """
+
+        ### CONTENT MAPPING ###
         
         selected_content = {key:value for key, value in form_data.items() if value != ['']}
 
@@ -1033,6 +1102,7 @@ def content_mapping(info_role, import_id):
         set_default_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_cols)
 
         logger.info('-> Content mapping : user values transformed to id_types in the user table')
+
 
         ### UPDATE TIMPORTS
 

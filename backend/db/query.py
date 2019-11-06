@@ -178,21 +178,24 @@ def delete_tables(id, archives_schema, imports_schema):
     Returns:
         None
 
-    """   
-    table_names_list = get_table_list(archives_schema)
-    if len(table_names_list) > 0:
-        for table_name in table_names_list:
-            try:
-                if int(table_name.split('_')[-1]) == id:
-                    imports_table_name = set_imports_table_name(table_name)
-                    DB.session.execute("""
-                        DROP TABLE {}"""\
-                            .format(get_full_table_name(archives_schema,table_name)))
-                    DB.session.execute("""
-                        DROP TABLE {}"""\
-                            .format(get_full_table_name(imports_schema,imports_table_name)))
-            except ValueError:
-                pass
+    """
+    try:   
+        table_names_list = get_table_list(archives_schema)
+        if len(table_names_list) > 0:
+            for table_name in table_names_list:
+                try:
+                    if int(table_name.split('_')[-1]) == id:
+                        imports_table_name = set_imports_table_name(table_name)
+                        DB.session.execute("""
+                            DROP TABLE IF EXISTS {}"""\
+                                .format(get_full_table_name(archives_schema,table_name)))
+                        DB.session.execute("""
+                            DROP TABLE IF EXISTS {}"""\
+                                .format(get_full_table_name(imports_schema,imports_table_name)))
+                except ValueError:
+                    pass
+    except Exception:
+        raise
 
 
 

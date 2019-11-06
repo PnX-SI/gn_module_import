@@ -3,6 +3,41 @@
         <h5 class="card-title mb-0"> Mapping des contenus </h5>
     </div>
     <div class="card-body">
+
+        <!-- Choix du mapping -->
+        <form [formGroup]="selectContentMappingForm" class="was-validated">
+                <fieldset>
+                    <legend class="px-1">
+                        Choix du mapping
+                    </legend>
+                    <div *ngIf="userContentMapping" class="form-group">
+                        <select class="form-control form-control-sm" id="contentMappingSelection"
+                            formControlName="contentMapping">
+                            <option [value]=""></option>
+                            <option *ngFor="let data of userContentMapping" [value]="data.id_mapping">
+                                {{data.mapping_label}}</option>
+                        </select>
+                    </div>
+                    <button
+                        class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
+                        (click)="createMapping()">
+                        Nouveau mapping
+                    </button>
+                    <div *ngIf="newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
+                        <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
+                        <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
+                            (click)="onMappingContentName(selectContentMappingForm.value)">
+                            ok
+                        </button>
+                        <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
+                            (click)="onCancelMapping()">
+                            annuler
+                        </button>
+                    </div>
+                </fieldset>
+            </form>
+
+
         <form [formGroup]="contentForm" *ngIf="showForm">
             <div *ngFor="let contentMapping of contentMappingInfo">
                 <div class="card field-card">
