@@ -1,8 +1,18 @@
 #!/bin/bash
 
-mkdir -p var/log
-
 . config/settings.ini
+
+# Create log folder in module folders if it don't already exists
+if [ ! -d 'var' ]
+then
+  mkdir var
+fi
+
+if [ ! -d 'var/log' ]
+then
+  mkdir var/log
+fi
+
 
 touch config/conf_gn_module.toml
 echo -n "create tables and functions in gn_imports_schema "

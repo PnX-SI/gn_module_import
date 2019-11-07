@@ -18,7 +18,7 @@ export const ModuleConfig = {
   "the_geom_local",
   "last_action"
  ],
- "ID_MODULE": 15,
+ "ID_MODULE": 17,
  "IMPORTS_SCHEMA_NAME": "gn_imports",
  "LIST_COLUMNS_FRONTEND": [
   {
