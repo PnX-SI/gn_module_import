@@ -1175,7 +1175,8 @@ def import_data(info_role, import_id):
                 TImports.taxa_count: get_n_taxa(IMPORTS_SCHEMA_NAME, table_name, total_columns['cd_nom']),
                 TImports.date_min_data: date_ext['date_min'],
                 TImports.date_max_data: date_ext['date_max'],
-                TImports.date_end_import: datetime.datetime.now()
+                TImports.date_end_import: datetime.datetime.now(),
+                TImports.step: 5
                 })
 
         logger.info('-> t_imports updated on final step')
