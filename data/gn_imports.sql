@@ -230,7 +230,8 @@ INSERT INTO user_errors (id_error, error_type, name, description) VALUES
 	(10, 'inconsistency error', 'altitude min > altitude max', 'altitude min > altitude max'),
 	(11, 'duplicates error', 'entitiy_source_pk_value duplicates', 'des valeurs de entity_source_pk_value ne sont pas uniques'),
 	(12, 'invalid type error', 'invalid real type', 'type real invalide'),
-	(13, 'inconsistency_error', 'inconsistent geographic coordinate', 'coordonnée géographique incohérente');
+	(13, 'inconsistency_error', 'inconsistent geographic coordinate', 'coordonnée géographique incohérente'),
+    (14, 'uuid value error', 'uuid existing in gn_synthese.synthese table', 'uuid déjà existant dans la table gn_synthese.synthese');
 
 
 INSERT INTO bib_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme) VALUES
