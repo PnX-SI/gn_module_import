@@ -3,7 +3,7 @@ import numpy as np
 
 from geonature.utils.env import DB
 
-from ..db.query import get_synthese_info
+#from ..db.query import get_synthese_info
 from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger

@@ -2,12 +2,13 @@ from uuid import uuid4
 import numpy as np
 import pandas as pd
 
+from geonature.utils.env import DB
+
 from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger
 
 import pdb
-from geonature.utils.env import DB
 
 
 def fill_nan_uuid(value):

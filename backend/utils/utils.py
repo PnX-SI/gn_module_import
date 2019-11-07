@@ -1,4 +1,3 @@
-
 def create_col_name(df, col_dict, key, value, import_id):
     try:
         if value not in df.columns:

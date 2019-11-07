@@ -1,9 +1,8 @@
 import datetime
 
-from ..db.query import (
+from ..db.queries.load_to_synthese import (
     get_synthese_info
 )
-
 from .check_cd_nom import check_cd_nom
 from .check_dates import check_dates
 from .check_missing import format_missing, check_missing
@@ -16,7 +15,6 @@ from .check_geography import check_geography
 from ..logs import logger
 
 import pdb
-
 
 
 def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, def_count_val, cd_nom_list, srid, local_srid, is_generate_uuid):

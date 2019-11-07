@@ -1,45 +1,24 @@
 from flask import (
     Blueprint,
-    current_app,
     request,
     jsonify
 )
-
-from werkzeug.utils import secure_filename
-import geopandas
 import os
-import pathlib
 import pandas as pd
-import numpy as np
-import threading
 import datetime
 import ast
 import itertools
-import inspect
-
 import sqlalchemy
-from sqlalchemy import func, text, select, update, event, join
-from sqlalchemy.sql.elements import quoted_name
-from sqlalchemy.sql import column
-
+from sqlalchemy import select, update
 import psycopg2
-from psycopg2 import sql
-from psycopg2.extensions import QuotedString, AsIs, quote_ident
-from psycopg2.extras import execute_values
-
 from geonature.utils.utilssqlalchemy import json_resp
 from geonature.utils.env import DB
 from geonature.core.gn_meta.models import TDatasets
 from geonature.core.gn_synthese.models import (
     Synthese,
-    TSources,
     CorObserverSynthese
 )
-from geonature.core.gn_commons.models import BibTablesLocation
-from geonature.utils.env import DB
 from geonature.core.gn_permissions import decorators as permissions
-
-from pypnnomenclature.models import TNomenclatures
 
 from .db.models import (
     TImports,
@@ -54,31 +33,19 @@ from .db.models import (
     generate_user_table_class
 )
 
-from .db.query import (
-    get_table_info,
-    get_table_list,
-    test_user_dataset,
-    delete_import_CorImportArchives,
-    delete_import_CorRoleImport,
-    delete_import_TImports,
-    delete_tables,
-    get_table_name,
-    get_table_names,
-    check_sql_words,
-    get_full_table_name,
-    set_imports_table_name,
-    get_synthese_info,
-    load_csv_to_db,
-    get_row_number,
-    check_row_number,
-    get_local_srid,
-    get_cd_nom_list
-)
-
 from .db.queries.user_table_queries import (
     delete_table,
     rename_table,
+    get_table_info,
+    delete_tables,
     set_primary_key,
+    get_table_name,
+    get_table_names,
+    get_full_table_name,
+    load_csv_to_db,
+    get_row_number,
+    set_imports_table_name,
+    check_row_number,
     alter_column_type,
     get_n_loaded_rows,
     get_n_invalid_rows,
@@ -87,15 +54,25 @@ from .db.queries.user_table_queries import (
     get_date_ext
 )
 
+from .db.queries.metadata import (
+    test_user_dataset,
+    delete_import_CorImportArchives,
+    delete_import_CorRoleImport,
+    delete_import_TImports
+)
+
 from .db.queries.save_mapping import save_field_mapping, save_content_mapping
+
+from .db.queries.taxonomy import get_cd_nom_list
+
 from .db.queries.load_to_synthese import (
-    insert_into_t_sources, 
-    get_id_source,
+    insert_into_t_sources,
     check_id_source
 )
 
+from .db.queries.geometries import get_local_srid
+
 from .utils.clean_names import*
-from .utils.utils import create_col_name
 
 from .upload.upload_process import upload
 from .upload.upload_errors import*
@@ -112,24 +89,18 @@ from .transform.nomenclatures.nomenclatures import (
 )
 
 from .logs import logger
-
 from .api_error import GeonatureImportApiError
-
 from .extract.extract import extract
-
 from .load.load import load
 from .load.utils import compute_df
-
 from .data_preview.preview import get_preview, set_total_columns
-
 from .load.into_synthese.import_data import load_data_to_synthese
-
 from .wrappers import checker
 
 import pdb
 
-blueprint = Blueprint('import', __name__)
 
+blueprint = Blueprint('import', __name__)
 
 @blueprint.errorhandler(GeonatureImportApiError)
 def handle_geonature_import_api(error):
@@ -173,9 +144,9 @@ def get_import_list(info_role):
                 "import_table": r.import_table,
                 "id_dataset": r.id_dataset,
                 "id_mapping": r.id_mapping,
-                # recupérer seulement date et pas heure
+                # recupérer seulement date et pas heure?
                 "date_create_import": str(r.date_create_import),
-                # recupérer seulement date et pas heure
+                # recupérer seulement date et pas heure?
                 "date_update_import": str(r.date_update_import),
                 "date_end_import": str(date_end_import),
                 "source_count": r.source_count,
@@ -1084,12 +1055,12 @@ def content_mapping(info_role, import_id, id_mapping):
         form_data.pop('table_name')
         form_data.pop('selected_cols')
 
-        """
+
         ### SAVE MAPPING ###
 
         logger.info('save content mapping')
         save_content_mapping(form_data, id_mapping)
-        """
+
 
         ### CONTENT MAPPING ###
         

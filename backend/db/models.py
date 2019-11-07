@@ -1,12 +1,17 @@
-from geonature.utils.env import DB
 from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func, PrimaryKeyConstraint
 from sqlalchemy.orm import relationship
-from geonature.utils.utilssqlalchemy import (
-    serializable, geoserializable
-)
 from geoalchemy2 import Geometry
+
 import datetime
+
+from geonature.utils.env import DB
+
+from geonature.utils.utilssqlalchemy import (
+    serializable, 
+    geoserializable
+)
 from geonature.core.gn_meta.models import TDatasets
+
 
 @serializable
 class TImports(DB.Model):

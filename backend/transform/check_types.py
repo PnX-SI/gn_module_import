@@ -3,7 +3,6 @@ from uuid import uuid4, UUID
 import numpy as np
 import datetime
 
-from ..db.query import get_synthese_types
 from ..db.queries.nomenclatures import get_synthese_cols
 from ..wrappers import checker
 from ..logs import logger

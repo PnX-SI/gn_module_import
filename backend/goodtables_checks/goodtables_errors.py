@@ -19,12 +19,14 @@ def set_error(code ,message, message_data):
         'message_data': message_data
     }
 
+
 no_data = \
 {
     'code': 'empty file',
     'message': 'no data',
     'message_data': ''
 }
+
 
 digit_name = \
 {
