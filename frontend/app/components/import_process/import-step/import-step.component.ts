@@ -103,14 +103,10 @@ export class ImportStepComponent implements OnInit, OnChanges {
                         saveAs(res, filename);
                     },
                     (error) => {
-                        if (error.statusText === 'Unknown Error') {
-                            // show error message if no connexion
+                        if (error.statusText === 'Unknown Error')
                             this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-                        } else {
-                            // show error message if other server error
-                            console.log(error);
-                            this.toastr.error(error.error.message);
-                        }
+                        else
+                            this.toastr.error('INTERNAL SERVER ERROR when downloading csv file');
                     }
                 );
             }
