@@ -39,8 +39,9 @@ def get_nomenc_user_values(user_nomenc_col, schema_name, table_name):
     try:
         nomenc_user_values = DB.session.execute("""
             SELECT DISTINCT {user_nomenc_col} as user_val
-            FROM {schema_name}.{table_name};"""\
-                .format(
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid = 'True';
+            """.format(
                     user_nomenc_col = user_nomenc_col,
                     schema_name = schema_name,
                     table_name = table_name))\
