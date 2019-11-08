@@ -316,3 +316,26 @@ def get_date_ext(schema_name, table_name, date_min_col, date_max_col):
         }
     except Exception:
         raise
+
+
+def save_invalid_data(cur, full_archive_table_name, full_imports_table_name, full_path, pk_name):
+    try:
+        cmd = """
+                COPY
+                    (
+                    SELECT I.gn_invalid_reason, A.*
+                    FROM {full_imports_table_name} I
+                    LEFT JOIN {full_archive_table_name} A ON I.{pk_name} = A.{pk_name}
+                    WHERE I.gn_is_valid = 'False'
+                    ORDER BY I.{pk_name} ASC
+                    )
+                TO STDOUT WITH CSV HEADER;
+            """.format(
+                full_archive_table_name = full_archive_table_name,
+                full_imports_table_name = full_imports_table_name,
+                pk_name = pk_name
+            )
+        with open(full_path, 'w') as f:
+            cur.copy_expert(cmd,f)
+    except Exception:
+        raise

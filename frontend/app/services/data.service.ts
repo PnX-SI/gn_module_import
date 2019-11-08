@@ -90,33 +90,24 @@ export class DataService {
 		return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
     }
     
+
     postContentMap(value, table_name, selected_columns, import_id, id_mapping) {
-        console.log('id_mapping = ' + id_mapping);
         const contentMappingUrl = `${urlApi}/contentMapping/${import_id}/${id_mapping}`;
-        console.log(value);
         let fd = new FormData();
         for (let key of Object.keys(value)) {
             if (value[key] == null) {
                 fd.append(key, '')
             } else {
-                //console.log(key);
-                //console.log(value[key]);
-                //console.log(value[key].length);
                 if (value[key].length > 1) {
                     for (let val of value[key]) {
-                        //console.log(val);
-                        //console.log(val['value'])
                         if (val['value'] == undefined) {
-                            //console.log(undefined)
                             fd.append(key, val);
                         } else {
                             fd.append(key, val['value']);
                         }
                     }
                 } else {
-                    //console.log(value[key]);
                     if (value[key] != '') {
-                        //console.log(value[key][0]['value']);
                         if (value[key][0]['value'] == undefined) {
                             fd.append(key, value[key])
                         } else {
@@ -164,6 +155,10 @@ export class DataService {
         fd.append('selected_columns', JSON.stringify(selected_columns));
         fd.append('added_columns', JSON.stringify(added_columns));
         return this._http.post<any>(`${urlApi}/getValidData/${importId}`, fd, HttpUploadOptions);        
+    }
+
+    getCSV(importId: number) {
+        return this._http.get<any>(`${urlApi}/getCSV/${importId}`);
     }
 
 }

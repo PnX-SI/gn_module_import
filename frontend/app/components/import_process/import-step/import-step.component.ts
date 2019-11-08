@@ -18,6 +18,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
     importDataRes: any;
     validData: any;
     total_columns: any;
+    csvResp: any;
 
 
 	constructor(
@@ -63,6 +64,26 @@ export class ImportStepComponent implements OnInit, OnChanges {
                 this.validData = res;
                 this.total_columns = res['total_columns'];
                 console.log(this.validData);
+            },
+            (error) => {
+                if (error.statusText === 'Unknown Error') {
+                    // show error message if no connexion
+                    this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+                } else {
+                    // show error message if other server error
+                    console.log(error);
+                    this.toastr.error(error.error.message);
+                }
+            }
+        );
+    }
+
+
+    onCSV() {
+        this._ds.getCSV(this.importId).subscribe(
+            (res) => {
+                this.csvResp = res;
+                console.log(this.csvResp);
             },
             (error) => {
                 if (error.statusText === 'Unknown Error') {
