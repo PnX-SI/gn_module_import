@@ -320,7 +320,8 @@ def get_date_ext(schema_name, table_name, date_min_col, date_max_col):
 
 def save_invalid_data(cur, full_archive_table_name, full_imports_table_name, full_path, pk_name):
     try:
-        cmd = """
+        cmd = \
+            """
                 COPY
                     (
                     SELECT I.gn_invalid_reason, A.*

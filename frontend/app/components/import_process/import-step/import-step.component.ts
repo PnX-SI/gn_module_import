@@ -3,6 +3,7 @@ import { StepsService } from '../steps.service';
 import { DataService } from '../../../services/data.service';
 import { ToastrService } from 'ngx-toastr';
 import { ModuleConfig } from '../../../module.config';
+import { saveAs } from 'file-saver';
 
 @Component({
 	selector: 'import-step',
@@ -18,8 +19,8 @@ export class ImportStepComponent implements OnInit, OnChanges {
     importDataRes: any;
     validData: any;
     total_columns: any;
-    csvResp: any;
-
+    fileName: any;
+    csvDownloadResp: any;
 
 	constructor(
         private stepService: StepsService, 
@@ -80,10 +81,10 @@ export class ImportStepComponent implements OnInit, OnChanges {
 
 
     onCSV() {
+        let filename = 'invalid_data.csv'
         this._ds.getCSV(this.importId).subscribe(
             (res) => {
-                this.csvResp = res;
-                console.log(this.csvResp);
+                saveAs(res, filename);
             },
             (error) => {
                 if (error.statusText === 'Unknown Error') {

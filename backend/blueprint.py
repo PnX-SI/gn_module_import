@@ -1,7 +1,8 @@
 from flask import (
     Blueprint,
     request,
-    jsonify
+    jsonify,
+    send_file
 )
 import os
 import pandas as pd
@@ -1210,7 +1211,7 @@ def get_valid_data(info_role, import_id):
 
 @blueprint.route('/getCSV/<import_id>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
-@json_resp
+#@json_resp
 def get_csv(info_role, import_id):
     try:
         # Set variables
@@ -1229,14 +1230,15 @@ def get_csv(info_role, import_id):
         file_name = '_'.join([INVALID_CSV_NAME,table_names['archives_table_name']])
         full_file_name = '.'.join([file_name, 'csv'])
         full_path = os.path.join(uploads_directory, full_file_name)
-        print(full_path)
 
         # save csv in upload directory
         engine = DB.engine
         conn = engine.raw_connection()
         cur = conn.cursor()
+        logger.info('saving csv of invalid data in upload directory')
         save_invalid_data(cur, full_archive_table_name, full_imports_table_name, full_path, pk_name)
+        logger.info(' -> csv saved')
 
-        return 'ca passe'
+        return send_file(full_path, as_attachment=True, attachment_filename=full_file_name)
     except Exception:
         raise

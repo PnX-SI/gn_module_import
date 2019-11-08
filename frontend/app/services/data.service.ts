@@ -157,8 +157,13 @@ export class DataService {
         return this._http.post<any>(`${urlApi}/getValidData/${importId}`, fd, HttpUploadOptions);        
     }
 
+
     getCSV(importId: number) {
-        return this._http.get<any>(`${urlApi}/getCSV/${importId}`);
-    }
+        let fd = new FormData();
+        return this._http.post<any>(`${urlApi}/getCSV/${importId}`, fd, {
+            responseType:'blob',
+            headers: new HttpHeaders().append('Content-Type', 'application/json')
+            });
+        }
 
 }
