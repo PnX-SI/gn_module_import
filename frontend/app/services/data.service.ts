@@ -100,19 +100,17 @@ export class DataService {
             } else {
                 if (value[key].length > 1) {
                     for (let val of value[key]) {
-                        if (val['value'] == undefined) {
+                        if (val['value'] == undefined)
                             fd.append(key, val);
-                        } else {
+                        else
                             fd.append(key, val['value']);
-                        }
                     }
                 } else {
                     if (value[key] != '') {
-                        if (value[key][0]['value'] == undefined) {
+                        if (value[key][0]['value'] == undefined)
                             fd.append(key, value[key])
-                        } else {
+                        else
                             fd.append(key, value[key][0]['value']);
-                        }
                     } else {
                         fd.append(key, '');
                     }
@@ -163,7 +161,12 @@ export class DataService {
         return this._http.post<any>(`${urlApi}/getCSV/${importId}`, fd, {
             responseType:'blob',
             headers: new HttpHeaders().append('Content-Type', 'application/json')
-            });
-        }
+        });
+    }
+
+
+    checkInvalid(import_id) {
+        return this._http.get<any>(`${urlApi}/check_invalid/${import_id}`);
+    }
 
 }

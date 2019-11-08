@@ -1211,7 +1211,6 @@ def get_valid_data(info_role, import_id):
 
 @blueprint.route('/getCSV/<import_id>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
-#@json_resp
 def get_csv(info_role, import_id):
     try:
         # Set variables
@@ -1240,5 +1239,34 @@ def get_csv(info_role, import_id):
         logger.info(' -> csv saved')
 
         return send_file(full_path, as_attachment=True, attachment_filename=full_file_name)
-    except Exception:
-        raise
+    
+    except Exception as e:
+        logger.error('*** SERVER ERROR when saving csv file of invalid data')
+        logger.exception(e)
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR when saving csv file of invalid data',
+            details=str(e))
+
+
+@blueprint.route('/check_invalid/<import_id>', methods=['GET', 'POST'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def check_invalid(info_role, import_id):
+    try:
+        ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+        full_imports_table_name = table_names['imports_full_table_name']
+
+        # check if n error != 0:
+        n_invalid = get_n_invalid_rows(full_imports_table_name)
+        if n_invalid == 0:
+            return 'Vous n\'avez aucune ligne invalide', 400
+
+        return n_invalid
+
+    except Exception as e:
+        logger.exception(e)
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR when getting invalid rows count',
+            details=str(e))
