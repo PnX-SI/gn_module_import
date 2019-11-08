@@ -92,6 +92,11 @@ export class DataService {
     
 
     postContentMap(value, table_name, selected_columns, import_id, id_mapping) {
+        console.log(id_mapping);
+        if (id_mapping == null)
+            console.log('cest null')
+            id_mapping = 0;
+            console.log(id_mapping);
         const contentMappingUrl = `${urlApi}/contentMapping/${import_id}/${id_mapping}`;
         let fd = new FormData();
         for (let key of Object.keys(value)) {

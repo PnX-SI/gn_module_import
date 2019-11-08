@@ -733,11 +733,13 @@ def postMapping(info_role, import_id, id_mapping):
         srid = int(data['srid'])
         data.pop('srid')
 
-        if id_mapping != 'undefined':
-            ### SAVE MAPPING ###
 
+        ### SAVE MAPPING ###
+
+        if id_mapping != 'undefined':
             logger.info('save field mapping')
             save_field_mapping(data, id_mapping)
+            logger.info(' -> field mapping saved')
 
 
         ### INITIALIZE VARIABLES
@@ -1061,8 +1063,10 @@ def content_mapping(info_role, import_id, id_mapping):
 
         ### SAVE MAPPING ###
 
-        logger.info('save content mapping')
-        save_content_mapping(form_data, id_mapping)
+        if id_mapping != 0:
+            logger.info('save content mapping')
+            save_content_mapping(form_data, id_mapping)
+            logger.info(' -> content mapping saved')
 
 
         ### CONTENT MAPPING ###
@@ -1119,7 +1123,13 @@ def import_data(info_role, import_id):
 
         # set total user columns
         form_data = request.form.to_dict(flat=False)
-        total_columns = ast.literal_eval(form_data['total_columns'][0])
+        try:
+            total_columns = ast.literal_eval(form_data['total_columns'][0])
+        except ValueError:
+            return {
+                'message' : 'Attention',
+                'details' : 'Veuillez prévisualiser les données avant d\'importer'
+            },500
 
         # check if id_source already exists in synthese table
         is_id_source = check_id_source(import_id)
