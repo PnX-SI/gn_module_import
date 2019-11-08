@@ -733,11 +733,11 @@ def postMapping(info_role, import_id, id_mapping):
         srid = int(data['srid'])
         data.pop('srid')
 
+        if id_mapping != 'undefined':
+            ### SAVE MAPPING ###
 
-        ### SAVE MAPPING ###
-
-        logger.info('save field mapping')
-        save_field_mapping(data, id_mapping)
+            logger.info('save field mapping')
+            save_field_mapping(data, id_mapping)
 
 
         ### INITIALIZE VARIABLES
