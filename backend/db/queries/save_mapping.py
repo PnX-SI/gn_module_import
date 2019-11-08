@@ -50,7 +50,6 @@ def save_content_mapping(form_data, id_mapping):
         objs = TMappingsValues.query.filter_by(id_mapping=id_mapping).all()
         for obj in objs:
             DB.session.delete(obj)
-        #pdb.set_trace()
         for id_type in form_data:
             for i in range(len(form_data[id_type])):
                 create_mapping_value(int(id_mapping), form_data[id_type][i], int(id_type))

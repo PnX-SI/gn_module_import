@@ -112,7 +112,8 @@ def set_nomenclature_id(schema_name, table_name, user_col, value, id_type):
     try:
         DB.session.execute("""
             UPDATE {schema_name}.{table_name}
-            SET {user_col} = REPLACE({user_col}, '{value}', '{id_type}')
+            SET {user_col} = {id_type}
+            WHERE {user_col} = '{value}';
             """.format(
                 schema_name = schema_name,
                 table_name = table_name,
