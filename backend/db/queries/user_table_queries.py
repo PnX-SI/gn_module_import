@@ -300,7 +300,7 @@ def get_n_taxa(schema_name, table_name, cd_nom_col):
 def get_date_ext(schema_name, table_name, date_min_col, date_max_col):
     try:
         dates = DB.session.execute("""
-            SELECT min(date_debut), max(date_fin)
+            SELECT min({date_min_col}), max({date_max_col})
             FROM {schema_name}.{table_name}
             WHERE gn_is_valid = 'True';
             """.format(
