@@ -958,6 +958,14 @@ def postMetaToStep3(info_role):
     try:
 
         data = request.form.to_dict()
+
+        try:
+            print(data['date_min'])
+        except Exception:
+            return {
+                'message' : 'Veuillez d\'abord valider votre mapping'
+            },400
+
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
         nomenc_info = get_nomenc_info(data, IMPORTS_SCHEMA_NAME)
