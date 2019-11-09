@@ -357,3 +357,20 @@ def check_existing_uuid(value):
         return is_existing
     except Exception:
         raise
+
+
+def get_required(schema_name, table_name):
+    try:
+        required_cols = DB.session.execute(
+            """
+            SELECT name_field
+            FROM {schema_name}.{table_name}
+            WHERE mandatory = True;
+            """.format(
+                schema_name = schema_name,
+                table_name = table_name
+            )).fetchall()
+        col_names = [col[0] for col in required_cols]
+        return col_names
+    except Exception:
+        raise

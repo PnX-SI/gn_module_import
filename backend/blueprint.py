@@ -53,7 +53,8 @@ from .db.queries.user_table_queries import (
     get_n_valid_rows,
     get_n_taxa,
     get_date_ext,
-    save_invalid_data
+    save_invalid_data,
+    get_required
 )
 
 from .db.queries.metadata import (
@@ -787,13 +788,25 @@ def postMapping(info_role, import_id, id_mapping):
         selected_user_cols = [*list(selected_columns.values())]
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
-        #pdb.set_trace()
+        # check if column names provided in the field form exists in the user table
         for val in selected_columns.values():
             if val not in column_names:
                 return {
                     'message':'La colonne \'{}\' n\'existe pas. \
                         Avez-vous sélectionné le bon mapping ?'.format(val)
                 }, 400
+
+        # check if required fields are not empty:
+        missing_cols = []
+        required_cols = get_required(IMPORTS_SCHEMA_NAME, 'bib_fields')
+        for col in required_cols:
+            if col not in selected_columns.keys():
+                missing_cols.append(col)
+        if len(missing_cols) > 0:
+            return {
+                'message':'Champs obligatoires manquants: {}'.format(','.join(missing_cols))
+            },500
+
 
         ### EXTRACT
 
