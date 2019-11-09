@@ -231,7 +231,8 @@ INSERT INTO user_errors (id_error, error_type, name, description) VALUES
 	(11, 'duplicates error', 'entitiy_source_pk_value duplicates', 'des valeurs de entity_source_pk_value ne sont pas uniques'),
 	(12, 'invalid type error', 'invalid real type', 'type real invalide'),
 	(13, 'inconsistency_error', 'inconsistent geographic coordinate', 'coordonnée géographique incohérente'),
-    (14, 'uuid value error', 'uuid existing in gn_synthese.synthese table', 'uuid déjà existant dans la table gn_synthese.synthese');
+    (14, 'uuid value error', 'uuid existing in gn_synthese.synthese table', 'uuid déjà existant dans la table gn_synthese.synthese'),
+    (15, 'invalid value', 'id_digitiser is not present in "t_roles" table', 'id_digitizer n''existe pas dans la table "t_roles"');
 
 
 INSERT INTO bib_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme) VALUES

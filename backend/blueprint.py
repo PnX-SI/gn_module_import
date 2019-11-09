@@ -1241,8 +1241,7 @@ def get_csv(info_role, import_id):
         full_path = os.path.join(uploads_directory, full_file_name)
 
         # save csv in upload directory
-        engine = DB.engine
-        conn = engine.raw_connection()
+        conn = DB.engine.raw_connection()
         cur = conn.cursor()
         logger.info('saving csv of invalid data in upload directory')
         save_invalid_data(cur, full_archive_table_name, full_imports_table_name, full_path, pk_name)

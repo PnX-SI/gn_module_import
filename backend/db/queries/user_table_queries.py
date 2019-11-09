@@ -340,3 +340,20 @@ def save_invalid_data(cur, full_archive_table_name, full_imports_table_name, ful
             cur.copy_expert(cmd,f)
     except Exception:
         raise
+
+
+def check_existing_uuid(value):
+    try:
+        is_existing = DB.session.execute(
+            """
+            SELECT exists (
+                SELECT 1 
+                FROM gn_synthese.synthese
+                WHERE unique_id_sinp::text = '{value}'
+                LIMIT 1
+            );
+            """.format(value=str(value))\
+            ).fetchone()[0]
+        return is_existing
+    except Exception:
+        raise

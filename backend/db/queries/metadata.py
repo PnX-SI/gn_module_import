@@ -87,3 +87,11 @@ def test_user_dataset(id_role, current_dataset_id):
         
     return True
     
+
+def get_id_roles():
+    ids = DB.session.execute("""
+        SELECT id_role
+        FROM utilisateurs.t_roles
+        """)
+    id_roles = [str(id[0]) for id in ids]
+    return id_roles

@@ -5,10 +5,10 @@ import pandas as pd
 from geonature.utils.env import DB
 
 from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_user_error
+
 from ..wrappers import checker
 from ..logs import logger
-
-import pdb
+from ..db.queries.user_table_queries import check_existing_uuid
 
 
 def fill_nan_uuid(value):
@@ -16,23 +16,6 @@ def fill_nan_uuid(value):
         return str(uuid4())
     else:
         return value  
-
-
-def check_existing_uuid(value):
-    try:
-        is_existing = DB.session.execute(
-            """
-            SELECT exists (
-                SELECT 1 
-                FROM gn_synthese.synthese
-                WHERE unique_id_sinp::text = '{value}'
-                LIMIT 1
-            );
-            """.format(value=str(value))\
-            ).fetchone()[0]
-        return is_existing
-    except Exception:
-        raise
 
 
 @checker('Data cleaning : uuid values checked')
