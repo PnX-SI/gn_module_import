@@ -787,6 +787,13 @@ def postMapping(info_role, import_id, id_mapping):
         selected_user_cols = [*list(selected_columns.values())]
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
+        #pdb.set_trace()
+        for val in selected_columns.values():
+            if val not in column_names:
+                return {
+                    'message':'La colonne \'{}\' n\'existe pas. \
+                        Avez-vous sélectionné le bon mapping ?'.format(val)
+                }, 400
 
         ### EXTRACT
 

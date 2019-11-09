@@ -56,7 +56,6 @@ export class FieldsMappingStepComponent implements OnInit {
 
 		this.syntheseForm = this._fb.group({});
 
-        
         this._ds.getBibFields().subscribe(
             (res) => {
                 this.bibRes = res;
@@ -87,9 +86,12 @@ export class FieldsMappingStepComponent implements OnInit {
         this.onSelectUserMapping();
 	}
 
+
 	onMapping(value) {
 		this.isUploading = true;
-		delete value.stepper;
+        delete value.stepper;
+        console.log(this.columns);
+        console.log(value);
 		this._ds.postMapping(value, this.importId, this.id_mapping, this.srid).subscribe(
 			(res) => {		
                 this.mappingRes =res;
@@ -109,10 +111,8 @@ export class FieldsMappingStepComponent implements OnInit {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
-					// show error message if other server error
-					this.isUserError = true;
-                    this.isUserError = error.error;
-                    console.log(error);
+                    if (error.status == 400)
+                        this.isUserError = true;
                     this.toastr.error(error.error.message);
 				}
 			}

@@ -73,17 +73,16 @@ def check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, 
                     if n_invalid_uuid > 0:
                         set_user_error(dc_user_errors, 14, selected_columns[col], n_invalid_uuid)
                     
-
                 # pour les autres colonnes : on envoie un warning sans créer un uuid pour les champs manquants:
                 else:
-                    pdb.set_trace()
                     logger.info('check for missing values in %s synthese column (= %s user column)', col, selected_columns[col])
 
                     df['gn_invalid_reason'] = df['gn_invalid_reason']\
                         .where(
                             cond=df['temp'],
                             other=df['gn_invalid_reason'] + 'warning : champ uuid vide dans colonne {} -- '\
-                                .format(selected_columns[col]))
+                                .format(selected_columns[col])
+                            )
 
                     n_missing_uuid = df['temp'].astype(str).str.contains('False').sum()
                     
