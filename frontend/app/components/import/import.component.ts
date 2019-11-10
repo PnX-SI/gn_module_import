@@ -20,7 +20,6 @@ export class ImportComponent implements OnInit {
 	ngOnInit() {
 		this.onImportList();
 		this.onDelete_aborted_step1();
-		// faire promesse pour structurer le déroulement de ces 2 appels
 	}
 
 	private onImportList() {
@@ -35,7 +34,7 @@ export class ImportComponent implements OnInit {
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
 					// show error message if other server error
-					this.toastr.error(error.error);
+					this.toastr.error(error.error.message);
 				}
 			}
 		);
@@ -52,7 +51,7 @@ export class ImportComponent implements OnInit {
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
 					// show error message if other server error
-					this.toastr.error(error.error);
+					this.toastr.error(error.error.message);
 				}
 			}
 		);

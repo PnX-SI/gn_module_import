@@ -171,8 +171,10 @@ def get_import_list(info_role):
             "history": history,
         }, 200
 
-    except Exception:
-        return 'INTERNAL SERVER ERROR ("get_import_list() error"): contactez l\'administrateur du site', 500
+    except Exception as e:
+        raise GeonatureImportApiError(\
+                    message='INTERNAL SERVER ERROR - affichage de l\'historique : contactez l\'administrateur du site',
+                    details=str(e))
 
 
 @blueprint.route('/delete_step1', methods=['GET'])
@@ -200,8 +202,10 @@ def delete_step1(info_role):
 
         return {"deleted_step1_imports": ids}, 200
 
-    except Exception:
-        return 'INTERNAL SERVER ERROR ("delete_step1() error"): contactez l\'administrateur du site', 500
+    except Exception as e:
+        raise GeonatureImportApiError(\
+                    message='INTERNAL SERVER ERROR - delete_step1() error : contactez l\'administrateur du site',
+                    details=str(e))
 
 
 @blueprint.route('/datasets', methods=['GET'])
@@ -228,9 +232,13 @@ def get_user_datasets(info_role):
                 datasets.append(d)
             return datasets, 200
         else:
-            return 'Attention, vous n\'avez aucun jeu de données déclaré', 400
-    except Exception:
-        return 'INTERNAL SERVER ERROR ("get_user_datasets() error"): contactez l\'administrateur du site', 500
+            return {
+                'message' : 'Attention, vous n\'avez aucun jeu de données déclaré'
+            }, 400
+    except Exception as e:
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR - checking dataset id: contactez l\'administrateur du site',
+            details=str(e))
 
 
 @blueprint.route('/mappings/<mapping_type>', methods=['GET'])
@@ -263,10 +271,10 @@ def get_mappings(info_role, mapping_type):
         logger.debug('List of mappings %s', mappings)
 
         return mappings, 200
-        
-    except Exception:
-        raise
-        return 'INTERNAL SERVER ERROR ("get_field_mappings() error"): contactez l\'administrateur du site', 500
+    except Exception as e:
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR - get_mappings() error : contactez l\'administrateur du site',
+            details=str(e))     
 
 
 @blueprint.route('/field_mappings/<id_mapping>', methods=['GET'])
@@ -303,9 +311,10 @@ def get_mapping_fields(info_role, id_mapping):
         
         return mapping_fields, 200
 
-    except Exception:
-        raise
-        return 'INTERNAL SERVER ERROR ("get_mapping_fields() error"): contactez l\'administrateur du site', 500
+    except Exception as e:
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR - get_mapping_fields() error : contactez l\'administrateur du site',
+            details=str(e))
 
 
 @blueprint.route('/content_mappings/<id_mapping>', methods=['GET'])
@@ -342,14 +351,13 @@ def get_mapping_contents(info_role, id_mapping):
             gb_mapping_contents.append('empty')
 
         logger.debug('mapping_contents = %s from id_mapping number %s', mapping_contents, id_mapping)
-
-
         
         return gb_mapping_contents, 200
 
-    except Exception:
-        raise
-        return 'INTERNAL SERVER ERROR ("get_mapping_contents() error"): contactez l\'administrateur du site', 500
+    except Exception as e:
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR - get_mapping_contents() error : contactez l\'administrateur du site',
+            details=str(e))
 
 
 @blueprint.route('/mappingName', methods=['GET', 'POST'])
@@ -406,7 +414,7 @@ def postMappingName(info_role):
         logger.exception(e)
         DB.session.rollback()
         raise GeonatureImportApiError(\
-            message='INTERNAL SERVER ERROR : Error when posting mapping field name',
+            message='INTERNAL SERVER ERROR - posting mapping field name : contactez l\'administrateur du site',
             details=str(e))
     finally:
         DB.session.close()
@@ -419,8 +427,7 @@ def cancel_import(info_role, import_id):
     try:
 
         if import_id == "undefined":
-            server_response = {'deleted_id_import': "canceled"}
-            return server_response, 200
+            return  {'deleted_id_import': "canceled"}, 200
 
         # get step number
         step = DB.session.query(TImports.step)\
@@ -445,9 +452,13 @@ def cancel_import(info_role, import_id):
             engine = DB.engine
             is_gn_imports_table_exist = engine.has_table(imports_table_name, schema=blueprint.config['IMPORTS_SCHEMA_NAME'])
             if is_gn_imports_table_exist:
-                DB.session.execute("DROP TABLE {}".format(imports_full_name))
+                DB.session.execute("""\
+                    DROP TABLE {}
+                    """.format(imports_full_name))
 
-            DB.session.execute("DROP TABLE {}".format(archives_full_name))
+            DB.session.execute("""\
+                DROP TABLE {}
+                """.format(archives_full_name))
 
         # delete metadata
         DB.session.query(TImports).filter(
@@ -458,15 +469,19 @@ def cancel_import(info_role, import_id):
             CorImportArchives.id_import == import_id).delete()
 
         DB.session.commit()
+
+        return {
+            'deleted_id_import': import_id
+            }, 200
+    except Exception as e:
+        DB.session.rollback()
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR pendant annulation de l\'import en cours : contactez l\'administrateur du site',
+            details=str(e))
+    finally:
         DB.session.close()
-        server_response = {'deleted_id_import': import_id}
 
-        return server_response, 200
-    except Exception:
-        raise
-        return 'INTERNAL SERVER ERROR ("delete_TImportRow() error"): contactez l\'administrateur du site', 500
-
-
+            
 @blueprint.route('/uploads', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
@@ -934,7 +949,7 @@ def postMapping(info_role, import_id, id_mapping):
             'selected_columns' : selected_columns,
             'added_columns': added_cols,
             'table_name' : table_names['imports_table_name']
-        }
+        },200
 
     except Exception as e:
         logger.error('*** ERROR IN CORRESPONDANCE MAPPING')
@@ -1006,7 +1021,7 @@ def postMetaToStep3(info_role):
             'import_id' : import_id,
             'selected_columns' : data,
             'content_mapping_info' : nomenc_info
-        }
+        },200
     except Exception as e:
         logger.error('*** ERROR IN STEP 2 NEXT BUTTON')
         logger.exception(e)
@@ -1124,7 +1139,7 @@ def content_mapping(info_role, import_id, id_mapping):
 
         logger.info('-> t_imports updated from step 3 to step 4')
 
-        return 'content_mapping done'
+        return 'content_mapping done',200
 
     except Exception as e:
         DB.session.rollback()
@@ -1198,7 +1213,7 @@ def import_data(info_role, import_id):
         return {
             'status' : 'imported successfully',
             'total_columns' : total_columns
-        }
+        },200
 
     except Exception as e:
         DB.session.rollback()
@@ -1237,7 +1252,7 @@ def get_valid_data(info_role, import_id):
         return {
             'total_columns' : total_columns,
             'valid_data': valid_data_list
-        }
+        },200
 
     except Exception as e:
         logger.error('*** SERVER ERROR WHEN GETTING VALID DATA')
@@ -1300,7 +1315,7 @@ def check_invalid(info_role, import_id):
         if n_invalid == 0:
             return 'Vous n\'avez aucune ligne invalide', 400
 
-        return n_invalid
+        return n_invalid,200
 
     except Exception as e:
         logger.exception(e)
