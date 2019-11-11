@@ -55,7 +55,6 @@ def save_content_mapping(form_data, id_mapping):
                 create_mapping_value(int(id_mapping), form_data[id_type][i], int(id_type))
                 DB.session.flush()
         DB.session.commit()
-
     except Exception:
         DB.session.rollback()
         raise

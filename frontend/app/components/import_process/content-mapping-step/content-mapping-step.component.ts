@@ -115,9 +115,9 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
     getMappingList(mapping_type) {
         // get list of existing content mapping in the select
-		this._ds.getMappings(mapping_type).subscribe(
+		this._ds.getMappings(mapping_type, this.importId).subscribe(
 			(result) => {
-				this.userContentMapping = result;
+				this.userContentMapping = result['mappings'];
 			},
 			(error) => {
 				console.log(error);
@@ -184,7 +184,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
                         let arrayVal: any = [];
                         for (let val of content) {
                             if (val['source_value'] != '') {
-                                arrayVal.push({value:val['source_value']});
+                                arrayVal.push({value : val['source_value']});
                             }
                         }
                         this.contentForm.get(String(content[0]['id_target_value'])).setValue(arrayVal);

@@ -47,6 +47,7 @@ export class FieldsMappingStepComponent implements OnInit {
 		private stepService: StepsService
 	) {}
 
+
 	ngOnInit() {
 
 		this.selectFieldMappingForm = this._fb.group({
@@ -94,7 +95,7 @@ export class FieldsMappingStepComponent implements OnInit {
         console.log(value);
 		this._ds.postMapping(value, this.importId, this.id_mapping, this.srid).subscribe(
 			(res) => {		
-                this.mappingRes =res;
+                this.mappingRes = res;
                 console.log(this.mappingRes);
 				this.isUploading = false;
 				this.n_error_lines = res['n_user_errors'];
@@ -119,6 +120,7 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
     }
     
+
     onNextStep()  {
         this._ds.postMetaToStep3(this.importId, this.id_mapping, this.mappingRes['selected_columns'], this.mappingRes['table_name']).subscribe(
 			(res) => {
@@ -145,12 +147,23 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
     }
 
+
 	getMappingList(mapping_type) {
-		// get list of all declared dataset of the user
-		this._ds.getMappings(mapping_type).subscribe(
+		this._ds.getMappings(mapping_type, this.importId).subscribe(
 			(result) => {
-                this.userMapping = result;
+                this.userMapping = result['mappings'];
+                if (result['column_names'] != 'undefined import_id') {
+                    this.columns = result['column_names'].map(
+                        (col) => {
+                            return {
+                                id: col,
+                                selected: false
+                            };
+                        });
+                    console.log(this.columns);
+                }
                 console.log(this.userMapping);
+                
 			},
 			(error) => {
 				console.log(error);
@@ -165,9 +178,9 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
+
 	getSelectedMapping(id_mapping) {
 		this.id_mapping = id_mapping;
-		// get list of all declared dataset of the user
 		this._ds.getMappingFields(id_mapping).subscribe(
 			(mappingFields) => {
 				if (mappingFields[0] != 'empty') {
@@ -241,40 +254,53 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
+
 	createMapping() {
 		this.selectFieldMappingForm.reset();
 		this.newMapping = true;
 	}
+
 
 	onCancelMapping() {
 		this.newMapping = false;
 		this.selectFieldMappingForm.controls['mappingName'].setValue('');
 	}
 
+
 	onStepBack() {
 		this.stepService.previousStep();
 	}
+
 
 	onSelect() {
 		this.getSelectedOptions();
 	}
 
+
 	getSelectedOptions() {
-		let formValues = this.syntheseForm.value;
-		this.columns.map((col) => {
-			if (formValues) {
-				if (Object.values(formValues).includes(col.id)) {
-					col.selected = true;
-				} else {
-					col.selected = false;
-				}
-			}
-        });
+        let formValues = this.syntheseForm.value;
+        console.log(this.id_mapping);
+        if (this.id_mapping == undefined) {
+            this.toastr.warning('Vous devez d\'abord créer ou sélectionner un mapping');
+        } else {
+            this.columns.map((col) => {
+                console.log(col);
+                if (formValues) {
+                    if (Object.values(formValues).includes(col.id)) {
+                        col.selected = false;
+                    } else {
+                        col.selected = false;
+                    }
+                }
+            });
+        }
 	}
+
 
 	ErrorButtonClicked() {
 		this.isErrorButtonClicked = !this.isErrorButtonClicked;
 	}
+
 
 	isFullErrorCheck(n_table_rows, n_errors) {
 		if (n_table_rows == n_errors) {

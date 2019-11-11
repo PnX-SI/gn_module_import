@@ -241,10 +241,10 @@ def get_user_datasets(info_role):
             details=str(e))
 
 
-@blueprint.route('/mappings/<mapping_type>', methods=['GET'])
+@blueprint.route('/mappings/<mapping_type>/<import_id>', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def get_mappings(info_role, mapping_type):
+def get_mappings(info_role, mapping_type, import_id):
     """
         Load mapping names in frontend (select)
     """
@@ -270,7 +270,21 @@ def get_mappings(info_role, mapping_type):
 
         logger.debug('List of mappings %s', mappings)
 
-        return mappings, 200
+        # get column names :
+        col_names = 'undefined import_id'
+        if import_id != 'undefined':
+            ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
+            IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+            table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+            col_names = get_table_info(table_names['imports_table_name'], info='column_name')
+            col_names.remove('gn_is_valid')
+            col_names.remove('gn_invalid_reason')
+            col_names.remove(get_pk_name(blueprint.config['PREFIX']))
+
+        return {
+            'mappings' : mappings,
+            'column_names' : col_names
+         },200
     except Exception as e:
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR - get_mappings() error : contactez l\'administrateur du site',
@@ -756,6 +770,10 @@ def postMapping(info_role, import_id, id_mapping):
             logger.info('save field mapping')
             save_field_mapping(data, id_mapping)
             logger.info(' -> field mapping saved')
+        else:
+            return {
+                'message' : 'Vous devez créer ou sélectionner un mapping pour le valider'
+            },400
 
 
         ### INITIALIZE VARIABLES
@@ -1106,11 +1124,11 @@ def content_mapping(info_role, import_id, id_mapping):
 
         ### SAVE MAPPING ###
 
+        id_mapping = int(id_mapping)
         if id_mapping != 0:
             logger.info('save content mapping')
             save_content_mapping(form_data, id_mapping)
             logger.info(' -> content mapping saved')
-
 
         ### CONTENT MAPPING ###
         

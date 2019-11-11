@@ -38,9 +38,10 @@ export class DataService {
     }
     
 
-	getMappings(mapping_type) {
-        console.log('get mapping : ' + mapping_type);
-		return this._http.get<any>(`${urlApi}/mappings/${mapping_type}`);
+	getMappings(mapping_type, import_id) {
+        console.log('get mapping type : ' + mapping_type);
+        console.log('get import_id : ' + import_id);
+		return this._http.get<any>(`${urlApi}/mappings/${mapping_type}/${import_id}`);
     }
     
 
@@ -92,11 +93,9 @@ export class DataService {
     
 
     postContentMap(value, table_name, selected_columns, import_id, id_mapping) {
-        console.log(id_mapping);
-        if (id_mapping == null)
-            console.log('cest null')
+        if (id_mapping == null) {
             id_mapping = 0;
-            console.log(id_mapping);
+        }
         const contentMappingUrl = `${urlApi}/contentMapping/${import_id}/${id_mapping}`;
         let fd = new FormData();
         for (let key of Object.keys(value)) {
@@ -105,17 +104,19 @@ export class DataService {
             } else {
                 if (value[key].length > 1) {
                     for (let val of value[key]) {
-                        if (val['value'] == undefined)
+                        if (val['value'] == undefined) {
                             fd.append(key, val);
-                        else
+                        } else {
                             fd.append(key, val['value']);
+                        }
                     }
                 } else {
                     if (value[key] != '') {
-                        if (value[key][0]['value'] == undefined)
+                        if (value[key][0]['value'] == undefined) {
                             fd.append(key, value[key])
-                        else
+                        } else {
                             fd.append(key, value[key][0]['value']);
+                        }
                     } else {
                         fd.append(key, '');
                     }
