@@ -3,7 +3,6 @@ import { StepsService } from '../steps.service';
 import { DataService } from '../../../services/data.service';
 import { ToastrService } from 'ngx-toastr';
 //import { ModuleConfig } from '../../../module.config';
-import { saveAs } from 'file-saver';
 import * as _ from 'lodash';
 
 @Component({
@@ -20,8 +19,6 @@ export class ImportStepComponent implements OnInit, OnChanges {
     importDataRes: any;
     validData: any;
     total_columns: any;
-    n_invalid: any;
-    csvDownloadResp: any;
 	columns: any[] = [];
 	rows: any[] = [];
 	tableReady: boolean = false;
@@ -97,37 +94,6 @@ export class ImportStepComponent implements OnInit, OnChanges {
     }
 
 
-    onCSV() {
-        this._ds.checkInvalid(this.importId).subscribe(
-            (res) => {
-                this.n_invalid = res;
-                console.log(this.n_invalid)
-            },
-            (error) => {
-                if (error.statusText === 'Unknown Error') {
-                    // show error message if no connexion
-                    this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-                } else {
-                    // show error message if other server error
-                    console.log(error);
-                    this.toastr.error(error.error);
-                }
-            },
-            () => {
-                let filename = 'invalid_data.csv'
-                this._ds.getCSV(this.importId).subscribe(
-                    (res) => {
-                        saveAs(res, filename);
-                    },
-                    (error) => {
-                        if (error.statusText === 'Unknown Error')
-                            this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-                        else
-                            this.toastr.error('INTERNAL SERVER ERROR when downloading csv file');
-                    }
-                );
-            }
-        );
     }
         
 
