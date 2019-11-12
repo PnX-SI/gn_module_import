@@ -21,7 +21,7 @@ export class ImportProcessComponent implements OnInit {
 	public srid: any;
 	public columns;
 	public IMPORT_CONFIG = ModuleConfig;
-
+	isLinear: boolean = true;
 	contentMappingInfo: any;
 	table_name: any;
 	selected_columns: any;
@@ -94,6 +94,13 @@ export class ImportProcessComponent implements OnInit {
 				if (step.type === 'previous') {
 					this.cd.detectChanges();
 					this.stepper.previous();
+				}
+				if (step.type === 'goTo') {
+					this.isLinear = false;
+					this.cd.detectChanges();
+					this.stepper.selectedIndex = 3;
+					this.isLinear = true;
+					this.cd.detectChanges();
 				}
 				if (step.type === 'reset') {
 					switch (step.id) {

@@ -1,5 +1,5 @@
 <div class=container>
-    <mat-horizontal-stepper linear #stepper>
+    <mat-horizontal-stepper [linear]="isLinear" #stepper>
         <!-- STEP 1 -->
         <mat-step label="Upload du fichier" [stepControl]="step1Control">
             <upload-file-step [importId]="importId"></upload-file-step>
