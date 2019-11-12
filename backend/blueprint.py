@@ -838,12 +838,13 @@ def postMapping(info_role, import_id, id_mapping):
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
         # check if column names provided in the field form exists in the user table
-        for val in selected_columns.values():
-            if val not in column_names:
-                return {
-                    'message':'La colonne \'{}\' n\'existe pas. \
-                        Avez-vous sélectionné le bon mapping ?'.format(val)
-                }, 400
+        for key, value in selected_columns.items():
+            if key not in ['unique_id_sinp_generate', 'altitudes_generate']:
+                if value not in column_names:
+                    return {
+                        'message':'La colonne \'{}\' n\'existe pas. \
+                            Avez-vous sélectionné le bon mapping ?'.format(value)
+                    }, 400
 
         # check if required fields are not empty:
         missing_cols = []
@@ -873,7 +874,10 @@ def postMapping(info_role, import_id, id_mapping):
         # set empty data cleaning user error report :
         dc_user_errors = []
         user_error = {}
-        dc_errors = DB.session.execute("SELECT * FROM gn_imports.user_errors;").fetchall()
+        dc_errors = DB.session.execute("""\
+            SELECT * 
+            FROM gn_imports.user_errors;
+            """).fetchall()
         for error in dc_errors:
             for field in selected_columns.values():
                 dc_user_errors.append({
