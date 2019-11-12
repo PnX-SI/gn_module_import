@@ -7,7 +7,7 @@
                 <div class="form-group">
                     <label>Importer un fichier :</label>
                     <div class="custom-file" id="upload_files">
-                        <input class="custom-file-input" type=file (change)="onFileSelected($event)" id="selectedFile"
+                        <input class="custom-file-input" type=file (click)="onFileClick($event)" (change)="onFileSelected($event)" id="selectedFile"
                             name="file" required>
                         <label class="custom-file-label" for="selectedFile">{{fileName}}</label>
                         <label *ngIf="!fileName" class="custom-file-label" for="selectedFile"> Choisissez

@@ -43,7 +43,19 @@ export class UploadFileStepComponent implements OnInit {
 		this.uploadForm.patchValue({
 			file: <File>event.target.files[0]
 		});
-		this.fileName = this.uploadForm.get('file').value.name;
+		if (event.target.value.length == 0) {
+			this.fileName = null
+		} else {
+			this.fileName = event.target.files[0].name;
+		}
+	}
+
+	onFileClick(event){
+		event.target.value = '';
+		this.fileName = null;
+		this.uploadForm.patchValue({
+			file: null
+		});
 	}
 
 	onUpload(formValues: any) {
