@@ -18,6 +18,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     public id_mapping;
     public columns;
 
+	public spinner: boolean = false;
     @Input() contentMappingInfo: any;
     @Input() selected_columns: any;
     @Input() table_name: any;
@@ -46,7 +47,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
         this.onSelectUserMapping();
 	}
 
-
 	ngOnChanges() {
 		if (this.contentMappingInfo) {
 			this.contentMappingInfo.forEach((ele) => {
@@ -57,7 +57,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 			this.showForm = true;
         }
 	}
-
 
 	onSelectChange(selectedVal, group) {
 		this.contentMappingInfo.map((ele) => {
@@ -71,6 +70,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 		})
 	}
 
+<<<<<<< HEAD
 
 	onSelectDelete(deletedVal, group) {
 		this.contentMappingInfo.map((ele) => {
@@ -79,6 +79,15 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
                 let temp_array = ele.user_values.values;
 				temp_array.push(deletedVal);
 				ele.user_values.values = temp_array;
+=======
+	onSelectDelete(deltetdVal, group) {
+		this.contentMappingInfo.map((ele) => {
+			if (ele.nomenc_abbr === group.nomenc_abbr)
+			{
+				let temp_array = ele.user_values.values;
+				temp_array.push(deltetdVal);
+				ele.user_values.values = temp_array.slice(0);
+>>>>>>> ee5c98573737f2567e58490d2845ef22de538593
 			}
 		})
 	}
@@ -90,16 +99,22 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     
 
     onContentMapping(value) {
+<<<<<<< HEAD
         // post content mapping form values and fill t_mapping_values table
         console.log(this.contentForm);
         this.id_mapping = this.selectContentMappingForm.get('contentMapping').value;
         this._ds.postContentMap(value, this.table_name, this.selected_columns, this.importId, this.id_mapping).subscribe(
+=======
+		this.spinner = true;
+        this._ds.postContentMap(value, this.table_name, this.selected_columns).subscribe(
+>>>>>>> ee5c98573737f2567e58490d2845ef22de538593
             (res) => {		
                 this.contentMapRes = res;
-                console.log(this.contentMapRes);
-                this.stepService.nextStep(this.contentForm, 'three', res);
+				this.stepService.nextStep(this.contentForm, 'three');
+				this.spinner = false;
             },
             (error) => {
+				this.spinner = false;
                 if (error.statusText === 'Unknown Error') {
                     // show error message if no connexion
                     this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
