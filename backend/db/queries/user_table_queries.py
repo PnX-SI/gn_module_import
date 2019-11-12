@@ -10,7 +10,7 @@ def delete_table(full_table_name):
     DB.session.begin(subtransactions=True)
     try:        
         DB.session.execute("""
-            DROP TABLE {};
+            DROP TABLE IF EXISTS {};
             """.format(full_table_name))
         DB.session.commit()
     except Exception:
