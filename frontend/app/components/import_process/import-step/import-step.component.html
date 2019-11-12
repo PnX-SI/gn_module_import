@@ -4,23 +4,25 @@
     </div>
     <div class="card-body">
 
-            <button (click)="getValidData()" class="btn btn-info">
-                    Preview data
+        <ngx-datatable  *ngIf="tableReady" #table class="material striped" [rows]="rows" [columnMode]="'force'" [headerHeight]="35"
+            [scrollbarH]="true" [footerHeight]="40" [rowHeight]="40" [limit]="15" [selectionType]='single'>
+            <ngx-datatable-column *ngFor="let col of columns" name="{{col.name}}" prop="{{col.prop}}">
+            </ngx-datatable-column>
+        </ngx-datatable>
+
+        <br />
+
+        <div class="d-flex flex-row justify-content-between">
+            <button (click)="onStepBack()"
+                class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between">
+                <i class="material-icons"> navigate_before </i>
+                Précédent
             </button>
-
-            <br/>
-
-            <div class="d-flex flex-row justify-content-between">
-                <button (click)="onStepBack()"
-                    class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between">
-                    <i class="material-icons"> navigate_before </i>
-                    Précédent
-                </button>
-                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                    (click)="onImport()">
-                    <i class="material-icons"> done </i>
-                    Importer les données
-                </button>
-            </div>
+            <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
+                (click)="onImport()">
+                <i class="material-icons"> done </i>
+                Importer les données
+            </button>
+        </div>
     </div>
 </div>

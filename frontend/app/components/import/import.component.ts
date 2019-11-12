@@ -57,4 +57,11 @@ export class ImportComponent implements OnInit {
 			}
 		);
 	}
+
+	onFinishImport(row){
+		console.log('import',row);
+		
+	}
+
+	
 }

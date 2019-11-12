@@ -13,10 +13,10 @@ import { StepsService } from '../steps.service';
 })
 export class UploadFileStepComponent implements OnInit {
 	public fileName: string;
-	public isUploading: boolean = false;
+	public spinner: boolean = false;
+	private skip: boolean = false;
 	public uploadForm: FormGroup;
 	public uploadFileErrors: any;
-	public NextBtnDisabled: boolean = true;
 	public importConfig = ModuleConfig;
 
 	@Input() importId: number;
@@ -36,7 +36,7 @@ export class UploadFileStepComponent implements OnInit {
 			srid: [ null, Validators.required ],
 			separator: [ null, Validators.required ]
 		});
-		this.Formlistener();
+		this.formListener();
 	}
 
 	onFileSelected(event: any) {
@@ -47,45 +47,48 @@ export class UploadFileStepComponent implements OnInit {
 	}
 
 	onUpload(formValues: any) {
-		this.isUploading = true;
-
-		this._ds
-			.postUserFile(formValues, this._activatedRoute.snapshot.queryParams['datasetId'], this.importId)
-			.subscribe(
-				(res) => {
-					this.importId = res.importId;
-					res.srid = formValues.srid;
-					this.stepService.nextStep(this.uploadForm, 'one', res);
-					this.isUploading = false;
-				},
-				(error) => {
-					this.isUploading = false;
-					if (error.statusText === 'Unknown Error') {
-						this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-					} else {
-						if (error.status == 500) {
-							this.toastr.error(error.error);
-						}
-						if (error.status == 400) {
-							this.uploadFileErrors = error.error;
-						}
-						if (error.status == 403) {
-							this.toastr.error(error.error);
+		this.uploadFileErrors = null;
+		this.spinner = true;
+		if (!this.skip) {
+			this._ds
+				.postUserFile(formValues, this._activatedRoute.snapshot.queryParams['datasetId'], this.importId)
+				.subscribe(
+					(res) => {
+						this.skip = true;
+						this.importId = res.importId;
+						res.srid = formValues.srid;
+						this.stepService.nextStep(this.uploadForm, 'one', res);
+						this.spinner = false;
+					},
+					(error) => {
+						this.spinner = false;
+						if (error.statusText === 'Unknown Error') {
+							this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+						} else {
+							if (error.status == 500) {
+								this.toastr.error(error.error);
+							}
+							if (error.status == 400) {
+								this.uploadFileErrors = error.error;
+							}
+							if (error.status == 403) {
+								this.toastr.error(error.error);
+							}
 						}
 					}
-				}
-			);
+				);
+		} else {
+			this.spinner = false;
+			this.stepService.nextStep(this.uploadForm, 'one');
+		}
 	}
 
-	Formlistener() {
+	formListener() {
 		this.uploadForm.valueChanges.subscribe(() => {
-			if (
-				this.uploadForm.get('file').valid &&
-				this.uploadForm.get('encodage').valid &&
-				this.uploadForm.get('srid').valid &&
-				this.uploadForm.get('separator').valid
-			)
-				this.NextBtnDisabled = false;
+			if (this.uploadForm.valid) {
+				this.stepService.resetCurrentStep('one');
+				this.skip = false;
+			}
 		});
 	}
 }
