@@ -117,6 +117,10 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 	}
 
 	onNextStep() {
+		console.log(this.mappingRes);
+		if (this.mappingRes == undefined) {
+			this.toastr.error('Veuillez valider le mapping avant de passer à l\'étape suivante');
+		}
 		this._ds
 			.postMetaToStep3(
 				this.importId,
