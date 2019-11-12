@@ -276,7 +276,7 @@ def get_mappings(info_role, mapping_type, import_id):
 
         # get column names :
         col_names = 'undefined import_id'
-        if import_id != 'undefined':
+        if import_id not in ['undefined','null']:
             ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
             IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
             table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
