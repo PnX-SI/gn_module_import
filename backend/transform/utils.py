@@ -31,6 +31,8 @@ fill_map = {'':True, False:False}
 
 
 def set_user_error(dc_user_errors, id, col_name, n_errors):
+    print(dc_user_errors)
     for error in dc_user_errors:
+        print('NOMCOL_dcuser{}'.format(error))
         if error['id'] == id and error['column'] == col_name:
             error['n_errors'] = error['n_errors'] + n_errors  

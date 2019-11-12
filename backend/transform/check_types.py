@@ -186,15 +186,19 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
             for col in real_cols:
 
                 logger.info('- checking real type in %s synthese column (= %s user column)', col, selected_columns[col])
-
-                # replace eventual commas by points
-                #df[selected_columns[col]] = df[selected_columns[col]].astype('object').str.replace(',', '.')
-                # check valid real type
-                df['temp'] = pd.to_numeric(\
-                    df[selected_columns[col]]\
-                        .str.replace(',','.')\
-                        .fillna(0),'coerce')\
-                        .notnull()
+                if df[selected_columns[col]].dtype == 'datetime64[ns]':
+                    df['temp'] = False
+                    print('NOMCOL = {}'.format(col))
+                else:
+                    print('NOMCOL_else = {}'.format(col))
+                    # replace eventual commas by points
+                    df[selected_columns[col]] = df[selected_columns[col]].astype('object').str.replace(',', '.')
+                    # check valid real type
+                    df['temp'] = pd.to_numeric(\
+                        df[selected_columns[col]]\
+                            .str.replace(',','.')\
+                            .fillna(0),'coerce')\
+                            .notnull()
 
                 set_is_valid(df, 'temp')
                 set_invalid_reason(df, 'temp', 'invalid real type in {} column', selected_columns[col])
@@ -203,7 +207,11 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
                 logger.info('%s real type errors detected in %s synthese column (= %s user column)', n_invalid_real, col, selected_columns[col])
 
                 if n_invalid_real > 0:
-                    set_user_error(dc_user_errors, 12, selected_columns[col], n_invalid_real)  
+                    print('NOMCOL_n_invalid = {}'.format(col))
+                    set_user_error(dc_user_errors, 12, selected_columns[col], n_invalid_real)
+
+                del df['temp']
 
     except Exception:
+        pdb.set_trace()
         raise

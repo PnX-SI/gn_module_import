@@ -930,6 +930,8 @@ def postMapping(info_role, import_id, id_mapping):
             if error['n_errors'] > 0:
                 error['n_errors'] = int(error['n_errors'])
                 error_report.append(error)
+        # delete eventual duplicates
+        error_report = [i for n, i in enumerate(error_report) if i not in error_report[n + 1:]]
 
         # delete original table
         delete_table(table_names['imports_full_table_name'])
