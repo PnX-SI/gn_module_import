@@ -8,7 +8,9 @@ from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_use
 
 from ..wrappers import checker
 from ..logs import logger
-from ..db.queries.user_table_queries import check_existing_uuid
+from ..db.queries.user_table_queries import get_uuid_list
+
+import pdb
 
 
 def fill_nan_uuid(value):
@@ -54,15 +56,20 @@ def check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, 
                                 .apply(lambda x: fill_nan_uuid(x))
                             set_invalid_reason(df, 'temp', 'warning : champ uuid vide dans colonne {} : un uuid a été créé', selected_columns[col])
 
-                    
-                    # check if uuid provided by the user are not already in gn_synthese.synthese.unique_id_sinp :
-                    df['temp'] = True
+                    # return False if invalid uuid, else (including missing values) return True
+                    uuid_list = get_uuid_list()
+                    df['temp'] = ''
                     df['temp'] = df['temp']\
                         .where(
-                            cond = df[selected_columns[col]].apply(lambda x: check_existing_uuid(x)), 
+                            cond=df[selected_columns[col]].isin(uuid_list), 
                             other=False)\
+                        .where(
+                            cond=df[selected_columns[col]].notnull(), 
+                            other='')\
+                        .map(fill_map)\
                         .astype('bool')
-                    df['temp'] = ~df['temp']
+
+                    # set gn_is_valid and invalid_reason
                     set_is_valid(df, 'temp')
                     set_invalid_reason(df, 'temp', 'uuid provided in {} col exists in synthese table', selected_columns[col])
                     n_invalid_uuid = df['temp'].astype(str).str.contains('False').sum()

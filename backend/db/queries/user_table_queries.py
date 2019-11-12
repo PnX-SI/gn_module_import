@@ -342,19 +342,18 @@ def save_invalid_data(cur, full_archive_table_name, full_imports_table_name, ful
         raise
 
 
-def check_existing_uuid(value):
+def get_uuid_list():
     try:
-        is_existing = DB.session.execute(
+        uuid_synthese = DB.session.execute(
             """
-            SELECT exists (
-                SELECT 1 
-                FROM gn_synthese.synthese
-                WHERE unique_id_sinp::text = '{value}'
-                LIMIT 1
-            );
-            """.format(value=str(value))\
-            ).fetchone()[0]
-        return is_existing
+            SELECT unique_id_sinp as unique_uuid
+            FROM gn_synthese.synthese
+            WHERE unique_id_sinp::text != '';
+            """).fetchall()
+        uuid_synthese_list = [str(uuid_synthese[0].unique_uuid) for row in uuid_synthese]
+        uuid_synthese_list.append('')
+        DB.session.close()
+        return uuid_synthese_list
     except Exception:
         raise
 
