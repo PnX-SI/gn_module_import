@@ -16,9 +16,12 @@ CREATE TABLE t_imports(
     id_import serial NOT NULL,
     format_source_file character varying(5),
     SRID integer,
+    separator character varying,
+    encoding character varying,
     import_table character varying(255),
     id_dataset integer,
-    id_mapping integer,
+    id_field_mapping integer,
+    id_content_mapping integer,
     date_create_import timestamp without time zone DEFAULT now(),
     date_update_import timestamp without time zone DEFAULT now(),
     date_end_import timestamp without time zone,
@@ -27,7 +30,8 @@ CREATE TABLE t_imports(
     taxa_count integer,
     date_min_data timestamp without time zone,
     date_max_data timestamp without time zone,
-    step integer
+    step integer,
+    is_finished boolean DEFAULT 'f'
 );
 
 

@@ -21,9 +21,12 @@ class TImports(DB.Model):
     id_import = DB.Column(DB.Integer, primary_key=True,autoincrement=True)
     format_source_file = DB.Column(DB.Unicode,nullable=True)
     srid = DB.Column(DB.Integer,nullable=True)
+    separator = DB.Column(DB.Unicode,nullable=True)
+    encoding = DB.Column(DB.Unicode,nullable=True)
     import_table = DB.Column(DB.Unicode,nullable=True)
     id_dataset = DB.Column(DB.Integer,nullable=True)
-    id_mapping = DB.Column(DB.Integer,nullable=True)
+    id_field_mapping = DB.Column(DB.Integer,nullable=True)
+    id_content_mapping = DB.Column(DB.Integer,nullable=True)
     date_create_import = DB.Column(DB.DateTime,nullable=True)
     date_update_import = DB.Column(DB.DateTime,nullable=True)
     date_end_import = DB.Column(DB.DateTime,nullable=True)
@@ -33,6 +36,7 @@ class TImports(DB.Model):
     date_min_data = DB.Column(DB.DateTime,nullable=True)
     date_max_data = DB.Column(DB.DateTime,nullable=True)
     step = DB.Column(DB.Integer,nullable=True)
+    is_finished = DB.Column(DB.Boolean, nullable=False, default=False)
 
 
 @serializable

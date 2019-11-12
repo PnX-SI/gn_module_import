@@ -12,10 +12,10 @@
                     </ngx-datatable-column>
                     <ngx-datatable-column maxWidth="120" >
                         <ng-template let-row="row" ngx-datatable-cell-template>
-                            <button *ngIf="row.step < 5" class="clickable btn btn-sm btn-dark" style="margin-top: -10px;"
+                            <button *ngIf="!row.is_finished" class="clickable btn btn-sm btn-dark" style="margin-top: -10px;"
                                 (click)="onFinishImport(row)"> Finir
                             </button>
-                            <button *ngIf="(row.step === 5) && ((row.source_count - row.import_count) > 0)" class="clickable btn btn-sm btn-warning" style="margin-top: -10px;"
+                            <button *ngIf="(row.is_finished) && ((row.source_count - row.import_count) > 0)" class="clickable btn btn-sm btn-warning" style="margin-top: -10px;"
                             (click)="onCSV(row)"> csv erreurs
                             </button>
                         </ng-template>

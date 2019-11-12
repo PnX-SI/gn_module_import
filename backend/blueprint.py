@@ -145,9 +145,12 @@ def get_import_list(info_role):
                 "id_import": r.id_import,
                 "format_source_file": r.format_source_file,
                 "srid": r.srid,
+                "separator": r.separator,
+                "encoding": r.encoding,
                 "import_table": r.import_table,
                 "id_dataset": r.id_dataset,
-                "id_mapping": r.id_mapping,
+                "id_field_mapping": r.id_field_mapping,
+                "id_content_mapping": r.id_content_mapping,
                 # recupérer seulement date et pas heure?
                 "date_create_import": str(r.date_create_import),
                 # recupérer seulement date et pas heure?
@@ -159,6 +162,7 @@ def get_import_list(info_role):
                 "date_min_data": str(r.date_min_data),
                 "date_max_data": str(r.date_max_data),
                 "step": r.step,
+                "is_finished": r.is_finished,
                 "dataset_name": DB.session\
                     .query(TDatasets.dataset_name)\
                     .filter(TDatasets.id_dataset == r.id_dataset)\
@@ -644,6 +648,7 @@ def post_user_file(info_role):
 
         # get/set table and column names
         separator = metadata['separator']
+
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, file_name_cleaner['clean_name'])
         logger.debug('full DB user table name = %s', table_names['imports_full_table_name'])
 
@@ -697,6 +702,15 @@ def post_user_file(info_role):
         cor_import_archives = CorImportArchives(id_import=id_import, table_archive=table_names['archives_table_name'])
         DB.session.add(cor_import_archives)
 
+        if separator == ';':
+            separator = 'colon'
+        elif separator == '\t':
+            separator = 'tab'
+        elif separator == ',':
+            separator = 'comma'
+        else:
+            separtor == 'space'
+
         # update gn_import.t_imports with cleaned file name and step = 2
         DB.session.query(TImports)\
             .filter(TImports.id_import == id_import)\
@@ -706,6 +720,8 @@ def post_user_file(info_role):
                 TImports.id_dataset: int(metadata['datasetId']),
                 TImports.srid: int(metadata['srid']),
                 TImports.format_source_file: report['file_format'],
+                TImports.separator: separator,
+                TImports.encoding: metadata['encodage'],
                 TImports.source_count: report['row_count']-1
             })
 
@@ -1024,7 +1040,7 @@ def postMetaToStep3(info_role):
             .filter(TImports.id_import==int(data['import_id']))\
             .update({
                 TImports.step: 3,
-                TImports.id_mapping: int(data['id_mapping'])
+                TImports.id_field_mapping: int(data['id_mapping'])
                 })
 
         DB.session.commit()
@@ -1150,6 +1166,7 @@ def content_mapping(info_role, import_id, id_mapping):
         DB.session.query(TImports)\
             .filter(TImports.id_import==int(import_id))\
             .update({
+                TImports.id_content_mapping: int(id_mapping),
                 TImports.step: 4
                })
 
@@ -1221,7 +1238,7 @@ def import_data(info_role, import_id):
                 TImports.date_min_data: date_ext['date_min'],
                 TImports.date_max_data: date_ext['date_max'],
                 TImports.date_end_import: datetime.datetime.now(),
-                TImports.step: 5
+                TImports.is_finished: True
                 })
 
         logger.info('-> t_imports updated on final step')
