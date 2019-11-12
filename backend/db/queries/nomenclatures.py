@@ -39,8 +39,9 @@ def get_nomenc_user_values(user_nomenc_col, schema_name, table_name):
     try:
         nomenc_user_values = DB.session.execute("""
             SELECT DISTINCT {user_nomenc_col} as user_val
-            FROM {schema_name}.{table_name};"""\
-                .format(
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid = 'True';
+            """.format(
                     user_nomenc_col = user_nomenc_col,
                     schema_name = schema_name,
                     table_name = table_name))\
@@ -112,7 +113,8 @@ def set_nomenclature_id(schema_name, table_name, user_col, value, id_type):
     try:
         DB.session.execute("""
             UPDATE {schema_name}.{table_name}
-            SET {user_col} = REPLACE({user_col}, '{value}', '{id_type}')
+            SET {user_col} = {id_type}
+            WHERE {user_col} = '{value}';
             """.format(
                 schema_name = schema_name,
                 table_name = table_name,

@@ -7,7 +7,7 @@
                 <div class="form-group">
                     <label>Importer un fichier :</label>
                     <div class="custom-file" id="upload_files">
-                        <input class="custom-file-input" type=file (change)="onFileSelected($event)" id="selectedFile"
+                        <input class="custom-file-input" type=file (click)="onFileClick($event)" (change)="onFileSelected($event)" id="selectedFile"
                             name="file" required>
                         <label class="custom-file-label" for="selectedFile">{{fileName}}</label>
                         <label *ngIf="!fileName" class="custom-file-label" for="selectedFile"> Choisissez
@@ -49,7 +49,7 @@
             <div class="navigate-btn">
                 <button type="submit"
                     class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                    (click)="onUpload(uploadForm.value)" [disabled]="NextBtnDisabled" id="validate">
+                    (click)="onUpload(uploadForm.value)" [disabled]="uploadForm.invalid" id="validate">
                     Suivant
                     <i class="material-icons"> navigate_next </i>
                 </button>
@@ -77,7 +77,7 @@
         </div>
     </div>
     <!-- Spinner -->
-    <div *ngIf="isUploading" class="spinner">
+    <div *ngIf="spinner" class="spinner">
         <mat-spinner class="upload-spinner" [color]="color" [diameter]="150" [strokeWidth]="12">
         </mat-spinner>
     </div>

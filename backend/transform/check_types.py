@@ -3,7 +3,6 @@ from uuid import uuid4, UUID
 import numpy as np
 import datetime
 
-from ..db.query import get_synthese_types
 from ..db.queries.nomenclatures import get_synthese_cols
 from ..wrappers import checker
 from ..logs import logger
@@ -67,7 +66,6 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
             set_is_valid(df, 'temp')
             set_invalid_reason(df, 'temp', 'invalid date in {} column', selected_columns[field])
             n_invalid_date_error = df['temp'].astype(str).str.contains('False').sum()
-            #pdb.set_trace()
             #added_cols[field] = col_name
             #selected_columns[field] = col_name
 

@@ -1,6 +1,8 @@
 import unicodedata
 import re
+
 from ..goodtables_checks.goodtables_errors import digit_name
+
 
 def clean_string(my_string):
     """ Clean strings (file or column names) from user data:

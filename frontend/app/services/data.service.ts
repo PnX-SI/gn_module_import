@@ -38,19 +38,31 @@ export class DataService {
     }
     
 
-	getFieldMappings() {
-		return this._http.get<any>(`${urlApi}/field_mappings`);
+	getMappings(mapping_type, import_id) {
+        console.log('get mapping type : ' + mapping_type);
+        console.log('get import_id : ' + import_id);
+		return this._http.get<any>(`${urlApi}/mappings/${mapping_type}/${import_id}`);
     }
     
 
     getMappingFields(id_mapping: number) {
 		return this._http.get<any>(`${urlApi}/field_mappings/${id_mapping}`);
     }
+
+
+    getMappingContents(id_mapping: number) {
+		return this._http.get<any>(`${urlApi}/content_mappings/${id_mapping}`);
+    }
     
 
-    postMappingFieldName(value) {
-        const urlMapping = `${urlApi}/mappingFieldName`;
-        return this._http.post<any>(urlMapping, value);
+    postMappingName(value, mappingType) {
+        const urlMapping = `${urlApi}/mappingName`;
+        let fd = new FormData();
+        for (let key of Object.keys(value)) {
+            fd.append(key, value[key]);
+        }
+        fd.append('mapping_type', mappingType);
+        return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
     }
 
 
@@ -80,20 +92,37 @@ export class DataService {
     }
     
 
-    postContentMap(value, table_name, selected_columns) {
-        const contentMappingUrl = `${urlApi}/contentMapping`;
-        console.log(value)
+    postContentMap(value, table_name, selected_columns, import_id, id_mapping) {
+        if (id_mapping == null) {
+            id_mapping = 0;
+        }
+        const contentMappingUrl = `${urlApi}/contentMapping/${import_id}/${id_mapping}`;
         let fd = new FormData();
         for (let key of Object.keys(value)) {
-            if (value[key].length > 1) {
-                for (let val of value[key]) {
-                    fd.append(key, val);
-                }
+            if (value[key] == null) {
+                fd.append(key, '')
             } else {
-                fd.append(key, value[key]);
+                if (value[key].length > 1) {
+                    for (let val of value[key]) {
+                        if (val['value'] == undefined) {
+                            fd.append(key, val);
+                        } else {
+                            fd.append(key, val['value']);
+                        }
+                    }
+                } else {
+                    if (value[key] != '') {
+                        if (value[key][0]['value'] == undefined) {
+                            fd.append(key, value[key])
+                        } else {
+                            fd.append(key, value[key][0]['value']);
+                        }
+                    } else {
+                        fd.append(key, '');
+                    }
+                }
             }
         }
-        console.log(table_name);
         fd.append('table_name', table_name);
         fd.append('selected_cols', JSON.stringify(selected_columns));
 		return this._http.post<any>(contentMappingUrl, fd, HttpUploadOptions);
@@ -130,6 +159,20 @@ export class DataService {
         fd.append('selected_columns', JSON.stringify(selected_columns));
         fd.append('added_columns', JSON.stringify(added_columns));
         return this._http.post<any>(`${urlApi}/getValidData/${importId}`, fd, HttpUploadOptions);        
+    }
+
+
+    getCSV(importId: number) {
+        let fd = new FormData();
+        return this._http.post<any>(`${urlApi}/getCSV/${importId}`, fd, {
+            responseType:'blob',
+            headers: new HttpHeaders().append('Content-Type', 'application/json')
+        });
+    }
+
+
+    checkInvalid(import_id) {
+        return this._http.get<any>(`${urlApi}/check_invalid/${import_id}`);
     }
 
 }

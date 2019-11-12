@@ -12,7 +12,7 @@ from geonature.utils.env import DB
 from ..wrappers import checker
 from ..api_error import GeonatureImportApiError
 from ..logs import logger
-from ..db.query import get_full_table_name, load_csv_to_db
+from ..db.queries.user_table_queries import get_full_table_name, load_csv_to_db
 from ..db.models import generate_user_table_class
 from ..load.utils import compute_df
 

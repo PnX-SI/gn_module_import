@@ -1,12 +1,17 @@
-from geonature.utils.env import DB
 from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func, PrimaryKeyConstraint
 from sqlalchemy.orm import relationship
-from geonature.utils.utilssqlalchemy import (
-    serializable, geoserializable
-)
 from geoalchemy2 import Geometry
+
 import datetime
+
+from geonature.utils.env import DB
+
+from geonature.utils.utilssqlalchemy import (
+    serializable, 
+    geoserializable
+)
 from geonature.core.gn_meta.models import TDatasets
+
 
 @serializable
 class TImports(DB.Model):
@@ -16,9 +21,12 @@ class TImports(DB.Model):
     id_import = DB.Column(DB.Integer, primary_key=True,autoincrement=True)
     format_source_file = DB.Column(DB.Unicode,nullable=True)
     srid = DB.Column(DB.Integer,nullable=True)
+    separator = DB.Column(DB.Unicode,nullable=True)
+    encoding = DB.Column(DB.Unicode,nullable=True)
     import_table = DB.Column(DB.Unicode,nullable=True)
     id_dataset = DB.Column(DB.Integer,nullable=True)
-    id_mapping = DB.Column(DB.Integer,nullable=True)
+    id_field_mapping = DB.Column(DB.Integer,nullable=True)
+    id_content_mapping = DB.Column(DB.Integer,nullable=True)
     date_create_import = DB.Column(DB.DateTime,nullable=True)
     date_update_import = DB.Column(DB.DateTime,nullable=True)
     date_end_import = DB.Column(DB.DateTime,nullable=True)
@@ -28,6 +36,7 @@ class TImports(DB.Model):
     date_min_data = DB.Column(DB.DateTime,nullable=True)
     date_max_data = DB.Column(DB.DateTime,nullable=True)
     step = DB.Column(DB.Integer,nullable=True)
+    is_finished = DB.Column(DB.Boolean, nullable=False, default=False)
 
 
 @serializable
@@ -53,10 +62,21 @@ class TMappingsFields(DB.Model):
     __tablename__ = 't_mappings_fields'
     __table_args__ = {'schema': 'gn_imports', "extend_existing":True}
 
-    id_match_fields = DB.Column(DB.Integer, primary_key=True,autoincrement=True)
+    id_match_fields = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
-    source_field = DB.Column(DB.Unicode,nullable=True)
-    target_field = DB.Column(DB.Unicode,nullable=True)
+    source_field = DB.Column(DB.Unicode, nullable=False)
+    target_field = DB.Column(DB.Unicode, nullable=False)
+
+
+@serializable
+class TMappingsValues(DB.Model):
+    __tablename__ = 't_mappings_values'
+    __table_args__ = {'schema': 'gn_imports', "extend_existing":True}
+
+    id_match_values = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
+    id_mapping = DB.Column(DB.Integer, primary_key=True)
+    source_value = DB.Column(DB.Unicode, nullable=False)
+    id_target_value = DB.Column(DB.Integer, nullable=False)
 
 
 @serializable
@@ -65,8 +85,9 @@ class BibMappings(DB.Model):
     __table_args__ = {'schema': 'gn_imports', "extend_existing":True}
 
     id_mapping = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
-    mapping_label = DB.Column(DB.Unicode,nullable=True)
-    active = DB.Column(DB.Boolean,nullable=True)
+    mapping_label = DB.Column(DB.Unicode, nullable=False)
+    mapping_type = DB.Column(DB.Unicode, nullable=False)
+    active = DB.Column(DB.Boolean, nullable=False)
 
 
 @serializable

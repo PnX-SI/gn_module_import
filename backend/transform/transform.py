@@ -1,22 +1,20 @@
 import datetime
 
-from ..db.query import (
-    get_synthese_info
-)
+from ..db.queries.load_to_synthese import get_synthese_info
 
 from .check_cd_nom import check_cd_nom
 from .check_dates import check_dates
 from .check_missing import format_missing, check_missing
 from .check_uuid import check_uuid
 from .check_types import check_types
-from .check_other_fields import check_entity_source
+from .check_other_fields import check_entity_source, check_id_digitizer
 from .check_counts import check_counts
 from .check_altitudes import check_altitudes
 from .check_geography import check_geography
+
 from ..logs import logger
 
 import pdb
-
 
 
 def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, def_count_val, cd_nom_list, srid, local_srid, is_generate_uuid):
@@ -46,6 +44,7 @@ def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, 
         check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, is_generate_uuid)
         check_counts(df, selected_columns, dc_user_errors, synthese_info, def_count_val)
         check_entity_source(df, added_cols, selected_columns, dc_user_errors, synthese_info)
+        check_id_digitizer(df, added_cols, selected_columns, dc_user_errors, synthese_info)
         check_geography(df, import_id, added_cols, selected_columns, dc_user_errors, srid, local_srid)
         check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul=False)
         

@@ -1,9 +1,5 @@
 from geonature.utils.env import DB
 
-"""
-correct error : the_geom_4326 doit pas etre fix
-"""
-
 
 def set_geom_4326(schema_name, table_name, col_name):
     DB.session.begin(subtransactions=True)
@@ -52,3 +48,14 @@ def set_geom_local(schema_name, table_name, local_srid, col_name):
     except Exception:
         DB.session.rollback()
         raise
+
+
+def get_local_srid():
+    local_srid = DB.session.execute("""
+        SELECT parameter_value 
+        FROM gn_commons.t_parameters 
+        WHERE parameter_name = 'local_srid';
+        """).fetchone()[0]
+    DB.session.close()
+    return int(local_srid)
+

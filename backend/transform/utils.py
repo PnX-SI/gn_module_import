@@ -1,6 +1,3 @@
-from ..db.query import get_synthese_types, get_user_error
-
-
 def fill_col(value):
     if value is not False:
         return True

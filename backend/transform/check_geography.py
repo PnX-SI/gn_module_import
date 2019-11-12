@@ -100,6 +100,5 @@ def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors,
 
 
     except Exception:
-        pdb.set_trace()
         raise
         

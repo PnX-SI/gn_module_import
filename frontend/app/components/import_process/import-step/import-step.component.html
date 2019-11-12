@@ -4,11 +4,13 @@
     </div>
     <div class="card-body">
 
-            <button (click)="getValidData()" class="btn btn-info">
-                    Preview data
-            </button>
+        <ngx-datatable  *ngIf="tableReady" #table class="material striped" [rows]="rows" [columnMode]="'force'" [headerHeight]="35"
+            [scrollbarH]="true" [footerHeight]="40" [rowHeight]="40" [limit]="15" [selectionType]='single'>
+            <ngx-datatable-column *ngFor="let col of columns" name="{{col.name}}" prop="{{col.prop}}">
+            </ngx-datatable-column>
+        </ngx-datatable>
 
-            <br/>
+        <br />
 
             <div class="d-flex flex-row justify-content-between">
                 <button (click)="onStepBack()"
