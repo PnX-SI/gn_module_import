@@ -34,10 +34,10 @@ ENCODAGE = [
 ]
 
 SEPARATOR = [
-    {"name": "virgule (,)", "code": ","},
-    {"name": "tabulation", "code": "\t"},
-    {"name": "point-virgule (;)", "code": ";"},
-    {"name": "espace", "code": " "}
+    {"name": "virgule (,)", "code": ",", "db_code": "comma"},
+    {"name": "tabulation", "code": "\t", "db_code": "tab"},
+    {"name": "point-virgule (;)", "code": ";", "db_code": "colon"},
+    {"name": "espace", "code": " ", "db_code": "space"}
 ]
 
 MAX_FILE_SIZE = 500
