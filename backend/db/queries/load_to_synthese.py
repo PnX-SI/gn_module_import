@@ -81,3 +81,26 @@ def check_id_source(import_id):
         return is_id_source
     except Exception:
         raise
+
+
+def get_synthese_info(selected_synthese_cols):
+    formated_selected_synthese_cols = '\',\''.join(selected_synthese_cols)
+    formated_selected_synthese_cols = '{}{}{}'.format('(\'',formated_selected_synthese_cols,'\')')
+
+    synthese_info = DB.session.execute("""
+        SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
+        FROM INFORMATION_SCHEMA.COLUMNS\
+        WHERE table_name = 'synthese'\
+        AND column_name IN {};"""\
+            .format(formated_selected_synthese_cols)\
+    ).fetchall()
+
+    my_dict = {
+        d[0] : {
+            'is_nullable':d[1],
+            'column_default':d[2],
+            'data_type':d[3],
+            'character_max_length':d[4]
+            } for d in synthese_info}
+
+    return my_dict

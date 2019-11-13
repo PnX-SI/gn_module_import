@@ -2,6 +2,7 @@ import { Component, OnInit, OnChanges, Input } from '@angular/core';
 import { StepsService } from '../steps.service';
 import { DataService } from '../../../services/data.service';
 import { ToastrService } from 'ngx-toastr';
+//import { ModuleConfig } from '../../../module.config';
 import * as _ from 'lodash';
 
 @Component({
@@ -11,14 +12,13 @@ import * as _ from 'lodash';
 })
 export class ImportStepComponent implements OnInit, OnChanges {
 	public isCollapsed = false;
-	@Input() selected_columns: any;
-	@Input() added_columns: any;
-	@Input() importId: any;
-	@Input() stepId: any;
-
-	importDataRes: any;
-	validData: any;
-	total_columns: any;
+    @Input() selected_columns: any;
+    @Input() added_columns: any;
+    @Input() importId: any;
+    @Input() stepId: any;
+    importDataRes: any;
+    validData: any;
+    total_columns: any;
 	columns: any[] = [];
 	rows: any[] = [];
 	tableReady: boolean = false;
@@ -92,6 +92,11 @@ export class ImportStepComponent implements OnInit, OnChanges {
 			}
 		);
     }
+
+
+    }
+        
+
     
 
 }

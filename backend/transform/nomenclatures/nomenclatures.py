@@ -1,7 +1,6 @@
 from psycopg2.extensions import AsIs,QuotedString
-from geonature.utils.env import DB
 
-from ...logs import logger
+from geonature.utils.env import DB
 
 from ...db.queries.nomenclatures import (
     get_nomenc_details, 
@@ -18,8 +17,10 @@ from ...db.queries.nomenclatures import (
 
 from ...utils.clean_names import clean_string
 from ...wrappers import checker
+from ...logs import logger
 
 import pdb
+
 
 def get_nomenc_info(form_data, schema_name):
 
@@ -56,7 +57,6 @@ def get_nomenc_info(form_data, schema_name):
             nomenc_user_values = get_nomenc_user_values(form_data[user_nomenc_col], schema_name, form_data['table_name'])
             user_values_list = []
             for index,val in enumerate(nomenc_user_values):
-                #pdb.set_trace()
                 user_val_dict = {
                     'id':index,
                     'value':val.user_val

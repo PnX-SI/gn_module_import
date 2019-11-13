@@ -19,7 +19,6 @@ def format_missing(df, selected_columns, synthese_info, missing_values):
             df[selected_columns[field]] = df[selected_columns[field]].replace(missing_values,pd.np.nan).fillna(value=pd.np.nan)
 
     except Exception as e:
-        pdb.set_trace()
         raise 
 
 

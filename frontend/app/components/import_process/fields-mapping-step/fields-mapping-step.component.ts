@@ -21,7 +21,7 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 	public isErrorButtonClicked: boolean = false;
 	public dataCleaningErrors;
 	public isFullError: boolean = true;
-	public userFieldMapping;
+	public userMapping;
 	public newMapping: boolean = false;
 	public id_mapping;
 	public step3Response;
@@ -81,10 +81,11 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 				}
 			}
 		);
-		this.getMappingList();
+		this.getMappingList('field');
 		this.onSelectUserMapping();
 		this.onFormMappingChange();
 	}
+
 
 	onMapping(value) {
 		this.spinner = true;
@@ -107,16 +108,19 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
 					// show error message if other server error
-					this.isUserError = true;
-					this.isUserError = error.error;
-					console.error(error);
-					this.toastr.error(error.error.message);
+					if (error.status == 400)
+                        this.isUserError = true;
+                    this.toastr.error(error.error.message);
 				}
 			}
 		);
 	}
 
 	onNextStep() {
+		console.log(this.mappingRes);
+		if (this.mappingRes == undefined) {
+			this.toastr.error('Veuillez valider le mapping avant de passer à l\'étape suivante');
+		}
 		this._ds
 			.postMetaToStep3(
 				this.importId,
@@ -148,11 +152,23 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 			);
 	}
 
-	getMappingList() {
-		// get list of all declared dataset of the user
-		this._ds.getFieldMappings().subscribe(
+
+	getMappingList(mapping_type) {
+		this._ds.getMappings(mapping_type, this.importId).subscribe(
 			(result) => {
-				this.userFieldMapping = result;
+                this.userMapping = result['mappings'];
+                if (result['column_names'] != 'undefined import_id') {
+                    this.columns = result['column_names'].map(
+                        (col) => {
+                            return {
+                                id: col,
+                                selected: false
+                            };
+                        });
+                    console.log(this.columns);
+                }
+                console.log(this.userMapping);
+                
 			},
 			(error) => {
 				console.error(error);
@@ -166,9 +182,9 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 		);
 	}
 
+
 	getSelectedMapping(id_mapping) {
 		this.id_mapping = id_mapping;
-		// get list of all declared dataset of the user
 		this._ds.getMappingFields(id_mapping).subscribe(
 			(mappingFields) => {
 				if (mappingFields[0] != 'empty') {
@@ -194,9 +210,11 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 		);
 	}
 
+    
 	onSelectUserMapping(): void {
 		this.selectFieldMappingForm.get('fieldMapping').valueChanges.subscribe(
 			(id_mapping) => {
+                console.log(id_mapping);
 				if (id_mapping) {
 					this.getSelectedMapping(id_mapping);
 				} else {
@@ -229,10 +247,11 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 	}
 	
 	onMappingFieldName(value) {
-		this._ds.postMappingFieldName(value).subscribe(
+        let mappingType = 'FIELD';
+		this._ds.postMappingName(value, mappingType).subscribe(
 			(res) => {
 				this.newMapping = false;
-				this.getMappingList();
+				this.getMappingList(mappingType);
 				this.selectFieldMappingForm.controls['fieldMapping'].setValue(res);
 				this.selectFieldMappingForm.controls['mappingName'].setValue('');
 			},
@@ -248,40 +267,51 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 		);
 	}
 
+
 	createMapping() {
 		this.selectFieldMappingForm.reset();
 		this.newMapping = true;
 	}
+
 
 	onCancelMapping() {
 		this.newMapping = false;
 		this.selectFieldMappingForm.controls['mappingName'].setValue('');
 	}
 
+
 	onStepBack() {
 		this.stepService.previousStep();
 	}
+
 
 	onSelect() {
 		this.getSelectedOptions();
 	}
 
+
 	getSelectedOptions() {
-		let formValues = this.syntheseForm.value;
-		this.columns.map((col) => {
-			if (formValues) {
-				if (Object.values(formValues).includes(col.id)) {
-					col.selected = true;
-				} else {
-					col.selected = false;
-				}
-			}
-		});
+        let formValues = this.syntheseForm.value;
+        if (this.id_mapping == undefined) {
+            this.toastr.warning('Vous devez d\'abord créer ou sélectionner un mapping');
+        } else {
+            this.columns.map((col) => {
+                if (formValues) {
+                    if (Object.values(formValues).includes(col.id)) {
+                        col.selected = false;
+                    } else {
+                        col.selected = false;
+                    }
+                }
+            });
+        }
 	}
+
 
 	ErrorButtonClicked() {
 		this.isErrorButtonClicked = !this.isErrorButtonClicked;
 	}
+
 
 	isFullErrorCheck(n_table_rows, n_errors) {
 		if (n_table_rows == n_errors) {

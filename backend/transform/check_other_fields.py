@@ -1,9 +1,12 @@
 import pdb
 import pandas as pd
+#import numpy as np
+from geonature.utils.env import DB
 
 from ..wrappers import checker
-from .utils import set_is_valid, set_invalid_reason, set_user_error
+from .utils import set_is_valid, set_invalid_reason, set_user_error, fill_map
 from ..logs import logger
+from ..db.queries.metadata import get_id_roles
 
 
 @checker('Data cleaning : entity source pk value checked')
@@ -38,3 +41,31 @@ def check_entity_source(df, added_cols, selected_columns, dc_user_errors, synthe
     except Exception:
         raise
 
+
+@checker('Data cleaning : id_digitizer checked')
+def check_id_digitizer(df, added_cols, selected_columns, dc_user_errors, synthese_info):
+    try:
+        # check if id_digitizer exists in t_roles
+        fields = [field for field in synthese_info]
+
+        if 'id_digitiser' in fields:
+            logger.info('CHECKING ID DIGITIZER :')
+            ids = df[selected_columns['id_digitiser']].dropna().unique().tolist()
+            if len(ids) > 0:
+                id_roles = get_id_roles()
+                is_invalid_id = any(id not in id_roles for id in ids)
+                if is_invalid_id:
+                    df['temp'] = df[selected_columns['id_digitiser']]\
+                        .fillna(id_roles[0])\
+                        .isin(id_roles)
+                    set_is_valid(df, 'temp')
+                    set_invalid_reason(df, 'temp', 'id_digitiser provided in {} column is not present in "t_roles" table', selected_columns['id_digitiser'])
+                    n_invalid_id_digit = df['temp'].astype(str).str.contains('False').sum()
+
+                    logger.info('%s invalid id_digitizer detected in %s column', n_invalid_id_digit, selected_columns['id_digitiser'])
+
+                    # set front interface error
+                    if n_invalid_id_digit > 0:
+                        set_user_error(dc_user_errors, 15, selected_columns['id_digitiser'], n_invalid_id_digit)
+    except Exception:
+        raise

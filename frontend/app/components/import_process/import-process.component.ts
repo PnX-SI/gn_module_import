@@ -146,11 +146,11 @@ export class ImportProcessComponent implements OnInit {
 					// show error message if no connexion
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
-					if ((error.status = 400)) {
+					if (error.status = 400) {
 						this._router.navigate([ `${this.IMPORT_CONFIG.MODULE_URL}` ]);
 					}
 					// show error message if other server error
-					this.toastr.error(error.error);
+					this.toastr.error(error.error.message);
 				}
 			}
 		);

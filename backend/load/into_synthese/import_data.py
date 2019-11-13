@@ -1,12 +1,13 @@
+from geonature.utils.env import DB
+
 from ...db.queries.load_to_synthese import (
     get_data_type, 
     insert_into_synthese,
     get_id_source
 )
-from geonature.core.gn_synthese.models import TSources
-from geonature.utils.env import DB
 
 import pdb
+
 
 def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
     try:
@@ -27,8 +28,6 @@ def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
 
         # insert into synthese
         insert_into_synthese(schema_name, table_name, select_part, total_columns)
-        DB.session.commit()
-
     except Exception:
         DB.session.rollback()
         raise

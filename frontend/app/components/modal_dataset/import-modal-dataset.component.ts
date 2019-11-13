@@ -14,8 +14,8 @@ import { ModuleConfig } from '../../module.config';
 })
 export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 	public selectDatasetForm: FormGroup;
-	public userDatasetsResponse: any; // server response for getUserDatasets
-	public datasetResponse: JSON; // server response for postDatasetResponse (= post the dataset name from the 'selectDatasetForm' form)
+	public userDatasetsResponse: any; 
+	public datasetResponse: JSON;
 	public isUserDatasetError: Boolean = false; // true if user does not have any declared dataset
 	public datasetError: string;
 	private modalRef: NgbModalRef;
@@ -68,10 +68,8 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 					if (err.status == 400) {
 						this.isUserDatasetError = true;
 						this.datasetError = err.error;
-					} else {
-						// show error message if other server error
-						this.toastr.error(err.error);
-					}
+					} 
+					this.toastr.error(err.error.message);
 				}
 			}
 		);

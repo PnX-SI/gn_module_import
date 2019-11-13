@@ -34,10 +34,10 @@ ENCODAGE = [
 ]
 
 SEPARATOR = [
-    {"name": "virgule (,)", "code": ","},
-    {"name": "tabulation", "code": "\t"},
-    {"name": "point-virgule (;)", "code": ";"},
-    {"name": "espace", "code": " "}
+    {"name": "virgule (,)", "code": ",", "db_code": "comma"},
+    {"name": "tabulation", "code": "\t", "db_code": "tab"},
+    {"name": "point-virgule (;)", "code": ";", "db_code": "colon"},
+    {"name": "espace", "code": " ", "db_code": "space"}
 ]
 
 MAX_FILE_SIZE = 500
@@ -56,11 +56,12 @@ MISSING_VALUES = [
 
 DEFAULT_COUNT_VALUE = 1
 
-
 EXCLUDED_SYNTHESE_FIELDS_FRONT = ['id_synthese', 'id_source', 'id_module',
                                   'id_dataset', 'the_geom_4326', 'the_geom_point', 'the_geom_local', 'last_action']
 
 NOT_NULLABLE_SYNTHESE_FIELDS = ['cd_nom', 'nom_cite', 'date_min']
+
+INVALID_CSV_NAME = 'invalid'
 
 
 class GnModuleSchemaConf(Schema):
@@ -81,3 +82,4 @@ class GnModuleSchemaConf(Schema):
         fields.String, missing=EXCLUDED_SYNTHESE_FIELDS_FRONT)
     NOT_NULLABLE_SYNTHESE_FIELDS = fields.List(
         fields.String, missing=NOT_NULLABLE_SYNTHESE_FIELDS)
+    INVALID_CSV_NAME = fields.String(missing=INVALID_CSV_NAME)
