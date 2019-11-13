@@ -69,8 +69,10 @@ export class ImportStepComponent implements OnInit, OnChanges {
     }
 
     getValidData() {
+        this.spinner = true;
         this._ds.getValidData(this.importId, this.selected_columns, this.added_columns).subscribe(
             (res) => {
+                this.spinner = false;
                 this.validData = res.valid_data;
                 console.log(this.validData);
                 if (this.validData != 'no data') {
@@ -95,6 +97,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
                 }
             },
             (error) => {
+                this.spinner = false;
                 if (error.statusText === 'Unknown Error') {
                     // show error message if no connexion
                     this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');

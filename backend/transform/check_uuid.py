@@ -69,6 +69,7 @@ def check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, 
                         .map(fill_map)\
                         .astype('bool')
 
+                    df['temp'] = ~df['temp']
                     # set gn_is_valid and invalid_reason
                     set_is_valid(df, 'temp')
                     set_invalid_reason(df, 'temp', 'uuid provided in {} col exists in synthese table', selected_columns[col])

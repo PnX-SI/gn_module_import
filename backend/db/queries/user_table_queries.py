@@ -350,8 +350,9 @@ def get_uuid_list():
             FROM gn_synthese.synthese
             WHERE unique_id_sinp::text != '';
             """).fetchall()
-        uuid_synthese_list = [str(uuid_synthese[0].unique_uuid) for row in uuid_synthese]
-        uuid_synthese_list.append('')
+
+        uuid_synthese_list = [str(row.unique_uuid) for row in uuid_synthese]
+        #uuid_synthese_list.append('')
         DB.session.close()
         return uuid_synthese_list
     except Exception:

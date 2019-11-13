@@ -5,6 +5,13 @@ from ..db.queries.data_preview import (
     get_id_dataset
 )
 
+from ..db.queries.nomenclatures import (
+    get_synthese_cols, 
+    get_mnemo,
+    set_default_value,
+    get_nomenc_abb_from_name
+)
+
 import pdb
 
 
@@ -13,7 +20,7 @@ def get_preview(schema_name, table_name, total_columns):
     try:
 
         # get valid data in user table
-        preview = get_valid_user_data(schema_name, table_name, 100)
+        preview = get_valid_user_data(schema_name, table_name, 50)
         
         # get synthese fields
         synthese_fields = get_synthese_fields()
@@ -29,7 +36,13 @@ def get_preview(schema_name, table_name, total_columns):
                                 or value['key'] == 'id_source':
                         synthese_dict[key]['value'] = total_columns[value['key']]
                     else:
-                        synthese_dict[key]['value'] = row[total_columns[value['key']]]
+                        if value['key'] in get_synthese_cols():
+                            synthese_dict[key]['value'] = get_mnemo(row[total_columns[value['key']]])
+                        else:    
+                            synthese_dict[key]['value'] = row[total_columns[value['key']]]
+                else:
+                    if value['key'] in get_synthese_cols():
+                        synthese_dict[key]['value'] = get_mnemo(set_default_value(get_nomenc_abb_from_name(value['key'])))
             if synthese_dict[4]['key'] == 'id_source':
                 del synthese_dict[4]
             valid_data_list.append(synthese_dict)

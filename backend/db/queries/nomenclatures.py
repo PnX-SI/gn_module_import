@@ -140,6 +140,18 @@ def get_nomenc_abb_from_name(synthese_name):
         raise
 
 
+def set_default_value(abb):
+    try:
+        default_value = DB.session.execute("""
+                SELECT gn_synthese.get_default_nomenclature_value('{abb}');
+                """.format(abb = abb)).fetchone()[0]
+        if default_value is None:
+            default_value = 'NULL'
+        return str(default_value)
+    except Exception:
+        raise
+
+
 def set_default_nomenclature_id(schema_name, table_name, nomenc_abb, user_col, id_types):
     try:
         default_value = DB.session.execute("""
@@ -162,3 +174,20 @@ def set_default_nomenclature_id(schema_name, table_name, nomenc_abb, user_col, i
             ))
     except Exception:
         raise
+
+
+def get_mnemo(id):
+    try:
+        try:
+            mnemo = DB.session.execute("""
+                SELECT mnemonique
+                FROM ref_nomenclatures.t_nomenclatures
+                WHERE id_nomenclature = {id};
+            """.format(id=int(id)))\
+                .fetchone()[0]
+            return mnemo
+        except ValueError:
+            return ''
+    except Exception:
+        raise
+        
