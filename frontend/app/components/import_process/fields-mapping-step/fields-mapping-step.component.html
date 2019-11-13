@@ -84,7 +84,7 @@
                     Valider le mapping
                 </button>
                 <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                    (click)='onNextStep()'>
+                    [disabled]="!step2_btn || isFullError" (click)='onNextStep()'>
                     Suivant
                     <i class="material-icons"> navigate_next </i>
                 </button>
