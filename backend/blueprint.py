@@ -1276,19 +1276,24 @@ def get_valid_data(info_role, import_id):
 
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
-        # get table name
-        table_name = set_imports_table_name(get_table_name(import_id))
+        if import_id != 'undefined':
+            
+            # get table name
+            table_name = set_imports_table_name(get_table_name(import_id))
 
-        # set total user columns
-        form_data = request.form.to_dict(flat=False)
-        selected_cols = ast.literal_eval(form_data['selected_columns'][0])
-        added_cols = ast.literal_eval(form_data['added_columns'][0])
-        total_columns = set_total_columns(selected_cols, added_cols, import_id)
+            # set total user columns
+            form_data = request.form.to_dict(flat=False)
+            selected_cols = ast.literal_eval(form_data['selected_columns'][0])
+            added_cols = ast.literal_eval(form_data['added_columns'][0])
+            total_columns = set_total_columns(selected_cols, added_cols, import_id)
 
-        # get valid data preview
-        valid_data_list = get_preview(IMPORTS_SCHEMA_NAME, table_name, total_columns)
+            # get valid data preview
+            valid_data_list = get_preview(IMPORTS_SCHEMA_NAME, table_name, total_columns)
 
-        logger.info('-> got valid data for preview')
+            logger.info('-> got valid data for preview')
+        else:
+            valid_data_list = 'no data'
+            total_columns = ''
 
         return {
             'total_columns' : total_columns,

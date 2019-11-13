@@ -52,7 +52,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
                 this.spinner = false;
                 this.importDataRes = res;
                 console.log(this.importDataRes);
-                this._router.navigate([ `${ModuleConfig.MODULE_URL}` ]);
+                this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
             },
             (error) => {
                 this.spinner = false;
@@ -72,25 +72,27 @@ export class ImportStepComponent implements OnInit, OnChanges {
         this._ds.getValidData(this.importId, this.selected_columns, this.added_columns).subscribe(
             (res) => {
                 this.validData = res.valid_data;
-                this.total_columns = res['total_columns'];
-
-                _.forEach(this.validData[0], (el) => {
-                    let key = el.key;
-                    let val = el.value;
-                    this.columns.push({ name: key, prop: key });
-                });
-
-                _.forEach(this.validData, (data) => {
-                    let obj = {};
-                    _.forEach(data, (el) => {
+                console.log(this.validData);
+                if (this.validData != 'no data') {
+                    this.total_columns = res['total_columns'];
+                    _.forEach(this.validData[0], (el) => {
                         let key = el.key;
                         let val = el.value;
-                        obj[key] = val;
+                        this.columns.push({ name: key, prop: key });
                     });
-                    this.rows.push(obj);
-                });
 
-                this.tableReady = true;
+                    _.forEach(this.validData, (data) => {
+                        let obj = {};
+                        _.forEach(data, (el) => {
+                            let key = el.key;
+                            let val = el.value;
+                            obj[key] = val;
+                        });
+                        this.rows.push(obj);
+                    });
+
+                    this.tableReady = true;
+                }
             },
             (error) => {
                 if (error.statusText === 'Unknown Error') {
