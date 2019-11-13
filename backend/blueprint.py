@@ -276,7 +276,7 @@ def get_mappings(info_role, mapping_type, import_id):
 
         # get column names :
         col_names = 'undefined import_id'
-        if import_id != 'undefined':
+        if import_id not in ['undefined','null']:
             ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
             IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
             table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
@@ -838,12 +838,13 @@ def postMapping(info_role, import_id, id_mapping):
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
         # check if column names provided in the field form exists in the user table
-        for val in selected_columns.values():
-            if val not in column_names:
-                return {
-                    'message':'La colonne \'{}\' n\'existe pas. \
-                        Avez-vous sélectionné le bon mapping ?'.format(val)
-                }, 400
+        for key, value in selected_columns.items():
+            if key not in ['unique_id_sinp_generate', 'altitudes_generate']:
+                if value not in column_names:
+                    return {
+                        'message':'La colonne \'{}\' n\'existe pas. \
+                            Avez-vous sélectionné le bon mapping ?'.format(value)
+                    }, 400
 
         # check if required fields are not empty:
         missing_cols = []
@@ -873,7 +874,10 @@ def postMapping(info_role, import_id, id_mapping):
         # set empty data cleaning user error report :
         dc_user_errors = []
         user_error = {}
-        dc_errors = DB.session.execute("SELECT * FROM gn_imports.user_errors;").fetchall()
+        dc_errors = DB.session.execute("""\
+            SELECT * 
+            FROM gn_imports.user_errors;
+            """).fetchall()
         for error in dc_errors:
             for field in selected_columns.values():
                 dc_user_errors.append({
@@ -930,6 +934,8 @@ def postMapping(info_role, import_id, id_mapping):
             if error['n_errors'] > 0:
                 error['n_errors'] = int(error['n_errors'])
                 error_report.append(error)
+        # delete eventual duplicates
+        error_report = [i for n, i in enumerate(error_report) if i not in error_report[n + 1:]]
 
         # delete original table
         delete_table(table_names['imports_full_table_name'])

@@ -67,29 +67,23 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 					return value.id !=selectedVal.id;
 				});
 			}
-		})
+        })
+        this.onSelectUserMapping();
 	}
-
-<<<<<<< HEAD
 
 	onSelectDelete(deletedVal, group) {
 		this.contentMappingInfo.map((ele) => {
-			if (ele.nomenc_abbr === group.nomenc_abbr)
-			{
-                let temp_array = ele.user_values.values;
-				temp_array.push(deletedVal);
-				ele.user_values.values = temp_array;
-=======
-	onSelectDelete(deltetdVal, group) {
-		this.contentMappingInfo.map((ele) => {
+            console.log(ele);
+            console.log(deletedVal);
+            console.log(group);
 			if (ele.nomenc_abbr === group.nomenc_abbr)
 			{
 				let temp_array = ele.user_values.values;
-				temp_array.push(deltetdVal);
+				temp_array.push(deletedVal);
 				ele.user_values.values = temp_array.slice(0);
->>>>>>> ee5c98573737f2567e58490d2845ef22de538593
 			}
-		})
+        })
+        this.onSelectUserMapping();
 	}
 
 
@@ -99,15 +93,11 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     
 
     onContentMapping(value) {
-<<<<<<< HEAD
         // post content mapping form values and fill t_mapping_values table
         console.log(this.contentForm);
         this.id_mapping = this.selectContentMappingForm.get('contentMapping').value;
+        this.spinner = true;
         this._ds.postContentMap(value, this.table_name, this.selected_columns, this.importId, this.id_mapping).subscribe(
-=======
-		this.spinner = true;
-        this._ds.postContentMap(value, this.table_name, this.selected_columns).subscribe(
->>>>>>> ee5c98573737f2567e58490d2845ef22de538593
             (res) => {		
                 this.contentMapRes = res;
 				this.stepService.nextStep(this.contentForm, 'three');
@@ -132,7 +122,8 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
         // get list of existing content mapping in the select
 		this._ds.getMappings(mapping_type, this.importId).subscribe(
 			(result) => {
-				this.userContentMapping = result['mappings'];
+                console.log(result);
+                this.userContentMapping = result['mappings'];
 			},
 			(error) => {
 				console.log(error);
@@ -239,6 +230,29 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 				}
 			}
 		);
+    }
+ 
+    
+    onSelect() {
+		this.getSelectedOptions();
+	}
+
+
+	getSelectedOptions() {
+        let formValues = this.contentForm.value;
+        if (this.id_mapping == undefined) {
+            this.toastr.warning('Vous devez d\'abord créer ou sélectionner un mapping');
+        } else {
+            this.columns.map((col) => {
+                if (formValues) {
+                    if (Object.values(formValues).includes(col.id)) {
+                        col.selected = false;
+                    } else {
+                        col.selected = false;
+                    }
+                }
+            });
+        }
     }
     
 }
