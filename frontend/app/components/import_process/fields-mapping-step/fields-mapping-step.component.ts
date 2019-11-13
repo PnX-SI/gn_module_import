@@ -165,7 +165,6 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
                                 selected: false
                             };
                         });
-                    console.log(this.columns);
                 }
                 console.log(this.userMapping);
                 
@@ -298,7 +297,7 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
             this.columns.map((col) => {
                 if (formValues) {
                     if (Object.values(formValues).includes(col.id)) {
-                        col.selected = false;
+                        col.selected = true;
                     } else {
                         col.selected = false;
                     }
