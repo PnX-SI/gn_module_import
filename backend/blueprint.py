@@ -54,7 +54,8 @@ from .db.queries.user_table_queries import (
     get_n_taxa,
     get_date_ext,
     save_invalid_data,
-    get_required
+    get_required,
+    get_delimiter
 )
 
 from .db.queries.metadata import (
@@ -1319,6 +1320,7 @@ def get_csv(info_role, import_id):
         MODULE_URL = blueprint.config["MODULE_URL"]
         PREFIX = blueprint.config['PREFIX']
         INVALID_CSV_NAME = blueprint.config['INVALID_CSV_NAME']
+        SEPARATOR = blueprint.config['SEPARATOR']
 
         uploads_directory = get_upload_dir_path(MODULE_URL, DIRECTORY_NAME)
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
@@ -1329,11 +1331,13 @@ def get_csv(info_role, import_id):
         full_file_name = '.'.join([file_name, 'csv'])
         full_path = os.path.join(uploads_directory, full_file_name)
 
+        delimiter = get_delimiter(IMPORTS_SCHEMA_NAME, import_id, SEPARATOR)
+
         # save csv in upload directory
         conn = DB.engine.raw_connection()
         cur = conn.cursor()
         logger.info('saving csv of invalid data in upload directory')
-        save_invalid_data(cur, full_archive_table_name, full_imports_table_name, full_path, pk_name)
+        save_invalid_data(cur, full_archive_table_name, full_imports_table_name, full_path, pk_name, delimiter)
         logger.info(' -> csv saved')
 
         return send_file(full_path, as_attachment=True, attachment_filename=full_file_name)

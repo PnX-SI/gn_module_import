@@ -318,7 +318,7 @@ def get_date_ext(schema_name, table_name, date_min_col, date_max_col):
         raise
 
 
-def save_invalid_data(cur, full_archive_table_name, full_imports_table_name, full_path, pk_name):
+def save_invalid_data(cur, full_archive_table_name, full_imports_table_name, full_path, pk_name, delimiter):
     try:
         cmd = \
             """
@@ -330,11 +330,12 @@ def save_invalid_data(cur, full_archive_table_name, full_imports_table_name, ful
                     WHERE I.gn_is_valid = 'False'
                     ORDER BY I.{pk_name} ASC
                     )
-                TO STDOUT WITH CSV HEADER;
+                TO STDOUT WITH DELIMITER '{delimiter}' CSV HEADER;
             """.format(
                 full_archive_table_name = full_archive_table_name,
                 full_imports_table_name = full_imports_table_name,
-                pk_name = pk_name
+                pk_name = pk_name,
+                delimiter = str(delimiter[0])
             )
         with open(full_path, 'w') as f:
             cur.copy_expert(cmd,f)
@@ -372,5 +373,24 @@ def get_required(schema_name, table_name):
             )).fetchall()
         col_names = [col[0] for col in required_cols]
         return col_names
+    except Exception:
+        raise
+
+
+def get_delimiter(schema_name, import_id, separator):
+    try:
+        delimiter = DB.session.execute(
+            """
+            SELECT separator
+            FROM {schema_name}.t_imports
+            WHERE id_import = {import_id};
+            """.format(
+                schema_name = schema_name,
+                import_id = int(import_id)
+            )
+        ).fetchone()[0]
+        for sep in separator:
+            if sep['db_code'] == delimiter:
+                return str(sep['code'])
     except Exception:
         raise
