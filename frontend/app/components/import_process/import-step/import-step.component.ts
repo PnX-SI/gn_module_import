@@ -72,10 +72,12 @@ export class ImportStepComponent implements OnInit, OnChanges {
         this.spinner = true;
         this._ds.getValidData(this.importId, this.selected_columns, this.added_columns).subscribe(
             (res) => {
+                console.log(res);
                 this.spinner = false;
                 this.validData = res.valid_data;
                 if (this.validData != 'no data') {
-                    this.total_columns = res['total_columns'];
+                    this.columns = [];
+                    this.rows = [];
                     _.forEach(this.validData[0], (el) => {
                         let key = el.key;
                         let val = el.value;
