@@ -1290,6 +1290,9 @@ def get_valid_data(info_role, import_id):
 
             # get valid data preview
             valid_data_list = get_preview(IMPORTS_SCHEMA_NAME, table_name, total_columns)
+            
+            # get n valid data
+            n_valid = get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name)
 
             logger.info('-> got valid data for preview')
         else:
@@ -1298,7 +1301,8 @@ def get_valid_data(info_role, import_id):
 
         return {
             'total_columns' : total_columns,
-            'valid_data': valid_data_list
+            'valid_data': valid_data_list,
+            'n_valid_data': n_valid
         },200
 
     except Exception as e:

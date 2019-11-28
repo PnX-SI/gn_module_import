@@ -19,6 +19,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
     @Input() stepId: any;
     importDataRes: any;
     validData: any;
+    nValidData: number;
     total_columns: any;
     columns: any[] = [];
     rows: any[] = [];
@@ -72,8 +73,8 @@ export class ImportStepComponent implements OnInit, OnChanges {
         this.spinner = true;
         this._ds.getValidData(this.importId, this.selected_columns, this.added_columns).subscribe(
             (res) => {
-                console.log(res);
                 this.spinner = false;
+                this.nValidData = res.n_valid_data;
                 this.validData = res.valid_data;
                 if (this.validData != 'no data') {
                     this.columns = [];

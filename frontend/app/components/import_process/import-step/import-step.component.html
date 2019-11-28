@@ -18,10 +18,10 @@
                     <i class="material-icons"> navigate_before </i>
                     Précédent
                 </button>
-                <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
+                <button *ngIf="nValidData > 0" class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                     (click)="onImport()">
                     <i class="material-icons"> done </i>
-                    Importer les données
+                    Importer vos {{nValidData}} observations valides
                 </button>
             </div>
     </div>
