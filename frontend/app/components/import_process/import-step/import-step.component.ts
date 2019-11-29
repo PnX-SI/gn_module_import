@@ -74,6 +74,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
         this._ds.getValidData(this.importId, this.selected_columns, this.added_columns).subscribe(
             (res) => {
                 this.spinner = false;
+                this.total_columns = res.total_columns;
                 this.nValidData = res.n_valid_data;
                 this.validData = res.valid_data;
                 if (this.validData != 'no data') {

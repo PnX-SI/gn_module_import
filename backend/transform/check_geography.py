@@ -63,9 +63,9 @@ def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors,
         df['temp'] = user_gdf['geometry'].is_valid
 
         # set column names :
-        create_col_name(df=df, col_dict=added_cols, key='the_geom_4326', value='the_geom_4326', import_id=import_id)
-        create_col_name(df=df, col_dict=added_cols, key='the_geom_point', value='the_geom_point', import_id=import_id)
-        create_col_name(df=df, col_dict=added_cols, key='the_geom_local', value='the_geom_local', import_id=import_id)
+        create_col_name(df=df, col_dict=added_cols, key='the_geom_4326', import_id=import_id)
+        create_col_name(df=df, col_dict=added_cols, key='the_geom_point', import_id=import_id)
+        create_col_name(df=df, col_dict=added_cols, key='the_geom_local', import_id=import_id)
 
         # convert wkt in local and 4326 crs
         if srid == 4326 and local_srid == 4326:

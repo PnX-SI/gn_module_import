@@ -9,7 +9,7 @@ import pdb
 
 
 @checker('Data cleaning : altitudes created')
-def set_altitudes(df, selected_columns, import_id, schema_name, full_table_name, table_name, index_col, is_generate_alt):
+def set_altitudes(df, selected_columns, import_id, schema_name, full_table_name, table_name, index_col, is_generate_alt, the_geom_local_col):
 
     try:
 
@@ -18,7 +18,7 @@ def set_altitudes(df, selected_columns, import_id, schema_name, full_table_name,
         if is_generate_alt:
 
             if 'altitude_min' not in selected_columns.keys():
-                create_col_name(df, selected_columns, 'altitude_min', 'gn_altitude_min', import_id)
+                create_col_name(df, selected_columns, 'altitude_min', import_id)
                 create_column(
                     full_table_name = full_table_name, 
                     alt_col = selected_columns['altitude_min'])
@@ -28,10 +28,10 @@ def set_altitudes(df, selected_columns, import_id, schema_name, full_table_name,
                 table = table_name, 
                 alt_col = selected_columns['altitude_min'], 
                 table_pk = index_col,
-                geom_col = 'the_geom_local')
+                geom_col = the_geom_local_col)
 
             if 'altitude_max' not in selected_columns.keys():
-                create_col_name(df, selected_columns, 'altitude_max', 'gn_altitude_max', import_id)
+                create_col_name(df, selected_columns, 'altitude_max', import_id)
                 create_column(
                     full_table_name = full_table_name, 
                     alt_col = selected_columns['altitude_max'])
@@ -41,7 +41,7 @@ def set_altitudes(df, selected_columns, import_id, schema_name, full_table_name,
                 table = table_name, 
                 alt_col = selected_columns['altitude_max'], 
                 table_pk = index_col,
-                geom_col = 'the_geom_local')
+                geom_col = the_geom_local_col)
 
     except Exception:
         raise

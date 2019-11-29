@@ -44,7 +44,7 @@ MAX_FILE_SIZE = 500
 
 ALLOWED_EXTENSIONS = [
     '.csv',
-    '.json'
+    '.geojson'
 ]
 
 MISSING_VALUES = [

@@ -9,6 +9,7 @@ from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_use
 from ..wrappers import checker
 from ..logs import logger
 from ..db.queries.user_table_queries import get_uuid_list
+from ..utils.utils import create_col_name
 
 import pdb
 
@@ -21,7 +22,7 @@ def fill_nan_uuid(value):
 
 
 @checker('Data cleaning : uuid values checked')
-def check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, is_generate_uuid):
+def check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, is_generate_uuid, import_id):
 
     try:
 
@@ -52,7 +53,10 @@ def check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, 
                     if df[selected_columns[col]].isnull().any():
                         if is_generate_uuid:
                             logger.info('generating uuid for missing values in %s synthese column (= %s user column)', col, selected_columns[col])
-                            df[selected_columns[col]] = df[selected_columns[col]]\
+                            uuid_col_name = selected_columns[col]
+                            create_col_name(df, selected_columns, col, import_id)
+                            df[selected_columns[col]] = ''
+                            df[selected_columns[col]] = df[uuid_col_name]\
                                 .apply(lambda x: fill_nan_uuid(x))
                             set_invalid_reason(df, 'temp', 'warning : champ uuid vide dans colonne {} : un uuid a été créé', selected_columns[col])
 
@@ -63,12 +67,8 @@ def check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, 
                         .where(
                             cond=df[selected_columns[col]].isin(uuid_list), 
                             other=False)\
-                        .where(
-                            cond=df[selected_columns[col]].notnull(), 
-                            other='')\
                         .map(fill_map)\
                         .astype('bool')
-
                     df['temp'] = ~df['temp']
                     # set gn_is_valid and invalid_reason
                     set_is_valid(df, 'temp')
@@ -105,10 +105,11 @@ def check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, 
         if 'unique_id_sinp' not in uuid_cols:
             if is_generate_uuid:
                 logger.info('no unique_id_sinp column provided: creating uuid for each row')
-                df['unique_id_sinp'] = ''
-                df['unique_id_sinp'] = df['unique_id_sinp']\
+                create_col_name(df, selected_columns, 'unique_id_sinp', import_id)
+                df[selected_columns['unique_id_sinp']] = ''
+                df[selected_columns['unique_id_sinp']] = df[selected_columns['unique_id_sinp']]\
                     .apply(lambda x: str(uuid4()))
-                added_cols['unique_id_sinp'] = 'unique_id_sinp'
+                #added_cols['unique_id_sinp'] = 'unique_id_sinp'
 
     except Exception:
         raise

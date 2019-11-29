@@ -514,7 +514,6 @@ def post_user_file(info_role):
         - return id_import and column names list
         - delete user file in upload directory
 
-        # Note perso:
         # prevoir un boolean (ou autre) pour bloquer la possibilité de l'utilisateur de lancer plusieurs uploads sans passer par interface front
 
     """
@@ -953,9 +952,10 @@ def postMapping(info_role, import_id, id_mapping):
         # calculate geometries and altitudes
         set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid,
             added_cols['the_geom_4326'], added_cols['the_geom_point'], added_cols['the_geom_local'])
+
         set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME, 
             table_names['imports_full_table_name'], table_names['imports_table_name'], 
-            index_col, is_generate_alt)
+            index_col, is_generate_alt, added_cols['the_geom_local'])
 
         DB.session.commit()
         DB.session.close()
