@@ -16,7 +16,7 @@
                                 (click)="onFinishImport(row)"> Finir
                             </button>
                             <button *ngIf="(row.is_finished) && ((row.source_count - row.import_count) > 0)" class="clickable btn btn-sm btn-warning" style="margin-top: -10px;"
-                            (click)="onCSV(row)"> csv erreurs
+                            (click)="_csvExport.onCSV(row.id_import)"> csv erreurs
                             </button>
                         </ng-template>
                     </ngx-datatable-column>

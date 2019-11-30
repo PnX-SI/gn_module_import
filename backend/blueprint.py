@@ -1275,6 +1275,7 @@ def get_valid_data(info_role, import_id):
     try:
         logger.info('Get valid data for preview')
 
+        ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
         if import_id != 'undefined':
@@ -1294,6 +1295,10 @@ def get_valid_data(info_role, import_id):
             # get n valid data
             n_valid = get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name)
 
+            # get n invalid data
+            table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+            n_invalid = get_n_invalid_rows(table_names['imports_full_table_name'])
+
             logger.info('-> got valid data for preview')
         else:
             valid_data_list = 'no data'
@@ -1302,7 +1307,8 @@ def get_valid_data(info_role, import_id):
         return {
             'total_columns' : total_columns,
             'valid_data': valid_data_list,
-            'n_valid_data': n_valid
+            'n_valid_data': n_valid,
+            'n_invalid_data': n_invalid
         },200
 
     except Exception as e:

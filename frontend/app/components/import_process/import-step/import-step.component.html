@@ -18,6 +18,11 @@
                     <i class="material-icons"> navigate_before </i>
                     Précédent
                 </button>
+                <button *ngIf="nInvalidData > 0" class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
+                    (click)="_csvExport.onCSV(importId)">
+                    <i class="material-icons"> done </i>
+                    Exporter vos {{nInvalidData}} observations invalides
+                </button>
                 <button *ngIf="nValidData > 0" class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                     (click)="onImport()">
                     <i class="material-icons"> done </i>

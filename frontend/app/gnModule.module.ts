@@ -9,6 +9,7 @@ import { ImportComponent } from "./components/import/import.component";
 import { ImportProcessComponent } from "./components/import_process/import-process.component";
 import { ImportModalDatasetComponent } from "./components/modal_dataset/import-modal-dataset.component";
 import { DataService } from "./services/data.service";
+import { CsvExportService } from "./services/csv-export.service";
 import { StepsService } from './components/import_process/steps.service';
 import { UploadFileStepComponent } from "./components/import_process/upload-file-step/upload-file-step.component"
 import { FieldsMappingStepComponent } from "./components/import_process/fields-mapping-step/fields-mapping-step.component"
@@ -43,7 +44,8 @@ const routes: Routes = [
 
   providers: [
     DataService,
-    StepsService
+    StepsService,
+    CsvExportService
   ],
 
   bootstrap: []

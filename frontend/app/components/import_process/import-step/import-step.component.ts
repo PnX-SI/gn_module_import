@@ -1,6 +1,7 @@
 import { Component, OnInit, OnChanges, Input } from '@angular/core';
 import { StepsService } from '../steps.service';
 import { DataService } from '../../../services/data.service';
+import { CsvExportService } from '../../../services/csv-export.service';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { ModuleConfig } from '../../../module.config';
@@ -20,6 +21,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
     importDataRes: any;
     validData: any;
     nValidData: number;
+    nInvalidData: number;
     total_columns: any;
     columns: any[] = [];
     rows: any[] = [];
@@ -29,6 +31,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
 
     constructor(
         private stepService: StepsService,
+        private _csvExport: CsvExportService,
         private _router: Router,
         private _ds: DataService,
         private toastr: ToastrService
@@ -76,6 +79,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
                 this.spinner = false;
                 this.total_columns = res.total_columns;
                 this.nValidData = res.n_valid_data;
+                this.nInvalidData = res.n_invalid_data;
                 this.validData = res.valid_data;
                 if (this.validData != 'no data') {
                     this.columns = [];
