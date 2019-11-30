@@ -955,7 +955,7 @@ def postMapping(info_role, import_id, id_mapping):
 
         set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME, 
             table_names['imports_full_table_name'], table_names['imports_table_name'], 
-            index_col, is_generate_alt, added_cols['the_geom_local'])
+            index_col, is_generate_alt, added_cols['the_geom_local'], added_cols)
 
         DB.session.commit()
         DB.session.close()

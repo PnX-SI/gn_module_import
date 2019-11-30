@@ -1,28 +1,37 @@
 from geonature.utils.env import DB
+import pdb
 
-
-def generate_altitudes(schema, table, alt_col, table_pk, geom_col):
+def generate_altitudes(type, schema, table, alt_col, original_alt_col, table_pk, geom_col):
     DB.session.begin(subtransactions=True)
     try:
-        DB.session.execute("""
+        if type == 'min':
+            alti_type = 'altitude_min'
+        if type == 'max':
+            alti_type = 'altitude_max'
+
+        DB.session.execute(\
+            """
             UPDATE {schema}.{table} as T
             SET {alt_col} = 
-                CASE WHEN (COALESCE({alt_col}, '') = '') 
+                CASE WHEN (COALESCE({original_alt_col}, '') = '') 
                     THEN (
-                        SELECT (ref_geo.fct_get_altitude_intersection({geom_col})).altitude_min::text
+                        SELECT (ref_geo.fct_get_altitude_intersection({geom_col})).{alti_type}::text
                         FROM {schema}.{table}
                         WHERE {table_pk} = T.{table_pk}
                         )
-                    ELSE T.{alt_col}
+                    ELSE T.{original_alt_col}
                 END
-        """.format(
-            schema = schema, 
-            table = table, 
-            alt_col = alt_col, 
-            table_pk = table_pk,
-            geom_col = geom_col
-            )
+            """.format(
+                schema = schema, 
+                table = table, 
+                alt_col = alt_col, 
+                original_alt_col = original_alt_col,
+                table_pk = table_pk,
+                geom_col = geom_col,
+                alti_type = alti_type
+                )
         )
+
         DB.session.commit()
     except Exception:
         DB.session.rollback()

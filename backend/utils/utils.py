@@ -9,7 +9,7 @@ def create_col_name(df, col_dict, key, import_id):
         else:
             i = 2
             while colname in df.columns:
-                colname = '_'.join([colname, str(i)])
+                colname = '_'.join(['gn', import_id, key, str(i)])
                 i = i+1
             col_dict[key] = colname
     except Exception:
