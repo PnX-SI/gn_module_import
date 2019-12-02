@@ -275,7 +275,7 @@ def get_mappings(info_role, mapping_type, import_id):
 
         logger.debug('List of mappings %s', mappings)
 
-        # get column names :
+        # get column names
         col_names = 'undefined import_id'
         if import_id not in ['undefined','null']:
             ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
