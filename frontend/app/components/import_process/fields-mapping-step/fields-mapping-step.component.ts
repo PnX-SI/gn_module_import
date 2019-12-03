@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, OnChanges } from '@angular/core';
 import { DataService } from '../../../services/data.service';
-import { MappingService } from '../../../services/mapping.service';
+import { FieldMappingService } from '../../../services/mappings/field-mapping.service';
 import { ToastrService } from 'ngx-toastr';
 import { ModuleConfig } from '../../../module.config';
 import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms';
@@ -40,51 +40,59 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 
 	constructor(
         private _ds: DataService,
-        private _mapping: MappingService,
+        private _fm: FieldMappingService,
 		private toastr: ToastrService,
 		private _fb: FormBuilder,
 		private stepService: StepsService
 	) {}
 
-	ngOnInit() {}
+	ngOnInit() {
+    }
 
 
 	ngOnChanges() {
 		this.formReady = false;
-		this._mapping.fieldMappingForm = this._fb.group({
+		this._fm.fieldMappingForm = this._fb.group({
 			fieldMapping: [null],
 			mappingName: ['']
 		});
-		this.syntheseForm = this._fb.group({});
-		this._ds.getBibFields().subscribe(
-			(res) => {
-				this.bibRes = res;
-				for (let theme of this.bibRes) {
-					for (let field of theme.fields) {
-						if (field.required) {
-							this.syntheseForm.addControl(field.name_field, new FormControl({value:'', disabled: true}, Validators.required));
-						} else {
-							this.syntheseForm.addControl(field.name_field, new FormControl({value:'', disabled: true}));
-						}
-					}
-				}
-				this.formReady = true;
-			},
-			(error) => {
-				if (error.statusText === 'Unknown Error') {
-					// show error message if no connexion
-					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-				} else {
-					// show error message if other server error
-					console.error(error);
-					this.toastr.error(error.error.message);
-				}
-			}
-		);
-		this._mapping.getMappingNamesList('field', this.importId);
-		this._mapping.onMappingName(this.syntheseForm);
-		this.onFormMappingChange();
+        this.syntheseForm = this._fb.group({});
+        this.generateSyntheseForm();
+		this._fm.getMappingNamesList('field', this.importId);
+		this._fm.onMappingName(this._fm.fieldMappingForm, this.syntheseForm);
+        this.onFormMappingChange();
 	}
+
+
+    generateSyntheseForm() {
+        this._ds.getBibFields().subscribe(
+            (res) => {
+                this.bibRes = res;
+                const validators = [Validators.required];
+                for (let theme of this.bibRes) {
+                    for (let field of theme.fields) {
+                        if (field.required) {
+                            this.syntheseForm.addControl(field.name_field, new FormControl({value:'', disabled: true}, validators));
+                            this.syntheseForm.get(field.name_field).setValidators([Validators.required]);
+                        } else {
+                            this.syntheseForm.addControl(field.name_field, new FormControl({value:'', disabled: true}));
+                        }
+                    }
+                }
+                this.formReady = true;
+            },
+            (error) => {
+                if (error.statusText === 'Unknown Error') {
+                    // show error message if no connexion
+                    this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+                } else {
+                    // show error message if other server error
+                    console.error(error);
+                    this.toastr.error(error.error.message);
+                }
+            }
+        );
+    }
 
 
 	onDataCleaning(value, id_mapping) {
@@ -126,7 +134,7 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 		this._ds
 			.postMetaToStep3(
 				this.importId,
-				this._mapping.id_mapping,
+				this._fm.id_mapping,
 				this.mappingRes['selected_columns'],
 				this.mappingRes['table_name']
 			)
@@ -184,5 +192,5 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 			this.isFullError = false;
 		}
     }
-    
+
 }

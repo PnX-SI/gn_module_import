@@ -2,6 +2,7 @@ import { Component, OnInit, OnChanges, Input } from '@angular/core';
 import { FormControl, FormGroup, FormBuilder } from '@angular/forms';
 import { StepsService } from '../steps.service';
 import { DataService } from '../../../services/data.service';
+import { ContentMappingService } from '../../../services/mappings/content-mapping.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -13,8 +14,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
     public isCollapsed = false;
     public selectContentMappingForm: FormGroup;
-	public userContentMapping;
-	public newMapping: boolean = false;
     public id_mapping;
     public columns;
 
@@ -33,17 +32,18 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
         private stepService: StepsService, 
         private _fb: FormBuilder,
         private _ds: DataService,
+        private _cm: ContentMappingService,
         private toastr: ToastrService
         ) {}
 
 
 	ngOnInit() {
-        this.selectContentMappingForm = this._fb.group({
+        this._cm.contentMappingForm = this._fb.group({
 			contentMapping: [ null ],
 			mappingName: [ '' ]
 		});
         this.contentForm = this._fb.group({});
-        this.getMappingList('content');
+        this._cm.getMappingNamesList('content', this.importId);
         this.onSelectUserMapping();
 	}
 
@@ -118,25 +118,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     }
     
 
-    getMappingList(mapping_type) {
-        // get list of existing content mapping in the select
-		this._ds.getMappings(mapping_type, this.importId).subscribe(
-			(result) => {
-                console.log(result);
-                this.userContentMapping = result['mappings'];
-			},
-			(error) => {
-				console.log(error);
-				if (error.statusText === 'Unknown Error') {
-					// show error message if no connexion
-					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-				} else {
-					console.log(error);
-                    this.toastr.error(error.error.message);
-				}
-			}
-		);
-    }
+
     
     
     onMappingContentName(value) {
@@ -147,7 +129,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 			(res) => {
                 console.log(res);
 				this.newMapping = false;
-				this.getMappingList(mappingType);
+				this._cm.getMappingNamesList(mappingType, this.importId);
 				this.selectContentMappingForm.controls['contentMapping'].setValue(res);
                 this.selectContentMappingForm.controls['mappingName'].setValue('');
 			},
@@ -212,7 +194,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     
 
     onSelectUserMapping(): void {
-		this.selectContentMappingForm.get('contentMapping').valueChanges.subscribe(
+		this._cm.contentMappingForm.get('contentMapping').valueChanges.subscribe(
 			(id_mapping) => {
 				if (id_mapping) {
 					this.getSelectedMapping(id_mapping);

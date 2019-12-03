@@ -5,16 +5,16 @@
     <div class="card-body">
 
         <!-- Choix du mapping -->
-        <form [formGroup]="selectContentMappingForm" class="was-validated">
+        <form [formGroup]="_cm.contentMappingForm" class="was-validated">
                 <fieldset>
                     <legend class="px-1">
                         Choix du mapping
                     </legend>
-                    <div *ngIf="userContentMapping" class="form-group">
+                    <div *ngIf="_cm.userContentMappings" class="form-group">
                         <select class="form-control form-control-sm" id="contentMappingSelection"
                             formControlName="contentMapping">
                             <option [value]=""></option>
-                            <option *ngFor="let data of userContentMapping" [value]="data.id_mapping">
+                            <option *ngFor="let data of _cm.userContentMappings" [value]="data.id_mapping">
                                 {{data.mapping_label}}</option>
                         </select>
                     </div>

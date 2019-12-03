@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { DataService } from './data.service';
+import { DataService } from '../data.service';
 import { ToastrService } from 'ngx-toastr';
 
 
 @Injectable()
-export class MappingService {
+export class FieldMappingService {
 
     public fieldMappingForm: FormGroup;
-    public userMapping;
+    public userFieldMappings;
     public columns;
 	public newMapping: boolean = false;
 	public id_mapping;
@@ -23,7 +23,7 @@ export class MappingService {
 	getMappingNamesList(mapping_type, importId) {
 		this._ds.getMappings(mapping_type, importId).subscribe(
 			(result) => {
-                this.userMapping = result['mappings'];
+                this.userFieldMappings = result['mappings'];
                 if (result['column_names'] != 'undefined import_id') {
                     this.columns = result['column_names'].map(
                         (col) => {
@@ -33,7 +33,7 @@ export class MappingService {
                             };
                         });
                 }
-                console.log(this.userMapping);
+                console.log(this.userFieldMappings);
                 
 			},
 			(error) => {
@@ -84,16 +84,17 @@ export class MappingService {
 	}
     
 
-    onMappingName(targetFormName): void {
-		this.fieldMappingForm.get('fieldMapping').valueChanges.subscribe(
+    onMappingName(mappingForm, targetFormName): void {
+		mappingForm.get('fieldMapping').valueChanges.subscribe(
 			(id_mapping) => {
 				this.id_mapping = id_mapping;
-				if (this.id_mapping) {
+				if (this.id_mapping && id_mapping != '') {
 					this.fillMapping(this.id_mapping, targetFormName);
 				} else {
-					this.fillEmptyMapping(targetFormName);
-					this.getSelectedOptions(this.id_mapping, targetFormName);
-				}
+                    this.fillEmptyMapping(targetFormName);
+                    this.disableMapping(targetFormName);
+					this.shadeSelectedColumns(targetFormName);
+                }
 			},
 			(error) => {
 				if (error.statusText === 'Unknown Error') {
@@ -103,7 +104,7 @@ export class MappingService {
 					console.error(error);
 					this.toastr.error(error.error);
 				}
-			}
+            }
 		);
     }
     
@@ -116,8 +117,8 @@ export class MappingService {
 					for (let field of mappingFields) {
 						targetFormName.controls[field['target_field']].enable();
 						targetFormName.get(field['target_field']).setValue(field['source_field']);
-					}
-					this.getSelectedOptions(this.id_mapping, targetFormName);
+                    }
+					this.shadeSelectedColumns(targetFormName);
 				} else {
 					this.fillEmptyMapping(targetFormName);
 				}
@@ -135,28 +136,23 @@ export class MappingService {
     }
     
 
-    getSelectedOptions(id_mapping, targetFormName) {
-		let formValues = targetFormName.value;
-		if (id_mapping == undefined || id_mapping == '') {
-			this.disableMapping(targetFormName);
-		} else {
-			this.columns.map((col) => {
-				if (formValues) {
-					if (Object.values(formValues).includes(col.id)) {
-						col.selected = true;
-					} else {
-						col.selected = false;
-					}
-				}
-			});
-		}
-		
+    shadeSelectedColumns(targetFormName) {
+        let formValues = targetFormName.value;
+        this.columns.map((col) => {
+            if (formValues) {
+                if (Object.values(formValues).includes(col.id)) {
+                    col.selected = true;
+                } else {
+                    col.selected = false;
+                }
+            }
+        });
     }
 
 
 	onSelect(id_mapping, targetFormName) {
 		this.id_mapping = id_mapping;
-		this.getSelectedOptions(this.id_mapping, targetFormName);
+		this.shadeSelectedColumns(targetFormName);
 	}
 
 
@@ -178,7 +174,7 @@ export class MappingService {
 		Object.keys(targetForm.controls).forEach((key) => {
 			targetForm.get(key).setValue('');
 		});
-	}
-	
+    }
+
     
 }
