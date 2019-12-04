@@ -6,13 +6,14 @@
     </div>
     <div class="card-body">
 
-        <ngx-datatable  *ngIf="tableReady" #table class="material striped" [rows]="rows" [columnMode]="'force'" [headerHeight]="35"
-            [scrollbarH]="true" [footerHeight]="40" [rowHeight]="40" [limit]="15" [selectionType]='single'>
-            <ngx-datatable-column *ngFor="let col of columns" name="{{col.name}}" prop="{{col.prop}}">
-            </ngx-datatable-column>
-        </ngx-datatable>
+            <ngx-datatable *ngIf="tableReady" #table class="material striped" [rows]="rows" [columnMode]="'force'"
+                [headerHeight]="35" [scrollbarH]="true" [footerHeight]="40" [rowHeight]="40" [limit]="15"
+                [selectionType]='single'>
+                <ngx-datatable-column *ngFor="let col of columns" name="{{col.name}}" prop="{{col.prop}}">
+                </ngx-datatable-column>
+            </ngx-datatable>
 
-        <br />
+            <br />
 
             <div class="d-flex flex-row justify-content-between">
                 <button (click)="onStepBack()"
@@ -21,7 +22,7 @@
                     Précédent
                 </button>
                 <button *ngIf="nInvalidData > 0" class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
-                    (click)="_csvExport.onCSV(importId)">
+                    (click)="_csvExport.onCSV(stepData.importId)">
                     <i class="material-icons"> done </i>
                     Exporter vos {{nInvalidData}} observations invalides
                 </button>

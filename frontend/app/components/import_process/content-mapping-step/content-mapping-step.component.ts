@@ -1,9 +1,11 @@
-import { Component, OnInit, OnChanges, Input } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormControl, FormGroup, FormBuilder } from '@angular/forms';
-import { StepsService } from '../steps.service';
+import { StepsService, Step3Data, Step4Data } from '../steps.service';
 import { DataService } from '../../../services/data.service';
 import { ContentMappingService } from '../../../services/mappings/content-mapping.service';
 import { ToastrService } from 'ngx-toastr';
+import { ModuleConfig } from '../../../module.config';
 
 @Component({
 	selector: 'content-mapping-step',
@@ -12,17 +14,16 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class ContentMappingStepComponent implements OnInit, OnChanges {
 
-    public isCollapsed = false;
-    public id_mapping;
-    public columns;
-
+	public isCollapsed = false;
+	public userContentMapping;
+	public newMapping: boolean = false;
+	public id_mapping;
+	public columns;
 	public spinner: boolean = false;
-    @Input() contentMappingInfo: any;
-    @Input() selected_columns: any;
-    @Input() table_name: any;
-    @Input() importId: any;
 	contentTargetForm: FormGroup;
-    contentMapRes: any;
+	showForm: boolean = false;
+	contentMapRes: any;
+	stepData: Step3Data;
     contentMappingObj = [];
 
 
@@ -31,42 +32,43 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
         private _fb: FormBuilder,
         private _ds: DataService,
         private _cm: ContentMappingService,
-        private toastr: ToastrService
+		private toastr: ToastrService,
+		private _router: Router
         ) {}
 
 
-	ngOnInit() {}
+	ngOnInit() {
+		this.stepData = this.stepService.getStepData(3);
 
-
-	ngOnChanges() {
-		if (this.contentMappingInfo) {
-			for (let contentMapping of this.contentMappingInfo) {
-				this.contentMappingObj[contentMapping.nomenc_synthese_name] = contentMapping.user_values.column_name;
-			}
-			console.log(this.contentMappingObj);
-		}
-
-        this._cm.contentMappingForm = this._fb.group({
+		this._cm.contentMappingForm = this._fb.group({
 			contentMapping: [ null ],
 			mappingName: [ '' ]
 		});
-        this.contentTargetForm = this._fb.group({});
-        this._cm.getMappingNamesList('content', this.importId);
+		this.contentTargetForm = this._fb.group({});
+		this._cm.getMappingNamesList('content', this.stepData.importId);
+
 		if (this._cm.contentMappingInfo) {
 			if (this._cm.contentMappingInfo.length > 0) {
 				console.log(this._cm.contentMappingInfo);
-				this.contentMappingInfo = this._cm.contentMappingInfo;
+				this.stepData.contentMappingInfo = this._cm.contentMappingInfo;
 			}
 		}
-		this._cm.onMappingName(this._cm.contentMappingForm, this.contentTargetForm, this.table_name, this.contentMappingObj, this.contentMappingInfo);
 
+		this._cm.onMappingName(this._cm.contentMappingForm, this.contentTargetForm, this.stepData.table_name, this.contentMappingObj, this.stepData.contentMappingInfo);
+		this._cm.generateContentForm(this.stepData.contentMappingInfo, this.contentTargetForm, this.stepData.table_name, this.contentMappingObj);
 
-		this._cm.generateContentForm(this.contentMappingInfo, this.contentTargetForm, this.table_name, this.contentMappingObj);
-		console.log(this.contentMappingInfo);
-		console.log(this._cm.contentMappingInfo);
-    }
-    
-
+		if (this.stepData.contentMappingInfo) {
+			this.stepData.contentMappingInfo.forEach((ele) => {
+				ele['nomenc_values_def'].forEach((nomenc) => {
+					this.contentTargetForm.addControl(nomenc.id, new FormControl(''));
+				});
+			});
+			this.showForm = true;
+		}
+		if (this.stepData.id_content_mapping) {
+			this._cm.fillMapping(this.stepData.id_content_mapping, this.contentTargetForm);
+		}
+	}
 
 
 	/*
@@ -92,92 +94,77 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 
 	onSelectChange(selectedVal, group) {
-		console.log(selectedVal);
-		console.log(group);
-		this.contentMappingInfo.map(
-			(ele) => {
-				console.log(ele);
-				if (ele.nomenc_abbr === group.nomenc_abbr) {
-					ele.user_values.values = ele.user_values.values.filter(
-						(value) => {
-							console.log(value.id != selectedVal.id);
-							return value.id != selectedVal.id;
-					});
-				}
+		this.stepData.contentMappingInfo.map((ele) => {
+			if (ele.nomenc_abbr === group.nomenc_abbr) {
+				ele.user_values.values = ele.user_values.values.filter((value) => {
+					return value.id != selectedVal.id;
+				});
+			}
 		});
-		this._cm.onMappingName(this.contentMappingInfo, this._cm.contentMappingForm, this.contentTargetForm, this.table_name, this.contentMappingObj);
+		this._cm.onMappingName(this._cm.contentMappingForm, this.contentTargetForm, this.stepData.table_name, this.contentMappingObj, this.stepData.contentMappingInfo);
+
 	}
 
 
 	onSelectDelete(deletedVal, group) {
-		console.log(deletedVal);
-		console.log(group);
-		this.contentMappingInfo.map(
-			(ele) => {
-				console.log(ele);
-				if (ele.nomenc_abbr === group.nomenc_abbr) {
-					let temp_array = ele.user_values.values;
-					temp_array.push(deletedVal);
-					ele.user_values.values = temp_array.slice(0);
-				}
-			});
-		//this._cm.onMappingName(this._cm.contentMappingForm, this.contentTargetForm, this.table_name, this.contentMappingObj);
+		this.stepData.contentMappingInfo.map((ele) => {
+			if (ele.nomenc_abbr === group.nomenc_abbr) {
+				let temp_array = ele.user_values.values;
+				temp_array.push(deletedVal);
+				ele.user_values.values = temp_array.slice(0);
+			}
+		});
+		this._cm.onMappingName(this._cm.contentMappingForm, this.contentTargetForm, this.stepData.table_name, this.contentMappingObj, this.stepData.contentMappingInfo);
+
 	}
 
 
 	onStepBack() {
-		this.stepService.previousStep();
-    }
-
-
-    onContentMapping(value) {
-        // post content mapping form values and fill t_mapping_values table
-        console.log(this.contentTargetForm);
-        this.id_mapping = this._cm.contentMappingForm.get('contentMapping').value;
-        this.spinner = true;
-        this._ds.postContentMap(value, this.table_name, this.selected_columns, this.importId, this.id_mapping).subscribe(
-            (res) => {		
-                this.contentMapRes = res;
-				this.stepService.nextStep(this.contentTargetForm, 'three');
-				this.spinner = false;
-            },
-            (error) => {
-				this.spinner = false;
-                if (error.statusText === 'Unknown Error') {
-                    // show error message if no connexion
-                    this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-                } else {
-                    // show error message if other server error
-                    console.log(error);
-                    this.toastr.error(error.error.message);
-                }
-            }
-        );
-    }
-
-
-    /*
-    onSelect() {
-		this.getSelectedOptions();
+		this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/2` ]);
 	}
 
 
-	getSelectedOptions() {
-        let formValues = this.contentTargetForm.value;
-        if (this.id_mapping == undefined) {
-            this.toastr.warning('Vous devez d\'abord créer ou sélectionner un mapping');
-        } else {
-            this.columns.map((col) => {
-                if (formValues) {
-                    if (Object.values(formValues).includes(col.id)) {
-                        col.selected = false;
-                    } else {
-                        col.selected = false;
-                    }
-                }
-            });
-        }
-    }
-    */
+	onContentMapping(value) {
+		// post content mapping form values and fill t_mapping_values table
+		this.id_mapping = this._cm.contentMappingForm.get('contentMapping').value;
+		this.spinner = true;
+		this._ds
+			.postContentMap(
+				value,
+				this.stepData.table_name,
+				this.stepData.selected_columns,
+				this.stepData.importId,
+				this.id_mapping
+			)
+			.subscribe(
+				(res) => {
+					this.contentMapRes = res;
+					let step4Data: Step4Data = {
+						importId: this.stepData.importId,
+						selected_columns: this.stepData.selected_columns,
+						added_columns: this.stepData.added_columns
+					};
+				
+					let step3Data: Step3Data = this.stepData;
+					step3Data.id_content_mapping = this.id_mapping;
+					this.stepService.setStepData(3, step3Data);
+					this.stepService.setStepData(4, step4Data);
+
+					this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/4` ]);
+					this.spinner = false;
+				},
+				(error) => {
+					this.spinner = false;
+					if (error.statusText === 'Unknown Error') {
+						// show error message if no connexion
+						this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+					} else {
+						// show error message if other server error
+						console.log(error);
+						this.toastr.error(error.error.message);
+					}
+				}
+			);
+	}
     
 }

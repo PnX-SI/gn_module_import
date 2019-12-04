@@ -1,9 +1,9 @@
-import { Component, OnInit, OnChanges, Input } from '@angular/core';
-import { StepsService } from '../steps.service';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { StepsService, Step4Data } from '../steps.service';
 import { DataService } from '../../../services/data.service';
 import { CsvExportService } from '../../../services/csv-export.service';
 import { ToastrService } from 'ngx-toastr';
-import { Router } from '@angular/router';
 import { ModuleConfig } from '../../../module.config';
 import * as _ from 'lodash';
 
@@ -12,20 +12,18 @@ import * as _ from 'lodash';
     styleUrls: ['import-step.component.scss'],
     templateUrl: 'import-step.component.html'
 })
-export class ImportStepComponent implements OnInit, OnChanges {
+export class ImportStepComponent implements OnInit {
+
     public isCollapsed = false;
-    @Input() selected_columns: any;
-    @Input() added_columns: any;
-    @Input() importId: any;
-    @Input() stepId: any;
-    importDataRes: any;
-    validData: any;
+	importDataRes: any;
+	validData: any;
+	total_columns: any;
+	columns: any[] = [];
+	rows: any[] = [];
+	tableReady: boolean = false;
+	stepData: Step4Data;
     nValidData: number;
     nInvalidData: number;
-    total_columns: any;
-    columns: any[] = [];
-    rows: any[] = [];
-    tableReady: boolean = false;
     public spinner: boolean = false;
 
 
@@ -37,21 +35,21 @@ export class ImportStepComponent implements OnInit, OnChanges {
         private toastr: ToastrService
     ) { }
 
-    ngOnInit() { }
+    
+    ngOnInit() {
+		this.stepData = this.stepService.getStepData(4);
+		this.getValidData();
+	}
 
-    ngOnChanges() {
-        if (this.stepId == 'three') {
-            this.getValidData();
-        }
-    }
 
     onStepBack() {
-        this.stepService.previousStep();
+		this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/3` ]);
     }
+    
 
     onImport() {
         this.spinner = true;
-        this._ds.importData(this.importId, this.total_columns).subscribe(
+        this._ds.importData(this.stepData.importId, this.total_columns).subscribe(
             (res) => {
                 this.spinner = false;
                 this.importDataRes = res;
@@ -74,7 +72,7 @@ export class ImportStepComponent implements OnInit, OnChanges {
 
     getValidData() {
         this.spinner = true;
-        this._ds.getValidData(this.importId, this.selected_columns, this.added_columns).subscribe(
+        this._ds.getValidData(this.stepData.importId, this.stepData.selected_columns, this.stepData.added_columns).subscribe(
             (res) => {
                 this.spinner = false;
                 this.total_columns = res.total_columns;
@@ -117,10 +115,5 @@ export class ImportStepComponent implements OnInit, OnChanges {
         );
     }
 
-
-}
-        
-
-    
 
 }

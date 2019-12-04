@@ -978,6 +978,12 @@ def postMapping(info_role, import_id, id_mapping):
 
         logger.info('*** END CORRESPONDANCE MAPPING')
 
+        DB.session.query(TImports)\
+            .filter(TImports.id_import==int(import_id))\
+            .update({
+                TImports.id_field_mapping: int(id_mapping)
+                })
+
         DB.session.commit()
         DB.session.close()
 
@@ -1046,8 +1052,7 @@ def postMetaToStep3(info_role):
         DB.session.query(TImports)\
             .filter(TImports.id_import==int(data['import_id']))\
             .update({
-                TImports.step: 3,
-                TImports.id_field_mapping: int(data['id_mapping'])
+                TImports.step: 3
                 })
 
         DB.session.commit()

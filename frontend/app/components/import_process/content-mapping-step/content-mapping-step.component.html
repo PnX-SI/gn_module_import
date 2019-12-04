@@ -1,8 +1,10 @@
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0"> Mapping des contenus </h5>
-    </div>
-    <div class="card-body">
+<div class=container>
+    <stepper [step]=3></stepper>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0"> Mapping des contenus </h5>
+        </div>
+        <div class="card-body">
 
         <!-- Choix du mapping -->
         <form [formGroup]="_cm.contentMappingForm" class="was-validated">
@@ -85,6 +87,9 @@
             </div>
         </form>
     </div>
+    <footer>
+        <footer-stepper></footer-stepper>
+    </footer>
 </div>
 <!-- Spinner -->
 <div *ngIf="spinner" class="spinner">
