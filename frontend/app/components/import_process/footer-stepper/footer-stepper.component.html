@@ -1,0 +1,6 @@
+<div class="d-flex flex-row justify-content-between">
+    <button type="button" id="cancelImport" (click)="cancelImport()" class="btn btn-danger box-shadow btn-sm">Annuler
+        l'import</button>
+    <button *ngIf="!isStep1" type="button" id="importListPage" (click)="onImportList()"
+        class="btn btn-secondary box-shadow btn-sm">Enregistrer et quitter</button>
+</div>

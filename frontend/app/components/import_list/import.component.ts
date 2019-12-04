@@ -15,10 +15,10 @@ export class ImportComponent implements OnInit {
 	public deletedStep1;
 	public history;
 	public empty: boolean = false;
-    public config = ModuleConfig;
-    historyId: any;
-    n_invalid: any;
-    csvDownloadResp: any;
+	public config = ModuleConfig;
+	historyId: any;
+	n_invalid: any;
+	csvDownloadResp: any;
 
 	constructor(
 		private _ds: DataService,
@@ -35,8 +35,7 @@ export class ImportComponent implements OnInit {
 	private onImportList() {
 		this._ds.getImportList().subscribe(
 			(res) => {
-                this.history = res.history;
-                console.log(this.history);
+				this.history = res.history;
 				this.empty = res.empty;
 			},
 			(error) => {
@@ -73,43 +72,40 @@ export class ImportComponent implements OnInit {
 		this._router.navigate([ `${ModuleConfig.MODULE_URL}/process` ], {
 			queryParams: { datasetId: row.id_dataset }
 		});
-		this.stepService.goToStep(row.step)
+
 	}
 
-
-    onCSV(row) {
-        console.log(row);
-        this.historyId = row.id_import;
-        this._ds.checkInvalid(this.historyId).subscribe(
-            (res) => {
-                this.n_invalid = res;
-                console.log(this.n_invalid)
-            },
-            (error) => {
-                if (error.statusText === 'Unknown Error') {
-                    // show error message if no connexion
-                    this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-                } else {
-                    // show error message if other server error
-                    console.log(error);
-                    this.toastr.error(error.error);
-                }
-            },
-            () => {
-                let filename = 'invalid_data.csv'
-                this._ds.getCSV(this.historyId).subscribe(
-                    (res) => {
-                        saveAs(res, filename);
-                    },
-                    (error) => {
-                        if (error.statusText === 'Unknown Error')
-                            this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-                        else
-                            this.toastr.error('INTERNAL SERVER ERROR when downloading csv file');
-                    }
-                );
-            }
-        );
-
-	
+	onCSV(row) {
+		console.log(row);
+		this.historyId = row.id_import;
+		this._ds.checkInvalid(this.historyId).subscribe(
+			(res) => {
+				this.n_invalid = res;
+				console.log(this.n_invalid);
+			},
+			(error) => {
+				if (error.statusText === 'Unknown Error') {
+					// show error message if no connexion
+					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+				} else {
+					// show error message if other server error
+					console.log(error);
+					this.toastr.error(error.error);
+				}
+			},
+			() => {
+				let filename = 'invalid_data.csv';
+				this._ds.getCSV(this.historyId).subscribe(
+					(res) => {
+						saveAs(res, filename);
+					},
+					(error) => {
+						if (error.statusText === 'Unknown Error')
+							this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+						else this.toastr.error('INTERNAL SERVER ERROR when downloading csv file');
+					}
+				);
+			}
+		);
+	}
 }
