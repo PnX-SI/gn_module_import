@@ -146,6 +146,16 @@ export class DataService {
     }
 
 
+    getNomencInfo(table_name, obj) {
+        let fd = new FormData();
+        for (let key of Object.keys(obj)) {
+            fd.append(key, obj[key]);
+        }
+        fd.append('table_name', table_name);
+        return this._http.post<any>(`${urlApi}/getNomencInfo`, fd, HttpUploadOptions);
+    }
+
+
     importData(import_id, total_columns) {
         let fd = new FormData();
         fd.append('total_columns', JSON.stringify(total_columns));

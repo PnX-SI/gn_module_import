@@ -1074,6 +1074,31 @@ def postMetaToStep3(info_role):
         DB.session.close()
 
 
+@blueprint.route('/getNomencInfo', methods=['GET', 'POST'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def getNomencInfo(info_role):
+
+    try:
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        data = request.form.to_dict()
+        print(data)
+        nomenc_info = get_nomenc_info(data, IMPORTS_SCHEMA_NAME)
+
+        return {
+            'content_mapping_info' : nomenc_info
+        },200
+    except Exception as e:
+        logger.error('*** ERROR WHEN GETTING NOMENCLATURE')
+        logger.exception(e)
+        DB.session.rollback()
+        raise GeonatureImportApiError(\
+            message='INTERNAL SERVER ERROR : Erreur pour obtenir les infos de nomenclature - contacter l\'administrateur',
+            details=str(e))
+    finally:
+        DB.session.close()
+
+
 @blueprint.route('/bibFields', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp

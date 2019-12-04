@@ -54,12 +54,13 @@ def get_nomenc_info(form_data, schema_name):
             # get user_nomenclature column name and values:
             user_nomenc_col = get_synthese_col(nomenc)
 
-            nomenc_user_values = get_nomenc_user_values(form_data[user_nomenc_col], schema_name, form_data['table_name'])
+            nomenc_user_values = get_nomenc_user_values(\
+                form_data[user_nomenc_col], schema_name, form_data['table_name'])
             user_values_list = []
             for index,val in enumerate(nomenc_user_values):
                 user_val_dict = {
-                    'id':index,
-                    'value':val.user_val
+                    'id': index,
+                    'value': val.user_val
                 }
                 user_values_list.append(user_val_dict)
                 
@@ -67,6 +68,7 @@ def get_nomenc_info(form_data, schema_name):
                     'nomenc_abbr' : nomenc,
                     'nomenc_id' : nomenc_info.id,
                     'nomenc_name' : nomenc_info.name,
+                    'nomenc_synthese_name' : user_nomenc_col,
                     'nomenc_values_def' : val_def_list,
                     'user_values' : {
                         'column_name' : form_data[user_nomenc_col],

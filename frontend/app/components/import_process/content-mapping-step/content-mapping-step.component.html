@@ -20,17 +20,17 @@
                     </div>
                     <button
                         class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
-                        (click)="createMapping()">
+                        (click)="_cm.createMapping()">
                         Nouveau mapping
                     </button>
-                    <div *ngIf="newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
+                    <div *ngIf="_cm.newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
                         <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
                         <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
-                            (click)="onMappingContentName(selectContentMappingForm.value)">
+                            (click)="_cm.saveMappingName(_cm.contentMappingForm.value, importId, contentTargetForm)">
                             ok
                         </button>
                         <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
-                            (click)="onCancelMapping()">
+                            (click)="_cm.cancelMapping()">
                             annuler
                         </button>
                     </div>
@@ -38,7 +38,7 @@
             </form>
 
 
-        <form [formGroup]="contentForm" *ngIf="showForm">
+        <form [formGroup]="contentTargetForm" *ngIf="_cm.showForm">
             <div *ngFor="let contentMapping of contentMappingInfo">
                 <div class="card field-card">
                     <div class="field-header" (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed">
@@ -47,14 +47,19 @@
                         <i *ngIf="!contentMapping.isCollapsed" class="material-icons">keyboard_arrow_up</i>
                     </div>
                     <div [ngbCollapse]="contentMapping.isCollapsed" class="card-body">
+
                         <div *ngFor="let value_def of contentMapping.nomenc_values_def">
                             <div class="form-group row">
                                 <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
                                 <div class="col-sm-8">
-                                    <pnx-multiselect [values]="contentMapping.user_values.values"
-                                        [parentFormControl]="contentForm.controls[value_def.id]"
-                                        keyLabel="value" keyValue="value" debounceTime="500"
-                                        [searchBar]="false" [disabled]="disabled"
+                                    <pnx-multiselect 
+                                        [values]="contentMapping.user_values.values"
+                                        [parentFormControl]="contentTargetForm.controls[value_def.id]"
+                                        keyLabel="value" 
+                                        keyValue="value" 
+                                        debounceTime="500"
+                                        [searchBar]="false"
+                                        [disabled]="disabled"
                                         (onChange) = "onSelectChange($event,contentMapping)"
                                         (onDelete) = "onSelectDelete($event,contentMapping)"
                                         >
@@ -62,6 +67,7 @@
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -71,7 +77,7 @@
                     <i class="material-icons"> navigate_before </i>
                     Précédent
                 </button>
-                <button (click)="onContentMapping(contentForm.value)"
+                <button (click)="onContentMapping(contentTargetForm.value)"
                     class="btn btn-success box-shadow d-flex justify-content-center align-content-between">
                     Suivant
                     <i class="material-icons"> navigate_next </i>

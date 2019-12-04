@@ -140,13 +140,13 @@ export class FieldsMappingStepComponent implements OnInit, OnChanges {
 			)
 			.subscribe(
 				(res) => {
-					this.step3Response = res;
+                    this.step3Response = res;
 					this.contentMappingInfo = res.content_mapping_info;
 					this.contentMappingInfo.map((content) => {
 						content.isCollapsed = true;
 					});
 					this.step3Response['added_columns'] = this.added_columns;
-					this.stepService.nextStep(this.syntheseForm, 'two', this.step3Response);
+                    this.stepService.nextStep(this.syntheseForm, 'two', this.step3Response);
 				},
 				(error) => {
 					this.spinner = false;

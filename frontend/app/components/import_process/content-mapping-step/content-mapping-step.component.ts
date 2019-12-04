@@ -13,7 +13,6 @@ import { ToastrService } from 'ngx-toastr';
 export class ContentMappingStepComponent implements OnInit, OnChanges {
 
     public isCollapsed = false;
-    public selectContentMappingForm: FormGroup;
     public id_mapping;
     public columns;
 
@@ -22,10 +21,9 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
     @Input() selected_columns: any;
     @Input() table_name: any;
     @Input() importId: any;
-	contentForm: FormGroup;
-	showForm: boolean = false;
+	contentTargetForm: FormGroup;
     contentMapRes: any;
-    
+    contentMappingObj = [];
 
 
 	constructor(
@@ -37,70 +35,110 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
         ) {}
 
 
-	ngOnInit() {
+	ngOnInit() {}
+
+
+	ngOnChanges() {
+		if (this.contentMappingInfo) {
+			for (let contentMapping of this.contentMappingInfo) {
+				this.contentMappingObj[contentMapping.nomenc_synthese_name] = contentMapping.user_values.column_name;
+			}
+			console.log(this.contentMappingObj);
+		}
+
         this._cm.contentMappingForm = this._fb.group({
 			contentMapping: [ null ],
 			mappingName: [ '' ]
 		});
-        this.contentForm = this._fb.group({});
+        this.contentTargetForm = this._fb.group({});
         this._cm.getMappingNamesList('content', this.importId);
-        this.onSelectUserMapping();
-	}
+		if (this._cm.contentMappingInfo) {
+			if (this._cm.contentMappingInfo.length > 0) {
+				console.log(this._cm.contentMappingInfo);
+				this.contentMappingInfo = this._cm.contentMappingInfo;
+			}
+		}
+		this._cm.onMappingName(this._cm.contentMappingForm, this.contentTargetForm, this.table_name, this.contentMappingObj, this.contentMappingInfo);
 
-	ngOnChanges() {
-		if (this.contentMappingInfo) {
-			this.contentMappingInfo.forEach((ele) => {
-				ele['nomenc_values_def'].forEach((nomenc) => {
-                    this.contentForm.addControl(nomenc.id, new FormControl(''));
-                });
-			});
-			this.showForm = true;
-        }
+
+		this._cm.generateContentForm(this.contentMappingInfo, this.contentTargetForm, this.table_name, this.contentMappingObj);
+		console.log(this.contentMappingInfo);
+		console.log(this._cm.contentMappingInfo);
+    }
+    
+
+
+
+	/*
+	getNomencInf(table_name, obj) {
+		this._ds.getNomencInfo(table_name, obj).subscribe(
+			(res) => {		
+                this.contentMappingInfo = res['content_mapping_info'];
+                console.log(this.contentMappingInfo);
+            },
+            (error) => {
+                if (error.statusText === 'Unknown Error') {
+                    // show error message if no connexion
+                    this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+                } else {
+                    // show error message if other server error
+                    console.log(error);
+                    this.toastr.error(error.error.message);
+                }
+            }
+        );
 	}
+	*/
+
 
 	onSelectChange(selectedVal, group) {
-		this.contentMappingInfo.map((ele) => {
-			if (ele.nomenc_abbr === group.nomenc_abbr)
-			{
-				ele.user_values.values = ele.user_values.values.filter(
-					(value) => {
-					return value.id !=selectedVal.id;
-				});
-			}
-        })
-        this.onSelectUserMapping();
+		console.log(selectedVal);
+		console.log(group);
+		this.contentMappingInfo.map(
+			(ele) => {
+				console.log(ele);
+				if (ele.nomenc_abbr === group.nomenc_abbr) {
+					ele.user_values.values = ele.user_values.values.filter(
+						(value) => {
+							console.log(value.id != selectedVal.id);
+							return value.id != selectedVal.id;
+					});
+				}
+		});
+		this._cm.onMappingName(this.contentMappingInfo, this._cm.contentMappingForm, this.contentTargetForm, this.table_name, this.contentMappingObj);
 	}
 
+
 	onSelectDelete(deletedVal, group) {
-		this.contentMappingInfo.map((ele) => {
-            console.log(ele);
-            console.log(deletedVal);
-            console.log(group);
-			if (ele.nomenc_abbr === group.nomenc_abbr)
-			{
-				let temp_array = ele.user_values.values;
-				temp_array.push(deletedVal);
-				ele.user_values.values = temp_array.slice(0);
-			}
-        })
-        this.onSelectUserMapping();
+		console.log(deletedVal);
+		console.log(group);
+		this.contentMappingInfo.map(
+			(ele) => {
+				console.log(ele);
+				if (ele.nomenc_abbr === group.nomenc_abbr) {
+					let temp_array = ele.user_values.values;
+					temp_array.push(deletedVal);
+					ele.user_values.values = temp_array.slice(0);
+				}
+			});
+		//this._cm.onMappingName(this._cm.contentMappingForm, this.contentTargetForm, this.table_name, this.contentMappingObj);
 	}
 
 
 	onStepBack() {
 		this.stepService.previousStep();
     }
-    
+
 
     onContentMapping(value) {
         // post content mapping form values and fill t_mapping_values table
-        console.log(this.contentForm);
-        this.id_mapping = this.selectContentMappingForm.get('contentMapping').value;
+        console.log(this.contentTargetForm);
+        this.id_mapping = this._cm.contentMappingForm.get('contentMapping').value;
         this.spinner = true;
         this._ds.postContentMap(value, this.table_name, this.selected_columns, this.importId, this.id_mapping).subscribe(
             (res) => {		
                 this.contentMapRes = res;
-				this.stepService.nextStep(this.contentForm, 'three');
+				this.stepService.nextStep(this.contentTargetForm, 'three');
 				this.spinner = false;
             },
             (error) => {
@@ -116,112 +154,16 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
             }
         );
     }
-    
 
 
-    
-    
-    onMappingContentName(value) {
-        // save new mapping in bib_mapping
-        // then select the mapping name in the select
-        let mappingType = 'CONTENT';
-		this._ds.postMappingName(value, mappingType).subscribe(
-			(res) => {
-                console.log(res);
-				this.newMapping = false;
-				this._cm.getMappingNamesList(mappingType, this.importId);
-				this.selectContentMappingForm.controls['contentMapping'].setValue(res);
-                this.selectContentMappingForm.controls['mappingName'].setValue('');
-			},
-			(error) => {
-				if (error.statusText === 'Unknown Error') {
-					// show error message if no connexion
-					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-				} else {
-					console.log(error);
-                    this.toastr.error(error.error);
-				}
-			}
-		);
-    }
-
-
-    createMapping() {
-        // show input for typing mapping name
-        // and deselect previously selected mapping
-		this.selectContentMappingForm.reset();
-		this.newMapping = true;
-    }
-    
-
-    onCancelMapping() {
-        // show input for typing mapping name
-        // and deselect previously selected mapping
-		this.newMapping = false;
-		this.selectContentMappingForm.controls['mappingName'].setValue('');
-	}
-
-
-    getSelectedMapping(id_mapping) {
-		this.id_mapping = id_mapping;
-		this._ds.getMappingContents(id_mapping).subscribe(
-			(mappingContents) => {
-                this.contentForm.reset();
-				if (mappingContents[0] != 'empty') {
-					for (let content of mappingContents) {
-                        let arrayVal: any = [];
-                        for (let val of content) {
-                            if (val['source_value'] != '') {
-                                arrayVal.push({value : val['source_value']});
-                            }
-                        }
-                        this.contentForm.get(String(content[0]['id_target_value'])).setValue(arrayVal);
-                    }                    
-				} else {
-                    this.contentForm.reset();
-				}
-			},
-			(error) => {
-				if (error.statusText === 'Unknown Error') {
-					// show error message if no connexion
-					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-				} else {
-                    this.toastr.error(error.error.message);
-				}
-			}
-		);
-    }
-    
-
-    onSelectUserMapping(): void {
-		this._cm.contentMappingForm.get('contentMapping').valueChanges.subscribe(
-			(id_mapping) => {
-				if (id_mapping) {
-					this.getSelectedMapping(id_mapping);
-				} else {
-                    this.contentForm.reset();
-                }
-			},
-			(error) => {
-				if (error.statusText === 'Unknown Error') {
-					// show error message if no connexion
-					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-				} else {
-					console.log(error);
-                    this.toastr.error(error.error.message);
-				}
-			}
-		);
-    }
- 
-    
+    /*
     onSelect() {
 		this.getSelectedOptions();
 	}
 
 
 	getSelectedOptions() {
-        let formValues = this.contentForm.value;
+        let formValues = this.contentTargetForm.value;
         if (this.id_mapping == undefined) {
             this.toastr.warning('Vous devez d\'abord créer ou sélectionner un mapping');
         } else {
@@ -236,5 +178,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
             });
         }
     }
+    */
     
 }
