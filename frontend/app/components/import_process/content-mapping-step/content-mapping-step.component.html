@@ -7,7 +7,7 @@
         <div class="card-body">
 
         <!-- Choix du mapping -->
-        <form [formGroup]="_cm.contentMappingForm" class="was-validated">
+        <form [formGroup]="contentMappingForm" class="was-validated">
                 <fieldset>
                     <legend class="px-1">
                         Choix du mapping
@@ -22,17 +22,17 @@
                     </div>
                     <button
                         class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
-                        (click)="_cm.createMapping()">
+                        (click)="_cm.createMapping(contentMappingForm)">
                         Nouveau mapping
                     </button>
                     <div *ngIf="_cm.newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
                         <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
                         <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
-                            (click)="_cm.saveMappingName(_cm.contentMappingForm.value, importId, contentTargetForm)">
+                            (click)="_cm.saveMappingName(contentMappingForm.value, importId, contentMappingForm)">
                             ok
                         </button>
                         <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
-                            (click)="_cm.cancelMapping()">
+                            (click)="_cm.cancelMapping(contentMappingForm)">
                             annuler
                         </button>
                     </div>
@@ -40,8 +40,8 @@
             </form>
 
 
-        <form [formGroup]="contentTargetForm" *ngIf="_cm.showForm">
-            <div *ngFor="let contentMapping of contentMappingInfo">
+        <form [formGroup]="contentTargetForm" *ngIf="showForm">
+            <div *ngFor="let contentMapping of stepData.contentMappingInfo">
                 <div class="card field-card">
                     <div class="field-header" (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed">
                         <div class="card-title mb-0">{{contentMapping.nomenc_name}}</div>
@@ -62,8 +62,8 @@
                                         debounceTime="500"
                                         [searchBar]="false"
                                         [disabled]="disabled"
-                                        (onChange) = "onSelectChange($event,contentMapping)"
-                                        (onDelete) = "onSelectDelete($event,contentMapping)"
+                                        (onChange) = "onSelectChange($event,contentMapping,value_def.id)"
+                                        (onDelete) = "onSelectDelete($event,contentMapping,value_def.id)"
                                         >
                                     </pnx-multiselect>
                                 </div>
