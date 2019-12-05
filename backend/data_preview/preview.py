@@ -9,13 +9,14 @@ from ..db.queries.nomenclatures import (
     get_synthese_cols, 
     get_mnemo,
     set_default_value,
-    get_nomenc_abb_from_name
+    get_nomenc_abb_from_name,
+    get_nomenc_values
 )
 
 import pdb
 
 
-def get_preview(schema_name, table_name, total_columns):
+def get_preview(schema_name, table_name, total_columns, selected_content):
 
     try:
 
@@ -37,8 +38,9 @@ def get_preview(schema_name, table_name, total_columns):
                         synthese_dict[key]['value'] = total_columns[value['key']]
                     else:
                         if value['key'] in get_synthese_cols():
-                            synthese_dict[key]['value'] = get_mnemo(row[total_columns[value['key']]])
-                        else:    
+                            nomenc_val = get_nomenc_name(value['key'], row[total_columns[value['key']]], selected_content)
+                            synthese_dict[key]['value'] = nomenc_val
+                        else:
                             synthese_dict[key]['value'] = row[total_columns[value['key']]]
                 else:
                     if value['key'] in get_synthese_cols():
@@ -89,5 +91,19 @@ def set_total_columns(selected_cols, added_cols, import_id):
         total_columns['id_dataset'] = get_id_dataset(import_id)       
 
         return total_columns
+    except Exception:
+        raise
+
+
+def get_nomenc_name(synthese_col_name, user_value, selected_content):
+    try:
+        nomenc_abb = get_nomenc_abb_from_name(synthese_col_name)
+        nomenc_values = get_nomenc_values(nomenc_abb)
+        nomenc_values_ids = [str(val[0]) for val in nomenc_values]
+        for k,v in selected_content.items():
+            for val in v:
+                if val == user_value:
+                    if k in nomenc_values_ids:
+                        return get_mnemo(k)
     except Exception:
         raise

@@ -77,9 +77,11 @@ export class DataService {
 	}
 
 	postContentMap(value, table_name, selected_columns, import_id, id_mapping) {
+        console.log(value);
 		if (id_mapping == null) {
 			id_mapping = 0;
-		}
+        }
+        console.log(id_mapping);
 		const contentMappingUrl = `${urlApi}/contentMapping/${import_id}/${id_mapping}`;
 		let fd = new FormData();
 		for (let key of Object.keys(value)) {
@@ -129,13 +131,15 @@ export class DataService {
     }
 
 
-    getNomencInfo(table_name, obj) {
+    getNomencInfo(obj, import_id) {
         let fd = new FormData();
         for (let key of Object.keys(obj)) {
+            console.log(key);
+            console.log(obj[key]);
             fd.append(key, obj[key]);
         }
-        fd.append('table_name', table_name);
-        return this._http.post<any>(`${urlApi}/getNomencInfo`, fd, HttpUploadOptions);
+        console.log(fd);
+        return this._http.post<any>(`${urlApi}/getNomencInfo/${import_id}`, fd, HttpUploadOptions);
     }
 
 

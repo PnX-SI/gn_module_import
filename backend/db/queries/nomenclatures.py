@@ -1,5 +1,11 @@
 from psycopg2.extensions import AsIs,QuotedString
 from geonature.utils.env import DB
+import itertools
+from collections import defaultdict
+
+from ..models import (
+    TMappingsValues
+)
 import pdb
 
 
@@ -46,6 +52,8 @@ def get_nomenc_user_values(user_nomenc_col, schema_name, table_name):
                     schema_name = schema_name,
                     table_name = table_name))\
                 .fetchall()
+        print('nomenc_user_values in db = ')
+        print(nomenc_user_values)
         return nomenc_user_values
     except Exception:
         raise
@@ -190,4 +198,57 @@ def get_mnemo(id):
             return ''
     except Exception:
         raise
+
+
+def get_content_mapping(id_mapping):
+    try:
+        contents = DB.session\
+            .query(TMappingsValues)\
+            .filter(TMappingsValues.id_mapping == int(id_mapping))\
+            .all()
+        mapping_contents = []
+        gb_mapping_contents = []
+
+        if len(contents) > 0:
+            for content in contents:
+                d = {
+                    'id_match_values': content.id_match_values,
+                    'id_mapping': content.id_mapping,
+                    'source_value': content.source_value,
+                    'id_target_value': content.id_target_value
+                    }
+                mapping_contents.append(d)
+            for key, group in itertools.groupby(mapping_contents, key=lambda x:x['id_target_value']):
+                gb_mapping_contents.append(list(group))
+        else:
+            gb_mapping_contents.append('empty')
         
+        return gb_mapping_contents
+    except Exception:
+        raise
+
+
+def get_saved_content_mapping(id_mapping):
+    try:
+        contents = DB.session\
+            .query(TMappingsValues)\
+            .filter(TMappingsValues.id_mapping == int(id_mapping))\
+            .all()
+        mapping_contents = []
+
+        if len(contents) > 0:
+            for content in contents:
+                if content.source_value != '':
+                    d = {
+                        str(content.id_target_value) : content.source_value
+                        }
+                    mapping_contents.append(d)
+
+        selected_content = defaultdict(list)
+        for content in mapping_contents:
+            for key, value in content.items():
+                selected_content[key].append(value)
+
+        return selected_content
+    except Exception:
+        raise

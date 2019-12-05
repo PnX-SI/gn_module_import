@@ -11,6 +11,7 @@ import ast
 import itertools
 import sqlalchemy
 from sqlalchemy import select, update
+from collections import defaultdict
 import psycopg2
 from geonature.utils.utilssqlalchemy import json_resp
 from geonature.utils.env import DB
@@ -62,7 +63,14 @@ from .db.queries.metadata import (
     test_user_dataset,
     delete_import_CorImportArchives,
     delete_import_CorRoleImport,
-    delete_import_TImports
+    delete_import_TImports,
+    get_id_mapping
+)
+
+from .db.queries.nomenclatures import (
+    get_content_mapping,
+    get_mnemo,
+    get_saved_content_mapping
 )
 
 from .db.queries.save_mapping import save_field_mapping, save_content_mapping
@@ -346,33 +354,8 @@ def get_mapping_contents(info_role, id_mapping):
 
     try:
         logger.debug('get contents saved in id_mapping = %s', id_mapping)
-
-        contents = DB.session\
-            .query(TMappingsValues)\
-            .filter(TMappingsValues.id_mapping == int(id_mapping))\
-            .all()
-        
-        mapping_contents = []
-        gb_mapping_contents = []
-
-        if len(contents) > 0:
-            for content in contents:
-                d = {
-                    'id_match_values': content.id_match_values,
-                    'id_mapping': content.id_mapping,
-                    'source_value': content.source_value,
-                    'id_target_value': content.id_target_value
-                    }
-                mapping_contents.append(d)
-            for key, group in itertools.groupby(mapping_contents, key=lambda x:x['id_target_value']):
-                gb_mapping_contents.append(list(group))
-        else:
-            gb_mapping_contents.append('empty')
-
-        logger.debug('mapping_contents = %s from id_mapping number %s', mapping_contents, id_mapping)
-        
-        return gb_mapping_contents, 200
-
+        content_mapping = get_content_mapping(id_mapping)
+        return content_mapping, 200
     except Exception as e:
         raise GeonatureImportApiError(\
             message='INTERNAL SERVER ERROR - get_mapping_contents() error : contactez l\'administrateur du site',
@@ -1043,7 +1026,7 @@ def postMetaToStep3(info_role):
 
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
-        nomenc_info = get_nomenc_info(data, IMPORTS_SCHEMA_NAME)
+        nomenc_info = get_nomenc_info(data, IMPORTS_SCHEMA_NAME, data['table_name'])
 
         ### UPDATE TIMPORTS
 
@@ -1079,16 +1062,25 @@ def postMetaToStep3(info_role):
         DB.session.close()
 
 
-@blueprint.route('/getNomencInfo', methods=['GET', 'POST'])
+@blueprint.route('/getNomencInfo/<import_id>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def getNomencInfo(info_role):
+def getNomencInfo(info_role, import_id):
 
     try:
+        # get table_name
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
+        table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
+        table_name = table_names['imports_table_name']
+
+        # get form data
         data = request.form.to_dict()
-        print(data)
-        nomenc_info = get_nomenc_info(data, IMPORTS_SCHEMA_NAME)
+
+        nomenc_info = get_nomenc_info(data, IMPORTS_SCHEMA_NAME, table_name)
+
+        print('nomenc_info = ')
+        print(nomenc_info)
 
         return {
             'content_mapping_info' : nomenc_info
@@ -1183,18 +1175,6 @@ def content_mapping(info_role, import_id, id_mapping):
             save_content_mapping(form_data, id_mapping)
             logger.info(' -> content mapping saved')
 
-        ### CONTENT MAPPING ###
-        
-        selected_content = {key:value for key, value in form_data.items() if value != ['']}
-
-        logger.info('Generating nomenclature ids from content mapping form values :')
-        set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, selected_cols)
-        
-        logger.info('Generating default nomenclature ids :')
-        set_default_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_cols)
-
-        logger.info('-> Content mapping : user values transformed to id_types in the user table')
-
 
         ### UPDATE TIMPORTS
 
@@ -1245,6 +1225,25 @@ def import_data(info_role, import_id):
                 'message' : 'Attention',
                 'details' : 'Veuillez prévisualiser les données avant d\'importer'
             },500
+
+
+        ### CONTENT MAPPING ###
+        
+        # get content mapping data
+        id_mapping = get_id_mapping(import_id);
+        selected_content = get_saved_content_mapping(id_mapping)
+
+        logger.info('Generating nomenclature ids from content mapping form values :')
+        set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, total_columns)
+        
+        logger.info('Generating default nomenclature ids :')
+        set_default_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, total_columns)
+
+        logger.info('-> Content mapping : user values transformed to id_types in the user table')
+        pdb.set_trace()
+
+
+        ### IMPORT DATA IN SYNTHESE ###
 
         # check if id_source already exists in synthese table
         is_id_source = check_id_source(import_id)
@@ -1319,8 +1318,12 @@ def get_valid_data(info_role, import_id):
             added_cols = ast.literal_eval(form_data['added_columns'][0])
             total_columns = set_total_columns(selected_cols, added_cols, import_id)
 
+            # get content mapping data
+            id_mapping = get_id_mapping(import_id);
+            selected_content = get_saved_content_mapping(id_mapping)
+
             # get valid data preview
-            valid_data_list = get_preview(IMPORTS_SCHEMA_NAME, table_name, total_columns)
+            valid_data_list = get_preview(IMPORTS_SCHEMA_NAME, table_name, total_columns, selected_content)
             
             # get n valid data
             n_valid = get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name)

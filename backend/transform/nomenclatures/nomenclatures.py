@@ -22,7 +22,7 @@ from ...logs import logger
 import pdb
 
 
-def get_nomenc_info(form_data, schema_name):
+def get_nomenc_info(form_data, schema_name, table_name):
 
     try:
 
@@ -53,9 +53,9 @@ def get_nomenc_info(form_data, schema_name):
 
             # get user_nomenclature column name and values:
             user_nomenc_col = get_synthese_col(nomenc)
-
             nomenc_user_values = get_nomenc_user_values(\
-                form_data[user_nomenc_col], schema_name, form_data['table_name'])
+                form_data[user_nomenc_col], schema_name, table_name)
+
             user_values_list = []
             for index,val in enumerate(nomenc_user_values):
                 user_val_dict = {
@@ -86,7 +86,7 @@ def get_nomenc_info(form_data, schema_name):
 
 @checker('Set nomenclature ids from content mapping form')
 def set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, selected_cols):
-
+    
     try:
         content_list = []
         for key,value in selected_content.items():

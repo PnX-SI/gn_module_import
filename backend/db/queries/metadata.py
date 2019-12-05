@@ -13,6 +13,8 @@ from ..models import (
     TImports
 )
 
+import pdb
+
 
 def delete_import_CorImportArchives(id):
     
@@ -95,3 +97,14 @@ def get_id_roles():
         """)
     id_roles = [str(id[0]) for id in ids]
     return id_roles
+
+
+def get_id_mapping(import_id):
+    try:
+        t_import = DB.session\
+            .query(TImports.id_content_mapping)\
+            .filter(TImports.id_import == int(import_id))\
+            .one()
+        return t_import.id_content_mapping
+    except Exception:
+        raise
