@@ -3,7 +3,6 @@ import numpy as np
 
 from geonature.utils.env import DB
 
-#from ..db.query import get_synthese_info
 from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..logs import logger
@@ -16,7 +15,6 @@ def check_cd_nom(df, selected_columns, dc_user_errors, missing_values, cd_nom_li
 
     try:
 
-        # note : améliorer performances du comptage d'erreurs
         logger.info('CHECKING CD_NOM VALIDITY in %s column', selected_columns['cd_nom'])
 
         # return False if invalid cd_nom, else (including missing values) return True

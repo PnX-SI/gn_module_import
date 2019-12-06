@@ -23,9 +23,10 @@ def set_invalid_reason(df, source_col_name, message, col_name):
         )
 
 
+"""
 def get_types(synthese_info):
     return [synthese_info[field]['data_type'] for field in synthese_info]
-
+"""
     
 fill_map = {'':True, False:False}
 

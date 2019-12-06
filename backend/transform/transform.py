@@ -1,6 +1,7 @@
 import datetime
 
 from ..db.queries.load_to_synthese import get_synthese_info
+from ..db.queries.utils import is_cd_nom_required
 
 from .check_cd_nom import check_cd_nom
 from .check_dates import check_dates
@@ -17,7 +18,7 @@ from ..logs import logger
 import pdb
 
 
-def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, def_count_val, cd_nom_list, srid, local_srid, is_generate_uuid):
+def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, def_count_val, cd_nom_list, srid, local_srid, is_generate_uuid, schema_name):
 
     try:
 
@@ -29,16 +30,25 @@ def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, 
         df['gn_invalid_reason'] = ''
 
         # get synthese column info:
-        selected_synthese_cols = [*list(selected_columns.keys())]
-        synthese_info = get_synthese_info(selected_synthese_cols)
-        synthese_info['cd_nom']['is_nullable'] = 'NO' # mettre en conf
-        if 'longitude' in selected_synthese_cols and 'latitude' in selected_synthese_cols:
+        synthese_info = get_synthese_info(selected_columns.keys())
+
+        # set is_nullable for cd_nom
+        is_cd_nom_req = is_cd_nom_required(schema_name)
+        if is_cd_nom_req:
+            is_nullable = 'NO'
+        else:
+            is_nullable = 'YES'
+        synthese_info['cd_nom']['is_nullable'] = is_nullable
+        
+        """
+        if 'longitude' in selected_columns.keys() and 'latitude' in selected_columns.keys():
             synthese_info['longitude'] = {'is_nullable': 'NO', 'column_default': None, 'data_type': 'real', 'character_max_length': None}
             synthese_info['latitude'] = {'is_nullable': 'NO', 'column_default': None, 'data_type': 'real', 'character_max_length': None}
+        """
 
         # Check data:
         check_missing(df, selected_columns, dc_user_errors, synthese_info, missing_val)
-        check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_val)
+        check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_val, schema_name)
         check_cd_nom(df, selected_columns, dc_user_errors, missing_val, cd_nom_list)
         check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info)
         check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, is_generate_uuid, import_id)

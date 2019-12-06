@@ -236,7 +236,8 @@ INSERT INTO user_errors (id_error, error_type, name, description) VALUES
 	(12, 'invalid type error', 'invalid real type', 'type real invalide'),
 	(13, 'inconsistency_error', 'inconsistent geographic coordinate', 'coordonnée géographique incohérente'),
     (14, 'uuid value error', 'uuid existing in gn_synthese.synthese table', 'uuid déjà existant dans la table gn_synthese.synthese'),
-    (15, 'invalid value', 'id_digitiser is not present in "t_roles" table', 'id_digitizer n''existe pas dans la table "t_roles"');
+    (15, 'invalid value', 'id_digitiser is not present in "t_roles" table', 'id_digitizer n''existe pas dans la table "t_roles"'),
+    (16, 'invalid type error', 'invalid wkt type', 'type wkt invalide');
 
 
 INSERT INTO bib_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme) VALUES
@@ -259,12 +260,12 @@ INSERT INTO bib_fields (id_field, name_field, fr_label, eng_label, desc_field, t
 	(9, 'altitude_min', 'Altitude min', '', '', 'integer', TRUE, FALSE, FALSE, FALSE, 2, 3, TRUE),
 	(10, 'altitude_max', 'Altitude max', '', '', 'integer', TRUE, FALSE, FALSE, FALSE, 2, 4, TRUE),
 	(11, 'altitudes_generate', 'Générer les altitudes', '', 'Génère automatiquement les altitudes pour chaque observation', '', FALSE, FALSE, TRUE, FALSE, 2, 5, TRUE),
-	(12, 'longitude', 'Longitude (coord x)', '', '', '', FALSE, TRUE, FALSE, FALSE, 2, 6, TRUE),
-	(13, 'latitude', 'Latitude (coord y)', '', '', '', FALSE, TRUE, FALSE, FALSE, 2, 7, TRUE),
-	(14, 'observers', 'Observateur(s)', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, 2, 8, TRUE),
-	(15, 'comment_description', 'Commentaire de relevé', '', '', 'text', TRUE, FALSE, FALSE, FALSE, 2, 9, TRUE),
-	(16, 'id_nomenclature_info_geo_type', 'Type d''information géographique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 10, TRUE),
-	(17, 'id_nomenclature_grp_typ', 'Type de relevé/regroupement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 11, TRUE),
+	(12, 'longitude', 'Longitude (coord x)', '', '', 'real', FALSE, TRUE, FALSE, FALSE, 2, 6, TRUE),
+	(13, 'latitude', 'Latitude (coord y)', '', '', 'real', FALSE, TRUE, FALSE, FALSE, 2, 7, TRUE),
+	(14, 'observers', 'Observateur(s)', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, 2, 9, TRUE),
+	(15, 'comment_description', 'Commentaire de relevé', '', '', 'text', TRUE, FALSE, FALSE, FALSE, 2, 10, TRUE),
+	(16, 'id_nomenclature_info_geo_type', 'Type d''information géographique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 11, TRUE),
+	(17, 'id_nomenclature_grp_typ', 'Type de relevé/regroupement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 12, TRUE),
 	(18, 'nom_cite', 'Nom du taxon cité', '', '', 'character varying(1000)', TRUE, TRUE, FALSE, FALSE, 3, 1, TRUE),
 	(19, 'cd_nom', 'Cd nom taxref', '', '', 'integer', TRUE, TRUE, FALSE, FALSE, 3, 2, TRUE),
 	(20, 'id_nomenclature_obs_meth', 'Méthode d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 3, TRUE),
@@ -295,7 +296,8 @@ INSERT INTO bib_fields (id_field, name_field, fr_label, eng_label, desc_field, t
     (45, 'id_nomenclature_geo_object_nature', 'Nature d''objet géographique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 12, TRUE),
     (46, 'id_nomenclature_obs_technique', 'Techniques d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 11, TRUE),
     (47, 'id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 12, TRUE),
-    (48, 'id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 13, TRUE);
+    (48, 'id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 13, TRUE),
+    (49, 'WKT', 'WKT (Point)', '', '', 'wkt', FALSE, TRUE, FALSE, FALSE, 2, 8, TRUE);
 
 
 INSERT INTO cor_synthese_nomenclature (id_type, id_field) VALUES

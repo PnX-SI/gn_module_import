@@ -2,11 +2,18 @@ import pandas as pd
 from uuid import uuid4, UUID
 import numpy as np
 import datetime
+from shapely import wkt
 
 from ..db.queries.nomenclatures import get_synthese_cols
+from ..db.queries.utils import get_types
 from ..wrappers import checker
 from ..logs import logger
-from .utils import fill_map, get_types, set_is_valid, set_invalid_reason, set_user_error
+from .utils import (
+    fill_map, 
+    set_is_valid, 
+    set_invalid_reason, 
+    set_user_error
+)
 
 import pdb
 
@@ -37,14 +44,22 @@ def is_uuid(value, version=4):
         return False
 
 
+def is_wkt_valid(value):
+    try:
+        # set missing value for invalid wkt
+        wkt.loads(value)
+        return True
+    except Exception:
+        return False
+
+
 @checker('Data cleaning : type of values checked')
-def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_values):
+def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_values, schema_name):
 
     try:
 
         logger.info('CHECKING TYPES : ')
-        types = get_types(synthese_info)
-        #types = list(dict.fromkeys(get_synthese_types()))
+        types = get_types(schema_name, selected_columns)
         
         # DATE TYPE COLUMNS : 
 
@@ -209,6 +224,16 @@ def check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info,
 
                 del df['temp']
 
+        # WKT CHECK
+        if 'wkt' in types:
+            df['temp'] = df[selected_columns['WKT']].apply(lambda x: is_wkt_valid(x))
+            set_is_valid(df, 'temp')
+            set_invalid_reason(df, 'temp', 'invalid wkt type in {} column', selected_columns['WKT'])
+            n_invalid_wkt = df['temp'].astype(str).str.contains('False').sum()
+            logger.info('%s wkt type errors detected in %s synthese column (= %s user column)', n_invalid_wkt, col, selected_columns['WKT'])
+            if n_invalid_wkt > 0:
+                set_user_error(dc_user_errors, 16, selected_columns['WKT'], n_invalid_wkt)
+            del df['temp']
+
     except Exception:
-        pdb.set_trace()
         raise

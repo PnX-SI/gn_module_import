@@ -31,18 +31,21 @@ def get_preview(schema_name, table_name, total_columns, selected_content):
         for row in preview:
             synthese_dict = get_synthese_dict(synthese_fields)
             for key,value in synthese_dict.items():
+                # if column was provided by user:
                 if value['key'] in total_columns.keys():
                     if value['key'] == 'id_module'\
                             or value['key'] == 'id_dataset'\
                                 or value['key'] == 'id_source':
                         synthese_dict[key]['value'] = total_columns[value['key']]
                     else:
+                        # if this is a nomenclature column : replace user voc by nomenclature voc
                         if value['key'] in get_synthese_cols():
                             nomenc_val = get_nomenc_name(value['key'], row[total_columns[value['key']]], selected_content)
                             synthese_dict[key]['value'] = nomenc_val
                         else:
                             synthese_dict[key]['value'] = row[total_columns[value['key']]]
                 else:
+                    # if it is a nomenclature column and it is not provided by user : set default value
                     if value['key'] in get_synthese_cols():
                         synthese_dict[key]['value'] = get_mnemo(set_default_value(get_nomenc_abb_from_name(value['key'])))
             if synthese_dict[4]['key'] == 'id_source':
@@ -69,22 +72,17 @@ def get_synthese_dict(synthese_fields):
         raise
 
 
-def set_total_columns(selected_cols, added_cols, import_id):
+def set_total_columns(selected_cols, added_cols, import_id, schema_name):
     try:
 
         total_columns = {**selected_cols, **added_cols}
 
-        # remove from dict :
-        if 'longitude' in total_columns.keys():
-            del total_columns['longitude']
-        if 'latitude' in total_columns.keys():
-            del total_columns['latitude']
-        if 'id_mapping' in total_columns.keys():
-            del total_columns['id_mapping']
-        if 'unique_id_sinp_generate' in total_columns.keys():
-            del total_columns['unique_id_sinp_generate']
-        if 'altitudes_generate' in total_columns.keys():
-            del total_columns['altitudes_generate']
+        # remove non synthese fields from dict :
+        sf = get_synthese_fields()
+        sf_names = [f.column_name for f in sf]
+        for field in list(total_columns):
+            if field not in sf_names:
+                del total_columns[field]
 
         # add fixed synthese fields :
         total_columns['id_module'] = get_id_module()
@@ -105,7 +103,7 @@ def get_nomenc_name(synthese_col_name, user_value, selected_content):
                 if val == user_value:
                     if k in nomenc_values_ids:
                         return get_mnemo(k)
-        # default value:
+        # return default value if not provided:
         return get_mnemo(set_default_value(get_nomenc_abb_from_name(synthese_col_name)))
     except Exception:
         raise
