@@ -28,7 +28,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 	userNomenc = [];
 	public nomencName;
 	public idInfo;
-
+    public disabled: boolean = true;
 
 	constructor(
         private stepService: StepsService, 
@@ -54,6 +54,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 		// generate form
 		if (this.stepData.contentMappingInfo) {
+			console.log(this.stepData.contentMappingInfo);
 			this.generateContentForm();
 			for (let contentMapping of this.stepData.contentMappingInfo) {
 				this.userNomenc[contentMapping.nomenc_synthese_name] = contentMapping.user_values.column_name;
@@ -74,9 +75,14 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 
 	getNomencInf() {
+		console.log(this.userNomenc);
+		console.log(this.stepData.table_name);
+		console.log(this.userNomenc);
 		this._ds.getNomencInfo(this.userNomenc, this.stepData.importId).subscribe(
 			(res) => {
+				console.log(res);		
                 this.stepData.contentMappingInfo = res['content_mapping_info'];
+                console.log(this.stepData.contentMappingInfo);
             },
             (error) => {
                 if (error.statusText === 'Unknown Error') {
@@ -120,8 +126,14 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 
 	onSelectDelete(deletedVal, group, formControlName) {
+		console.log(deletedVal);
+		console.log(group);
+		console.log(formControlName);
+		console.log(this.stepData.contentMappingInfo);
+
 		this.stepData.contentMappingInfo.map(
 			(ele) => {
+				console.log(ele);
 				if (ele.nomenc_abbr === group.nomenc_abbr) {
 					let temp_array = ele.user_values.values;
 					temp_array.push(deletedVal);
@@ -133,6 +145,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 		let values = this.contentTargetForm.controls[formControlName].value;
 		values = values.filter(
 			(value) => {
+				console.log(value);
 				return value.id != deletedVal.id;
 			}
 		);
@@ -145,10 +158,12 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 		this.contentMappingForm.get('contentMapping').valueChanges.subscribe(
 			(id_mapping) => {
 				if (id_mapping) {
+                    this.disabled = false;
 					this.fillMapping(id_mapping);
 				} else {
 					this.getNomencInf();
                     this.contentTargetForm.reset();
+                    this.disabled = true;
                 }
 			},
 			(error) => {
@@ -196,15 +211,19 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 		this._ds.getMappingContents(id_mapping).subscribe(
 			(mappingContents) => {
 				this.contentTargetForm.reset();
+				console.log(mappingContents);
 				if (mappingContents[0] != 'empty') {
 					for (let content of mappingContents) {
 						let arrayVal: any = [];
 						for (let val of content) {
+							console.log(val);
 							if (val['source_value'] != '') {
 								let id_info = this.getId(val['source_value'], val['id_target_value']);
 								arrayVal.push({id: id_info, value: val['source_value']});
 							}
 						}
+						console.log(arrayVal);
+						console.log(content);
 						this.contentTargetForm.get(String(content[0]['id_target_value'])).setValue(arrayVal);
 					}
 				} else {

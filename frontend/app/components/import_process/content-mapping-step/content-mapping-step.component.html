@@ -80,7 +80,8 @@
                     Précédent
                 </button>
                 <button (click)="onContentMapping(contentTargetForm.value)"
-                    class="btn btn-success box-shadow d-flex justify-content-center align-content-between">
+                    class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
+                    [disabled]="disabled">
                     Suivant
                     <i class="material-icons"> navigate_next </i>
                 </button>

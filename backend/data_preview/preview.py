@@ -105,5 +105,7 @@ def get_nomenc_name(synthese_col_name, user_value, selected_content):
                 if val == user_value:
                     if k in nomenc_values_ids:
                         return get_mnemo(k)
+        # default value:
+        return get_mnemo(set_default_value(get_nomenc_abb_from_name(synthese_col_name)))
     except Exception:
         raise

@@ -1154,6 +1154,11 @@ def get_bib_fields(info_role):
 @json_resp
 def content_mapping(info_role, import_id, id_mapping):
     try:
+        print('test id_mapping = {}'.format(id_mapping))
+        if id_mapping == '0':
+            return {
+                'message' : 'Vous devez d\'abord créer ou sélectionner un mapping'
+            },400
 
         logger.info('Content mapping : transforming user values to id_types in the user table')
 
@@ -1240,7 +1245,6 @@ def import_data(info_role, import_id):
         set_default_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, total_columns)
 
         logger.info('-> Content mapping : user values transformed to id_types in the user table')
-        pdb.set_trace()
 
 
         ### IMPORT DATA IN SYNTHESE ###
