@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { DataService } from '../data.service';
 import { ToastrService } from 'ngx-toastr';
 
@@ -113,6 +113,7 @@ export class FieldMappingService {
 		this.id_mapping = id_mapping;
 		this._ds.getMappingFields(this.id_mapping).subscribe(
 			(mappingFields) => {
+                this.geoTypeSelect(targetFormName);
 				if (mappingFields[0] != 'empty') {
 					for (let field of mappingFields) {
 						targetFormName.controls[field['target_field']].enable();
@@ -150,9 +151,52 @@ export class FieldMappingService {
     }
 
 
-	onSelect(id_mapping, targetFormName) {
+    setFormControlNotRequired(targetForm, formControlName) {
+        targetForm.get(formControlName).clearValidators();
+        targetForm.get(formControlName).setValidators(null);
+        targetForm.get(formControlName).updateValueAndValidity();
+    }
+
+
+    setFormControlRequired(targetForm, formControlName) {
+        targetForm.get(formControlName).setValidators([Validators.required]);
+        targetForm.get(formControlName).updateValueAndValidity();
+    }
+
+
+    geoTypeSelect(targetForm) {
+        /*
+        3 cases :
+        - one coordinates == '' && wkt == '' : lat && long && wkt set as required
+        - wkt == '' and both coordinates != '' : wkt not required, coordinates required
+        - wkt != '' : wkt required, coordinates not required
+        */
+        if (targetForm.get('WKT').value === '' &&
+                (targetForm.get('longitude').value === '' ||
+                    targetForm.get('latitude').value === '')) {
+            this.setFormControlRequired(targetForm, 'WKT');
+            this.setFormControlRequired(targetForm, 'longitude');
+            this.setFormControlRequired(targetForm, 'latitude');
+        }
+        if (targetForm.get('WKT').value === '' &&
+                (targetForm.get('longitude').value !== '' &&
+                    targetForm.get('latitude').value !== '')) {
+            this.setFormControlNotRequired(targetForm, 'WKT');
+            this.setFormControlRequired(targetForm, 'longitude');
+            this.setFormControlRequired(targetForm, 'latitude');
+        }
+        if (targetForm.get('WKT').value !== '') {
+            this.setFormControlRequired(targetForm, 'WKT');
+            this.setFormControlNotRequired(targetForm, 'longitude');
+            this.setFormControlNotRequired(targetForm, 'latitude');
+        }
+    }
+
+
+	onSelect(id_mapping, targetForm) {
 		this.id_mapping = id_mapping;
-		this.shadeSelectedColumns(targetFormName);
+        this.shadeSelectedColumns(targetForm);
+        this.geoTypeSelect(targetForm);
 	}
 
 
@@ -173,7 +217,7 @@ export class FieldMappingService {
 	fillEmptyMapping(targetForm) {
 		Object.keys(targetForm.controls).forEach((key) => {
 			targetForm.get(key).setValue('');
-		});
+        });
     }
 
     

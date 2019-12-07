@@ -54,7 +54,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 		// generate form
 		if (this.stepData.contentMappingInfo) {
-			console.log(this.stepData.contentMappingInfo);
 			this.generateContentForm();
 			for (let contentMapping of this.stepData.contentMappingInfo) {
 				this.userNomenc[contentMapping.nomenc_synthese_name] = contentMapping.user_values.column_name;
