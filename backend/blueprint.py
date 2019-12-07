@@ -370,7 +370,7 @@ def postMappingName(info_role):
 
         data = request.form.to_dict()
 
-        if data['mappingName'] == '':
+        if data['mappingName'] == '' or data['mappingName'] == 'null':
             return 'Vous devez donner un nom au mapping', 400
 
         # check if name already exists

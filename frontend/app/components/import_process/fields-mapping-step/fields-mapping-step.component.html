@@ -27,7 +27,8 @@
                     <div *ngIf="_fm.newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
                         <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
                         <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
-                            (click)="_fm.saveMappingName(_fm.fieldMappingForm.value, importId, syntheseForm)">
+                            (click)="_fm.saveMappingName(_fm.fieldMappingForm.value, importId, syntheseForm)"
+                            [disabled] = "_fm.fieldMappingForm.get('mappingName').value === '' || _fm.fieldMappingForm.get('mappingName').value == null">
                             ok
                         </button>
                         <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
