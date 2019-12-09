@@ -831,6 +831,11 @@ def postMapping(info_role, import_id, id_mapping):
         # check if required fields are not empty:
         missing_cols = []
         required_cols = get_required(IMPORTS_SCHEMA_NAME, 'bib_fields')
+        if 'WKT' in selected_columns.keys():
+            required_cols.remove('longitude')
+            required_cols.remove('latitude')
+        else:
+            required_cols.remove('WKT')
         for col in required_cols:
             if col not in selected_columns.keys():
                 missing_cols.append(col)
