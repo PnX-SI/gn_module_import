@@ -89,6 +89,7 @@ from .utils.utils import get_upload_dir_path, get_pk_name
 
 from .upload.upload_process import upload
 from .upload.upload_errors import*
+from .upload.geojson_to_csv import parse_geojson
 
 from .goodtables_checks.check_user_file import check_user_file
 
@@ -552,6 +553,15 @@ def post_user_file(info_role):
         logger.info('* END SAVE USER FILE IN UPLOAD DIRECTORY')
 
 
+        ### GEOJSON
+
+        if uploaded_file['extension'] == '.geojson':
+            output = '.'.join([full_path, 'csv'])
+            parse_geojson(full_path, output, 'geometry')
+            os.remove(full_path)
+            full_path = output
+
+
         ### CHECKS USER FILE
 
         logger.info('* START CHECK USER FILE VALIDITY')
@@ -576,9 +586,10 @@ def post_user_file(info_role):
             info_role.id_role, metadata['datasetId'])
         if not is_dataset_allowed:
             logger.error('Provided dataset is not allowed')
-            return \
-                'L\'utilisateur {} n\'est pas autorisé à importer des données vers l\'id_dataset {}'\
-                .format(info_role.id_role, int(metadata['datasetId'])), 403
+            return {
+                'message' : 'L\'utilisateur {} n\'est pas autorisé à importer des données vers l\'id_dataset {}'\
+                .format(info_role.id_role, int(metadata['datasetId']))
+            },403
 
         # start t_imports filling and fill cor_role_import
         if metadata['importId'] == 'undefined':
@@ -629,7 +640,10 @@ def post_user_file(info_role):
             return file_name_cleaner['errors'],400
 
         # get/set table and column names
-        separator = metadata['separator']
+        if uploaded_file['extension'] == '.geojson':
+            separator = ','
+        else:
+            separator = metadata['separator']
 
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, file_name_cleaner['clean_name'])
         logger.debug('full DB user table name = %s', table_names['imports_full_table_name'])
@@ -691,7 +705,7 @@ def post_user_file(info_role):
         elif separator == ',':
             separator = 'comma'
         else:
-            separtor == 'space'
+            separator == 'space'
 
         # update gn_import.t_imports with cleaned file name and step = 2
         DB.session.query(TImports)\
@@ -722,12 +736,11 @@ def post_user_file(info_role):
         if is_id_import:
             delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
         DB.session.commit()
-        errors = []
-        errors.append({
+        errors = [{
             'code': 'psycopg2.errors.BadCopyFileFormat',
             'message': 'Erreur probablement due à un problème de separateur',
             'message_data': e.diag.message_primary
-        })
+        }]
         logger.error(errors)
         return errors,400
 

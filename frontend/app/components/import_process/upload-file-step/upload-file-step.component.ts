@@ -72,7 +72,15 @@ export class UploadFileStepComponent implements OnInit {
 			this.fileName = null;
 		} else {
 			this.fileName = event.target.files[0].name;
-		}
+        }
+
+        // disable 'separator' form control if geojson file provided :
+        let extension = this.fileName.split('.').pop();
+        if (extension === 'geojson') {
+            this.uploadForm.controls['separator'].disable();
+        } else {
+            this.uploadForm.controls['separator'].enable();
+        }
 	}
 
 	onFileClick(event) {
@@ -119,15 +127,7 @@ export class UploadFileStepComponent implements OnInit {
 						if (error.statusText === 'Unknown Error') {
 							this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 						} else {
-							if (error.status == 500) {
-								this.toastr.error(error.error);
-							}
-							if (error.status == 400) {
-								this.uploadFileErrors = error.error;
-							}
-							if (error.status == 403) {
-								this.toastr.error(error.error);
-							}
+							this.toastr.error(error.error.message);
 						}
 					}
 				);
