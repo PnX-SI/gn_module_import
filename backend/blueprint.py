@@ -559,7 +559,12 @@ def post_user_file(info_role):
 
         if uploaded_file['extension'] == '.geojson':
             output = '.'.join([full_path, 'csv'])
-            parse_geojson(full_path, output, 'geometry')
+            try:
+                parse_geojson(full_path, output, 'geometry')
+            except Exception:
+                return {
+                    'message' : 'Erreur durant la conversion du geojson en csv'
+                },500
             os.remove(full_path)
             full_path = output
 
