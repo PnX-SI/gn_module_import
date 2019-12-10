@@ -53,7 +53,7 @@ export class ImportStepComponent implements OnInit {
             (res) => {
                 this.spinner = false;
                 this.importDataRes = res;
-                console.log(this.importDataRes);
+                this.stepService.resetStepoer();
                 this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
             },
             (error) => {

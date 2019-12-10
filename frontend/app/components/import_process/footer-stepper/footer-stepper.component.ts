@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { DataService } from '../../../services/data.service';
 import { ToastrService } from 'ngx-toastr';
 import { ModuleConfig } from '../../../module.config';
+import { StepsService } from '../steps.service';
 
 @Component({
 	selector: 'footer-stepper',
@@ -23,13 +24,19 @@ export class FooterStepperComponent implements OnInit {
 	dataStep1: any;
 	dataStep2: any;
 
-	constructor(private _router: Router, private _ds: DataService, private toastr: ToastrService) {}
+	constructor(
+		private _router: Router,
+		private _ds: DataService,
+		private stepService: StepsService,
+		private toastr: ToastrService
+	) {}
 
 	ngOnInit() {}
 
 	cancelImport() {
 		this._ds.cancelImport(this.importId).subscribe(
 			() => {
+				this.stepService.resetStepoer();
 				this._router.navigate([ `${this.IMPORT_CONFIG.MODULE_URL}` ]);
 			},
 			(error) => {
@@ -48,6 +55,7 @@ export class FooterStepperComponent implements OnInit {
 	}
 
 	onImportList() {
+		this.stepService.resetStepoer();
 		this._router.navigate([ `${this.IMPORT_CONFIG.MODULE_URL}` ]);
 	}
 }

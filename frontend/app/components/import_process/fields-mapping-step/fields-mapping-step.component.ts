@@ -47,17 +47,17 @@ export class FieldsMappingStepComponent implements OnInit {
 
 	ngOnInit() {
         this.stepData = this.stepService.getStepData(2);
-        console.log('this.stepData', this.stepData);
-        
         this._fm.fieldMappingForm = this._fb.group({
             fieldMapping: [ null ],
             mappingName: [ '' ]
         });
         this.syntheseForm = this._fb.group({});
         this.generateSyntheseForm();
-        this._fm.getMappingNamesList('field', this.stepData.importId);
+		this._fm.getMappingNamesList('field', this.stepData.importId);
+		
 		this._fm.onMappingName(this._fm.fieldMappingForm, this.syntheseForm);
-        this.onFormMappingChange();
+
+	
     }
 
 
@@ -78,9 +78,10 @@ export class FieldsMappingStepComponent implements OnInit {
                 }
                 this.formReady = true;
                 if (this.stepData.id_field_mapping) {       
-                    //this._fm.fieldMappingForm.controls['fieldMapping'].setValue(this.stepData.id_field_mapping);
+                    this._fm.fieldMappingForm.controls['fieldMapping'].setValue(this.stepData.id_field_mapping);
                     this._fm.fillMapping(this.stepData.id_field_mapping, this.syntheseForm);
-                }
+				}
+				this.onFormMappingChange();
             },
             (error) => {
                 if (error.statusText === 'Unknown Error') {
@@ -155,7 +156,8 @@ export class FieldsMappingStepComponent implements OnInit {
 					let step2data: Step2Data = {
 					importId: this.stepData.importId,
 					srid: this.stepData.srid,
-					id_field_mapping: this._fm.id_mapping
+					id_field_mapping: this._fm.id_mapping,
+					mappingRes: this.mappingRes
 					};
 
 					this.stepService.setStepData(3, step3data);
@@ -179,11 +181,23 @@ export class FieldsMappingStepComponent implements OnInit {
 
 
 	onFormMappingChange() {
-		this.syntheseForm.valueChanges.subscribe(() => {
+		this.syntheseForm.valueChanges.subscribe((dd) => {
+			console.log("dd",dd);
+			
 			if (this.step2_btn) {
 				this.mappingRes = null;
 				this.step2_btn = false;
 			}
+
+
+				
+		/**if (this.stepData.mappingRes) {
+			this.mappingRes = this.stepData.mappingRes;
+			this.table_name = this.mappingRes['table_name'];
+			this.n_error_lines = this.mappingRes['n_user_errors'];
+	
+			this.isFullErrorCheck(this.mappingRes['n_table_rows'], this.n_error_lines);
+		}**/
 		});
 	}
 

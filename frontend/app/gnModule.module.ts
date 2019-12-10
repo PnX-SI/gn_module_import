@@ -6,11 +6,12 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 //import { ImportComponent } from "./components/import/import.component";
-import { ImportModalDatasetComponent } from "./components/modal_dataset/import-modal-dataset.component";
-import { DataService } from "./services/data.service";
-import { CsvExportService } from "./services/csv-export.service";
-import { FieldMappingService } from "./services/mappings/field-mapping.service";
-import { ContentMappingService } from "./services/mappings/content-mapping.service";
+import { ImportModalDatasetComponent } from './components/modal_dataset/import-modal-dataset.component';
+import { DataService } from './services/data.service';
+import { CsvExportService } from './services/csv-export.service';
+import { StepperGuardService } from './services/stepper-guard';
+import { FieldMappingService } from './services/mappings/field-mapping.service';
+import { ContentMappingService } from './services/mappings/content-mapping.service';
 import { ImportComponent } from './components/import_list/import.component';
 import { StepsService } from './components/import_process/steps.service';
 import { UploadFileStepComponent } from './components/import_process/upload-file-step/upload-file-step.component';
@@ -25,19 +26,23 @@ const routes: Routes = [
 	{ path: '', component: ImportComponent },
 	{
 		path: 'process/step/1',
-		component: UploadFileStepComponent
+		component: UploadFileStepComponent,
+		canActivate: [ StepperGuardService ]
 	},
 	{
 		path: 'process/step/2',
-		component: FieldsMappingStepComponent
+		component: FieldsMappingStepComponent,
+		canActivate: [ StepperGuardService ]
 	},
 	{
 		path: 'process/step/3',
-		component: ContentMappingStepComponent
+		component: ContentMappingStepComponent,
+		canActivate: [ StepperGuardService ]
 	},
 	{
 		path: 'process/step/4',
-		component: ImportStepComponent
+		component: ImportStepComponent,
+		canActivate: [ StepperGuardService ]
 	}
 ];
 
@@ -62,13 +67,14 @@ const routes: Routes = [
 		MatCheckboxModule
 	],
 
-  providers: [
-    DataService,
-    StepsService,
-    CsvExportService,
-    FieldMappingService,
-    ContentMappingService
-  ],
+	providers: [
+		DataService,
+		StepsService,
+		CsvExportService,
+		FieldMappingService,
+		StepperGuardService,
+		ContentMappingService
+	],
 
 	bootstrap: []
 })

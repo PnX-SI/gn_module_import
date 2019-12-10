@@ -67,6 +67,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 		// fill the form
 		if (this.stepData.id_content_mapping) {
+			this.contentMappingForm.controls['contentMapping'].setValue(this.stepData.id_content_mapping);
 			this.fillMapping(this.stepData.id_content_mapping);
 		}
 

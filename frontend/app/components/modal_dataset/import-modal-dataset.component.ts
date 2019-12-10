@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 
 import { DataService } from '../../services/data.service';
 import { ModuleConfig } from '../../module.config';
+import { StepsService } from '../import_process/steps.service';
 
 @Component({
 	selector: 'import-modal-dataset',
@@ -25,6 +26,7 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 		private _fb: FormBuilder,
 		public _ds: DataService,
 		private toastr: ToastrService,
+		private stepService: StepsService,
 		private _router: Router //private _idImport: importIdStorage
 	) {
 		this.selectDatasetForm = this._fb.group({
@@ -37,6 +39,7 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 	}
 
 	onOpenModal(content) {
+		this.stepService.resetStepoer()
 		this.modalRef = this.modalService.open(content, {
 			size: 'lg'
 		});
@@ -47,6 +50,7 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 	}
 
 	onSubmit() {
+		this.stepService.setStepData(1);
 		this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/1` ], {
 			queryParams: { datasetId: this.selectDatasetForm.value.dataset }
 		});
