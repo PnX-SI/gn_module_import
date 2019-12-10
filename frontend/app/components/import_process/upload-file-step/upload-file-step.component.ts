@@ -60,9 +60,28 @@ export class UploadFileStepComponent implements OnInit {
 			});
 			this.formListener();
 		}
-		console.log('this.up', this.uploadForm);
+        console.log('this.up', this.uploadForm);
+        
+        console.log(this.fileName);
+        console.log(this.importId);
+
+        // disable 'separator' form control if geojson file provided :
+        if (this.fileName) {
+            this.disableSeparator()
+        }
 		
-	}
+    }
+    
+
+    disableSeparator() {
+        let extension = this.fileName.split('.').pop();
+        if (extension === 'geojson') {
+            this.uploadForm.controls['separator'].disable();
+        } else {
+            this.uploadForm.controls['separator'].enable();
+        }
+    }
+
 
 	onFileSelected(event: any) {
 		this.uploadForm.patchValue({
@@ -74,13 +93,7 @@ export class UploadFileStepComponent implements OnInit {
 			this.fileName = event.target.files[0].name;
         }
 
-        // disable 'separator' form control if geojson file provided :
-        let extension = this.fileName.split('.').pop();
-        if (extension === 'geojson') {
-            this.uploadForm.controls['separator'].disable();
-        } else {
-            this.uploadForm.controls['separator'].enable();
-        }
+        this.disableSeparator();
 	}
 
 	onFileClick(event) {

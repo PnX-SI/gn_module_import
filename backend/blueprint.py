@@ -544,7 +544,9 @@ def post_user_file(info_role):
 
         if uploaded_file['error'] != '':
             logger.error('Saving user file : %s', errors)
-            return errors,400
+            return {
+                "message" : errors[0]['message']
+            },400
 
         full_path = uploaded_file['full_path']
 
