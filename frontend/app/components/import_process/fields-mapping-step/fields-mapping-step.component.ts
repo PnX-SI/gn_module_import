@@ -181,9 +181,7 @@ export class FieldsMappingStepComponent implements OnInit {
 
 
 	onFormMappingChange() {
-		this.syntheseForm.valueChanges.subscribe((dd) => {
-			console.log("dd",dd);
-			
+		this.syntheseForm.valueChanges.subscribe((dd) => {			
 			if (this.step2_btn) {
 				this.mappingRes = null;
 				this.step2_btn = false;

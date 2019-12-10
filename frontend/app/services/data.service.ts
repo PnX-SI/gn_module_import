@@ -16,7 +16,7 @@ export class DataService {
 		return this._http.get<any>(urlApi);
 	}
 
-	postUserFile(value, datasetId, importId) {
+	postUserFile(value, datasetId, importId, isFileChanged, fileName) {
 		const urlStatus = `${urlApi}/uploads`;
 		let fd = new FormData();
 		if (value.file instanceof Blob) fd.append('File', value.file, value.file['name']);
@@ -24,7 +24,9 @@ export class DataService {
 		fd.append('srid', value.srid);
 		fd.append('separator', value.separator);
 		fd.append('datasetId', datasetId);
-		fd.append('importId', importId);
+        fd.append('importId', importId);
+        fd.append('isFileChanged', isFileChanged);
+        fd.append('fileName', fileName);
 		return this._http.post<any>(urlStatus, fd, HttpUploadOptions);
 	}
 

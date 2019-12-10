@@ -17,8 +17,9 @@ export class UploadFileStepComponent implements OnInit {
 	private skip: boolean = false;
 	public uploadForm: FormGroup;
 	public uploadFileErrors: any;
-	public importConfig = ModuleConfig;
-
+    public importConfig = ModuleConfig;
+    public isUserErrors: boolean = false;
+    public isFileChanged: boolean = false;
 	stepData: Step1Data;
 
 	importId: number;
@@ -63,23 +64,45 @@ export class UploadFileStepComponent implements OnInit {
         console.log('this.up', this.uploadForm);
         
         console.log(this.fileName);
+        console.log(this.dataForm);
+        console.log(this.stepData);
         console.log(this.importId);
 
         // disable 'separator' form control if geojson file provided :
         if (this.fileName) {
-            this.disableSeparator()
+            this.disableSeparatorIfGeojson();
+            /*
+            this.uploadForm.controls['encodage'].disable();
+            this.uploadForm.controls['srid'].disable();
+            this.uploadForm.controls['separator'].disable();
+            */
         }
+
+        this.isUserErrors = false;
+        this.uploadFileErrors = null;
+        this.isFileChanged = false;
 		
     }
     
 
-    disableSeparator() {
+    disableSeparatorIfGeojson() {
         let extension = this.fileName.split('.').pop();
         if (extension === 'geojson') {
             this.uploadForm.controls['separator'].disable();
         } else {
             this.uploadForm.controls['separator'].enable();
         }
+    }
+
+
+    isDisable() {
+        if (this.uploadForm.invalid) {
+            return true
+        }
+        if (this.isUserErrors) {
+            return true
+        }
+        return false
     }
 
 
@@ -92,9 +115,15 @@ export class UploadFileStepComponent implements OnInit {
 		} else {
 			this.fileName = event.target.files[0].name;
         }
-
-        this.disableSeparator();
+        this.disableSeparatorIfGeojson();
+        /*
+        this.uploadForm.controls['encodage'].enable();
+        this.uploadForm.controls['srid'].enable();
+        this.uploadForm.controls['separator'].enable();
+        */
+        this.isFileChanged = true;
 	}
+
 
 	onFileClick(event) {
 		event.target.value = '';
@@ -102,17 +131,21 @@ export class UploadFileStepComponent implements OnInit {
 		this.skip = false;
 		this.uploadForm.patchValue({
 			file: null
-		});	
+        });
+        this.isUserErrors = false;
+        this.uploadFileErrors = null;
 	}
 
+
 	onUpload(formValues: any) {
-		this.uploadFileErrors = null;
+        this.uploadFileErrors = null;
+        this.isUserErrors = false;
 		this.spinner = true;
 		console.log('skip up', this.skip);
 		
 		if (!this.skip) {
 			this._ds
-				.postUserFile(formValues,this.datasetId , this.importId)
+                .postUserFile(formValues, this.datasetId , this.importId, this.isFileChanged, this.fileName)
 				.subscribe(
 					(res) => {
 						this.importId = res.importId;
@@ -125,7 +158,7 @@ export class UploadFileStepComponent implements OnInit {
 							importId : res.importId,
 							datasetId: this.datasetId,
 							formData :{
-								fileName: formValues.file.name,
+								fileName: res['fileName'],
 								srid : formValues.srid,
 								separator: formValues.separator,
 								encoding : formValues.encodage
@@ -140,7 +173,13 @@ export class UploadFileStepComponent implements OnInit {
 						if (error.statusText === 'Unknown Error') {
 							this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 						} else {
-							this.toastr.error(error.error.message);
+                            if (error.status == 400) {
+                                this.isUserErrors = true;
+                                this.uploadFileErrors = error.error;
+                                console.log(this.uploadFileErrors);
+                            } else {
+                                this.toastr.error(error.error.message);
+                            }
 						}
 					}
 				);
@@ -149,6 +188,7 @@ export class UploadFileStepComponent implements OnInit {
 			this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/2` ]);
 		}
 	}
+
 
 	formListener() {
 		this.uploadForm.valueChanges.subscribe(() => {

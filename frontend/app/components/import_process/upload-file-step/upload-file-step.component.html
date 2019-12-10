@@ -51,7 +51,7 @@
             <div class="navigate-btn">
                 <button type="submit"
                     class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                    (click)="onUpload(uploadForm.value)" [disabled]="uploadForm.invalid" id="validate">
+                    (click)="onUpload(uploadForm.value)" [disabled]="isDisable()" id="validate">
                     Suivant
                     <i class="material-icons"> navigate_next </i>
                 </button>
