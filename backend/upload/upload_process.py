@@ -1,7 +1,6 @@
 import os
 import pathlib
 from werkzeug.utils import secure_filename
-import pdb
 
 from ..logs import logger
 from ..wrappers import checker
@@ -30,19 +29,19 @@ def upload(request, size_max, allowed_extensions, directory_name, module_url):
     try:
 
         if request.method == 'POST':
-        
+
             if 'File' not in request.files:
                 logger.error('Saving user file : No File in request files')
                 return {
-                    'error':'no_file'
+                    'error': 'no_file'
                 }
-            
+
             file = request.files['File']
 
             if file.filename == '':
                 logger.error('Saving user file : No File in request files')
                 return {
-                    'error':'empty'
+                    'error': 'empty'
                 }
 
             # get file path
@@ -55,7 +54,7 @@ def upload(request, size_max, allowed_extensions, directory_name, module_url):
             if len(filename) > 100:
                 logger.error('Saving user file : file name too long')
                 return {
-                    'error':'long_name'
+                    'error': 'long_name'
                 }
 
             full_path = os.path.join(uploads_directory, filename)
@@ -65,7 +64,7 @@ def upload(request, size_max, allowed_extensions, directory_name, module_url):
             if extension not in allowed_extensions:
                 logger.error('Saving user file : extension not allowed')
                 return {
-                    'error':'bad_extension'
+                    'error': 'bad_extension'
                 }
 
             # check file size
@@ -76,7 +75,7 @@ def upload(request, size_max, allowed_extensions, directory_name, module_url):
             if size > size_max:
                 logger.error('Saving user file : user file size > max size allowed')
                 return {
-                    'error':'max_size'
+                    'error': 'max_size'
                 }
 
             # save user file in upload directory
@@ -85,18 +84,18 @@ def upload(request, size_max, allowed_extensions, directory_name, module_url):
             if not os.path.isfile(full_path):
                 logger.error('Saving user file : invalid path')
                 return {
-                    'error':'unknown',
-                    'is_uploaded':False
+                    'error': 'unknown',
+                    'is_uploaded': False
                 }
 
             logger.debug('original file name = %s', filename)
 
             return {
-                'file_name':filename,
-                'full_path':full_path,
-                'extension':extension,
-                'error':'',
-                'is_uploaded':True
-                }
+                'file_name': filename,
+                'full_path': full_path,
+                'extension': extension,
+                'error': '',
+                'is_uploaded': True
+            }
     except Exception:
         raise

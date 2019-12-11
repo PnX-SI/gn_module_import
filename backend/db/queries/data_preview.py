@@ -1,8 +1,6 @@
 from geonature.utils.env import DB
 from ..models import TImports
 
-import pdb
-
 
 def get_valid_user_data(schema_name, table_name, limit):
     try:

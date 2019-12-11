@@ -7,8 +7,6 @@ from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_use
 from ..wrappers import checker
 from ..logs import logger
 
-import pdb
-
 
 @checker('Data cleaning : cd_nom checked')
 def check_cd_nom(df, selected_columns, dc_user_errors, missing_values, cd_nom_list):

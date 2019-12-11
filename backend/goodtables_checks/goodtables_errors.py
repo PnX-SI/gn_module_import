@@ -1,4 +1,4 @@
-def set_error(code ,message, message_data):
+def set_error(code, message, message_data):
     """ set a user data error as a dict:
 
     Args: 
@@ -11,7 +11,7 @@ def set_error(code ,message, message_data):
             - 'message' (str)
             - 'message_data' (str)
         }
-        
+
     """
     return {
         'code': code,
@@ -21,16 +21,15 @@ def set_error(code ,message, message_data):
 
 
 no_data = \
-{
-    'code': 'empty file',
-    'message': 'no data',
-    'message_data': ''
-}
-
+    {
+        'code': 'empty file',
+        'message': 'no data',
+        'message_data': ''
+    }
 
 digit_name = \
-{
-    'code' : 'digit_name',
-    'message' : 'Nom de fichier non valide car seulement composé de chiffres',
-    'message_data' : ''
-}
+    {
+        'code': 'digit_name',
+        'message': 'Nom de fichier non valide car seulement composé de chiffres',
+        'message_data': ''
+    }

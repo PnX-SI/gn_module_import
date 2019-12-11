@@ -1,15 +1,15 @@
 from geonature.utils.env import DB
-import pdb
 
-def generate_altitudes(type, schema, table, alt_col, original_alt_col, table_pk, geom_col):
+
+def generate_altitudes(type_alt, schema, table, alt_col, original_alt_col, table_pk, geom_col):
     DB.session.begin(subtransactions=True)
     try:
-        if type == 'min':
+        if type_alt == 'min':
             alti_type = 'altitude_min'
-        if type == 'max':
+        if type_alt == 'max':
             alti_type = 'altitude_max'
 
-        DB.session.execute(\
+        DB.session.execute(
             """
             UPDATE {schema}.{table} as T
             SET {alt_col} = 
@@ -22,13 +22,13 @@ def generate_altitudes(type, schema, table, alt_col, original_alt_col, table_pk,
                     ELSE T.{original_alt_col}
                 END
             """.format(
-                schema = schema, 
-                table = table, 
-                alt_col = alt_col, 
-                original_alt_col = original_alt_col,
-                table_pk = table_pk,
-                geom_col = geom_col,
-                alti_type = alti_type
+                schema=schema,
+                table=table,
+                alt_col=alt_col,
+                original_alt_col=original_alt_col,
+                table_pk=table_pk,
+                geom_col=geom_col,
+                alti_type=alti_type
                 )
         )
 
@@ -45,7 +45,7 @@ def create_column(full_table_name, alt_col):
             ALTER TABLE {full_table_name} 
             ADD COLUMN {alt_col} text"""\
             .format(
-                full_table_name=full_table_name, 
+                full_table_name=full_table_name,
                 alt_col=alt_col
             )
         )

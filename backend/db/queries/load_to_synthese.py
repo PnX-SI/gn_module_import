@@ -8,7 +8,7 @@ def get_data_type(column_name):
             FROM information_schema.columns
             WHERE table_name = 'synthese'
             AND column_name = '{column_name}';
-            """.format(column_name = column_name)).fetchone()[0]
+            """.format(column_name=column_name)).fetchone()[0]
         return key_type
     except Exception:
         raise
@@ -22,10 +22,10 @@ def insert_into_synthese(schema_name, table_name, select_part, total_columns):
             FROM {schema_name}.{table_name}
             WHERE gn_is_valid='True';
             """.format(
-                into_part = ','.join(total_columns.keys()),
-                select_part = ','.join(select_part),
-                schema_name = schema_name,
-                table_name = table_name
+                into_part=','.join(total_columns.keys()),
+                select_part=','.join(select_part),
+                schema_name=schema_name,
+                table_name=table_name
             ))
     except Exception:
         raise
@@ -42,10 +42,10 @@ def insert_into_t_sources(schema_name, table_name, import_id, total_columns):
                 NULL
             )
             """.format(
-                import_id = import_id,
-                entity_col_name = total_columns['entity_source_pk_value'],
-                schema_name = schema_name,
-                table_name = table_name,
+                import_id=import_id,
+                entity_col_name=total_columns['entity_source_pk_value'],
+                schema_name=schema_name,
+                table_name=table_name,
             ))
         DB.session.flush()
     except Exception:
@@ -59,8 +59,7 @@ def get_id_source(import_id):
             SELECT id_source
             FROM gn_synthese.t_sources
             WHERE name_source = 'Import(id={import_id})'
-            """\
-            .format(import_id = import_id))\
+            """.format(import_id=import_id))\
             .fetchone()[0]
         return id_source
     except Exception:
@@ -75,8 +74,7 @@ def check_id_source(import_id):
                 FROM gn_synthese.t_sources 
                 WHERE name_source = 'Import(id={import_id})' 
                 LIMIT 1);
-            """\
-            .format(import_id = import_id))\
+            """.format(import_id=import_id))\
             .fetchone()[0]
         return is_id_source
     except Exception:
@@ -85,22 +83,20 @@ def check_id_source(import_id):
 
 def get_synthese_info(selected_synthese_cols):
     formated_selected_synthese_cols = '\',\''.join(selected_synthese_cols)
-    formated_selected_synthese_cols = '{}{}{}'.format('(\'',formated_selected_synthese_cols,'\')')
+    formated_selected_synthese_cols = '{}{}{}'.format('(\'', formated_selected_synthese_cols, '\')')
 
     synthese_info = DB.session.execute("""
         SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
         FROM INFORMATION_SCHEMA.COLUMNS\
         WHERE table_name = 'synthese'\
-        AND column_name IN {};"""\
-            .format(formated_selected_synthese_cols)\
-    ).fetchall()
+        AND column_name IN {};""".format(formated_selected_synthese_cols)).fetchall()
 
     my_dict = {
-        d[0] : {
-            'is_nullable':d[1],
-            'column_default':d[2],
-            'data_type':d[3],
-            'character_max_length':d[4]
+        d[0]: {
+            'is_nullable': d[1],
+            'column_default': d[2],
+            'data_type': d[3],
+            'character_max_length': d[4]
             } for d in synthese_info}
 
     return my_dict

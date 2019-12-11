@@ -6,8 +6,6 @@ from ...db.queries.load_to_synthese import (
     get_id_source
 )
 
-import pdb
-
 
 def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
     try:
