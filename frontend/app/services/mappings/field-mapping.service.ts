@@ -113,16 +113,16 @@ export class FieldMappingService {
 		this.id_mapping = id_mapping;
 		this._ds.getMappingFields(this.id_mapping).subscribe(
 			(mappingFields) => {
-                this.geoTypeSelect(targetFormName);
 				if (mappingFields[0] != 'empty') {
 					for (let field of mappingFields) {
 						targetFormName.controls[field['target_field']].enable();
 						targetFormName.get(field['target_field']).setValue(field['source_field']);
                     }
-					this.shadeSelectedColumns(targetFormName);
+                    this.shadeSelectedColumns(targetFormName);
+                    this.geoTypeSelect(targetFormName);
 				} else {
 					this.fillEmptyMapping(targetFormName);
-				}
+                }
 			},
 			(error) => {
 				if (error.statusText === 'Unknown Error') {
