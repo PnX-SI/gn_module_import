@@ -317,6 +317,10 @@ def get_mapping_fields(info_role, id_mapping):
 
         if len(fields) > 0:
             for field in fields:
+                if not field.is_selected:
+                    source_field = ''
+                else:
+                    source_field = field.source_field
                 d = {
                     'id_match_fields': field.id_match_fields,
                     'id_mapping': field.id_mapping,
