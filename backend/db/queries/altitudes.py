@@ -1,9 +1,10 @@
 from geonature.utils.env import DB
 
 
-def generate_altitudes(type_alt, schema, table, alt_col, original_alt_col, table_pk, geom_col):
+def generate_altitudes(type_alt, schema, table, alt_col, original_alt_col, table_pk, geom_col, generate_type):
     DB.session.begin(subtransactions=True)
     try:
+
         if type_alt == 'min':
             alti_type = 'altitude_min'
         if type_alt == 'max':
@@ -31,8 +32,8 @@ def generate_altitudes(type_alt, schema, table, alt_col, original_alt_col, table
                 alti_type=alti_type
                 )
         )
-
         DB.session.commit()
+
     except Exception:
         DB.session.rollback()
         raise

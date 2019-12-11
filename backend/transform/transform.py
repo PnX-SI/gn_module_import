@@ -13,7 +13,7 @@ from .check_geography import check_geography
 
 
 def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, def_count_val, cd_nom_list, srid,
-                  local_srid, is_generate_uuid, schema_name):
+                  local_srid, is_generate_uuid, schema_name, is_generate_altitude):
     try:
 
         user_error = []
@@ -48,7 +48,7 @@ def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, 
         check_entity_source(df, added_cols, selected_columns, dc_user_errors, synthese_info)
         check_id_digitizer(df, selected_columns, dc_user_errors, synthese_info)
         check_geography(df, import_id, added_cols, selected_columns, dc_user_errors, srid, local_srid)
-        check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul=False)
+        check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul=is_generate_altitude)
 
         return {
             'user_errors': user_error,
