@@ -66,6 +66,8 @@ class TMappingsFields(DB.Model):
     id_mapping = DB.Column(DB.Integer, primary_key=True)
     source_field = DB.Column(DB.Unicode, nullable=False)
     target_field = DB.Column(DB.Unicode, nullable=False)
+    is_selected = DB.Column(DB.Boolean, nullable=False)
+    is_added = DB.Column(DB.Boolean, nullable=False)
 
 
 @serializable

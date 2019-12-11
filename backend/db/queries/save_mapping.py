@@ -12,6 +12,12 @@ def save_field_mapping(form_data, id_mapping):
                 .filter(TMappingsFields.id_mapping == id_mapping) \
                 .filter(TMappingsFields.target_field == col).all()
 
+            #pdb.set_trace()
+            if form_data[col] != '':
+                is_selected = True
+            else:
+                is_selected = False
+                
             if len(my_query) > 0:
                 for q in my_query:
                     DB.session.query(TMappingsFields) \
@@ -19,7 +25,9 @@ def save_field_mapping(form_data, id_mapping):
                         .update({
                             TMappingsFields.id_mapping: int(id_mapping),
                             TMappingsFields.source_field: form_data[col],
-                            TMappingsFields.target_field: col
+                            TMappingsFields.target_field: col,
+                            TMappingsFields.is_selected: is_selected,
+                            TMappingsFields.is_added: False
                     })
                     DB.session.flush()
 
@@ -27,7 +35,9 @@ def save_field_mapping(form_data, id_mapping):
                 new_fields = TMappingsFields(
                     id_mapping=int(id_mapping),
                     source_field=form_data[col],
-                    target_field=col
+                    target_field=col,
+                    is_selected=is_selected,
+                    is_added=False
                 )
                 DB.session.add(new_fields)
                 DB.session.flush()
