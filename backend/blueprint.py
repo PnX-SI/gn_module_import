@@ -79,7 +79,7 @@ from .db.queries.save_mapping import (
 
 from .db.queries.taxonomy import get_cd_nom_list
 
-from .db.queries.user_errors import delete_user_errors
+from .db.queries.user_errors import delete_user_errors, get_user_error_list
 
 from .db.queries.load_to_synthese import (
     insert_into_t_sources,
@@ -976,7 +976,7 @@ def postMapping(info_role, import_id, id_mapping):
 
         return {
                    #'user_error_details': error_report,
-                   'n_user_errors': n_invalid_rows,
+                   #'n_user_errors': n_invalid_rows,
                    'n_table_rows': n_table_rows,
                    'import_id': import_id,
                    'id_mapping': id_mapping,
@@ -1023,7 +1023,18 @@ def postMetaToStep3(info_role):
     try:
 
         data = request.form.to_dict()
-        selected_columns = get_selected_columns(data['id_mapping'])
+        #selected_columns = get_selected_columns(data['id_mapping'])
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+
+        ### CHECK VALIDITY
+
+        row_count = get_row_number('.'.join([IMPORTS_SCHEMA_NAME, data['table_name']]))
+        row_error_count = get_n_invalid_rows('.'.join([IMPORTS_SCHEMA_NAME, data['table_name']]))
+        if row_error_count == row_count:
+            return {
+                'message' : 'Toutes vos observations comportent des erreurs : \
+                    vous ne pouvez pas accéder à l\'étape suivante'
+            },400
 
         """
         try:
@@ -1034,9 +1045,9 @@ def postMetaToStep3(info_role):
                    }, 400
         """
 
-        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        #IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
-        nomenc_info = get_nomenc_info(selected_columns, IMPORTS_SCHEMA_NAME, data['table_name'])
+        #nomenc_info = get_nomenc_info(selected_columns, IMPORTS_SCHEMA_NAME, data['table_name'])
 
         # UPDATE TIMPORTS
 
@@ -1059,7 +1070,7 @@ def postMetaToStep3(info_role):
                    'table_name': table_name,
                    'import_id': import_id,
                    #'selected_columns': data,
-                   'content_mapping_info': nomenc_info
+                   #'content_mapping_info': nomenc_info
                }, 200
     except Exception as e:
         logger.error('*** ERROR IN STEP 2 NEXT BUTTON')
@@ -1401,16 +1412,25 @@ def check_invalid(info_role, import_id):
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
         full_imports_table_name = table_names['imports_full_table_name']
-
-        # check if n error != 0:
         n_invalid = get_n_invalid_rows(full_imports_table_name)
-        if n_invalid == 0:
-            return 'Vous n\'avez aucune ligne invalide', 400
-
-        return n_invalid, 200
-
+        return str(n_invalid), 200
     except Exception as e:
         logger.exception(e)
         raise GeonatureImportApiError(
             message='INTERNAL SERVER ERROR when getting invalid rows count',
+            details=str(e))
+
+
+@blueprint.route('/get_error_list/<import_id>', methods=['GET'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def get_errors(info_role, import_id):
+    try:
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        user_error = get_user_error_list(IMPORTS_SCHEMA_NAME, import_id)
+        return user_error, 200
+    except Exception as e:
+        logger.exception(e)
+        raise GeonatureImportApiError(
+            message='INTERNAL SERVER ERROR when getting user error list',
             details=str(e))

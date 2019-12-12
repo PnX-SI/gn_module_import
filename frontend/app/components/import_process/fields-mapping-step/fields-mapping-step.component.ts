@@ -46,24 +46,65 @@ export class FieldsMappingStepComponent implements OnInit {
 		private _router: Router
 	) {}
 
+
 	ngOnInit() {
 		this.stepData = this.stepService.getStepData(2);
 		this.fieldMappingForm = this._fb.group({
 			fieldMapping: [ null ],
 			mappingName: [ '' ]
 		});
-		this.syntheseForm = this._fb.group({});
+        this.syntheseForm = this._fb.group({});
 
 		if (this.stepData.mappingRes) {
 			this.mappingRes = this.stepData.mappingRes;
 			this.table_name = this.mappingRes['table_name'];
-			this.n_error_lines = this.mappingRes['n_user_errors'];
-			this.dataCleaningErrors = this.mappingRes['user_error_details'];
+            //this.n_error_lines = this.mappingRes['n_user_errors'];
+            this.getRowErrorCount(this.stepData.importId);
+			this.getErrorList(this.stepData.importId);
 			this.step2_btn = true;
 			this.isFullErrorCheck(this.mappingRes['n_table_rows'], this.n_error_lines);
 		}
 		this.generateSyntheseForm();
-	}
+    }
+
+
+    getErrorList(importId) {
+        this._ds.getErrorList(importId).subscribe(
+            (res) => {
+                this.dataCleaningErrors = res;
+            },
+            (error) => {
+				if (error.statusText === 'Unknown Error') {
+					// show error message if no connexion
+					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+				} else {
+					// show error message if other server error
+                    console.error(error);
+					this.toastr.error(error.error.message);
+				}
+			}
+        )
+    }
+
+
+    getRowErrorCount(importId) {
+        this._ds.checkInvalid(importId).subscribe(
+            (res) => {
+                this.n_error_lines = Number(res);
+            },
+            (error) => {
+				if (error.statusText === 'Unknown Error') {
+					// show error message if no connexion
+					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+				} else {
+					// show error message if other server error
+                    console.error(error);
+					this.toastr.error(error.error.message);
+				}
+			}
+        )
+    }
+
 
 	generateSyntheseForm() {
 		this._ds.getBibFields().subscribe(
@@ -101,14 +142,16 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
+
 	onDataCleaning(value, id_mapping) {
 		this.spinner = true;
 		this._ds.postMapping(value, this.stepData.importId, id_mapping, this.stepData.srid).subscribe(
 			(res) => {
 				this.mappingRes = res;
-				this.spinner = false;
-				this.n_error_lines = res['n_user_errors'];
-				this.dataCleaningErrors = res['user_error_details'];
+                this.spinner = false;
+                this.getRowErrorCount(this.stepData.importId);
+				//this.n_error_lines = res['n_user_errors'];
+				this.getErrorList(this.stepData.importId);
 				this.table_name = this.mappingRes['table_name'];
 				//this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
 				//this.added_columns = this.mappingRes['added_columns'];
@@ -128,6 +171,7 @@ export class FieldsMappingStepComponent implements OnInit {
 			}
 		);
 	}
+
 
 	onNextStep() {
 		if (this.mappingRes == undefined) {
@@ -187,6 +231,7 @@ export class FieldsMappingStepComponent implements OnInit {
 			);
 	}
 
+
 	onFormMappingChange() {
 		this.syntheseForm.valueChanges.subscribe(() => {
 			if (this.step2_btn) {
@@ -197,6 +242,7 @@ export class FieldsMappingStepComponent implements OnInit {
 			}
 		});
 	}
+
 
 	onStepBack() {
 		this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/1` ]);

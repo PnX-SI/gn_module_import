@@ -163,4 +163,10 @@ export class DataService {
         return this._http.get<any>(`${urlApi}/check_invalid/${import_id}`);
     }
 
+
+    getErrorList(importId) {
+        return this._http.get<any>(`${urlApi}/get_error_list/${importId}`);
+    }
+
+
 }
