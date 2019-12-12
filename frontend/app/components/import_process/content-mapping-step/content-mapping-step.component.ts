@@ -75,14 +75,12 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 
 	getNomencInf() {
-		console.log(this.userNomenc);
-		console.log(this.stepData.table_name);
-		console.log(this.userNomenc);
+		console.log('info');
+		
 		this._ds.getNomencInfo(this.userNomenc, this.stepData.importId).subscribe(
-			(res) => {
-				console.log(res);		
+			(res) => {	
+				console.log('info',res);	
                 this.stepData.contentMappingInfo = res['content_mapping_info'];
-                console.log(this.stepData.contentMappingInfo);
             },
             (error) => {
                 if (error.statusText === 'Unknown Error') {
@@ -126,14 +124,8 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 
 	onSelectDelete(deletedVal, group, formControlName) {
-		console.log(deletedVal);
-		console.log(group);
-		console.log(formControlName);
-		console.log(this.stepData.contentMappingInfo);
-
 		this.stepData.contentMappingInfo.map(
 			(ele) => {
-				console.log(ele);
 				if (ele.nomenc_abbr === group.nomenc_abbr) {
 					let temp_array = ele.user_values.values;
 					temp_array.push(deletedVal);
@@ -211,19 +203,15 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 		this._ds.getMappingContents(id_mapping).subscribe(
 			(mappingContents) => {
 				this.contentTargetForm.reset();
-				console.log(mappingContents);
 				if (mappingContents[0] != 'empty') {
 					for (let content of mappingContents) {
 						let arrayVal: any = [];
 						for (let val of content) {
-							console.log(val);
 							if (val['source_value'] != '') {
 								let id_info = this.getId(val['source_value'], val['id_target_value']);
 								arrayVal.push({id: id_info, value: val['source_value']});
 							}
 						}
-						console.log(arrayVal);
-						console.log(content);
 						this.contentTargetForm.get(String(content[0]['id_target_value'])).setValue(arrayVal);
 					}
 				} else {
@@ -267,7 +255,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 						selected_columns: this.stepData.selected_columns,
 						added_columns: this.stepData.added_columns
 					};
-				
 					let step3Data: Step3Data = this.stepData;
 					step3Data.id_content_mapping = this.id_mapping;
 					this.stepService.setStepData(3, step3Data);

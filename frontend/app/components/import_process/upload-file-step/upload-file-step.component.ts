@@ -20,7 +20,6 @@ export class UploadFileStepComponent implements OnInit {
 	public importConfig = ModuleConfig;
 
 	stepData: Step1Data;
-
 	importId: number;
 	dataForm: any;
 	datasetId: any;
@@ -59,9 +58,7 @@ export class UploadFileStepComponent implements OnInit {
 				separator: this.dataForm.separator,
 			});
 			this.formListener();
-		}
-		console.log('this.up', this.uploadForm);
-		
+		}	
 	}
 
 	onFileSelected(event: any) {
@@ -95,8 +92,6 @@ export class UploadFileStepComponent implements OnInit {
 	onUpload(formValues: any) {
 		this.uploadFileErrors = null;
 		this.spinner = true;
-		console.log('skip up', this.skip);
-		
 		if (!this.skip) {
 			this._ds
 				.postUserFile(formValues,this.datasetId , this.importId)
@@ -141,7 +136,6 @@ export class UploadFileStepComponent implements OnInit {
 		this.uploadForm.valueChanges.subscribe(() => {
 			if (this.uploadForm.valid) {
 				this.skip = false;
-				console.log('skip', this.skip);
 			}
 		});
 	}

@@ -6,34 +6,34 @@
         </div>
         <div class="card-body" *ngIf="formReady">
             <!-- Choix du mapping -->
-            <form [formGroup]="_fm.fieldMappingForm" class="was-validated">
+            <form [formGroup]="fieldMappingForm" class="was-validated">
                 <fieldset>
                     <legend class="px-1">
                         Choix du mapping
                     </legend>
-                    <div *ngIf="_fm.userFieldMappings" class="form-group">
+                    <div *ngIf="userFieldMappings" class="form-group">
                         <select class="form-control form-control-sm" id="mappingSelection"
                             formControlName="fieldMapping">
                             <option [value]=""></option>
-                            <option *ngFor="let data of _fm.userFieldMappings" [value]="data.id_mapping">
+                            <option *ngFor="let data of userFieldMappings" [value]="data.id_mapping">
                                 {{data.mapping_label}}</option>
                         </select>
                     </div>
                     <button
                         class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
-                        (click)="_fm.createMapping()">
+                        (click)="createMapping()">
                         Nouveau mapping
                     </button>
-                    <div *ngIf="_fm.newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
+                    <div *ngIf="newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
                         <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
                         <button
                             class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
-                            (click)="_fm.saveMappingName(_fm.fieldMappingForm.value, importId, syntheseForm)"
-                            [disabled]="_fm.fieldMappingForm.get('mappingName').value === '' || _fm.fieldMappingForm.get('mappingName').value == null">
+                            (click)="saveMappingName(fieldMappingForm.value, importId, syntheseForm)"
+                            [disabled]="fieldMappingForm.get('mappingName').value === '' || fieldMappingForm.get('mappingName').value == null">
                             ok
                         </button>
                         <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
-                            (click)="_fm.cancelMapping()">
+                            (click)="cancelMapping()">
                             annuler
                         </button>
                     </div>
@@ -51,9 +51,9 @@
                                     <small>{{field.fr_label}} :</small>
                                     <select class="form-control form-control-sm" id="{{field.name_field}}"
                                         placeholder="Open this select menu" formControlName="{{field.name_field}}"
-                                        (change)="_fm.onSelect(_fm.id_mapping, syntheseForm)" [required]=field.required>
+                                        (change)="onSelect(id_mapping, syntheseForm)" [required]=field.required>
                                         <option [value]=""></option>
-                                        <option *ngFor="let column of _fm.columns" [class.isSelected]="column.selected"
+                                        <option *ngFor="let column of columns" [class.isSelected]="column.selected"
                                             [value]="column.id">
                                             {{column.id}}
                                         </option>
@@ -85,7 +85,7 @@
                     </button>
                     <button *ngIf="!mappingRes"
                         class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        [disabled]="syntheseForm.invalid" (click)="onDataCleaning(syntheseForm.value, _fm.id_mapping)">
+                        [disabled]="syntheseForm.invalid" (click)="onDataCleaning(syntheseForm.value, id_mapping)">
                         Valider le mapping
                     </button>
                     <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
