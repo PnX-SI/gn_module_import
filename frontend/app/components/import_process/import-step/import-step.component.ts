@@ -72,7 +72,7 @@ export class ImportStepComponent implements OnInit {
     }
 
     getValidData() {
-        this.spinner = true;
+        this.spinner = true;   
         this._ds.getValidData(this.stepData.importId).subscribe(
             (res) => {
                 this.spinner = false;
@@ -80,7 +80,6 @@ export class ImportStepComponent implements OnInit {
                 this.nValidData = res.n_valid_data;
                 this.nInvalidData = res.n_invalid_data;
                 this.validData = res.valid_data;
-                console.log(this.total_columns);
                 if (this.validData != 'no data') {
                     this.columns = [];
                     this.rows = [];

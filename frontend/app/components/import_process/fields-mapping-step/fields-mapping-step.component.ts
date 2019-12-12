@@ -59,8 +59,6 @@ export class FieldsMappingStepComponent implements OnInit {
 			this.table_name = this.mappingRes['table_name'];
 			this.n_error_lines = this.mappingRes['n_user_errors'];
 			this.dataCleaningErrors = this.mappingRes['user_error_details'];
-			
-
 			this.step2_btn = true;
 			this.isFullErrorCheck(this.mappingRes['n_table_rows'], this.n_error_lines);
 		}
