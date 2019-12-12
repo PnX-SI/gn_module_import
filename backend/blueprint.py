@@ -800,6 +800,7 @@ def postMapping(info_role, import_id, id_mapping):
                        'message': 'Vous devez créer ou sélectionner un mapping pour le valider'
                    }, 400
 
+
         # INITIALIZE VARIABLES
 
         logger.info('*** START CORRESPONDANCE MAPPING')
@@ -868,6 +869,7 @@ def postMapping(info_role, import_id, id_mapping):
                        'message': 'Champs obligatoires manquants: {}'.format(','.join(missing_cols))
                    }, 500
 
+
         # EXTRACT
 
         logger.info('* START EXTRACT FROM DB TABLE TO PYTHON')
@@ -877,24 +879,8 @@ def postMapping(info_role, import_id, id_mapping):
         # get cd_nom list
         cd_nom_list = get_cd_nom_list()
 
-        # TRANSFORM (data checking and cleaning)
 
-        # set empty data cleaning user error report :
-        dc_user_errors = []
-        dc_errors = DB.session.execute("""\
-            SELECT * 
-            FROM gn_imports.user_errors;
-            """).fetchall()
-        for error in dc_errors:
-            for field in selected_columns.values():
-                dc_user_errors.append({
-                    'id': error.id_error,
-                    'type': error.error_type,
-                    'name': error.name,
-                    'description': error.description,
-                    'column': field,
-                    'n_errors': 0
-                })
+        # TRANSFORM (data checking and cleaning)
 
         # start process (transform and load)
         for i in range(df.npartitions):
@@ -904,7 +890,7 @@ def postMapping(info_role, import_id, id_mapping):
             partition = df.get_partition(i)
             partition_df = compute_df(partition)
             transform_errors = data_cleaning(partition_df, import_id, \
-                                             selected_columns, dc_user_errors, MISSING_VALUES, \
+                                             selected_columns, MISSING_VALUES, \
                                              DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid, \
                                              is_generate_uuid, IMPORTS_SCHEMA_NAME, is_generate_alt)
 
@@ -935,15 +921,6 @@ def postMapping(info_role, import_id, id_mapping):
             logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE partition %s', i)
 
         save_field_mapping(added_cols, id_mapping, select_type='added')
-
-        # filters dc_user_errors to get error report:
-        error_report = []
-        for error in dc_user_errors:
-            if error['n_errors'] > 0:
-                error['n_errors'] = int(error['n_errors'])
-                error_report.append(error)
-        # delete eventual duplicates
-        error_report = [i for n, i in enumerate(error_report) if i not in error_report[n + 1:]]
 
         # delete original table
         delete_table(table_names['imports_full_table_name'])

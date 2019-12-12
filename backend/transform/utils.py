@@ -13,20 +13,4 @@ def set_is_valid(df, column_name):
     )
 
 
-def set_invalid_reason(df, source_col_name, message, col_name):
-    df['gn_invalid_reason'] = df['gn_invalid_reason'] \
-        .where(
-        cond=df[source_col_name],
-        other=df['gn_invalid_reason'] + message \
-            .format(col_name)
-              + ' *** '
-    )
-
-
 fill_map = {'': True, False: False}
-
-
-def set_user_error(dc_user_errors, id, col_name, n_errors):
-    for error in dc_user_errors:
-        if error['id'] == id and error['column'] == col_name:
-            error['n_errors'] = error['n_errors'] + n_errors

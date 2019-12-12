@@ -115,6 +115,15 @@ CREATE TABLE cor_synthese_nomenclature(
 );
 
 
+CREATE TABLE user_error_list(
+    id_user_error serial NOT NULL,
+    id_import integer NOT NULL,
+    id_error integer NOT NULL,
+    column_error character varying(100) NOT NULL,
+    count_error integer NOT NULL
+)
+
+
 
 ---------------
 --PRIMARY KEY--
@@ -153,7 +162,8 @@ ALTER TABLE ONLY bib_fields
 ALTER TABLE ONLY cor_synthese_nomenclature
     ADD CONSTRAINT pk_cor_synthese_nomenclature PRIMARY KEY (id_type, id_field);
 
-
+ALTER TABLE ONLY user_error_list
+    ADD CONSTRAINT pk_user_error_list PRIMARY KEY (id_user_error);
 
 ---------------
 --FOREIGN KEY--
@@ -188,6 +198,12 @@ ALTER TABLE ONLY cor_synthese_nomenclature
 
 ALTER TABLE ONLY cor_synthese_nomenclature
     ADD CONSTRAINT fk_cor_synthese_nomenclature_id_field FOREIGN KEY (id_field) REFERENCES gn_imports.bib_fields(id_field) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY user_error_list
+    ADD CONSTRAINT fk_user_error_list_id_import FOREIGN KEY (id_import) REFERENCES gn_imports.t_imports(id_import) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY user_error_list
+    ADD CONSTRAINT fk_user_error_list_id_error FOREIGN KEY (id_error) REFERENCES gn_imports.user_errors(id_error) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 ---------------------

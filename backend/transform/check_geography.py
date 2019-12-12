@@ -2,8 +2,9 @@ import geopandas as gpd
 import pandas as pd
 from shapely import wkt
 
+from ..db.queries.user_errors import set_user_error, set_invalid_reason
 from ..logs import logger
-from .utils import fill_map, set_is_valid, set_invalid_reason, set_user_error
+from .utils import fill_map, set_is_valid
 from ..wrappers import checker
 from ..utils.utils import create_col_name
 

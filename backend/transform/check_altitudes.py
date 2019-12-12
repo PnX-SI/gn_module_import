@@ -1,7 +1,8 @@
 import pandas as pd
 import dask
-from .utils import fill_col, set_user_error
+from .utils import fill_col
 from ..wrappers import checker
+from ..db.queries.user_errors import set_user_error, set_invalid_reason
 
 
 def check_alt_min_max(min_val, max_val):
@@ -58,7 +59,7 @@ def check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul)
                         selected_columns['altitude_min'], selected_columns['altitude_max']))
 
                 n_alt_min_sup = df['temp'].astype(str).str.contains('False').sum()
-
+                # set invalid reason ?
                 if n_alt_min_sup > 0:
                     set_user_error(dc_user_errors, 10, selected_columns['altitude_min'], n_alt_min_sup)
 

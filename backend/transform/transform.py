@@ -12,11 +12,11 @@ from .check_altitudes import check_altitudes
 from .check_geography import check_geography
 
 
-def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, def_count_val, cd_nom_list, srid,
+def data_cleaning(df, import_id, selected_columns, missing_val, def_count_val, cd_nom_list, srid,
                   local_srid, is_generate_uuid, schema_name, is_generate_altitude):
     try:
 
-        user_error = []
+        #user_error = []
         added_cols = {}
 
         # set gn_is_valid and gn_invalid_reason:
@@ -39,7 +39,8 @@ def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, 
             synthese_info['latitude'] = {'is_nullable': 'NO', 'column_default': None, 'data_type': 'real', 'character_max_length': None}
 
         # Check data:
-        check_missing(df, selected_columns, dc_user_errors, synthese_info, missing_val)
+        check_missing(df, selected_columns, synthese_info, missing_val, import_id)
+        """
         check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_val, schema_name)
         check_cd_nom(df, selected_columns, dc_user_errors, missing_val, cd_nom_list)
         check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info)
@@ -49,6 +50,7 @@ def data_cleaning(df, import_id, selected_columns, dc_user_errors, missing_val, 
         check_id_digitizer(df, selected_columns, dc_user_errors, synthese_info)
         check_geography(df, import_id, added_cols, selected_columns, dc_user_errors, srid, local_srid)
         check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul=is_generate_altitude)
+        """
 
         return {
             'user_errors': user_error,

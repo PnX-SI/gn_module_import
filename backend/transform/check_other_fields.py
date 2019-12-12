@@ -1,5 +1,6 @@
+from ..db.queries.user_errors import set_user_error, set_invalid_reason
 from ..wrappers import checker
-from .utils import set_is_valid, set_invalid_reason, set_user_error, fill_map
+from .utils import set_is_valid, fill_map
 from ..logs import logger
 from ..db.queries.metadata import get_id_roles
 

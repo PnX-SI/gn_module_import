@@ -4,8 +4,8 @@ import pandas as pd
 
 from geonature.utils.env import DB
 
-from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason, set_user_error
-
+from ..db.queries.user_errors import set_user_error, set_invalid_reason
+from .utils import fill_col, fill_map, set_is_valid
 from ..wrappers import checker
 from ..logs import logger
 from ..db.queries.user_table_queries import get_uuid_list
