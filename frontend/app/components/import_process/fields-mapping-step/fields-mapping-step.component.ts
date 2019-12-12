@@ -24,10 +24,10 @@ export class FieldsMappingStepComponent implements OnInit {
 	public id_mapping;
 	public step3Response;
 	public table_name;
-	public selected_columns;
-	public added_columns;
+	//public selected_columns;
+	//public added_columns;
 	step2_btn: boolean = false;
-	contentMappingInfo: any;
+	//contentMappingInfo: any;
 	isUserError: boolean = false;
 	formReady: boolean = false;
 	columns: any;
@@ -107,8 +107,8 @@ export class FieldsMappingStepComponent implements OnInit {
 				this.n_error_lines = res['n_user_errors'];
 				this.dataCleaningErrors = res['user_error_details'];
 				this.table_name = this.mappingRes['table_name'];
-				this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
-				this.added_columns = this.mappingRes['added_columns'];
+				//this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
+				//this.added_columns = this.mappingRes['added_columns'];
 				this.step2_btn = true;
 				this.isFullErrorCheck(res['n_table_rows'], this.n_error_lines);
 			},
@@ -135,23 +135,26 @@ export class FieldsMappingStepComponent implements OnInit {
 			.postMetaToStep3(
 				this.stepData.importId,
 				this._fm.id_mapping,
-				this.mappingRes['selected_columns'],
+				//this.mappingRes['selected_columns'],
 				this.mappingRes['table_name']
 			)
 			.subscribe(
 				(res) => {
                     this.step3Response = res;
+                    /*
 					this.contentMappingInfo = res.content_mapping_info;
 					this.contentMappingInfo.map((content) => {
 						content.isCollapsed = true;
-					});
-					this.step3Response['added_columns'] = this.added_columns;
+                    });
+                    */
+                    
+					//this.step3Response['added_columns'] = this.added_columns;
 					let step3data: Step3Data = {
-						contentMappingInfo: this.step3Response.content_mapping_info,
-						selected_columns: this.step3Response.selected_columns,
+						//contentMappingInfo: this.step3Response.content_mapping_info,
+						//selected_columns: this.step3Response.selected_columns,
 						table_name: this.step3Response.table_name,
 						importId: this.stepData.importId,
-						added_columns: this.step3Response.added_columns
+						//added_columns: this.step3Response.added_columns
 					};
 					let step2data: Step2Data = {
 					importId: this.stepData.importId,

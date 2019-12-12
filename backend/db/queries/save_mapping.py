@@ -1,9 +1,10 @@
 from geonature.utils.env import DB
 
 from ..models import TMappingsFields, TMappingsValues
+import pdb
 
 
-def save_field_mapping(form_data, id_mapping):
+def save_field_mapping(form_data, id_mapping, select_type):
     try:
 
         for col in form_data:
@@ -12,12 +13,18 @@ def save_field_mapping(form_data, id_mapping):
                 .filter(TMappingsFields.id_mapping == id_mapping) \
                 .filter(TMappingsFields.target_field == col).all()
 
-            #pdb.set_trace()
-            if form_data[col] != '':
-                is_selected = True
+            if select_type == 'selected':
+                if form_data[col] != '':
+                    is_selected = True
+                    is_added = False
+                else:
+                    is_selected = False
+                    is_added = False
             else:
-                is_selected = False
-                
+                if form_data[col] != '':
+                    is_selected = False
+                    is_added = True
+
             if len(my_query) > 0:
                 for q in my_query:
                     DB.session.query(TMappingsFields) \
@@ -27,8 +34,8 @@ def save_field_mapping(form_data, id_mapping):
                             TMappingsFields.source_field: form_data[col],
                             TMappingsFields.target_field: col,
                             TMappingsFields.is_selected: is_selected,
-                            TMappingsFields.is_added: False
-                    })
+                            TMappingsFields.is_added: is_added
+                        })
                     DB.session.flush()
 
             else:
@@ -76,5 +83,31 @@ def create_mapping_value(id_mapping, source_value, id_target_value):
             id_target_value=id_target_value
         )
         DB.session.add(new_contents)
+    except Exception:
+        raise
+
+
+def get_selected_columns(id_mapping):
+    try:
+        queries = DB.session.query(TMappingsFields) \
+            .filter(TMappingsFields.id_mapping == id_mapping) \
+            .filter(TMappingsFields.is_selected).all()
+        selected_columns = {}
+        for query in queries:
+            selected_columns[query.target_field] = query.source_field
+        return selected_columns        
+    except Exception:
+        raise
+
+
+def get_added_columns(id_mapping):
+    try:
+        queries = DB.session.query(TMappingsFields) \
+            .filter(TMappingsFields.id_mapping == id_mapping) \
+            .filter(TMappingsFields.is_added).all()
+        added_columns = {}
+        for query in queries:
+            added_columns[query.target_field] = query.source_field
+        return added_columns
     except Exception:
         raise

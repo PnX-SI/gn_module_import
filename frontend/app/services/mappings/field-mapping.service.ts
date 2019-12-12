@@ -115,7 +115,10 @@ export class FieldMappingService {
 			(mappingFields) => {
 				if (mappingFields[0] != 'empty') {
 					for (let field of mappingFields) {
-						targetFormName.controls[field['target_field']].enable();
+                        console.log(mappingFields);
+                        console.log(field);
+                        //targetFormName.controls[field['target_field']].enable();
+                        this.enableMapping(targetFormName);
 						targetFormName.get(field['target_field']).setValue(field['source_field']);
                     }
                     this.shadeSelectedColumns(targetFormName);

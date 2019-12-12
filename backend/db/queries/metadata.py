@@ -104,3 +104,14 @@ def get_id_mapping(import_id):
         return t_import.id_content_mapping
     except Exception:
         raise
+
+
+def get_id_field_mapping(import_id):
+    try:
+        t_import = DB.session \
+            .query(TImports.id_field_mapping) \
+            .filter(TImports.id_import == int(import_id)) \
+            .one()
+        return t_import.id_field_mapping
+    except Exception:
+        raise

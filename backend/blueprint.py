@@ -60,7 +60,8 @@ from .db.queries.metadata import (
     delete_import_CorImportArchives,
     delete_import_CorRoleImport,
     delete_import_TImports,
-    get_id_mapping
+    get_id_mapping,
+    get_id_field_mapping
 )
 
 from .db.queries.nomenclatures import (
@@ -69,7 +70,12 @@ from .db.queries.nomenclatures import (
     get_saved_content_mapping
 )
 
-from .db.queries.save_mapping import save_field_mapping, save_content_mapping
+from .db.queries.save_mapping import (
+    save_field_mapping, 
+    save_content_mapping, 
+    get_selected_columns,
+    get_added_columns
+)
 
 from .db.queries.taxonomy import get_cd_nom_list
 
@@ -106,6 +112,8 @@ from .load.utils import compute_df
 from .data_preview.preview import get_preview, set_total_columns
 from .load.into_synthese.import_data import load_data_to_synthese
 from .wrappers import checker
+
+import pdb
 
 
 blueprint = Blueprint('import', __name__)
@@ -311,6 +319,7 @@ def get_mapping_fields(info_role, id_mapping):
         fields = DB.session \
             .query(TMappingsFields) \
             .filter(TMappingsFields.id_mapping == int(id_mapping)) \
+            .filter(TMappingsFields.is_selected) \
             .all()
 
         mapping_fields = []
@@ -784,7 +793,7 @@ def postMapping(info_role, import_id, id_mapping):
 
         if id_mapping != 'undefined':
             logger.info('save field mapping')
-            save_field_mapping(data, id_mapping)
+            save_field_mapping(data, id_mapping, select_type='selected')
             logger.info(' -> field mapping saved')
         else:
             return {
@@ -830,7 +839,8 @@ def postMapping(info_role, import_id, id_mapping):
         logger.debug('DB tabel name = %s', table_names['imports_table_name'])
 
         # get synthese fields filled in the user form:
-        selected_columns = {key: value for key, value in data.items() if value}
+        selected_columns = get_selected_columns(id_mapping)
+
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
 
         # check if column names provided in the field form exists in the user table
@@ -924,6 +934,8 @@ def postMapping(info_role, import_id, id_mapping):
             load(partition_df, i, IMPORTS_SCHEMA_NAME, temp_table_name, engine)
             logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE partition %s', i)
 
+        save_field_mapping(added_cols, id_mapping, select_type='added')
+
         # filters dc_user_errors to get error report:
         error_report = []
         for error in dc_user_errors:
@@ -989,8 +1001,8 @@ def postMapping(info_role, import_id, id_mapping):
                    'n_table_rows': n_table_rows,
                    'import_id': import_id,
                    'id_mapping': id_mapping,
-                   'selected_columns': selected_columns,
-                   'added_columns': added_cols,
+                   #'selected_columns': selected_columns,
+                   #'added_columns': added_cols,
                    'table_name': table_names['imports_table_name']
                }, 200
 
@@ -1032,17 +1044,20 @@ def postMetaToStep3(info_role):
     try:
 
         data = request.form.to_dict()
+        selected_columns = get_selected_columns(data['id_mapping'])
 
+        """
         try:
             print(data['date_min'])
         except Exception:
             return {
                        'message': 'Veuillez d\'abord valider votre mapping'
                    }, 400
+        """
 
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
-        nomenc_info = get_nomenc_info(data, IMPORTS_SCHEMA_NAME, data['table_name'])
+        nomenc_info = get_nomenc_info(selected_columns, IMPORTS_SCHEMA_NAME, data['table_name'])
 
         # UPDATE TIMPORTS
 
@@ -1058,13 +1073,13 @@ def postMetaToStep3(info_role):
 
         table_name = data['table_name']
         import_id = data['import_id']
-        data.pop('table_name')
-        data.pop('import_id')
+        #data.pop('table_name')
+        #data.pop('import_id')
 
         return {
                    'table_name': table_name,
                    'import_id': import_id,
-                   'selected_columns': data,
+                   #'selected_columns': data,
                    'content_mapping_info': nomenc_info
                }, 200
     except Exception as e:
@@ -1089,10 +1104,10 @@ def getNomencInfo(info_role, import_id):
         table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id))
         table_name = table_names['imports_table_name']
 
-        # get form data
-        data = request.form.to_dict()
+        id_mapping = get_id_field_mapping(import_id)
+        selected_columns = get_selected_columns(id_mapping)
 
-        nomenc_info = get_nomenc_info(data, IMPORTS_SCHEMA_NAME, table_name)
+        nomenc_info = get_nomenc_info(selected_columns, IMPORTS_SCHEMA_NAME, table_name)
 
         return {
                    'content_mapping_info': nomenc_info
@@ -1176,7 +1191,7 @@ def content_mapping(info_role, import_id, id_mapping):
 
         form_data = request.form.to_dict(flat=False)
         form_data.pop('table_name')
-        form_data.pop('selected_cols')
+        #form_data.pop('selected_cols')
 
         # SAVE MAPPING
 
@@ -1256,7 +1271,10 @@ def import_data(info_role, import_id):
         is_id_source = check_id_source(import_id)
 
         if is_id_source:
-            return {'status': 'failed : already imported'}
+            return {
+                'message': 'échec : déjà importé',
+                'details': '(vérification basée sur l\'id_source)'
+            },400
 
         # insert into t_sources
         insert_into_t_sources(IMPORTS_SCHEMA_NAME, table_name, import_id, total_columns)
@@ -1288,9 +1306,9 @@ def import_data(info_role, import_id):
         DB.session.commit()
 
         return {
-                   'status': 'imported successfully',
-                   'total_columns': total_columns
-               }, 200
+            'status': 'imported successfully',
+            'total_columns': total_columns
+        }, 200
 
     except Exception as e:
         DB.session.rollback()
@@ -1319,13 +1337,13 @@ def get_valid_data(info_role, import_id):
             table_name = set_imports_table_name(get_table_name(import_id))
 
             # set total user columns
-            form_data = request.form.to_dict(flat=False)
-            selected_cols = ast.literal_eval(form_data['selected_columns'][0])
-            added_cols = ast.literal_eval(form_data['added_columns'][0])
+            #form_data = request.form.to_dict(flat=False)
+            id_mapping = get_id_field_mapping(import_id)
+            selected_cols = get_selected_columns(id_mapping)
+            added_cols = get_added_columns(id_mapping)
             total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME)
 
             # get content mapping data
-            id_mapping = get_id_mapping(import_id)
             selected_content = get_saved_content_mapping(id_mapping)
 
             # get valid data preview

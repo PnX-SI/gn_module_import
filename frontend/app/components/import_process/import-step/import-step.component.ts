@@ -55,6 +55,7 @@ export class ImportStepComponent implements OnInit {
                 this.importDataRes = res;
                 this.stepService.resetStepoer();
                 this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
+                console.log(res);
             },
             (error) => {
                 this.spinner = false;
@@ -72,13 +73,14 @@ export class ImportStepComponent implements OnInit {
 
     getValidData() {
         this.spinner = true;
-        this._ds.getValidData(this.stepData.importId, this.stepData.selected_columns, this.stepData.added_columns).subscribe(
+        this._ds.getValidData(this.stepData.importId).subscribe(
             (res) => {
                 this.spinner = false;
                 this.total_columns = res.total_columns;
                 this.nValidData = res.n_valid_data;
                 this.nInvalidData = res.n_invalid_data;
                 this.validData = res.valid_data;
+                console.log(this.total_columns);
                 if (this.validData != 'no data') {
                     this.columns = [];
                     this.rows = [];
