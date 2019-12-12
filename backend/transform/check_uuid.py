@@ -105,9 +105,9 @@ def check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, 
         if 'unique_id_sinp' not in uuid_cols:
             if is_generate_uuid:
                 logger.info('no unique_id_sinp column provided: creating uuid for each row')
-                create_col_name(df, selected_columns, 'unique_id_sinp', import_id)
-                df[selected_columns['unique_id_sinp']] = ''
-                df[selected_columns['unique_id_sinp']] = df[selected_columns['unique_id_sinp']]\
+                create_col_name(df, added_cols, 'unique_id_sinp', import_id)
+                df[added_cols['unique_id_sinp']] = ''
+                df[added_cols['unique_id_sinp']] = df[added_cols['unique_id_sinp']]\
                     .apply(lambda x: str(uuid4()))
                 #added_cols['unique_id_sinp'] = 'unique_id_sinp'
 

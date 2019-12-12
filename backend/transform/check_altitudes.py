@@ -1,4 +1,3 @@
-import pdb
 import pandas as pd
 import dask
 from .utils import fill_col, set_user_error
@@ -20,7 +19,6 @@ def check_alt_min_max(min_val, max_val):
 
 @checker('Data cleaning : altitudes checked')
 def check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul):
-
     """
     - if user want to calculate altitudes:
         -> if only altitude max column provided, calculates altitude min column
@@ -48,19 +46,21 @@ def check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul)
         if calcul is False:
 
             if len(altitudes) == 2:
-        
+
                 # check max >= min
                 df['temp'] = ''
-                df['temp'] = df.apply(lambda x: check_alt_min_max(x[selected_columns['altitude_min']], x[selected_columns['altitude_max']]), axis=1)
+                df['temp'] = df.apply(lambda x: check_alt_min_max(x[selected_columns['altitude_min']],
+                                                                  x[selected_columns['altitude_max']]), axis=1)
                 df['gn_is_valid'] = df['gn_is_valid'].where(cond=df['temp'].apply(lambda x: fill_col(x)), other=False)
                 df['gn_invalid_reason'] = df['gn_invalid_reason'].where(
                     cond=df['temp'].apply(lambda x: fill_col(x)),
-                    other=df['gn_invalid_reason'] + 'altitude_min ({}) > altitude_max ({}) -- '.format(selected_columns['altitude_min'],selected_columns['altitude_max']))
+                    other=df['gn_invalid_reason'] + 'altitude_min ({}) > altitude_max ({}) -- '.format(
+                        selected_columns['altitude_min'], selected_columns['altitude_max']))
 
                 n_alt_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
                 if n_alt_min_sup > 0:
-                    set_user_error(dc_user_errors, 10, selected_columns['altitude_min'], n_alt_min_sup)    
+                    set_user_error(dc_user_errors, 10, selected_columns['altitude_min'], n_alt_min_sup)
 
     except Exception:
         raise

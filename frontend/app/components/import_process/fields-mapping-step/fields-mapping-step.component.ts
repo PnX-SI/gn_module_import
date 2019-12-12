@@ -23,10 +23,10 @@ export class FieldsMappingStepComponent implements OnInit {
 	public id_mapping;
 	public step3Response;
 	public table_name;
-	public selected_columns;
-	public added_columns;
+	//public selected_columns;
+	//public added_columns;
 	step2_btn: boolean = false;
-	contentMappingInfo: any;
+	//contentMappingInfo: any;
 	isUserError: boolean = false;
 	formReady: boolean = false;
 	columns: any;
@@ -59,8 +59,7 @@ export class FieldsMappingStepComponent implements OnInit {
 			this.table_name = this.mappingRes['table_name'];
 			this.n_error_lines = this.mappingRes['n_user_errors'];
 			this.dataCleaningErrors = this.mappingRes['user_error_details'];
-			this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
-			this.added_columns = this.mappingRes['added_columns'];
+			
 
 			this.step2_btn = true;
 			this.isFullErrorCheck(this.mappingRes['n_table_rows'], this.n_error_lines);
@@ -113,8 +112,8 @@ export class FieldsMappingStepComponent implements OnInit {
 				this.n_error_lines = res['n_user_errors'];
 				this.dataCleaningErrors = res['user_error_details'];
 				this.table_name = this.mappingRes['table_name'];
-				this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
-				this.added_columns = this.mappingRes['added_columns'];
+				//this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
+				//this.added_columns = this.mappingRes['added_columns'];
 				this.step2_btn = true;
 				this.isFullErrorCheck(res['n_table_rows'], this.n_error_lines);
 			},
@@ -140,24 +139,26 @@ export class FieldsMappingStepComponent implements OnInit {
 			.postMetaToStep3(
 				this.stepData.importId,
 				this.id_mapping,
-				this.mappingRes['selected_columns'],
+				//this.mappingRes['selected_columns'],
 				this.mappingRes['table_name']
 			)
 			.subscribe(
 				(res) => {
-					this.step3Response = res;
+                    this.step3Response = res;
+                    /*
 					this.contentMappingInfo = res.content_mapping_info;
 					this.contentMappingInfo.map((content) => {
 						content.isCollapsed = true;
-					});
-					this.step3Response['added_columns'] = this.added_columns;
-
+                    });
+                    */
+                    
+					//this.step3Response['added_columns'] = this.added_columns;
 					let step3data: Step3Data = {
-						contentMappingInfo: this.step3Response.content_mapping_info,
-						selected_columns: this.step3Response.selected_columns,
+						//contentMappingInfo: this.step3Response.content_mapping_info,
+						//selected_columns: this.step3Response.selected_columns,
 						table_name: this.step3Response.table_name,
 						importId: this.stepData.importId,
-						added_columns: this.step3Response.added_columns
+						//added_columns: this.step3Response.added_columns
 					};
 					let savedStep3: Step3Data = this.stepService.getStepData(3);
 					if (savedStep3 && savedStep3.id_content_mapping )
@@ -189,7 +190,7 @@ export class FieldsMappingStepComponent implements OnInit {
 	}
 
 	onFormMappingChange() {
-		this.syntheseForm.valueChanges.subscribe((dd) => {
+		this.syntheseForm.valueChanges.subscribe(() => {
 			if (this.step2_btn) {
 				this.mappingRes = null;
 				this.step2_btn = false;
@@ -277,13 +278,15 @@ export class FieldsMappingStepComponent implements OnInit {
 		this.id_mapping = id_mapping;
 		this._ds.getMappingFields(this.id_mapping).subscribe(
 			(mappingFields) => {
-				this.geoTypeSelect(targetFormName);
+				
 				if (mappingFields[0] != 'empty') {
 					for (let field of mappingFields) {
-						targetFormName.controls[field['target_field']].enable();
+						this.enableMapping(targetFormName);
+						//targetFormName.controls[field['target_field']].enable();
 						targetFormName.get(field['target_field']).setValue(field['source_field']);
 					}
 					this.shadeSelectedColumns(targetFormName);
+					this.geoTypeSelect(targetFormName);
 				} else {
 					this.fillEmptyMapping(targetFormName);
 				}

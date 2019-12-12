@@ -7,8 +7,6 @@ from .utils import fill_map, set_is_valid, set_invalid_reason, set_user_error
 from ..wrappers import checker
 from ..utils.utils import create_col_name
 
-import pdb
-
 
 def set_wkt(value):
     try:
@@ -19,7 +17,6 @@ def set_wkt(value):
 
 @checker('Data cleaning : geographic data checked')
 def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors, srid, local_srid):
-    
     try:
 
         logger.info('CHECKING GEOGRAPHIC DATA:')
@@ -35,7 +32,6 @@ def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors,
             max_y = 7200000
             min_y = 6000000
 
-
         if 'WKT' not in selected_columns.keys():
 
             coordinates = ['longitude', 'latitude']
@@ -44,13 +40,12 @@ def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors,
 
                 logger.info('- converting %s in numeric values', selected_columns[col])
 
-                col_name = '_'.join(['temp',col])
+                col_name = '_'.join(['temp', col])
                 df[col_name] = pd.to_numeric(df[selected_columns[col]], 'coerce')
-                # créer une autre colonne (qu'on efface à la fin de la boucle) et garder celle là sans toucher aux valeurs
-                # car à la fin de toute façon on va utiliser seuelemnt les wkt
-                
-                logger.info('- checking consistency of values in %s synthese column (= %s user column):', col, selected_columns[col])
-                
+
+                logger.info('- checking consistency of values in %s synthese column (= %s user column):', col,
+                            selected_columns[col])
+
                 if col == 'longitude':
                     df['temp'] = df[col_name].le(min_x) | df[col_name].ge(max_x)
                 if col == 'latitude':
@@ -63,14 +58,16 @@ def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors,
                 # setting eventual inconsistent values to pd.np.nan
                 df[col_name] = df[col_name].where(df['temp'], pd.np.nan)
 
-                logger.info('%s inconsistant values detected in %s synthese column (= %s user column)', n_bad_coo, col, selected_columns[col])
+                logger.info('%s inconsistant values detected in %s synthese column (= %s user column)', n_bad_coo, col,
+                            selected_columns[col])
 
                 if n_bad_coo > 0:
-                    set_user_error(dc_user_errors, 13, selected_columns[col], n_bad_coo)  
+                    set_user_error(dc_user_errors, 13, selected_columns[col], n_bad_coo)
 
             # create wkt with crs provided by user
             crs = {'init': 'epsg:{}'.format(srid)}
-            user_gdf = gpd.GeoDataFrame(df, crs=crs, geometry=gpd.points_from_xy(df['temp_longitude'], df['temp_latitude']))
+            user_gdf = gpd.GeoDataFrame(df, crs=crs,
+                                        geometry=gpd.points_from_xy(df['temp_longitude'], df['temp_latitude']))
             df['temp'] = user_gdf['geometry'].is_valid
 
         else:
@@ -79,7 +76,6 @@ def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors,
             df[selected_columns['WKT']] = df[selected_columns['WKT']].apply(lambda x: set_wkt(x))
             user_gdf = gpd.GeoDataFrame(df, crs=crs, geometry=df[selected_columns['WKT']])
             df['temp'] = user_gdf['geometry'].is_valid
-
 
         # set column names :
         create_col_name(df=df, col_dict=added_cols, key='the_geom_4326', import_id=import_id)
@@ -117,7 +113,5 @@ def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors,
 
         del user_gdf
 
-
     except Exception:
         raise
-        

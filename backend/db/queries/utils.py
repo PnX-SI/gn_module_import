@@ -1,7 +1,5 @@
 from geonature.utils.env import DB
 
-import pdb
-
 
 def is_cd_nom_required(schema_name):
     try:
@@ -11,7 +9,7 @@ def is_cd_nom_required(schema_name):
             FROM {schema_name}.bib_fields
             WHERE name_field = 'cd_nom';
             """.format(
-                schema_name = schema_name
+                schema_name=schema_name
             )
         ).fetchone()[0]
         return is_nullable
@@ -26,8 +24,8 @@ def get_types(schema_name, selected_columns):
             FROM {schema_name}.bib_fields
             WHERE name_field IN ({col_list});
             """.format(
-                schema_name = schema_name,
-                col_list = ",".join(map(repr, selected_columns.keys()))
+                schema_name=schema_name,
+                col_list=",".join(map(repr, selected_columns.keys()))
             )).fetchall()
         types = [data.type_field for data in data_types]
         return types

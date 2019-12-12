@@ -18,7 +18,8 @@ export class UploadFileStepComponent implements OnInit {
 	public uploadForm: FormGroup;
 	public uploadFileErrors: any;
 	public importConfig = ModuleConfig;
-
+	public isUserErrors: boolean = false;
+	public isFileChanged: boolean = false;
 	stepData: Step1Data;
 	importId: number;
 	dataForm: any;
@@ -41,7 +42,7 @@ export class UploadFileStepComponent implements OnInit {
 	}
 
 	ngOnInit() {
-		this.datasetId =this._activatedRoute.snapshot.queryParams['datasetId'];
+		this.datasetId = this._activatedRoute.snapshot.queryParams['datasetId'];
 		this.stepData = this.stepService.getStepData(1);
 		if (this.stepData) {
 			this.importId = this.stepData.importId;
@@ -55,10 +56,37 @@ export class UploadFileStepComponent implements OnInit {
 				file: this.fileName,
 				encodage: this.dataForm.encoding,
 				srid: this.dataForm.srid,
-				separator: this.dataForm.separator,
+				separator: this.dataForm.separator
 			});
 			this.formListener();
-		}	
+		}
+		// disable 'separator' form control if geojson file provided :
+		if (this.fileName) {
+			this.disableSeparatorIfGeojson();
+		}
+
+		this.isUserErrors = false;
+		this.uploadFileErrors = null;
+		this.isFileChanged = false;
+	}
+
+	disableSeparatorIfGeojson() {
+		let extension = this.fileName.split('.').pop();
+		if (extension === 'geojson') {
+			this.uploadForm.controls['separator'].disable();
+		} else {
+			this.uploadForm.controls['separator'].enable();
+		}
+	}
+
+	isDisable() {
+		if (this.uploadForm.invalid) {
+			return true;
+		}
+		if (this.isUserErrors) {
+			return true;
+		}
+		return false;
 	}
 
 	onFileSelected(event: any) {
@@ -69,15 +97,14 @@ export class UploadFileStepComponent implements OnInit {
 			this.fileName = null;
 		} else {
 			this.fileName = event.target.files[0].name;
-        }
-
-        // disable 'separator' form control if geojson file provided :
-        let extension = this.fileName.split('.').pop();
-        if (extension === 'geojson') {
-            this.uploadForm.controls['separator'].disable();
-        } else {
-            this.uploadForm.controls['separator'].enable();
-        }
+		}
+		this.disableSeparatorIfGeojson();
+		/*
+        this.uploadForm.controls['encodage'].enable();
+        this.uploadForm.controls['srid'].enable();
+        this.uploadForm.controls['separator'].enable();
+        */
+		this.isFileChanged = true;
 	}
 
 	onFileClick(event) {
@@ -86,15 +113,18 @@ export class UploadFileStepComponent implements OnInit {
 		this.skip = false;
 		this.uploadForm.patchValue({
 			file: null
-		});	
+		});
+		this.isUserErrors = false;
+		this.uploadFileErrors = null;
 	}
 
 	onUpload(formValues: any) {
 		this.uploadFileErrors = null;
+		this.isUserErrors = false;
 		this.spinner = true;
 		if (!this.skip) {
 			this._ds
-				.postUserFile(formValues,this.datasetId , this.importId)
+				.postUserFile(formValues, this.datasetId, this.importId, this.isFileChanged, this.fileName)
 				.subscribe(
 					(res) => {
 						this.importId = res.importId;
@@ -103,17 +133,17 @@ export class UploadFileStepComponent implements OnInit {
 							srid: formValues.srid
 						};
 						this.stepService.setStepData(2, step2Data);
-						let step1data : Step1Data = {
-							importId : res.importId,
+						let step1data: Step1Data = {
+							importId: res.importId,
 							datasetId: this.datasetId,
-							formData :{
-								fileName: formValues.file.name,
-								srid : formValues.srid,
+							formData: {
+								fileName: res['fileName'],
+								srid: formValues.srid,
 								separator: formValues.separator,
-								encoding : formValues.encodage
+								encoding: formValues.encodage
 							}
-						}
-						this.stepService.setStepData(1, step1data)
+						};
+						this.stepService.setStepData(1, step1data);
 						this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/2` ]);
 						this.spinner = false;
 					},
@@ -122,7 +152,13 @@ export class UploadFileStepComponent implements OnInit {
 						if (error.statusText === 'Unknown Error') {
 							this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 						} else {
-							this.toastr.error(error.error.message);
+							if (error.status == 400) {
+								this.isUserErrors = true;
+								this.uploadFileErrors = error.error;
+								console.log(this.uploadFileErrors);
+							} else {
+								this.toastr.error(error.error.message);
+							}
 						}
 					}
 				);

@@ -59,7 +59,9 @@ CREATE TABLE t_mappings_fields(
     id_match_fields serial NOT NULL,
     id_mapping integer NOT NULL,
     source_field character varying(255) NOT NULL,
-    target_field character varying(255) NOT NULL
+    target_field character varying(255) NOT NULL,
+    is_selected boolean NOT NULL,
+    is_added boolean NOT NULL
 );
 
 
@@ -78,14 +80,6 @@ CREATE TABLE bib_mappings(
     mapping_type character varying(10) NOT NULL,
     active boolean NOT NULL
 );
-
-
-/*
-CREATE TABLE bib_type_mapping_values(
-    id_type_mapping integer NOT NULL,
-    mapping_type character varying(10)
-);
-*/
 
 
 CREATE TABLE bib_themes(

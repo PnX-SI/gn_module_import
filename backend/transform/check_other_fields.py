@@ -1,8 +1,3 @@
-import pdb
-import pandas as pd
-#import numpy as np
-from geonature.utils.env import DB
-
 from ..wrappers import checker
 from .utils import set_is_valid, set_invalid_reason, set_user_error, fill_map
 from ..logs import logger
@@ -11,7 +6,6 @@ from ..db.queries.metadata import get_id_roles
 
 @checker('Data cleaning : entity source pk value checked')
 def check_entity_source(df, added_cols, selected_columns, dc_user_errors, synthese_info):
-
     try:
         fields = [field for field in synthese_info]
 
@@ -19,31 +13,31 @@ def check_entity_source(df, added_cols, selected_columns, dc_user_errors, synthe
 
         if 'entity_source_pk_value' not in fields:
             logger.info('- no entity source pk value provided : set gn_pk column as entity source pk column')
-            # df['entity_source_pk_value'] = ''
-            # df['entity_source_pk_value'] = df['gn_pk'].astype('str') # utile?
-            added_cols['entity_source_pk_value'] = 'gn_pk' # récupérer gn_pk en conf
+            added_cols['entity_source_pk_value'] = 'gn_pk'  # récupérer gn_pk en conf
         else:
             # check duplicates
-            logger.info('- checking duplicates in entity_source_pk_value column (= %s user column)', selected_columns['entity_source_pk_value'])
+            logger.info('- checking duplicates in entity_source_pk_value column (= %s user column)',
+                        selected_columns['entity_source_pk_value'])
 
             df['temp'] = df.duplicated(selected_columns['entity_source_pk_value'], keep=False)
             df['temp'] = ~df['temp'].astype('bool')
 
             set_is_valid(df, 'temp')
-            set_invalid_reason(df, 'temp', 'entity_source_pk_value duplicates in {} column', selected_columns['entity_source_pk_value'])
-            
+            set_invalid_reason(df, 'temp', 'entity_source_pk_value duplicates in {} column',
+                               selected_columns['entity_source_pk_value'])
+
             n_entity_duplicates = df['temp'].astype(str).str.contains('False').sum()
-            logger.info('%s duplicates errors in entity_source_pk_value column (= %s user column)', n_entity_duplicates, selected_columns['entity_source_pk_value'])
+            logger.info('%s duplicates errors in entity_source_pk_value column (= %s user column)', n_entity_duplicates,
+                        selected_columns['entity_source_pk_value'])
 
             if n_entity_duplicates > 0:
                 set_user_error(dc_user_errors, 11, selected_columns['entity_source_pk_value'], n_entity_duplicates)
-            # ajouter check valeur manquante ? (car pas not null dans synthese)
     except Exception:
         raise
 
 
 @checker('Data cleaning : id_digitizer checked')
-def check_id_digitizer(df, added_cols, selected_columns, dc_user_errors, synthese_info):
+def check_id_digitizer(df, selected_columns, dc_user_errors, synthese_info):
     try:
         # check if id_digitizer exists in t_roles
         fields = [field for field in synthese_info]
@@ -55,14 +49,17 @@ def check_id_digitizer(df, added_cols, selected_columns, dc_user_errors, synthes
                 id_roles = get_id_roles()
                 is_invalid_id = any(id not in id_roles for id in ids)
                 if is_invalid_id:
-                    df['temp'] = df[selected_columns['id_digitiser']]\
-                        .fillna(id_roles[0])\
+                    df['temp'] = df[selected_columns['id_digitiser']] \
+                        .fillna(id_roles[0]) \
                         .isin(id_roles)
                     set_is_valid(df, 'temp')
-                    set_invalid_reason(df, 'temp', 'id_digitiser provided in {} column is not present in "t_roles" table', selected_columns['id_digitiser'])
+                    set_invalid_reason(df, 'temp',
+                                       'id_digitiser provided in {} column is not present in "t_roles" table',
+                                       selected_columns['id_digitiser'])
                     n_invalid_id_digit = df['temp'].astype(str).str.contains('False').sum()
 
-                    logger.info('%s invalid id_digitizer detected in %s column', n_invalid_id_digit, selected_columns['id_digitiser'])
+                    logger.info('%s invalid id_digitizer detected in %s column', n_invalid_id_digit,
+                                selected_columns['id_digitiser'])
 
                     # set front interface error
                     if n_invalid_id_digit > 0:

@@ -29,8 +29,8 @@ export interface Step2Data {
 
 export interface Step3Data {
 	importId?: number;
-	selected_columns?: any;
-	added_columns?: any;
+	//selected_columns?: any;
+	//added_columns?: any;
 	table_name?: any;
 	contentMappingInfo?: any;
 	id_content_mapping?: number;
@@ -38,8 +38,8 @@ export interface Step3Data {
 
 export interface Step4Data {
 	importId?: number;
-	selected_columns?: any;
-	added_columns?: any;
+	//selected_columns?: any;
+	//added_columns?: any;
 }
 
 @Injectable()

@@ -16,7 +16,7 @@ export class DataService {
 		return this._http.get<any>(urlApi);
 	}
 
-	postUserFile(value, datasetId, importId) {
+	postUserFile(value, datasetId, importId, isFileChanged, fileName) {
 		const urlStatus = `${urlApi}/uploads`;
 		let fd = new FormData();
 		if (value.file instanceof Blob) fd.append('File', value.file, value.file['name']);
@@ -24,7 +24,9 @@ export class DataService {
 		fd.append('srid', value.srid);
 		fd.append('separator', value.separator);
 		fd.append('datasetId', datasetId);
-		fd.append('importId', importId);
+        fd.append('importId', importId);
+        fd.append('isFileChanged', isFileChanged);
+        fd.append('fileName', fileName);
 		return this._http.post<any>(urlStatus, fd, HttpUploadOptions);
 	}
 
@@ -76,7 +78,7 @@ export class DataService {
 		return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
 	}
 
-	postContentMap(value, table_name, selected_columns, import_id, id_mapping) {
+	postContentMap(value, table_name, import_id, id_mapping) {
         console.log(value);
 		if (id_mapping == null) {
 			id_mapping = 0;
@@ -110,7 +112,6 @@ export class DataService {
 			}
 		}
 		fd.append('table_name', table_name);
-		fd.append('selected_cols', JSON.stringify(selected_columns));
 		return this._http.post<any>(contentMappingUrl, fd, HttpUploadOptions);
 	}
 
@@ -119,43 +120,33 @@ export class DataService {
     }
     
     
-    postMetaToStep3(import_id, id_mapping, selected_columns, table_name) {
+    postMetaToStep3(import_id, id_mapping, table_name) {
         let fd = new FormData();
         fd.append('import_id', import_id);
         fd.append('id_mapping', id_mapping);
+        /*
         for (let key of Object.keys(selected_columns)) {
             fd.append(key, selected_columns[key]);
         }
+        */
         fd.append('table_name', table_name);
         return this._http.post<any>(`${urlApi}/postMetaToStep3`, fd, HttpUploadOptions);
     }
 
 
-    getNomencInfo(obj, import_id) {
-        let fd = new FormData();
-        for (let key of Object.keys(obj)) {
-            console.log(key);
-            console.log(obj[key]);
-            fd.append(key, obj[key]);
-        }
-        console.log(fd);
-        return this._http.post<any>(`${urlApi}/getNomencInfo/${import_id}`, fd, HttpUploadOptions);
+    getNomencInfo(import_id) {
+        return this._http.get<any>(`${urlApi}/getNomencInfo/${import_id}`);
     }
 
 
-    importData(import_id, total_columns) {
-        let fd = new FormData();
-        fd.append('total_columns', JSON.stringify(total_columns));
-        fd.append('import_id', import_id);
-        return this._http.post<any>(`${urlApi}/importData/${import_id}`, fd, HttpUploadOptions);
+    importData(import_id) {
+        return this._http.get<any>(`${urlApi}/importData/${import_id}`);
     }
 
 
-    getValidData(importId: number, selected_columns, added_columns) {
+    getValidData(importId: number) {
         let fd = new FormData();
-        fd.append('selected_columns', JSON.stringify(selected_columns));
-        fd.append('added_columns', JSON.stringify(added_columns));
-        return this._http.post<any>(`${urlApi}/getValidData/${importId}`, fd, HttpUploadOptions);        
+        return this._http.get<any>(`${urlApi}/getValidData/${importId}`, fd, HttpUploadOptions);        
     }
 
 

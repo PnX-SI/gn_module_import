@@ -17,8 +17,8 @@ export class FooterStepperComponent implements OnInit {
 	isLinear: boolean = true;
 	contentMappingInfo: any;
 	table_name: any;
-	selected_columns: any;
-	added_columns: any;
+	//selected_columns: any;
+	//added_columns: any;
 	importId: any;
 	stepId: any;
 	dataStep1: any;
