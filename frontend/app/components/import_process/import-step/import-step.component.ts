@@ -49,7 +49,7 @@ export class ImportStepComponent implements OnInit {
 
     onImport() {
         this.spinner = true;
-        this._ds.importData(this.stepData.importId, this.total_columns).subscribe(
+        this._ds.importData(this.stepData.importId).subscribe(
             (res) => {
                 this.spinner = false;
                 this.importDataRes = res;

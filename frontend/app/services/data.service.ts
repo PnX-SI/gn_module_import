@@ -139,11 +139,8 @@ export class DataService {
     }
 
 
-    importData(import_id, total_columns) {
-        let fd = new FormData();
-        fd.append('total_columns', JSON.stringify(total_columns));
-        fd.append('import_id', import_id);
-        return this._http.post<any>(`${urlApi}/importData/${import_id}`, fd, HttpUploadOptions);
+    importData(import_id) {
+        return this._http.get<any>(`${urlApi}/importData/${import_id}`);
     }
 
 

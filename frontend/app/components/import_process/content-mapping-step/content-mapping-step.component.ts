@@ -150,7 +150,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 			}
 		);
 		this.contentTargetForm.controls[formControlName].setValue(values);
-		
 	}
 
 

@@ -1242,14 +1242,10 @@ def import_data(info_role, import_id):
         table_name = set_imports_table_name(get_table_name(import_id))
 
         # set total user columns
-        form_data = request.form.to_dict(flat=False)
-        try:
-            total_columns = ast.literal_eval(form_data['total_columns'][0])
-        except ValueError:
-            return {
-                       'message': 'Attention',
-                       'details': 'Veuillez prévisualiser les données avant d\'importer'
-                   }, 500
+        id_mapping = get_id_field_mapping(import_id)
+        selected_cols = get_selected_columns(id_mapping)
+        added_cols = get_added_columns(id_mapping)
+        total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME)
 
         ### CONTENT MAPPING ###
 
@@ -1306,8 +1302,8 @@ def import_data(info_role, import_id):
         DB.session.commit()
 
         return {
-            'status': 'imported successfully',
-            'total_columns': total_columns
+            'status': 'imported successfully'
+            #'total_columns': total_columns
         }, 200
 
     except Exception as e:
@@ -1362,7 +1358,7 @@ def get_valid_data(info_role, import_id):
             total_columns = ''
 
         return {
-                   'total_columns': total_columns,
+                   #'total_columns': total_columns,
                    'valid_data': valid_data_list,
                    'n_valid_data': n_valid,
                    'n_invalid_data': n_invalid
