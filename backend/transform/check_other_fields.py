@@ -1,12 +1,12 @@
-from ..db.queries.user_errors import set_user_error, set_invalid_reason
+from ..db.queries.user_errors import set_user_error
 from ..wrappers import checker
-from .utils import set_is_valid, fill_map
+from .utils import set_is_valid, fill_map, set_invalid_reason
 from ..logs import logger
 from ..db.queries.metadata import get_id_roles
 
 
 @checker('Data cleaning : entity source pk value checked')
-def check_entity_source(df, added_cols, selected_columns, dc_user_errors, synthese_info):
+def check_entity_source(df, added_cols, selected_columns, synthese_info, import_id, schema_name):
     try:
         fields = [field for field in synthese_info]
 
@@ -24,21 +24,21 @@ def check_entity_source(df, added_cols, selected_columns, dc_user_errors, synthe
             df['temp'] = ~df['temp'].astype('bool')
 
             set_is_valid(df, 'temp')
-            set_invalid_reason(df, 'temp', 'entity_source_pk_value duplicates in {} column',
-                               selected_columns['entity_source_pk_value'])
-
             n_entity_duplicates = df['temp'].astype(str).str.contains('False').sum()
+
             logger.info('%s duplicates errors in entity_source_pk_value column (= %s user column)', n_entity_duplicates,
                         selected_columns['entity_source_pk_value'])
 
             if n_entity_duplicates > 0:
-                set_user_error(dc_user_errors, 11, selected_columns['entity_source_pk_value'], n_entity_duplicates)
+                set_user_error(import_id, 11, selected_columns['entity_source_pk_value'], n_entity_duplicates)
+                set_invalid_reason(df, schema_name, 'temp', import_id, 11, selected_columns['entity_source_pk_value'])
+
     except Exception:
         raise
 
 
 @checker('Data cleaning : id_digitizer checked')
-def check_id_digitizer(df, selected_columns, dc_user_errors, synthese_info):
+def check_id_digitizer(df, selected_columns, synthese_info, import_id, schema_name):
     try:
         # check if id_digitizer exists in t_roles
         fields = [field for field in synthese_info]
@@ -54,9 +54,7 @@ def check_id_digitizer(df, selected_columns, dc_user_errors, synthese_info):
                         .fillna(id_roles[0]) \
                         .isin(id_roles)
                     set_is_valid(df, 'temp')
-                    set_invalid_reason(df, 'temp',
-                                       'id_digitiser provided in {} column is not present in "t_roles" table',
-                                       selected_columns['id_digitiser'])
+
                     n_invalid_id_digit = df['temp'].astype(str).str.contains('False').sum()
 
                     logger.info('%s invalid id_digitizer detected in %s column', n_invalid_id_digit,
@@ -64,6 +62,8 @@ def check_id_digitizer(df, selected_columns, dc_user_errors, synthese_info):
 
                     # set front interface error
                     if n_invalid_id_digit > 0:
-                        set_user_error(dc_user_errors, 15, selected_columns['id_digitiser'], n_invalid_id_digit)
+                        set_user_error(import_id, 15, selected_columns['id_digitiser'], n_invalid_id_digit)
+                        set_invalid_reason(df, schema_name, 'temp', import_id, 15, selected_columns['id_digitiser'])
+
     except Exception:
         raise

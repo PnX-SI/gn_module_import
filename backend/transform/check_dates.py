@@ -1,7 +1,7 @@
 import pandas as pd
 
-from ..db.queries.user_errors import set_user_error, set_invalid_reason
-from .utils import fill_col, fill_map, set_is_valid
+from ..db.queries.user_errors import set_user_error
+from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason
 from ..wrappers import checker
 from ..logs import logger
 
@@ -20,7 +20,7 @@ def is_negative_date(value):
 
 
 @checker('Data cleaning : dates checked')
-def check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info):
+def check_dates(df, added_cols, selected_columns, synthese_info, import_id, schema_name):
     try:
 
         logger.info('CHECKING DATES :')
@@ -56,15 +56,14 @@ def check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info)
                 .astype('bool')
 
             set_is_valid(df, 'temp')
-            set_invalid_reason(df, 'temp', 'date_min > date_max ({} columns)',
-                               ','.join([selected_columns['date_min'], selected_columns['date_max']]))
             n_date_min_sup = df['temp'].astype(str).str.contains('False').sum()
 
             logger.info('%s date_min (= %s user column) > date_max (= %s user column) errors detected', n_date_min_sup,
                         selected_columns['date_min'], selected_columns['date_max'])
 
             if n_date_min_sup > 0:
-                set_user_error(dc_user_errors, 7, selected_columns['date_min'], n_date_min_sup)
+                set_user_error(import_id, 7, selected_columns['date_min'], n_date_min_sup)
+                set_invalid_reason(df, schema_name, 'temp', import_id, 7, selected_columns['date_min'])
 
         if 'check_dates' in df.columns:
             df = df.drop('check_dates', axis=1)

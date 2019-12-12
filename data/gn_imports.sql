@@ -121,7 +121,7 @@ CREATE TABLE user_error_list(
     id_error integer NOT NULL,
     column_error character varying(100) NOT NULL,
     count_error integer NOT NULL
-)
+);
 
 
 

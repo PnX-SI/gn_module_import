@@ -2,9 +2,9 @@ import geopandas as gpd
 import pandas as pd
 from shapely import wkt
 
-from ..db.queries.user_errors import set_user_error, set_invalid_reason
+from ..db.queries.user_errors import set_user_error
 from ..logs import logger
-from .utils import fill_map, set_is_valid
+from .utils import fill_map, set_is_valid, set_invalid_reason
 from ..wrappers import checker
 from ..utils.utils import create_col_name
 
@@ -17,7 +17,7 @@ def set_wkt(value):
 
 
 @checker('Data cleaning : geographic data checked')
-def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors, srid, local_srid):
+def check_geography(df, import_id, added_cols, selected_columns, srid, local_srid, schema_name):
     try:
 
         logger.info('CHECKING GEOGRAPHIC DATA:')
@@ -53,7 +53,6 @@ def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors,
                     df['temp'] = df[col_name].le(min_y) | df[col_name].ge(max_y)
                 df['temp'] = ~df['temp']
                 set_is_valid(df, 'temp')
-                set_invalid_reason(df, 'temp', 'inconsistant coordinate in {} column', selected_columns[col])
                 n_bad_coo = df['temp'].astype(str).str.contains('False').sum()
 
                 # setting eventual inconsistent values to pd.np.nan
@@ -63,7 +62,8 @@ def check_geography(df, import_id, added_cols, selected_columns, dc_user_errors,
                             selected_columns[col])
 
                 if n_bad_coo > 0:
-                    set_user_error(dc_user_errors, 13, selected_columns[col], n_bad_coo)
+                    set_user_error(import_id, 13, selected_columns[col], n_bad_coo)
+                    set_invalid_reason(df, schema_name, 'temp', import_id, 13, selected_columns[col])
 
             # create wkt with crs provided by user
             crs = {'init': 'epsg:{}'.format(srid)}

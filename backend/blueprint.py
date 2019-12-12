@@ -79,6 +79,8 @@ from .db.queries.save_mapping import (
 
 from .db.queries.taxonomy import get_cd_nom_list
 
+from .db.queries.user_errors import delete_user_errors
+
 from .db.queries.load_to_synthese import (
     insert_into_t_sources,
     check_id_source
@@ -870,6 +872,11 @@ def postMapping(info_role, import_id, id_mapping):
                    }, 500
 
 
+        # DELETE USER ERRORS
+
+        delete_user_errors(IMPORTS_SCHEMA_NAME, import_id)
+
+
         # EXTRACT
 
         logger.info('* START EXTRACT FROM DB TABLE TO PYTHON')
@@ -894,13 +901,8 @@ def postMapping(info_role, import_id, id_mapping):
                                              DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid, \
                                              is_generate_uuid, IMPORTS_SCHEMA_NAME, is_generate_alt)
 
-            if len(transform_errors['user_errors']) > 0:
-                for error in transform_errors['user_errors']:
-                    logger.debug('USER ERRORS : %s', error['message'])
-                    errors.append(error)
-
+            
             added_cols = transform_errors['added_cols']
-
             if 'temp' in partition_df.columns:
                 partition_df = partition_df.drop('temp', axis=1)
             if 'check_dates' in partition_df.columns:
@@ -933,7 +935,8 @@ def postMapping(info_role, import_id, id_mapping):
 
         # alter primary key type into integer
         alter_column_type(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], index_col, 'integer')
-
+        
+        """
         # calculate geometries and altitudes
         set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid,
                      added_cols['the_geom_4326'], added_cols['the_geom_point'], added_cols['the_geom_local'])
@@ -941,6 +944,7 @@ def postMapping(info_role, import_id, id_mapping):
         set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME,
                       table_names['imports_full_table_name'], table_names['imports_table_name'],
                       index_col, is_generate_alt, added_cols['the_geom_local'], added_cols)
+        """
 
         DB.session.commit()
         DB.session.close()
@@ -973,7 +977,7 @@ def postMapping(info_role, import_id, id_mapping):
         DB.session.close()
 
         return {
-                   'user_error_details': error_report,
+                   #'user_error_details': error_report,
                    'n_user_errors': n_invalid_rows,
                    'n_table_rows': n_table_rows,
                    'import_id': import_id,

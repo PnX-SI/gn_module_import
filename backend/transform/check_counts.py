@@ -1,7 +1,7 @@
 import pandas as pd
 
-from ..db.queries.user_errors import set_user_error, set_invalid_reason
-from .utils import fill_col, fill_map, set_is_valid
+from ..db.queries.user_errors import set_user_error
+from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason
 from ..wrappers import checker
 from ..logs import logger
 
@@ -28,7 +28,7 @@ def check_missing_count_max(min_val, max_val):
 
 
 @checker('Data cleaning : counts checked')
-def check_counts(df, selected_columns, dc_user_errors, synthese_info, def_count_val, added_cols):
+def check_counts(df, selected_columns, synthese_info, def_count_val, added_cols, import_id, schema_name):
     """
     - every time :
         -> count_min = def_count_val if NA
@@ -42,8 +42,6 @@ def check_counts(df, selected_columns, dc_user_errors, synthese_info, def_count_
     """
 
     try:
-
-        # remark : negative values previously checked during check_types step
 
         logger.info('CHECKING COUNTS: ')
 
@@ -121,18 +119,13 @@ def check_counts(df, selected_columns, dc_user_errors, synthese_info, def_count_
                     .astype('bool')
 
                 set_is_valid(df, 'temp')
-                set_invalid_reason(
-                    df,
-                    'temp',
-                    'count_min > count_max ({} columns)',
-                    ','.join([count_min_col, selected_columns['count_max']])
-                )
-
                 n_count_min_sup = df['temp'].astype(str).str.contains('False').sum()
+
                 logger.info('%s count_max < count_min errors detected', n_count_min_sup)
 
                 if n_count_min_sup > 0:
-                    set_user_error(dc_user_errors, 8, count_min_col, n_count_min_sup)
+                    set_user_error(import_id, 8, count_min_col, n_count_min_sup)
+                    set_invalid_reason(df, schema_name, 'temp', import_id, 8, count_min_col)
 
     except Exception:
         raise

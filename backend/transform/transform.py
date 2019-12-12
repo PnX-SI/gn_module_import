@@ -39,21 +39,19 @@ def data_cleaning(df, import_id, selected_columns, missing_val, def_count_val, c
             synthese_info['latitude'] = {'is_nullable': 'NO', 'column_default': None, 'data_type': 'real', 'character_max_length': None}
 
         # Check data:
-        check_missing(df, selected_columns, synthese_info, missing_val, import_id)
-        """
-        check_types(df, added_cols, selected_columns, dc_user_errors, synthese_info, missing_val, schema_name)
-        check_cd_nom(df, selected_columns, dc_user_errors, missing_val, cd_nom_list)
-        check_dates(df, added_cols, selected_columns, dc_user_errors, synthese_info)
-        check_uuid(df, added_cols, selected_columns, dc_user_errors, synthese_info, is_generate_uuid, import_id)
-        check_counts(df, selected_columns, dc_user_errors, synthese_info, def_count_val, added_cols)
-        check_entity_source(df, added_cols, selected_columns, dc_user_errors, synthese_info)
-        check_id_digitizer(df, selected_columns, dc_user_errors, synthese_info)
-        check_geography(df, import_id, added_cols, selected_columns, dc_user_errors, srid, local_srid)
-        check_altitudes(df, selected_columns, dc_user_errors, synthese_info, calcul=is_generate_altitude)
-        """
+        check_missing(df, selected_columns, synthese_info, missing_val, import_id, schema_name)
+        check_types(df, added_cols, selected_columns, synthese_info, missing_val, schema_name, import_id)
+        check_cd_nom(df, selected_columns, missing_val, cd_nom_list, schema_name, import_id)
+        check_dates(df, added_cols, selected_columns, synthese_info, import_id, schema_name)
+        check_uuid(df, added_cols, selected_columns, synthese_info, is_generate_uuid, import_id, schema_name)
+        check_counts(df, selected_columns, synthese_info, def_count_val, added_cols, import_id, schema_name)
+        check_entity_source(df, added_cols, selected_columns, synthese_info, import_id, schema_name)
+        check_id_digitizer(df, selected_columns, synthese_info, import_id, schema_name)
+        check_geography(df, import_id, added_cols, selected_columns, srid, local_srid, schema_name)
+        check_altitudes(df, selected_columns, synthese_info, is_generate_altitude, import_id, schema_name)
 
         return {
-            'user_errors': user_error,
+            #'user_errors': user_error,
             'added_cols': added_cols
         }
 
