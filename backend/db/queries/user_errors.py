@@ -3,6 +3,7 @@ import pdb
 
 
 def set_user_error(id_import, id_error, col_name, n_errors):
+    DB.session.begin(subtransactions=True)
     try:
         DB.session.execute(
             """
@@ -48,6 +49,7 @@ def get_error_message(schema_name, id_import, id_error, col_name):
 
 
 def delete_user_errors(schema_name, id_import):
+    DB.session.begin(subtransactions=True)
     try:
         DB.session.execute(
             """
