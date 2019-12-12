@@ -27,7 +27,9 @@ def insert_into_synthese(schema_name, table_name, select_part, total_columns):
                 schema_name=schema_name,
                 table_name=table_name
             ))
+        DB.session.flush()
     except Exception:
+        DB.session.rollback()
         raise
 
 

@@ -1,42 +1,44 @@
+<div class=container>
+        <stepper [step]=3></stepper>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0"> 
+                Prévisualisation des observations valides prêtes à être importées dans GeoNature
+            </h5>
+        </div>
+        <div class="card-body">
 
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0"> 
-            Prévisualisation des observations valides prêtes à être importées dans GeoNature
-        </h5>
+                <ngx-datatable *ngIf="tableReady" #table class="material striped" [rows]="rows" [columnMode]="'force'"
+                    [headerHeight]="35" [scrollbarH]="true" [footerHeight]="40" [rowHeight]="40" [limit]="15"
+                    [selectionType]='single'>
+                    <ngx-datatable-column *ngFor="let col of columns" name="{{col.name}}" prop="{{col.prop}}">
+                    </ngx-datatable-column>
+                </ngx-datatable>
+
+                <br />
+
+                <div class="d-flex flex-row justify-content-between">
+                    <button (click)="onStepBack()"
+                        class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between">
+                        <i class="material-icons"> navigate_before </i>
+                        Précédent
+                    </button>
+                    <button *ngIf="nInvalidData > 0" class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
+                        (click)="_csvExport.onCSV(stepData.importId)">
+                        <i class="material-icons"> done </i>
+                        Exporter vos {{nInvalidData}} observations invalides
+                    </button>
+                    <button *ngIf="nValidData > 0" class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
+                        (click)="onImport()">
+                        <i class="material-icons"> done </i>
+                        Importer vos {{nValidData}} observations valides
+                    </button>
+                </div>
+        </div>
+        <footer>
+            <footer-stepper></footer-stepper>
+        </footer>
     </div>
-    <div class="card-body">
-
-            <ngx-datatable *ngIf="tableReady" #table class="material striped" [rows]="rows" [columnMode]="'force'"
-                [headerHeight]="35" [scrollbarH]="true" [footerHeight]="40" [rowHeight]="40" [limit]="15"
-                [selectionType]='single'>
-                <ngx-datatable-column *ngFor="let col of columns" name="{{col.name}}" prop="{{col.prop}}">
-                </ngx-datatable-column>
-            </ngx-datatable>
-
-            <br />
-
-            <div class="d-flex flex-row justify-content-between">
-                <button (click)="onStepBack()"
-                    class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between">
-                    <i class="material-icons"> navigate_before </i>
-                    Précédent
-                </button>
-                <button *ngIf="nInvalidData > 0" class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
-                    (click)="_csvExport.onCSV(stepData.importId)">
-                    <i class="material-icons"> done </i>
-                    Exporter vos {{nInvalidData}} observations invalides
-                </button>
-                <button *ngIf="nValidData > 0" class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                    (click)="onImport()">
-                    <i class="material-icons"> done </i>
-                    Importer vos {{nValidData}} observations valides
-                </button>
-            </div>
-    </div>
-    <footer>
-        <footer-stepper></footer-stepper>
-    </footer>
 </div>
 
 <div *ngIf="spinner" class="spinner">

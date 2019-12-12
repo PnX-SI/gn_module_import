@@ -82,6 +82,7 @@ def get_nomenc_info(form_data, schema_name, table_name):
 
 @checker('Set nomenclature ids from content mapping form')
 def set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, selected_cols):
+    DB.session.begin(subtransactions=True)
     try:
         content_list = []
         for key, value in selected_content.items():
@@ -104,12 +105,11 @@ def set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, sele
     except Exception:
         DB.session.rollback()
         raise
-    finally:
-        DB.session.close()
 
 
 @checker('Set nomenclature default ids')
 def set_default_nomenclature_ids(schema_name, table_name, selected_cols):
+    DB.session.begin(subtransactions=True)
     try:
         selected_nomenc = {k: v for k, v in selected_cols.items() if k in get_synthese_cols()}
         for k, v in selected_nomenc.items():
@@ -121,5 +121,3 @@ def set_default_nomenclature_ids(schema_name, table_name, selected_cols):
     except Exception:
         DB.session.rollback()
         raise
-    finally:
-        DB.session.close()

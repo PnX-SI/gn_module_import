@@ -159,7 +159,7 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 			(id_mapping) => {
 				if (id_mapping) {
                     this.disabled = false;
-					this.fillMapping(id_mapping);
+                    this.fillMapping(id_mapping);
 				} else {
 					this.getNomencInf();
                     this.contentTargetForm.reset();
