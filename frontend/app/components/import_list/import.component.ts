@@ -86,7 +86,6 @@ export class ImportComponent implements OnInit {
 		let dataStep2: Step2Data = {
 			importId: row.id_import,
 			srid: row.srid,
-			mappingRes :{},
 			mappingIsValidate: false
 		};
 		switch (row.step) {
@@ -96,6 +95,7 @@ export class ImportComponent implements OnInit {
 			}
 			case 3: {
 				dataStep2.id_field_mapping = row.id_field_mapping;
+				dataStep2.mappingRes = {};
 				dataStep2.mappingRes.table_name = row.import_table;
 				dataStep2.mappingRes.n_table_rows = row.source_count;
 				dataStep2.mappingIsValidate = true;
@@ -125,8 +125,7 @@ export class ImportComponent implements OnInit {
 		this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/${row.step}` ]);
 	}
 
-
-    /*
+	/*
 	onCSV(row) {
 		console.log(row);
 		this.historyId = row.id_import;
@@ -161,5 +160,4 @@ export class ImportComponent implements OnInit {
 		);
     }
     */
-   
 }
