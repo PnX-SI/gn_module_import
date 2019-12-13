@@ -902,7 +902,7 @@ def postMapping(info_role, import_id, id_mapping):
             transform_errors = data_cleaning(partition_df, import_id, \
                                              selected_columns, MISSING_VALUES, \
                                              DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid, \
-                                             is_generate_uuid, IMPORTS_SCHEMA_NAME, is_generate_alt)
+                                             is_generate_uuid, IMPORTS_SCHEMA_NAME, is_generate_alt, PREFIX)
 
             
             added_cols = transform_errors['added_cols']

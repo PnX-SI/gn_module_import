@@ -10,10 +10,11 @@ from .check_other_fields import check_entity_source, check_id_digitizer
 from .check_counts import check_counts
 from .check_altitudes import check_altitudes
 from .check_geography import check_geography
+from .check_duplicated import check_row_duplicates
 
 
 def data_cleaning(df, import_id, selected_columns, missing_val, def_count_val, cd_nom_list, srid,
-                  local_srid, is_generate_uuid, schema_name, is_generate_altitude):
+                  local_srid, is_generate_uuid, schema_name, is_generate_altitude, prefix):
     try:
 
         #user_error = []
@@ -40,6 +41,7 @@ def data_cleaning(df, import_id, selected_columns, missing_val, def_count_val, c
 
         # Check data:
         check_missing(df, selected_columns, synthese_info, missing_val, import_id, schema_name)
+        check_row_duplicates(df, selected_columns, import_id, schema_name)
         check_types(df, added_cols, selected_columns, synthese_info, missing_val, schema_name, import_id)
         check_cd_nom(df, selected_columns, missing_val, cd_nom_list, schema_name, import_id)
         check_dates(df, added_cols, selected_columns, synthese_info, import_id, schema_name)

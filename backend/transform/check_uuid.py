@@ -74,13 +74,14 @@ def check_uuid(df, added_cols, selected_columns, synthese_info, is_generate_uuid
 
                     set_is_valid(df, 'temp')
                     n_invalid_uuid = df['temp'].astype(str).str.contains('False').sum()
-                    df.drop('temp',axis=1)
 
                     logger.info('%s uuid value exists already in synthese table (= %s user column)', n_invalid_uuid, selected_columns[col])
 
                     if n_invalid_uuid > 0:
                         set_user_error(import_id, 14, uuid_col_name, n_invalid_uuid)
                         set_invalid_reason(df, schema_name, 'temp', import_id, 14, uuid_col_name)
+
+                    df.drop('temp',axis=1)
                     
                 # pour les autres colonnes : on envoie un warning sans créer un uuid pour les champs manquants:
                 else:

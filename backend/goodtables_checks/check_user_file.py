@@ -12,7 +12,7 @@ def check_user_file(full_path, row_limit=100000000):
 
         errors = []
 
-        report = validate(full_path, row_limit=row_limit)
+        report = validate(full_path, skip_checks=['duplicate-row'], row_limit=row_limit)
 
         if report['valid'] is False:
 

@@ -44,13 +44,15 @@ def check_missing(df, selected_columns, synthese_info, missing_values, import_id
                     .astype('bool')
                 set_is_valid(df, 'temp')
                 n_missing_value = df['temp'].astype(str).str.contains('False').sum()
-                df.drop('temp', axis=1)
+                
                 logger.info('%s missing values detected for %s synthese column (= %s user column)', n_missing_value,
                             field, selected_columns[field])
                 
                 if n_missing_value > 0:
                     set_user_error(import_id, 5, selected_columns[field], n_missing_value)
                     set_invalid_reason(df, schema_name, 'temp', import_id, 5, selected_columns[field])
+
+                df.drop('temp', axis=1)
             else:
                 logger.info('0 missing values detected for %s synthese column (= %s user column)', field,
                             selected_columns[field])
