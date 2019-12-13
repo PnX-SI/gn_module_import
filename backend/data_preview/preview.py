@@ -6,7 +6,7 @@ from ..db.queries.data_preview import (
 )
 
 from ..db.queries.nomenclatures import (
-    get_synthese_cols, 
+    get_SINP_synthese_cols, 
     get_mnemo,
     set_default_value,
     get_nomenc_abb_from_name,
@@ -39,14 +39,14 @@ def get_preview(schema_name, table_name, total_columns, selected_content):
                         synthese_dict[key]['value'] = total_columns[value['key']]
                     else:
                         # if this is a nomenclature column : replace user voc by nomenclature voc
-                        if value['key'] in get_synthese_cols():
+                        if value['key'] in get_SINP_synthese_cols():
                             nomenc_val = get_nomenc_name(value['key'], row[total_columns[value['key']]], selected_content)
                             synthese_dict[key]['value'] = nomenc_val
                         else:
                             synthese_dict[key]['value'] = row[total_columns[value['key']]]
                 else:
                     # if it is a nomenclature column and it is not provided by user : set default value
-                    if value['key'] in get_synthese_cols():
+                    if value['key'] in get_SINP_synthese_cols():
                         synthese_dict[key]['value'] = get_mnemo(set_default_value(get_nomenc_abb_from_name(value['key'])))
             if synthese_dict[4]['key'] == 'id_source':
                 del synthese_dict[4]

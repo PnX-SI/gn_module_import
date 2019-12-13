@@ -7,7 +7,7 @@ from ...db.queries.nomenclatures import (
     get_nomenc_abbs,
     get_synthese_col,
     get_nomenc_abb,
-    get_synthese_cols,
+    get_SINP_synthese_cols,
     set_nomenclature_id,
     get_nomenc_abb_from_name,
     set_default_nomenclature_id
@@ -111,7 +111,7 @@ def set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, sele
 def set_default_nomenclature_ids(schema_name, table_name, selected_cols):
     DB.session.begin(subtransactions=True)
     try:
-        selected_nomenc = {k: v for k, v in selected_cols.items() if k in get_synthese_cols()}
+        selected_nomenc = {k: v for k, v in selected_cols.items() if k in get_SINP_synthese_cols()}
         for k, v in selected_nomenc.items():
             abb = get_nomenc_abb_from_name(k)
             nomenc_values = get_nomenc_values(abb)

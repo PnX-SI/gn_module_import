@@ -4,12 +4,12 @@ import numpy as np
 from shapely import wkt
 
 from ..db.queries.user_errors import set_user_error
-from ..db.queries.nomenclatures import get_synthese_cols
+from ..db.queries.nomenclatures import get_SINP_synthese_cols
 from ..db.queries.utils import get_types
 from ..wrappers import checker
 from ..logs import logger
 from .utils import fill_map, set_is_valid, set_invalid_reason
-
+import pdb
 
 def convert_to_datetime(value):
     try:
@@ -152,7 +152,7 @@ def check_types(df, added_cols, selected_columns, synthese_info, missing_values,
 
             int_cols = [field for field in synthese_info if synthese_info[field]['data_type'] == 'integer']
 
-            SINP_synthese_cols = get_synthese_cols()
+            SINP_synthese_cols = get_SINP_synthese_cols()
 
             if 'cd_nom' in int_cols:  # voir si on garde (idealement faudrait plutot adapter clean_cd_nom)
                 int_cols.remove('cd_nom')

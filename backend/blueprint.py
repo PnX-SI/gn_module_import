@@ -1025,13 +1025,16 @@ def postMetaToStep3(info_role):
     try:
 
         data = request.form.to_dict()
-        #selected_columns = get_selected_columns(data['id_mapping'])
-        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
         ### CHECK VALIDITY
 
-        row_count = get_row_number('.'.join([IMPORTS_SCHEMA_NAME, data['table_name']]))
-        row_error_count = get_n_invalid_rows('.'.join([IMPORTS_SCHEMA_NAME, data['table_name']]))
+        ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
+        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(data['import_id']))
+        full_imports_table_name = table_names['imports_full_table_name']
+
+        row_count = get_row_number(full_imports_table_name)
+        row_error_count = get_n_invalid_rows(full_imports_table_name)
         if row_error_count == row_count:
             return {
                 'message' : 'Toutes vos observations comportent des erreurs : \
@@ -1063,14 +1066,14 @@ def postMetaToStep3(info_role):
 
         DB.session.commit()
 
-        table_name = data['table_name']
-        import_id = data['import_id']
+        #table_name = data['table_name']
+        #import_id = data['import_id']
         #data.pop('table_name')
         #data.pop('import_id')
 
         return {
-                   'table_name': table_name,
-                   'import_id': import_id,
+                   'table_name': table_names['imports_table_name'],
+                   'import_id': data['import_id'],
                    #'selected_columns': data,
                    #'content_mapping_info': nomenc_info
                }, 200

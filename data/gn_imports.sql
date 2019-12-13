@@ -111,8 +111,8 @@ CREATE TABLE bib_fields(
 
 
 CREATE TABLE cor_synthese_nomenclature(
-    id_type integer NOT NULL,
-    id_field integer NOT NULL
+    mnemonique character varying(50) NOT NULL,
+    synthese_col character varying(50) NOT NULL
 );
 
 
@@ -161,7 +161,7 @@ ALTER TABLE ONLY bib_fields
     ADD CONSTRAINT pk_bib_fields_id_theme PRIMARY KEY (id_field);
 
 ALTER TABLE ONLY cor_synthese_nomenclature
-    ADD CONSTRAINT pk_cor_synthese_nomenclature PRIMARY KEY (id_type, id_field);
+    ADD CONSTRAINT pk_cor_synthese_nomenclature PRIMARY KEY (mnemonique, synthese_col);
 
 ALTER TABLE ONLY user_error_list
     ADD CONSTRAINT pk_user_error_list PRIMARY KEY (id_user_error);
@@ -195,10 +195,7 @@ ALTER TABLE ONLY bib_fields
     ADD CONSTRAINT fk_gn_imports_bib_themes_id_theme FOREIGN KEY (id_theme) REFERENCES gn_imports.bib_themes(id_theme) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY cor_synthese_nomenclature
-    ADD CONSTRAINT fk_cor_synthese_nomenclature_id_type FOREIGN KEY (id_type) REFERENCES ref_nomenclatures.bib_nomenclatures_types(id_type) ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE ONLY cor_synthese_nomenclature
-    ADD CONSTRAINT fk_cor_synthese_nomenclature_id_field FOREIGN KEY (id_field) REFERENCES gn_imports.bib_fields(id_field) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_cor_synthese_nomenclature_id_type FOREIGN KEY (mnemonique) REFERENCES ref_nomenclatures.bib_nomenclatures_types(mnemonique) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY user_error_list
     ADD CONSTRAINT fk_user_error_list_id_import FOREIGN KEY (id_import) REFERENCES gn_imports.t_imports(id_import) ON UPDATE CASCADE ON DELETE CASCADE;
@@ -311,24 +308,25 @@ INSERT INTO bib_fields (id_field, name_field, fr_label, eng_label, desc_field, t
     (49, 'WKT', 'WKT (Point)', '', '', 'wkt', FALSE, TRUE, FALSE, FALSE, 2, 8, TRUE);
 
 
-INSERT INTO cor_synthese_nomenclature (id_type, id_field) VALUES
-    (3, 45),
-    (24, 17), 
-    (14, 20),
-    (100, 46),
-    (13, 21),
-    (8, 23),
-    (7, 22),
-    (15, 37),
-    (101, 41),
-    (5, 26),
-    (10, 28),
-    (9, 29),
-    (6, 31),
-    (21, 30),
-    (16, 25),
-    (18, 47),
-    (4, 27),
-    (19, 48),
-    (23, 16),
-    (106, 34);
+INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
+    ('NAT_OBJ_GEO',	'id_nomenclature_geo_object_nature'),
+    ('DEE_FLOU',	'id_nomenclature_blurring'),
+    ('NIV_PRECIS',	'id_nomenclature_diffusion_level'),
+    ('OBJ_DENBR',	'id_nomenclature_obj_count'),
+    ('ETA_BIO',	'id_nomenclature_bio_condition'),
+    ('NATURALITE',	'id_nomenclature_naturalness'),
+    ('SEXE',	'id_nomenclature_sex'),
+    ('STADE_VIE',	'id_nomenclature_life_stage'),
+    ('STATUT_BIO',	'id_nomenclature_bio_status'),
+    ('METH_OBS',	'id_nomenclature_obs_meth'),
+    ('PREUVE_EXIST',	'id_nomenclature_exist_proof'),
+    ('SENSIBILITE',	'id_nomenclature_sensitivity'),
+    ('STATUT_OBS',	'id_nomenclature_observation_status'),
+    ('STATUT_SOURCE',	'id_nomenclature_source_status'),
+    ('TYP_DENBR',	'id_nomenclature_type_count'),
+    ('TYP_INF_GEO',	'id_nomenclature_info_geo_type'),
+    ('TYP_GRP',	'id_nomenclature_grp_typ'),
+    ('TECHNIQUE_OBS',	'id_nomenclature_obs_technique'),
+    ('STATUT_VALID',	'id_nomenclature_valid_status'),
+    ('METH_DETERMIN',	'id_nomenclature_determination_method');
+
