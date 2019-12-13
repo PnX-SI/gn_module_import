@@ -246,7 +246,7 @@ INSERT INTO user_errors (id_error, error_type, name, description) VALUES
     (14, 'uuid value error', 'uuid existing in gn_synthese.synthese table', 'uuid déjà existant dans la table gn_synthese.synthese'),
     (15, 'invalid value', 'id_digitiser is not present in "t_roles" table', 'id_digitizer n''existe pas dans la table "t_roles"'),
     (16, 'invalid type error', 'invalid wkt type', 'type wkt invalide'),
-    (17, 'duplicates error', 'duplicated observation for selected fields', 'observation en doublon sur les champs sélectionnés');
+    (17, 'duplicates error', 'duplicated observation for selected columns', 'observation en doublon sur les colonnes sélectionnées');
 
 
 INSERT INTO bib_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme) VALUES

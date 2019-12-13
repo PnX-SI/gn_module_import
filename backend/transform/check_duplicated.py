@@ -22,7 +22,7 @@ def check_row_duplicates(df, selected_columns, import_id, schema_name):
         
         if n_duplicated_rows > 0:
             set_user_error(import_id, 17, '', n_duplicated_rows)
-            set_invalid_reason(df, schema_name, 'temp', import_id, 17, 'selected')
+            set_invalid_reason(df, schema_name, 'temp', import_id, 17, '')
 
         df.drop('temp', axis=1)
 
