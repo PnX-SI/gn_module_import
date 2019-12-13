@@ -23,7 +23,7 @@ export const ModuleConfig = {
 			show: true
 		},
 		{
-			max_width: 50,
+			max_width: 100,
 			name: 'File format',
 			prop: 'format_source_file',
 			show: false
@@ -35,29 +35,24 @@ export const ModuleConfig = {
 			show: true
 		},
 		{
-			max_width: 200,
+			max_width: 120,
 			name: 'Nb de taxons',
 			prop: 'taxa_count',
 			show: true
 		},
 		{
-			max_width: 200,
+			max_width: 120,
 			name: 'Nb de donnees',
 			prop: 'import_count',
 			show: true
 		},
 		{
-			max_width: 200,
+			max_width: 150,
 			name: 'Debut import',
 			prop: 'date_create_import',
 			show: true
 		},
-		{
-			max_width: 200,
-			name: 'Fin import',
-			prop: 'date_end_import',
-			show: true
-		}
+		
 	],
 	MAX_FILE_SIZE: 500,
 	MISSING_VALUES: [ '', 'NA', 'NaN', 'na' ],

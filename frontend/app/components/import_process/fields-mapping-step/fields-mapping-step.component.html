@@ -89,7 +89,7 @@
                         Valider le mapping
                     </button>
                     <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        [disabled]="!step2_btn || isFullError" (click)='onNextStep()'>
+                        [disabled]="!mappingIsValidate || isFullError" (click)='onNextStep()'>
                         Suivant
                         <i class="material-icons"> navigate_next </i>
                     </button>
@@ -97,7 +97,7 @@
             </form>
             <!-- Error list in table -->
             <br>
-            <div id="dataCleaningErrorList" *ngIf="isErrorButtonClicked">
+            <div id="dataCleaningErrorList" *ngIf="isErrorButtonClicked && mappingIsValidate">
                 <div> Attention, des erreurs ont été détectées dans le fichier : </div>
                 <table>
                     <thead>

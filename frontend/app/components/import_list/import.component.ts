@@ -80,7 +80,9 @@ export class ImportComponent implements OnInit {
 		localStorage.setItem('step1Data', JSON.stringify(dataStep1));
 		let dataStep2: Step2Data = {
 			importId: row.id_import,
-			srid: row.srid
+			srid: row.srid,
+			mappingRes :{},
+			mappingIsValidate: false
 		};
 		switch (row.step) {
 			case 2: {
@@ -89,6 +91,9 @@ export class ImportComponent implements OnInit {
 			}
 			case 3: {
 				dataStep2.id_field_mapping = row.id_field_mapping;
+				dataStep2.mappingRes.table_name = row.import_table;
+				dataStep2.mappingRes.n_table_rows = row.source_count;
+				dataStep2.mappingIsValidate = true;
 				let dataStep3: Step3Data = {
 					importId: row.id_import
 				};
