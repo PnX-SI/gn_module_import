@@ -1,9 +1,6 @@
 import { Component, OnInit, OnChanges, Input } from '@angular/core';
-import { StepsService } from '../steps.service';
-import { DataService } from '../../../services/data.service';
-import { ToastrService } from 'ngx-toastr';
-//import { ModuleConfig } from '../../../module.config';
-import * as _ from 'lodash';
+import { Router } from '@angular/router';
+import { ModuleConfig } from '../../../module.config';
 
 @Component({
 	selector: 'stepper',
@@ -12,9 +9,14 @@ import * as _ from 'lodash';
 })
 export class stepperComponent implements OnInit, OnChanges {
 	@Input() step: any;
-	constructor() {}
+	constructor(private _router: Router) {}
 
-	ngOnInit() {
+	ngOnInit() {}
+
+
+
+	onGoToStep(step){
+		this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/${step}` ]);
 	}
 
 	ngOnChanges() {}

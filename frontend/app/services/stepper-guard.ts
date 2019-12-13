@@ -14,7 +14,9 @@ export class StepperGuardService implements CanActivate {
 				if (JSON.parse(localStorage.getItem('step2Data'))) return true;
 				else return false;
 			} else if (url.endsWith('process/step/3')) {
-				if (JSON.parse(localStorage.getItem('step3Data'))) {
+				let step3Data = JSON.parse(localStorage.getItem('step3Data'))
+				let step2Data = JSON.parse(localStorage.getItem('step2Data'))
+				if (step3Data && step2Data.mappingIsValidate) {
 					return true;
 				} else return false;
 			} else if (url.endsWith('process/step/4')) {

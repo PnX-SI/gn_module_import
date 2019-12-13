@@ -24,6 +24,7 @@ export interface Step2Data {
 	importId?: number;
 	srid?: any;
 	id_field_mapping?: any;
+	mappingIsValidate?: boolean;
 	mappingRes?: any;
 }
 
