@@ -24,6 +24,7 @@ class TImports(DB.Model):
     separator = DB.Column(DB.Unicode, nullable=True)
     encoding = DB.Column(DB.Unicode, nullable=True)
     import_table = DB.Column(DB.Unicode, nullable=True)
+    full_file_name = DB.Column(DB.Unicode, nullable=True)
     id_dataset = DB.Column(DB.Integer, nullable=True)
     id_field_mapping = DB.Column(DB.Integer, nullable=True)
     id_content_mapping = DB.Column(DB.Integer, nullable=True)

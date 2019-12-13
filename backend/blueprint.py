@@ -163,6 +163,7 @@ def get_import_list(info_role):
                 "separator": r.separator,
                 "encoding": r.encoding,
                 "import_table": r.import_table,
+                "full_file_name": r.full_file_name,
                 "id_dataset": r.id_dataset,
                 "id_field_mapping": r.id_field_mapping,
                 "id_content_mapping": r.id_content_mapping,
@@ -608,6 +609,7 @@ def post_user_file(info_role):
                 insert_t_imports = TImports(
                     date_create_import=init_date,
                     date_update_import=init_date,
+                    full_file_name=uploaded_file['file_name']
                 )
                 DB.session.add(insert_t_imports)
                 DB.session.flush()

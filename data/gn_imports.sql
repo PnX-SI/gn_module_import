@@ -19,6 +19,7 @@ CREATE TABLE t_imports(
     separator character varying,
     encoding character varying,
     import_table character varying(255),
+    full_file_name character varying(255),
     id_dataset integer,
     id_field_mapping integer,
     id_content_mapping integer,

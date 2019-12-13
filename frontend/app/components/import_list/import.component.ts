@@ -71,7 +71,7 @@ export class ImportComponent implements OnInit {
 			importId: row.id_import,
 			datasetId: row.id_dataset,
 			formData: {
-				fileName: 'fileName.' + row.format_source_file, // fileName = import table ?
+				fileName: row.full_file_name,
 				encoding: row.encoding,
 				srid: row.srid,
 				separator: separator.code /// separator to convert
