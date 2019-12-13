@@ -14,7 +14,7 @@ SET default_with_oids = false;
 
 CREATE TABLE t_imports(
     id_import serial NOT NULL,
-    format_source_file character varying(5),
+    format_source_file character varying(10),
     SRID integer,
     separator character varying,
     encoding character varying,

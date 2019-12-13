@@ -56,13 +56,14 @@ export class FieldsMappingStepComponent implements OnInit {
         this.syntheseForm = this._fb.group({});
 
 		if (this.stepData.mappingRes) {
+            console.log(this.stepData);
 			this.mappingRes = this.stepData.mappingRes;
 			this.table_name = this.mappingRes['table_name'];
             //this.n_error_lines = this.mappingRes['n_user_errors'];
             this.getRowErrorCount(this.stepData.importId);
 			this.getErrorList(this.stepData.importId);
 			this.step2_btn = true;
-			this.isFullErrorCheck(this.mappingRes['n_table_rows'], this.n_error_lines);
+            this.isFullErrorCheck(this.mappingRes['n_table_rows'], this.n_error_lines);
 		}
 		this.generateSyntheseForm();
     }
@@ -127,7 +128,8 @@ export class FieldsMappingStepComponent implements OnInit {
 						}
 					}
 				}
-				this.getMappingNamesList('field', this.stepData.importId);
+                this.getMappingNamesList('field', this.stepData.importId);
+                this.geoTypeSelect(this.syntheseForm);
 			},
 			(error) => {
 				if (error.statusText === 'Unknown Error') {
@@ -294,6 +296,7 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
+
 	onMappingName(mappingForm, targetFormName): void {
 		mappingForm.get('fieldMapping').valueChanges.subscribe(
 			(id_mapping) => {
@@ -318,6 +321,7 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
+
 	fillMapping(id_mapping, targetFormName) {
 		this.id_mapping = id_mapping;
 		this._ds.getMappingFields(this.id_mapping).subscribe(
@@ -332,7 +336,7 @@ export class FieldsMappingStepComponent implements OnInit {
 					this.shadeSelectedColumns(targetFormName);
 					this.geoTypeSelect(targetFormName);
 				} else {
-					this.fillEmptyMapping(targetFormName);
+                    this.fillEmptyMapping(targetFormName);
 				}
 				this.onFormMappingChange();
 				this.onMappingName(this.fieldMappingForm, this.syntheseForm);
@@ -350,15 +354,18 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
+
 	createMapping() {
 		this.fieldMappingForm.reset();
 		this.newMapping = true;
 	}
 
+
 	cancelMapping() {
 		this.newMapping = false;
 		this.fieldMappingForm.controls['mappingName'].setValue('');
 	}
+
 
 	saveMappingName(value, importId, targetForm) {
 		let mappingType = 'FIELD';
@@ -382,6 +389,7 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
+
 	shadeSelectedColumns(targetFormName) {
 		let formValues = targetFormName.value;
 		this.columns.map((col) => {
@@ -395,16 +403,19 @@ export class FieldsMappingStepComponent implements OnInit {
 		});
 	}
 
+
 	setFormControlNotRequired(targetForm, formControlName) {
 		targetForm.get(formControlName).clearValidators();
 		targetForm.get(formControlName).setValidators(null);
 		targetForm.get(formControlName).updateValueAndValidity();
 	}
 
+
 	setFormControlRequired(targetForm, formControlName) {
 		targetForm.get(formControlName).setValidators([ Validators.required ]);
 		targetForm.get(formControlName).updateValueAndValidity();
 	}
+
 
 	geoTypeSelect(targetForm) {
 		/*
@@ -436,11 +447,13 @@ export class FieldsMappingStepComponent implements OnInit {
 		}
 	}
 
+
 	onSelect(id_mapping, targetForm) {
 		this.id_mapping = id_mapping;
 		this.shadeSelectedColumns(targetForm);
 		this.geoTypeSelect(targetForm);
 	}
+
 
 	disableMapping(targetForm) {
 		Object.keys(targetForm.controls).forEach((key) => {
@@ -448,11 +461,13 @@ export class FieldsMappingStepComponent implements OnInit {
 		});
 	}
 
+
 	enableMapping(targetForm) {
 		Object.keys(targetForm.controls).forEach((key) => {
 			targetForm.controls[key].enable();
 		});
 	}
+
 
 	fillEmptyMapping(targetForm) {
 		Object.keys(targetForm.controls).forEach((key) => {

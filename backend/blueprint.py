@@ -729,7 +729,7 @@ def post_user_file(info_role):
                     TImports.step: 2,
                     TImports.id_dataset: int(metadata['datasetId']),
                     TImports.srid: int(metadata['srid']),
-                    TImports.format_source_file: report['file_format'],
+                    TImports.format_source_file: uploaded_file['extension'],
                     TImports.separator: separator,
                     TImports.encoding: metadata['encodage'],
                     TImports.source_count: report['row_count'] - 1

@@ -115,6 +115,8 @@ export class ImportComponent implements OnInit {
 		this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/${row.step}` ]);
 	}
 
+
+    /*
 	onCSV(row) {
 		console.log(row);
 		this.historyId = row.id_import;
@@ -147,5 +149,7 @@ export class ImportComponent implements OnInit {
 				);
 			}
 		);
-	}
+    }
+    */
+   
 }
