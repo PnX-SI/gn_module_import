@@ -6,7 +6,7 @@ def is_cd_nom_required(schema_name):
         is_nullable = DB.session.execute(
             """
             SELECT mandatory
-            FROM {schema_name}.bib_fields
+            FROM {schema_name}.dict_fields
             WHERE name_field = 'cd_nom';
             """.format(
                 schema_name=schema_name
@@ -21,7 +21,7 @@ def get_types(schema_name, selected_columns):
     try:
         data_types = DB.session.execute("""
             SELECT DISTINCT type_field
-            FROM {schema_name}.bib_fields
+            FROM {schema_name}.dict_fields
             WHERE name_field IN ({col_list});
             """.format(
                 schema_name=schema_name,

@@ -83,8 +83,8 @@ class TMappingsValues(DB.Model):
 
 
 @serializable
-class BibMappings(DB.Model):
-    __tablename__ = 'bib_mappings'
+class TMappings(DB.Model):
+    __tablename__ = 't_mappings'
     __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
 
     id_mapping = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
@@ -95,7 +95,7 @@ class BibMappings(DB.Model):
 
 @serializable
 class BibFields(DB.Model):
-    __tablename__ = 'bib_fields'
+    __tablename__ = 'dict_fields'
     __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
 
     id_field = DB.Column(DB.Integer, primary_key=True)
@@ -114,7 +114,7 @@ class BibFields(DB.Model):
 
 @serializable
 class BibThemes(DB.Model):
-    __tablename__ = 'bib_themes'
+    __tablename__ = 'dict_themes'
     __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
 
     id_theme = DB.Column(DB.Integer, primary_key=True)

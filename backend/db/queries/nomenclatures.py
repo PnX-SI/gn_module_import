@@ -58,7 +58,7 @@ def get_nomenc_abbs(form_data):
     try:
         nomenc_abbs = DB.session.execute("""
             SELECT F.name_field as synthese_name, BNT.mnemonique as nomenc_abb
-            FROM gn_imports.bib_fields F
+            FROM gn_imports.dict_fields F
             RIGHT JOIN gn_imports.cor_synthese_nomenclature CSN ON CSN.synthese_col = F.name_field
             LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.mnemonique = CSN.mnemonique;
             """).fetchall()
@@ -75,7 +75,7 @@ def get_synthese_col(abb):
     try:
         nomenc_synthese_name = DB.session.execute("""
             SELECT F.name_field as synthese_name
-            FROM gn_imports.bib_fields F
+            FROM gn_imports.dict_fields F
             RIGHT JOIN gn_imports.cor_synthese_nomenclature CSN ON CSN.synthese_col = F.name_field
             LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.mnemonique = CSN.mnemonique
             WHERE BNT.mnemonique = '{abb}';
@@ -89,7 +89,7 @@ def get_SINP_synthese_cols():
     try:
         nomencs = DB.session.execute("""
             SELECT F.name_field as synthese_name
-            FROM gn_imports.bib_fields F
+            FROM gn_imports.dict_fields F
             RIGHT JOIN gn_imports.cor_synthese_nomenclature CSN ON CSN.synthese_col = F.name_field
             LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.mnemonique = CSN.mnemonique;
             """).fetchall()
@@ -133,7 +133,7 @@ def get_nomenc_abb_from_name(synthese_name):
     try:
         nomenc = DB.session.execute("""
             SELECT BNT.mnemonique as abb
-            FROM gn_imports.bib_fields F
+            FROM gn_imports.dict_fields F
             RIGHT JOIN gn_imports.cor_synthese_nomenclature CSN ON CSN.synthese_col = F.name_field
             LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.mnemonique = CSN.mnemonique
             WHERE F.name_field = '{synthese_name}';

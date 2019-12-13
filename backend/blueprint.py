@@ -22,12 +22,10 @@ from .db.models import (
     TImports,
     CorRoleImport,
     CorImportArchives,
-    BibMappings,
+    TMappings,
     CorRoleMapping,
     TMappingsFields,
     TMappingsValues,
-    BibFields,
-    BibThemes,
     generate_user_table_class
 )
 
@@ -268,9 +266,9 @@ def get_mappings(info_role, mapping_type, import_id):
     """
 
     try:
-        results = DB.session.query(BibMappings) \
+        results = DB.session.query(TMappings) \
             .filter(CorRoleMapping.id_role == info_role.id_role) \
-            .filter(BibMappings.mapping_type == mapping_type.upper()) \
+            .filter(TMappings.mapping_type == mapping_type.upper()) \
             .all()
 
         mappings = []
@@ -385,7 +383,7 @@ def postMappingName(info_role):
 
         # check if name already exists
         names_request = DB.session \
-            .query(BibMappings) \
+            .query(TMappings) \
             .all()
         names = [name.mapping_label for name in names_request]
 
@@ -393,7 +391,7 @@ def postMappingName(info_role):
             return 'Ce nom de mapping existe déjà', 400
 
         # fill BibMapping
-        new_name = BibMappings(
+        new_name = TMappings(
             mapping_label=data['mappingName'],
             mapping_type=data['mapping_type'],
             active=True
@@ -404,8 +402,8 @@ def postMappingName(info_role):
 
         # fill CorRoleMapping
 
-        id_mapping = DB.session.query(BibMappings.id_mapping) \
-            .filter(BibMappings.mapping_label == data['mappingName']) \
+        id_mapping = DB.session.query(TMappings.id_mapping) \
+            .filter(TMappings.mapping_label == data['mappingName']) \
             .one()[0]
 
         new_map_role = CorRoleMapping(
@@ -860,7 +858,7 @@ def postMapping(info_role, import_id, id_mapping):
 
         # check if required fields are not empty:
         missing_cols = []
-        required_cols = get_required(IMPORTS_SCHEMA_NAME, 'bib_fields')
+        required_cols = get_required(IMPORTS_SCHEMA_NAME, 'dict_fields')
         if 'WKT' in selected_columns.keys():
             required_cols.remove('longitude')
             required_cols.remove('latitude')
@@ -1123,15 +1121,15 @@ def getNomencInfo(info_role, import_id):
 @blueprint.route('/bibFields', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def get_bib_fields(info_role):
+def get_dict_fields(info_role):
     try:
 
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
         bibs = DB.session.execute("""
             SELECT *
-            FROM {schema_name}.bib_fields fields
-            JOIN {schema_name}.bib_themes themes on fields.id_theme = themes.id_theme
+            FROM {schema_name}.dict_fields fields
+            JOIN {schema_name}.dict_themes themes on fields.id_theme = themes.id_theme
             WHERE fields.display = true
             ORDER BY fields.order_field ASC;
             """.format(schema_name=IMPORTS_SCHEMA_NAME)
@@ -1139,7 +1137,7 @@ def get_bib_fields(info_role):
 
         max_theme = DB.session.execute("""
             SELECT max(id_theme)
-            FROM {schema_name}.bib_fields fields
+            FROM {schema_name}.dict_fields fields
             """.format(schema_name=IMPORTS_SCHEMA_NAME)
                                        ).fetchone()[0]
 
@@ -1165,10 +1163,10 @@ def get_bib_fields(info_role):
         return data_theme, 200
 
     except Exception as e:
-        logger.error('*** SERVER ERROR WHEN GETTING BIB_FIELDS AND BIB_THEMES')
+        logger.error('*** SERVER ERROR WHEN GETTING DICT_FIELDS AND DICT_THEMES')
         logger.exception(e)
         raise GeonatureImportApiError(
-            message='INTERNAL SERVER ERROR when getting bib_fields and bib_themes',
+            message='INTERNAL SERVER ERROR when getting dict_fields and dict_themes',
             details=str(e))
 
 

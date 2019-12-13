@@ -55,11 +55,11 @@ def get_id_dataset(import_id):
         raise
 
 
-def get_synthese_bib_fields(schema_name):
+def get_synthese_dict_fields(schema_name):
     try:
         fields = DB.session.execute("""
             SELECT name_field
-            FROM {schema_name}.bib_fields
+            FROM {schema_name}.dict_fields
             WHERE synthese_field = TRUE;
         """.format(schema_name = schema_name)
         ).fetchall()

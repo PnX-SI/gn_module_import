@@ -42,7 +42,7 @@ CREATE TABLE cor_role_import(
 );
 
 
-CREATE TABLE user_errors(
+CREATE TABLE t_user_errors(
     id_error integer NOT NULL,
     error_type character varying(100) NOT NULL,
     name character varying(255) NOT NULL UNIQUE,
@@ -75,7 +75,7 @@ CREATE TABLE t_mappings_values(
 );
 
 
-CREATE TABLE bib_mappings(
+CREATE TABLE t_mappings(
     id_mapping serial NOT NULL,
     mapping_label character varying(255) NOT NULL,
     mapping_type character varying(10) NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE bib_mappings(
 );
 
 
-CREATE TABLE bib_themes(
+CREATE TABLE dict_themes(
     id_theme integer,
     name_theme character varying(100) NOT NULL,
     fr_label_theme character varying(100) NOT NULL,
@@ -93,7 +93,7 @@ CREATE TABLE bib_themes(
 );
 
 
-CREATE TABLE bib_fields(
+CREATE TABLE dict_fields(
     id_field integer,
     name_field character varying(100) NOT NULL,
     fr_label character varying(100) NOT NULL,
@@ -116,7 +116,7 @@ CREATE TABLE cor_synthese_nomenclature(
 );
 
 
-CREATE TABLE user_error_list(
+CREATE TABLE t_user_error_list(
     id_user_error serial NOT NULL,
     id_import integer NOT NULL,
     id_error integer NOT NULL,
@@ -136,7 +136,7 @@ ALTER TABLE ONLY t_imports
 ALTER TABLE ONLY cor_role_import 
     ADD CONSTRAINT pk_cor_role_import PRIMARY KEY (id_role, id_import);
 
-ALTER TABLE ONLY user_errors 
+ALTER TABLE ONLY t_user_errors 
     ADD CONSTRAINT pk_user_errors PRIMARY KEY (id_error);
 
 ALTER TABLE ONLY cor_role_mapping
@@ -148,23 +148,23 @@ ALTER TABLE ONLY t_mappings_fields
 ALTER TABLE ONLY t_mappings_values
     ADD CONSTRAINT pk_t_mappings_values PRIMARY KEY (id_match_values);
 
-ALTER TABLE ONLY bib_mappings
-    ADD CONSTRAINT pk_bib_mappings PRIMARY KEY (id_mapping);
+ALTER TABLE ONLY t_mappings
+    ADD CONSTRAINT pk_t_mappings PRIMARY KEY (id_mapping);
 
 --ALTER TABLE ONLY bib_type_mapping_values
 --    ADD CONSTRAINT pk_bib_type_mapping_values PRIMARY KEY (id_type_mapping, mapping_type);
 
-ALTER TABLE ONLY bib_themes
-    ADD CONSTRAINT pk_bib_themes_id_theme PRIMARY KEY (id_theme);
+ALTER TABLE ONLY dict_themes
+    ADD CONSTRAINT pk_dict_themes_id_theme PRIMARY KEY (id_theme);
 
-ALTER TABLE ONLY bib_fields
-    ADD CONSTRAINT pk_bib_fields_id_theme PRIMARY KEY (id_field);
+ALTER TABLE ONLY dict_fields
+    ADD CONSTRAINT pk_dict_fields_id_theme PRIMARY KEY (id_field);
 
 ALTER TABLE ONLY cor_synthese_nomenclature
     ADD CONSTRAINT pk_cor_synthese_nomenclature PRIMARY KEY (mnemonique, synthese_col);
 
-ALTER TABLE ONLY user_error_list
-    ADD CONSTRAINT pk_user_error_list PRIMARY KEY (id_user_error);
+ALTER TABLE ONLY t_user_error_list
+    ADD CONSTRAINT pk_t_user_error_list PRIMARY KEY (id_user_error);
 
 ---------------
 --FOREIGN KEY--
@@ -180,36 +180,36 @@ ALTER TABLE ONLY cor_role_mapping
     ADD CONSTRAINT fk_utilisateurs_t_roles FOREIGN KEY (id_role) REFERENCES utilisateurs.t_roles(id_role) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY cor_role_mapping
-    ADD CONSTRAINT fk_gn_imports_bib_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.bib_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_gn_imports_t_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_mappings_fields
-    ADD CONSTRAINT fk_gn_imports_bib_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.bib_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_gn_imports_t_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_mappings_values
-    ADD CONSTRAINT fk_gn_imports_bib_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.bib_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_gn_imports_t_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --ALTER TABLE ONLY t_mappings_values
 --    ADD CONSTRAINT fk_gn_imports_bib_type_mapping_values_id_type_mapping FOREIGN KEY (id_type_mapping) REFERENCES gn_imports.bib_type_mapping_values(id_type_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE ONLY bib_fields
-    ADD CONSTRAINT fk_gn_imports_bib_themes_id_theme FOREIGN KEY (id_theme) REFERENCES gn_imports.bib_themes(id_theme) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY dict_fields
+    ADD CONSTRAINT fk_gn_imports_dict_themes_id_theme FOREIGN KEY (id_theme) REFERENCES gn_imports.dict_themes(id_theme) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY cor_synthese_nomenclature
     ADD CONSTRAINT fk_cor_synthese_nomenclature_id_type FOREIGN KEY (mnemonique) REFERENCES ref_nomenclatures.bib_nomenclatures_types(mnemonique) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE ONLY user_error_list
-    ADD CONSTRAINT fk_user_error_list_id_import FOREIGN KEY (id_import) REFERENCES gn_imports.t_imports(id_import) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY t_user_error_list
+    ADD CONSTRAINT fk_t_user_error_list_id_import FOREIGN KEY (id_import) REFERENCES gn_imports.t_imports(id_import) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE ONLY user_error_list
-    ADD CONSTRAINT fk_user_error_list_id_error FOREIGN KEY (id_error) REFERENCES gn_imports.user_errors(id_error) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY t_user_error_list
+    ADD CONSTRAINT fk_t_user_error_list_id_error FOREIGN KEY (id_error) REFERENCES gn_imports.t_user_errors(id_error) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 ---------------------
 --OTHER CONSTRAINTS--
 ---------------------
 
-ALTER TABLE ONLY bib_mappings
-   ADD CONSTRAINT check_mapping_type_in_bib_mappings CHECK (mapping_type IN ('FIELD', 'CONTENT'));
+ALTER TABLE ONLY t_mappings
+   ADD CONSTRAINT check_mapping_type_in_t_mappings CHECK (mapping_type IN ('FIELD', 'CONTENT'));
 
 
 
@@ -229,7 +229,7 @@ ALTER TABLE ONLY bib_mappings
 --INSERTIONS--
 --------------
 
-INSERT INTO user_errors (id_error, error_type, name, description) VALUES
+INSERT INTO t_user_errors (id_error, error_type, name, description) VALUES
 	(1, 'invalid type error', 'invalid integer type', 'type integer invalide'),
 	(2, 'invalid type error', 'invalid date type', 'type date invalide'),
 	(3, 'invalid type error', 'invalid uuid type', 'type uuid invalide'),
@@ -249,7 +249,7 @@ INSERT INTO user_errors (id_error, error_type, name, description) VALUES
     (17, 'duplicates error', 'duplicated observation for selected columns', 'observation en doublon sur les colonnes sélectionnées');
 
 
-INSERT INTO bib_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme) VALUES
+INSERT INTO dict_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme) VALUES
 	(1, 'general_info', 'Informations générales', '', '', 1),
     (2, 'statement_info', 'Informations de relevés', '', '', 2),
     (3, 'occurrence_sensitivity', 'Informations d''occurrences & sensibilité', '', '', 3),
@@ -257,7 +257,7 @@ INSERT INTO bib_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, d
     (5, 'validation', 'Détermination et validité', '', '', 5);
 
 
-INSERT INTO bib_fields (id_field, name_field, fr_label, eng_label, desc_field, type_field, synthese_field, mandatory, autogenerated, nomenclature, id_theme, order_field, display) VALUES
+INSERT INTO dict_fields (id_field, name_field, fr_label, eng_label, desc_field, type_field, synthese_field, mandatory, autogenerated, nomenclature, id_theme, order_field, display) VALUES
 	(1, 'entity_source_pk_value', 'Identifiant source', '', '', 'character varying', TRUE, FALSE, FALSE, FALSE, 1, 1, TRUE),
 	(2, 'unique_id_sinp', 'Identifiant SINP (uuid)', '', '', 'uuid', TRUE, FALSE, FALSE, FALSE, 1, 2, TRUE),
 	(3, 'unique_id_sinp_generate', 'Générer l''identifiant SINP', '', 'Génère automatiquement un identifiant de type uuid pour chaque observation', '', FALSE, FALSE, TRUE, FALSE, 1, 3, TRUE), 

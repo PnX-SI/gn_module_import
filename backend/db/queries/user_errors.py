@@ -6,7 +6,7 @@ def set_user_error(id_import, id_error, col_name, n_errors):
     try:
         DB.session.execute(
             """
-                INSERT INTO gn_imports.user_error_list(id_import, id_error, column_error, count_error)
+                INSERT INTO gn_imports.t_user_error_list(id_import, id_error, column_error, count_error)
                 VALUES ({id_import}, {id_error}, '{col_name}', {n_errors});
             """.format(
                 id_import=id_import,
@@ -26,8 +26,8 @@ def get_error_message(schema_name, id_import, id_error, col_name):
         error = DB.session.execute(
             """
                 SELECT *
-                FROM {schema_name}.user_error_list UEL
-                LEFT JOIN {schema_name}.user_errors UE ON UE.id_error=UEL.id_error
+                FROM {schema_name}.t_user_error_list UEL
+                LEFT JOIN {schema_name}.t_user_errors UE ON UE.id_error=UEL.id_error
                 WHERE UEL.id_import = {id_import}
                 AND UEL.id_error = {id_error}
                 AND UEL.column_error = '{col_name}';
@@ -51,7 +51,7 @@ def delete_user_errors(schema_name, id_import):
     try:
         DB.session.execute(
             """
-                DELETE FROM {schema_name}.user_error_list
+                DELETE FROM {schema_name}.t_user_error_list
                 WHERE id_import = {id_import};
             """.format(
                 schema_name=schema_name,
@@ -69,8 +69,8 @@ def get_user_error_list(schema_name, id_import):
         user_errors = DB.session.execute(
             """
                 SELECT *
-                FROM {schema_name}.user_error_list UEL
-                LEFT JOIN {schema_name}.user_errors UE ON UE.id_error = UEL.id_error
+                FROM {schema_name}.t_user_error_list UEL
+                LEFT JOIN {schema_name}.t_user_errors UE ON UE.id_error = UEL.id_error
                 WHERE id_import = {id_import};
             """.format(
                 id_import=id_import,
