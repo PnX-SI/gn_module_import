@@ -5,6 +5,7 @@ import { DataService } from '../../services/data.service';
 import { ModuleConfig } from '../../module.config';
 import { Step2Data, Step1Data, Step3Data, Step4Data } from '../import_process/steps.service';
 import { saveAs } from 'file-saver';
+import { CsvExportService } from '../../services/csv-export.service';
 
 @Component({
 	selector: 'pnx-import',
@@ -20,7 +21,11 @@ export class ImportComponent implements OnInit {
 	n_invalid: any;
 	csvDownloadResp: any;
 
-	constructor(private _ds: DataService, private _router: Router, private toastr: ToastrService) {}
+	constructor(
+        private _ds: DataService,
+        private _csvExport: CsvExportService,
+        private _router: Router, 
+        private toastr: ToastrService) {}
 
 	ngOnInit() {
 		this.onImportList();
