@@ -24,6 +24,8 @@ export class UploadFileStepComponent implements OnInit {
 	importId: number;
 	dataForm: any;
 	datasetId: any;
+    isUploadRunning: boolean = false;
+
 
 	constructor(
 		private _activatedRoute: ActivatedRoute,
@@ -119,53 +121,60 @@ export class UploadFileStepComponent implements OnInit {
 	}
 
 	onUpload(formValues: any) {
-		this.uploadFileErrors = null;
-		this.isUserErrors = false;
-		this.spinner = true;
-		if (!this.skip) {
-			this._ds
-				.postUserFile(formValues, this.datasetId, this.importId, this.isFileChanged, this.fileName)
-				.subscribe(
-					(res) => {
-						this.importId = res.importId;
-						let step2Data: Step2Data = {
-							importId: res.importId,
-							srid: formValues.srid
-						};
-						this.stepService.setStepData(2, step2Data);
-						let step1data: Step1Data = {
-							importId: res.importId,
-							datasetId: this.datasetId,
-							formData: {
-								fileName: res['fileName'],
-								srid: formValues.srid,
-								separator: formValues.separator,
-								encoding: formValues.encodage
-							}
-						};
-						this.stepService.setStepData(1, step1data);
-						this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/2` ]);
-						this.spinner = false;
-					},
-					(error) => {
-						this.spinner = false;
-						if (error.statusText === 'Unknown Error') {
-							this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-						} else {
-							if (error.status == 400) {
-								this.isUserErrors = true;
-								this.uploadFileErrors = error.error;
-								console.log(this.uploadFileErrors);
-							} else {
-								this.toastr.error(error.error.message);
-							}
-						}
-					}
-				);
-		} else {
-			this.spinner = false;
-			this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/2` ]);
-		}
+        if (!this.isUploadRunning) {
+            this.isUploadRunning = true;
+            this.uploadFileErrors = null;
+            this.isUserErrors = false;
+            this.spinner = true;
+            if (!this.skip) {
+                this._ds
+                    .postUserFile(formValues, this.datasetId, this.importId, this.isFileChanged, this.fileName)
+                    .subscribe(
+                        (res) => {
+                            this.isUploadRunning = res.is_running;
+                            this.importId = res.importId;
+                            let step2Data: Step2Data = {
+                                importId: res.importId,
+                                srid: formValues.srid
+                            };
+                            this.stepService.setStepData(2, step2Data);
+                            let step1data: Step1Data = {
+                                importId: res.importId,
+                                datasetId: this.datasetId,
+                                formData: {
+                                    fileName: res['fileName'],
+                                    srid: formValues.srid,
+                                    separator: formValues.separator,
+                                    encoding: formValues.encodage
+                                }
+                            };
+                            this.stepService.setStepData(1, step1data);
+                            this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/2` ]);
+                            this.spinner = false;
+                        },
+                        (error) => {
+                            this.isUploadRunning = false;
+                            this.spinner = false;
+                            if (error.statusText === 'Unknown Error') {
+                                this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+                            } else {
+                                if (error.status == 400) {
+                                    this.isUserErrors = true;
+                                    this.uploadFileErrors = error.error;
+                                    console.log(this.uploadFileErrors);
+                                } else {
+                                    this.toastr.error(error.error.message);
+                                }
+                            }
+                        }
+                    );
+            } else {
+                this.spinner = false;
+                this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/2` ]);
+            }
+        } else {
+            this.toastr.error('un upload déjà en cours');
+        }
 	}
 
 	formListener() {

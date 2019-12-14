@@ -12,7 +12,7 @@ from geonature.utils.utilssqlalchemy import (
 )
 from geonature.core.gn_meta.models import TDatasets
 
-from ...config.conf_schema_toml import IMPORTS_SCHEMA_NAME
+from ...config.conf_schema_toml import IMPORTS_SCHEMA_NAME, ARCHIVES_SCHEMA_NAME
 
 @serializable
 class TImports(DB.Model):
@@ -126,11 +126,10 @@ class BibThemes(DB.Model):
     order_theme = DB.Column(DB.Integer, nullable=False)
 
 
-# ne pas mettre gn_import_archives en dur
 @serializable
 class CorImportArchives(DB.Model):
     __tablename__ = 'cor_import_archives'
-    __table_args__ = {'schema': IMPORTS_SCHEMA_NAME, "extend_existing": True}
+    __table_args__ = {'schema': ARCHIVES_SCHEMA_NAME, "extend_existing": True}
 
     id_import = DB.Column(DB.Integer, primary_key=True)
     table_archive = DB.Column(DB.Integer, primary_key=True)

@@ -479,7 +479,7 @@ def post_user_file(info_role):
     """
 
     try:
-
+        is_running = True
         logger.info('*** START UPLOAD USER FILE')
 
         # INITIALIZE VARIABLES
@@ -709,15 +709,19 @@ def post_user_file(info_role):
 
             logger.info('*** END UPLOAD USER FILE')
 
+            is_running = False
+
             return {
                        "importId": id_import,
                        "columns": columns,
-                       "fileName": metadata['fileName']
+                       "fileName": metadata['fileName'],
+                       "is_running": is_running
                    }, 200
 
         return {
                    "importId": metadata['importId'],
-                   "fileName": metadata['fileName']
+                   "fileName": metadata['fileName'],
+                   "is_running": is_running
                }, 200
 
     except psycopg2.errors.BadCopyFileFormat as e:
@@ -756,6 +760,8 @@ def post_user_file(info_role):
 @json_resp
 def postMapping(info_role, import_id, id_mapping):
     try:
+        
+        is_running = True
         is_temp_table_name = False
         is_table_names = False
 
@@ -946,6 +952,8 @@ def postMapping(info_role, import_id, id_mapping):
         DB.session.commit()
         DB.session.close()
 
+        is_running = False
+
         return {
                    #'user_error_details': error_report,
                    #'n_user_errors': n_invalid_rows,
@@ -954,7 +962,8 @@ def postMapping(info_role, import_id, id_mapping):
                    'id_mapping': id_mapping,
                    #'selected_columns': selected_columns,
                    #'added_columns': added_cols,
-                   'table_name': table_names['imports_table_name']
+                   'table_name': table_names['imports_table_name'],
+                   'is_running': is_running
                }, 200
 
     except Exception as e:

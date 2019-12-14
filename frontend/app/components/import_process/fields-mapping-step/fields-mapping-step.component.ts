@@ -36,7 +36,8 @@ export class FieldsMappingStepComponent implements OnInit {
 	stepData: Step2Data;
 	public fieldMappingForm: FormGroup;
 	public userFieldMappings;
-	public newMapping: boolean = false;
+    public newMapping: boolean = false;
+    isDataCleaningRunning: boolean = false;
 
 	constructor(
 		private _ds: DataService,
@@ -125,31 +126,38 @@ export class FieldsMappingStepComponent implements OnInit {
 	}
 
 	onDataCleaning(value, id_mapping) {
-		this.spinner = true;
-		this._ds.postMapping(value, this.stepData.importId, id_mapping, this.stepData.srid).subscribe(
-			(res) => {
-				this.mappingRes = res;
-				this.spinner = false;
-				this.getValidationErrors(res['n_table_rows'], this.stepData.importId);
-				this.table_name = this.mappingRes['table_name'];
-				//this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
-				//this.added_columns = this.mappingRes['added_columns'];
-				this.mappingIsValidate = true;
-				console.log('this.mappingIsValidate', this.mappingIsValidate);
-				
-			},
-			(error) => {
-				this.spinner = false;
-				if (error.statusText === 'Unknown Error') {
-					// show error message if no connexion
-					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-				} else {
-					// show error message if other server error
-					if (error.status == 400) this.isUserError = true;
-					this.toastr.error(error.error.message);
-				}
-			}
-		);
+        if (!this.isDataCleaningRunning) {
+            this.isDataCleaningRunning = true;
+            this.spinner = true;
+            this._ds.postMapping(value, this.stepData.importId, id_mapping, this.stepData.srid).subscribe(
+                (res) => {
+                    this.mappingRes = res;
+                    console.log(this.mappingRes);
+                    this.spinner = false;
+                    this.getValidationErrors(res['n_table_rows'], this.stepData.importId);
+                    this.table_name = this.mappingRes['table_name'];
+                    //this.selected_columns = JSON.stringify(this.mappingRes['selected_columns']);
+                    //this.added_columns = this.mappingRes['added_columns'];
+                    this.mappingIsValidate = true;
+                    console.log('this.mappingIsValidate', this.mappingIsValidate);
+                    this.isDataCleaningRunning = this.mappingRes['is_running'];
+                },
+                (error) => {
+                    this.isDataCleaningRunning = false;
+                    this.spinner = false;
+                    if (error.statusText === 'Unknown Error') {
+                        // show error message if no connexion
+                        this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+                    } else {
+                        // show error message if other server error
+                        if (error.status == 400) this.isUserError = true;
+                        this.toastr.error(error.error.message);
+                    }
+                }
+            );
+        } else {
+            this.toastr.error('data cleaning en cours')
+        }
 	}
 
 	onNextStep() {
