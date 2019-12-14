@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { DataService } from '../../../services/data.service';
 import { ToastrService } from 'ngx-toastr';
 import { ModuleConfig } from '../../../module.config';
-import { StepsService } from '../steps.service';
+import { StepsService, Step2Data, Step3Data, Step4Data } from '../steps.service';
 
 @Component({
 	selector: 'footer-stepper',
@@ -11,19 +11,11 @@ import { StepsService } from '../steps.service';
 	templateUrl: 'footer-stepper.component.html'
 })
 export class FooterStepperComponent implements OnInit {
-	public srid: any;
-	public columns;
 	public IMPORT_CONFIG = ModuleConfig;
-	isLinear: boolean = true;
-	contentMappingInfo: any;
-	table_name: any;
-	//selected_columns: any;
-	//added_columns: any;
-	importId: any;
-	stepId: any;
-	dataStep1: any;
-	dataStep2: any;
 
+    @Input()
+    importId: any;
+    
 	constructor(
 		private _router: Router,
 		private _ds: DataService,
@@ -31,7 +23,9 @@ export class FooterStepperComponent implements OnInit {
 		private toastr: ToastrService
 	) {}
 
-	ngOnInit() {}
+	ngOnInit() {
+        console.log(this.importId);
+    }
 
 	cancelImport() {
 		this._ds.cancelImport(this.importId).subscribe(

@@ -48,7 +48,8 @@ export class FieldsMappingStepComponent implements OnInit {
 	) {}
 
 	ngOnInit() {
-		this.stepData = this.stepService.getStepData(2);
+        this.stepData = this.stepService.getStepData(2);
+        console.log(this.stepData);
 		this.fieldMappingForm = this._fb.group({
 			fieldMapping: [ null ],
 			mappingName: [ '' ]

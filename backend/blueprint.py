@@ -193,37 +193,6 @@ def get_import_list(info_role):
             details=str(e))
 
 
-@blueprint.route('/delete_step1', methods=['GET'])
-@permissions.check_cruved_scope('R', True, module_code="IMPORT")
-@json_resp
-def delete_step1(info_role):
-    """
-        delete id_import previously created by current id_role having step = 1 value
-        (might happen when user uploads several files during the same import process (=same id_import)
-        and finally interrupts the process without any valid import)
-    """
-    try:
-        list_to_delete = DB.session.query(TImports.id_import) \
-            .filter(CorRoleImport.id_import == TImports.id_import) \
-            .filter(CorRoleImport.id_role == info_role.id_role) \
-            .filter(TImports.step == 1)
-        
-        ids = []
-        for id in list_to_delete:
-            delete_import_CorImportArchives(id.id_import)
-            delete_import_CorRoleImport(id.id_import)
-            delete_import_TImports(id.id_import)
-            ids.append(id.id_import)
-            DB.session.commit()
-
-        return {"deleted_step1_imports": ids}, 200
-
-    except Exception as e:
-        raise GeonatureImportApiError(
-            message='INTERNAL SERVER ERROR - delete_step1() error : contactez l\'administrateur du site',
-            details=str(e))
-
-
 @blueprint.route('/datasets', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
@@ -436,7 +405,9 @@ def cancel_import(info_role, import_id):
     try:
 
         if import_id == "undefined":
-            return {'deleted_id_import': "canceled"}, 200
+            return {
+                'message':'Import annulé'
+                }, 200
 
         # get step number
         step = DB.session.query(TImports.step) \
@@ -481,7 +452,7 @@ def cancel_import(info_role, import_id):
         DB.session.commit()
 
         return {
-                   'deleted_id_import': import_id
+                   'message':'Import annulé'
                }, 200
     except Exception as e:
         DB.session.rollback()
