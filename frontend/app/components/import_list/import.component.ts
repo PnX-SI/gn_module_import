@@ -4,7 +4,6 @@ import { ToastrService } from 'ngx-toastr';
 import { DataService } from '../../services/data.service';
 import { ModuleConfig } from '../../module.config';
 import { Step2Data, Step1Data, Step3Data, Step4Data } from '../import_process/steps.service';
-import { saveAs } from 'file-saver';
 import { CsvExportService } from '../../services/csv-export.service';
 
 @Component({
@@ -12,6 +11,7 @@ import { CsvExportService } from '../../services/csv-export.service';
 	styleUrls: [ 'import.component.scss' ],
 	templateUrl: 'import.component.html'
 })
+
 export class ImportComponent implements OnInit {
 	public deletedStep1;
 	public history;
@@ -27,9 +27,11 @@ export class ImportComponent implements OnInit {
         private _router: Router, 
         private toastr: ToastrService) {}
 
+
 	ngOnInit() {
 		this.onImportList();
 	}
+
 
 	private onImportList() {
 		this._ds.getImportList().subscribe(
@@ -51,7 +53,6 @@ export class ImportComponent implements OnInit {
 
 
 	onFinishImport(row) {
-		console.log('import', row);
 		localStorage.setItem('startPorcess', JSON.stringify(true));
 		let separator = ModuleConfig.SEPARATOR.find((separator) => separator.db_code === row.separator);
 		let dataStep1: Step1Data = {

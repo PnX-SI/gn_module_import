@@ -11,14 +11,15 @@ export class CsvExportService {
     n_invalid: any;
     csvDownloadResp: any;
 
-    constructor(private _ds: DataService, private toastr: ToastrService) {}
+    constructor(
+        private _ds: DataService, 
+        private toastr: ToastrService) {}
+
 
     onCSV(id_import) {
-        console.log(id_import);
         this._ds.checkInvalid(id_import).subscribe(
             (res) => {
                 this.n_invalid = res;
-                console.log(this.n_invalid)
             },
             (error) => {
                 if (error.statusText === 'Unknown Error') {

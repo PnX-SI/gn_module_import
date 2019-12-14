@@ -3,7 +3,6 @@ import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
-
 import { DataService } from '../../services/data.service';
 import { ModuleConfig } from '../../module.config';
 import { StepsService } from '../import_process/steps.service';
@@ -13,13 +12,16 @@ import { StepsService } from '../import_process/steps.service';
 	templateUrl: 'import-modal-dataset.component.html',
 	styleUrls: [ './import-modal-dataset.component.scss' ]
 })
+
 export class ImportModalDatasetComponent implements OnInit, OnDestroy {
+
 	public selectDatasetForm: FormGroup;
 	public userDatasetsResponse: any; 
 	public datasetResponse: JSON;
 	public isUserDatasetError: Boolean = false; // true if user does not have any declared dataset
 	public datasetError: string;
 	private modalRef: NgbModalRef;
+
 
 	constructor(
 		private modalService: NgbModal,
@@ -34,9 +36,11 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 		});
 	}
 
+
 	ngOnInit() {
 		this.getUserDataset();
 	}
+
 
 	onOpenModal(content) {
 		this.stepService.resetStepoer()
@@ -45,9 +49,11 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 		});
 	}
 
+
 	closeModal() {
 		if (this.modalRef) this.modalRef.close();
 	}
+
 
 	onSubmit() {
 		this.stepService.setStepData(1);
@@ -56,6 +62,7 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 		});
 		this.closeModal();
 	}
+
 
 	getUserDataset() {
 		// get list of all declared dataset of the user
@@ -79,7 +86,9 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 		);
 	}
 
+
 	ngOnDestroy(): void {
 		this.closeModal();
-	}
+    }
+    
 }

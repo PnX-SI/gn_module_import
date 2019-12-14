@@ -5,7 +5,6 @@ import { Routes, RouterModule } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-//import { ImportComponent } from "./components/import/import.component";
 import { ImportModalDatasetComponent } from './components/modal_dataset/import-modal-dataset.component';
 import { DataService } from './services/data.service';
 import { CsvExportService } from './services/csv-export.service';

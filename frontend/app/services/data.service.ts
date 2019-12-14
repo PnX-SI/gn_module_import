@@ -12,9 +12,11 @@ const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 export class DataService {
 	constructor(private _http: HttpClient) {}
 
+
 	getImportList() {
 		return this._http.get<any>(urlApi);
 	}
+
 
 	postUserFile(value, datasetId, importId, isFileChanged, fileName) {
 		const urlStatus = `${urlApi}/uploads`;
@@ -30,21 +32,26 @@ export class DataService {
 		return this._http.post<any>(urlStatus, fd, HttpUploadOptions);
 	}
 
+
 	getUserDatasets() {
 		return this._http.get<any>(`${urlApi}/datasets`);
 	}
+
 
 	getMappings(mapping_type, import_id) {
 		return this._http.get<any>(`${urlApi}/mappings/${mapping_type}/${import_id}`);
 	}
 
+
 	getMappingFields(id_mapping: number) {
 		return this._http.get<any>(`${urlApi}/field_mappings/${id_mapping}`);
 	}
 
+
 	getMappingContents(id_mapping: number) {
 		return this._http.get<any>(`${urlApi}/content_mappings/${id_mapping}`);
 	}
+
 
 	postMappingName(value, mappingType) {
 		const urlMapping = `${urlApi}/mappingName`;
@@ -56,17 +63,21 @@ export class DataService {
 		return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
 	}
 
+
 	cancelImport(importId: number) {
 		return this._http.get<any>(`${urlApi}/cancel_import/${importId}`);
 	}
+
 
 	getSynColumnNames() {
 		return this._http.get<any>(`${urlApi}/syntheseInfo`);
 	}
 
+
 	getBibFields() {
 		return this._http.get<any>(`${urlApi}/bibFields`);
 	}
+
 
 	postMapping(value, importId: number, id_mapping: number, user_srid) {
 		const urlMapping = `${urlApi}/mapping/${importId}/${id_mapping}`;
@@ -78,12 +89,11 @@ export class DataService {
 		return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
 	}
 
+
 	postContentMap(value, table_name, import_id, id_mapping) {
-        console.log(value);
 		if (id_mapping == null) {
 			id_mapping = 0;
         }
-        console.log(id_mapping);
 		const contentMappingUrl = `${urlApi}/contentMapping/${import_id}/${id_mapping}`;
 		let fd = new FormData();
 		for (let key of Object.keys(value)) {
@@ -114,21 +124,12 @@ export class DataService {
 		fd.append('table_name', table_name);
 		return this._http.post<any>(contentMappingUrl, fd, HttpUploadOptions);
 	}
-
-	delete_aborted_step1() {
-		return this._http.get<any>(`${urlApi}/delete_step1`);
-    }
     
     
     postMetaToStep3(import_id, id_mapping, table_name) {
         let fd = new FormData();
         fd.append('import_id', import_id);
         fd.append('id_mapping', id_mapping);
-        /*
-        for (let key of Object.keys(selected_columns)) {
-            fd.append(key, selected_columns[key]);
-        }
-        */
         fd.append('table_name', table_name);
         return this._http.post<any>(`${urlApi}/postMetaToStep3`, fd, HttpUploadOptions);
     }

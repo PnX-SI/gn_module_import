@@ -11,6 +11,7 @@ import { StepsService, Step2Data, Step3Data, Step4Data } from '../steps.service'
 	templateUrl: 'footer-stepper.component.html'
 })
 export class FooterStepperComponent implements OnInit {
+    
 	public IMPORT_CONFIG = ModuleConfig;
 
     @Input()
@@ -23,9 +24,9 @@ export class FooterStepperComponent implements OnInit {
 		private toastr: ToastrService
 	) {}
 
-	ngOnInit() {
-        console.log(this.importId);
-    }
+
+	ngOnInit() {}
+
 
 	cancelImport() {
 		this._ds.cancelImport(this.importId).subscribe(
@@ -48,8 +49,10 @@ export class FooterStepperComponent implements OnInit {
 		);
 	}
 
+
 	onImportList() {
 		this.stepService.resetStepoer();
 		this._router.navigate([ `${this.IMPORT_CONFIG.MODULE_URL}` ]);
-	}
+    }
+    
 }

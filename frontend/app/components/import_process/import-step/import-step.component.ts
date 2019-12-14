@@ -12,6 +12,7 @@ import * as _ from 'lodash';
     styleUrls: ['import-step.component.scss'],
     templateUrl: 'import-step.component.html'
 })
+
 export class ImportStepComponent implements OnInit {
 
     public isCollapsed = false;
@@ -55,7 +56,6 @@ export class ImportStepComponent implements OnInit {
                 this.importDataRes = res;
                 this.stepService.resetStepoer();
                 this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
-                console.log(res);
             },
             (error) => {
                 this.spinner = false;
@@ -64,7 +64,6 @@ export class ImportStepComponent implements OnInit {
                     this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
                 } else {
                     // show error message if other server error
-                    console.log(error);
                     this.toastr.error(error.error.message + ' = ' + error.error.details);
                 }
             }
@@ -109,7 +108,6 @@ export class ImportStepComponent implements OnInit {
                     this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
                 } else {
                     // show error message if other server error
-                    console.log(error);
                     this.toastr.error(error.error.message);
                 }
             }

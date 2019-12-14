@@ -30,8 +30,6 @@ export interface Step2Data {
 
 export interface Step3Data {
 	importId?: number;
-	//selected_columns?: any;
-	//added_columns?: any;
 	table_name?: any;
 	contentMappingInfo?: any;
 	id_content_mapping?: number;
@@ -39,13 +37,12 @@ export interface Step3Data {
 
 export interface Step4Data {
 	importId?: number;
-	//selected_columns?: any;
-	//added_columns?: any;
 }
 
 @Injectable()
 export class StepsService {
 	constructor() {}
+
 
 	getStepData(step: 1 | 2 | 3 | 4): Step1Data | Step2Data | Step3Data | Step4Data {
 		switch (step) {
@@ -63,6 +60,7 @@ export class StepsService {
 			}
 		}
 	}
+
 
 	setStepData(step: 1 | 2 | 3 | 4, data?: Step1Data | Step2Data | Step3Data | Step4Data) {
 		switch (step) {
@@ -85,6 +83,7 @@ export class StepsService {
 			}
 		}
 	}
+
 
 	resetStepoer() {
 		localStorage.removeItem('startPorcess');

@@ -25,7 +25,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 	showForm: boolean = false;
 	contentMapRes: any;
 	stepData: Step3Data;
-	//userNomenc = [];
 	public nomencName;
 	public idInfo;
     public disabled: boolean = true;
@@ -51,13 +50,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 		// show list of user mappings
 		this._cm.getMappingNamesList('content', this.stepData.importId);
-
-        // generate form
-        /*
-		if (this.stepData.contentMappingInfo) {
-			this.generateContentForm();
-        }
-        */
 
 		this.getNomencInf();
 
@@ -97,7 +89,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 
     generateContentForm() {
-        console.log(this.stepData.contentMappingInfo);
 		this.stepData.contentMappingInfo.forEach(
 			(ele) => {
 				ele['nomenc_values_def'].forEach(
@@ -105,7 +96,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 						this.contentTargetForm.addControl(nomenc.id, new FormControl(''));
 					});
             });
-        console.log(this.contentTargetForm);
 		this.showForm = true;
     }
 	
@@ -244,7 +234,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 			.postContentMap(
 				value,
 				this.stepData.table_name,
-				//this.stepData.selected_columns,
 				this.stepData.importId,
 				this.id_mapping
 			)
@@ -253,8 +242,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 					this.contentMapRes = res;
 					let step4Data: Step4Data = {
 						importId: this.stepData.importId,
-						//selected_columns: this.stepData.selected_columns,
-						//added_columns: this.stepData.added_columns
 					};
 					let step3Data: Step3Data = this.stepData;
 					step3Data.id_content_mapping = this.id_mapping;

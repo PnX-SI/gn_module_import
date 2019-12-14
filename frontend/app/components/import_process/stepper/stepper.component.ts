@@ -7,17 +7,22 @@ import { ModuleConfig } from '../../../module.config';
 	styleUrls: [ 'stepper.component.scss' ],
 	templateUrl: 'stepper.component.html'
 })
+
 export class stepperComponent implements OnInit, OnChanges {
-	@Input() step: any;
+
+    @Input() step: any;
+    
 	constructor(private _router: Router) {}
 
-	ngOnInit() {}
 
+	ngOnInit() {}
 
 
 	onGoToStep(step){
 		this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/${step}` ]);
 	}
 
-	ngOnChanges() {}
+
+    ngOnChanges() {}
+
 }

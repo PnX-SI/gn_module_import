@@ -11,6 +11,7 @@ import { StepsService, Step1Data, Step2Data } from '../steps.service';
 	styleUrls: [ 'upload-file-step.component.scss' ],
 	templateUrl: 'upload-file-step.component.html'
 })
+
 export class UploadFileStepComponent implements OnInit {
 	public fileName: string;
 	public spinner: boolean = false;
@@ -43,6 +44,7 @@ export class UploadFileStepComponent implements OnInit {
 		});
 	}
 
+
 	ngOnInit() {
 		this.datasetId = this._activatedRoute.snapshot.queryParams['datasetId'];
 		this.stepData = this.stepService.getStepData(1);
@@ -72,6 +74,7 @@ export class UploadFileStepComponent implements OnInit {
 		this.isFileChanged = false;
 	}
 
+
 	disableSeparatorIfGeojson() {
 		let extension = this.fileName.split('.').pop();
 		if (extension === 'geojson') {
@@ -80,6 +83,7 @@ export class UploadFileStepComponent implements OnInit {
 			this.uploadForm.controls['separator'].enable();
 		}
 	}
+
 
 	isDisable() {
 		if (this.uploadForm.invalid) {
@@ -91,6 +95,7 @@ export class UploadFileStepComponent implements OnInit {
 		return false;
 	}
 
+
 	onFileSelected(event: any) {
 		this.uploadForm.patchValue({
 			file: <File>event.target.files[0]
@@ -101,13 +106,9 @@ export class UploadFileStepComponent implements OnInit {
 			this.fileName = event.target.files[0].name;
 		}
 		this.disableSeparatorIfGeojson();
-		/*
-        this.uploadForm.controls['encodage'].enable();
-        this.uploadForm.controls['srid'].enable();
-        this.uploadForm.controls['separator'].enable();
-        */
 		this.isFileChanged = true;
 	}
+
 
 	onFileClick(event) {
 		event.target.value = '';
@@ -119,6 +120,7 @@ export class UploadFileStepComponent implements OnInit {
 		this.isUserErrors = false;
 		this.uploadFileErrors = null;
 	}
+
 
 	onUpload(formValues: any) {
         if (!this.isUploadRunning) {
@@ -177,6 +179,7 @@ export class UploadFileStepComponent implements OnInit {
         }
 	}
 
+    
 	formListener() {
 		this.uploadForm.valueChanges.subscribe(() => {
 			if (this.uploadForm.valid) {
