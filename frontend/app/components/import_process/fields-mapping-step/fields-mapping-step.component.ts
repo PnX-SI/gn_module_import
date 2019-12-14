@@ -13,9 +13,7 @@ import { forkJoin } from 'rxjs/observable/forkJoin';
 	styleUrls: [ 'fields-mapping-step.component.scss' ],
 	templateUrl: 'fields-mapping-step.component.html'
 })
-
 export class FieldsMappingStepComponent implements OnInit {
-
 	public spinner: boolean = false;
 	public IMPORT_CONFIG = ModuleConfig;
 	public syntheseForm: FormGroup;
@@ -36,7 +34,7 @@ export class FieldsMappingStepComponent implements OnInit {
 	public fieldMappingForm: FormGroup;
 	public userFieldMappings;
     public newMapping: boolean = false;
-    isDataCleaningRunning: boolean = false;
+
 
 	constructor(
 		private _ds: DataService,
@@ -49,7 +47,7 @@ export class FieldsMappingStepComponent implements OnInit {
 
 
 	ngOnInit() {
-        this.stepData = this.stepService.getStepData(2);
+		this.stepData = this.stepService.getStepData(2);
 		this.fieldMappingForm = this._fb.group({
 			fieldMapping: [ null ],
 			mappingName: [ '' ]
@@ -119,6 +117,7 @@ export class FieldsMappingStepComponent implements OnInit {
 					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
 				} else {
 					// show error message if other server error
+					console.error(error);
 					this.toastr.error(error.error.message);
 				}
 			}
@@ -127,35 +126,29 @@ export class FieldsMappingStepComponent implements OnInit {
 
 
 	onDataCleaning(value, id_mapping) {
-        if (!this.isDataCleaningRunning) {
-            this.isDataCleaningRunning = true;
-            this.spinner = true;
-            this._ds.postMapping(value, this.stepData.importId, id_mapping, this.stepData.srid).subscribe(
-                (res) => {
-                    this.mappingRes = res;
-                    this.spinner = false;
-                    this.getValidationErrors(res['n_table_rows'], this.stepData.importId);
-                    this.table_name = this.mappingRes['table_name'];];
-                    this.mappingIsValidate = true;
-                    this.isDataCleaningRunning = this.mappingRes['is_running'];
-                },
-                (error) => {
-                    this.isDataCleaningRunning = false;
-                    this.spinner = false;
-                    if (error.statusText === 'Unknown Error') {
-                        // show error message if no connexion
-                        this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
-                    } else {
-                        // show error message if other server error
-                        if (error.status == 400) this.isUserError = true;
-                        this.toastr.error(error.error.message);
-                    }
-                }
-            );
-        } else {
-            this.toastr.error('data cleaning en cours')
-        }
+		this.spinner = true;
+		this._ds.postMapping(value, this.stepData.importId, id_mapping, this.stepData.srid).subscribe(
+			(res) => {
+				this.mappingRes = res;
+				this.spinner = false;
+				this.getValidationErrors(res['n_table_rows'], this.stepData.importId);
+				this.table_name = this.mappingRes['table_name'];
+				this.mappingIsValidate = true;				
+			},
+			(error) => {
+				this.spinner = false;
+				if (error.statusText === 'Unknown Error') {
+					// show error message if no connexion
+					this.toastr.error('ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)');
+				} else {
+					// show error message if other server error
+					if (error.status == 400) this.isUserError = true;
+					this.toastr.error(error.error.message);
+				}
+			}
+		);
 	}
+
 
 	onNextStep() {
 		if (this.mappingRes == undefined) {
@@ -252,13 +245,14 @@ export class FieldsMappingStepComponent implements OnInit {
 					});
 				}
 
-				if (this.stepData.id_field_mapping) {
-					this.fieldMappingForm.controls['fieldMapping'].setValue(this.stepData.id_field_mapping);
-					this.fillMapping(this.stepData.id_field_mapping, this.syntheseForm);
-				} else {
-					this.formReady = true;
-					this.onMappingName(this.fieldMappingForm, this.syntheseForm);
-				}
+                if (this.stepData.id_field_mapping) {
+                    this.fieldMappingForm.controls['fieldMapping'].setValue(this.stepData.id_field_mapping);
+                    this.fillMapping(this.stepData.id_field_mapping, this.syntheseForm);
+                } else {
+                    this.formReady = true;
+                    this.onMappingName(this.fieldMappingForm, this.syntheseForm);
+                }
+
 			},
 			(error) => {
 				console.error(error);
@@ -297,7 +291,7 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
-
+    
 	fillMapping(id_mapping, targetFormName) {
 		this.id_mapping = id_mapping;
 		this._ds.getMappingFields(this.id_mapping).subscribe(
@@ -345,6 +339,7 @@ export class FieldsMappingStepComponent implements OnInit {
 		let mappingType = 'FIELD';
 		this._ds.postMappingName(value, mappingType).subscribe(
 			(res) => {
+                this.stepData.id_field_mapping = res;
 				this.newMapping = false;
 				this.getMappingNamesList(mappingType, importId);
 				this.fieldMappingForm.controls['fieldMapping'].setValue(res);
@@ -359,7 +354,7 @@ export class FieldsMappingStepComponent implements OnInit {
 					console.error(error);
 					this.toastr.error(error.error);
 				}
-			}
+            }
 		);
 	}
 
@@ -391,7 +386,7 @@ export class FieldsMappingStepComponent implements OnInit {
 	}
 
 
-	geoTypeSelect(targetForm) {		
+	geoTypeSelect(targetForm) {
 		/*
         3 cases :
         - one coordinates == '' && wkt == '' : lat && long && wkt set as required
@@ -427,7 +422,6 @@ export class FieldsMappingStepComponent implements OnInit {
 		this.shadeSelectedColumns(targetForm);
 		this.geoTypeSelect(targetForm);
 	}
-
 
 	disableMapping(targetForm) {
 		Object.keys(targetForm.controls).forEach((key) => {
