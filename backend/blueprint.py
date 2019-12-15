@@ -1314,7 +1314,8 @@ def get_valid_data(info_role, import_id):
             total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME)
 
             # get content mapping data
-            selected_content = get_saved_content_mapping(id_mapping)
+            id_content_mapping = get_id_mapping(import_id)
+            selected_content = get_saved_content_mapping(id_content_mapping)
 
             # get valid data preview
             valid_data_list = get_preview(IMPORTS_SCHEMA_NAME, table_name, total_columns, selected_content)

@@ -7,6 +7,7 @@ from ..models import (
     TMappingsValues
 )
 
+import pdb
 
 def get_nomenc_details(nomenclature_abb):
     try:
@@ -238,7 +239,7 @@ def get_saved_content_mapping(id_mapping):
                         str(content.id_target_value): content.source_value
                     }
                     mapping_contents.append(d)
-
+        #pdb.set_trace()
         selected_content = defaultdict(list)
         for content in mapping_contents:
             for key, value in content.items():

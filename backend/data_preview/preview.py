@@ -19,7 +19,6 @@ import pdb
 def get_preview(schema_name, table_name, total_columns, selected_content):
 
     try:
-
         # get valid data in user table
         preview = get_valid_user_data(schema_name, table_name, 50)
         
@@ -98,6 +97,10 @@ def get_nomenc_name(synthese_col_name, user_value, selected_content):
         nomenc_abb = get_nomenc_abb_from_name(synthese_col_name)
         nomenc_values = get_nomenc_values(nomenc_abb)
         nomenc_values_ids = [str(val[0]) for val in nomenc_values]
+        """
+        if user_value == 'plouf':
+            pdb.set_trace()
+        """
         for k,v in selected_content.items():
             for val in v:
                 if val == user_value:
