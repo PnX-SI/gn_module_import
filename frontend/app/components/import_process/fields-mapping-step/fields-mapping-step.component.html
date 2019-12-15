@@ -100,7 +100,7 @@
             </form>
             <!-- Error list in table -->
             <br>
-            <div id="dataCleaningErrorList" *ngIf="isErrorButtonClicked && mappingIsValidate">
+            <div id="dataCleaningErrorList" *ngIf="isErrorButtonClicked && mappingIsValidate && n_error_lines>0">
                 <div> Attention, des erreurs ont été détectées dans le fichier : </div>
                 <table>
                     <thead>
