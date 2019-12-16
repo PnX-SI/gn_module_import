@@ -1016,11 +1016,6 @@ def postMetaToStep3(info_role):
                     vous ne pouvez pas accéder à l\'étape suivante'
             },400
 
-
-        #IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
-
-        #nomenc_info = get_nomenc_info(selected_columns, IMPORTS_SCHEMA_NAME, data['table_name'])
-
         # UPDATE TIMPORTS
 
         logger.info('update t_imports from step 2 to step 3')
@@ -1033,16 +1028,9 @@ def postMetaToStep3(info_role):
 
         DB.session.commit()
 
-        #table_name = data['table_name']
-        #import_id = data['import_id']
-        #data.pop('table_name')
-        #data.pop('import_id')
-
         return {
                    'table_name': table_names['imports_table_name'],
-                   'import_id': data['import_id'],
-                   #'selected_columns': data,
-                   #'content_mapping_info': nomenc_info
+                   'import_id': data['import_id']
                }, 200
     except Exception as e:
         logger.error('*** ERROR IN STEP 2 NEXT BUTTON')
