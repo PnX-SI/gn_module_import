@@ -12,12 +12,10 @@ from geonature.utils.utilssqlalchemy import (
 )
 from geonature.core.gn_meta.models import TDatasets
 
-from ...config.conf_schema_toml import IMPORTS_SCHEMA_NAME, ARCHIVES_SCHEMA_NAME
-
 @serializable
 class TImports(DB.Model):
     __tablename__ = 't_imports'
-    __table_args__ = {'schema': IMPORTS_SCHEMA_NAME, "extend_existing": True}
+    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
 
     id_import = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     format_source_file = DB.Column(DB.Unicode, nullable=True)
@@ -44,7 +42,7 @@ class TImports(DB.Model):
 @serializable
 class CorRoleImport(DB.Model):
     __tablename__ = 'cor_role_import'
-    __table_args__ = {'schema': IMPORTS_SCHEMA_NAME, "extend_existing": True}
+    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
 
     id_role = DB.Column(DB.Integer, primary_key=True)
     id_import = DB.Column(DB.Integer, primary_key=True)
@@ -53,7 +51,7 @@ class CorRoleImport(DB.Model):
 @serializable
 class CorRoleMapping(DB.Model):
     __tablename__ = 'cor_role_mapping'
-    __table_args__ = {'schema': IMPORTS_SCHEMA_NAME, "extend_existing": True}
+    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
 
     id_role = DB.Column(DB.Integer, primary_key=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
@@ -62,7 +60,7 @@ class CorRoleMapping(DB.Model):
 @serializable
 class TMappingsFields(DB.Model):
     __tablename__ = 't_mappings_fields'
-    __table_args__ = {'schema': IMPORTS_SCHEMA_NAME, "extend_existing": True}
+    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
 
     id_match_fields = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
@@ -75,7 +73,7 @@ class TMappingsFields(DB.Model):
 @serializable
 class TMappingsValues(DB.Model):
     __tablename__ = 't_mappings_values'
-    __table_args__ = {'schema': IMPORTS_SCHEMA_NAME, "extend_existing": True}
+    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
 
     id_match_values = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
@@ -86,7 +84,7 @@ class TMappingsValues(DB.Model):
 @serializable
 class TMappings(DB.Model):
     __tablename__ = 't_mappings'
-    __table_args__ = {'schema': IMPORTS_SCHEMA_NAME, "extend_existing": True}
+    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
 
     id_mapping = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     mapping_label = DB.Column(DB.Unicode, nullable=False)
@@ -97,7 +95,7 @@ class TMappings(DB.Model):
 @serializable
 class BibFields(DB.Model):
     __tablename__ = 'dict_fields'
-    __table_args__ = {'schema': IMPORTS_SCHEMA_NAME, "extend_existing": True}
+    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
 
     id_field = DB.Column(DB.Integer, primary_key=True)
     name_field = DB.Column(DB.Unicode, nullable=False)
@@ -116,7 +114,7 @@ class BibFields(DB.Model):
 @serializable
 class BibThemes(DB.Model):
     __tablename__ = 'dict_themes'
-    __table_args__ = {'schema': IMPORTS_SCHEMA_NAME, "extend_existing": True}
+    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
 
     id_theme = DB.Column(DB.Integer, primary_key=True)
     name_theme = DB.Column(DB.Unicode, nullable=False)
@@ -129,7 +127,7 @@ class BibThemes(DB.Model):
 @serializable
 class CorImportArchives(DB.Model):
     __tablename__ = 'cor_import_archives'
-    __table_args__ = {'schema': ARCHIVES_SCHEMA_NAME, "extend_existing": True}
+    __table_args__ = {'schema': 'gn_import_archives', "extend_existing": True}
 
     id_import = DB.Column(DB.Integer, primary_key=True)
     table_archive = DB.Column(DB.Integer, primary_key=True)
