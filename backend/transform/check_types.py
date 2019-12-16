@@ -9,7 +9,7 @@ from ..db.queries.utils import get_types
 from ..wrappers import checker
 from ..logs import logger
 from .utils import fill_map, set_is_valid, set_invalid_reason
-import pdb
+
 
 def convert_to_datetime(value):
     try:

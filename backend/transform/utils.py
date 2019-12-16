@@ -1,5 +1,4 @@
 from ..db.queries.user_errors import get_error_message
-import pdb
 
 
 def fill_col(value):

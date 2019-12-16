@@ -113,8 +113,6 @@ from .data_preview.preview import get_preview, set_total_columns
 from .load.into_synthese.import_data import load_data_to_synthese
 from .wrappers import checker
 
-import pdb
-
 
 blueprint = Blueprint('import', __name__)
 
@@ -814,8 +812,6 @@ def postMapping(info_role, import_id, id_mapping):
         else:
             is_generate_alt = False
 
-        print('is generating altitudes : {}'.format(is_generate_alt))
-
         logger.debug('import_id = %s', import_id)
         logger.debug('DB tabel name = %s', table_names['imports_table_name'])
 
@@ -1020,14 +1016,6 @@ def postMetaToStep3(info_role):
                     vous ne pouvez pas accéder à l\'étape suivante'
             },400
 
-        """
-        try:
-            print(data['date_min'])
-        except Exception:
-            return {
-                       'message': 'Veuillez d\'abord valider votre mapping'
-                   }, 400
-        """
 
         #IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
 
@@ -1155,7 +1143,6 @@ def get_dict_fields(info_role):
 @json_resp
 def content_mapping(info_role, import_id, id_mapping):
     try:
-        print('test id_mapping = {}'.format(id_mapping))
         if id_mapping == '0':
             return {
                        'message': 'Vous devez d\'abord créer ou sélectionner un mapping'

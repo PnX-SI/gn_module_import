@@ -66,12 +66,9 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 
 
 	getNomencInf() {
-		console.log(this.stepData.table_name);
 		this._ds.getNomencInfo(this.stepData.importId).subscribe(
 			(res) => {
-				console.log(res);		
                 this.stepData.contentMappingInfo = res['content_mapping_info'];
-                console.log(this.stepData.contentMappingInfo);
                 this.generateContentForm();
             },
             (error) => {
@@ -129,7 +126,6 @@ export class ContentMappingStepComponent implements OnInit, OnChanges {
 		let values = this.contentTargetForm.controls[formControlName].value;
 		values = values.filter(
 			(value) => {
-				console.log(value);
 				return value.id != deletedVal.id;
 			}
 		);

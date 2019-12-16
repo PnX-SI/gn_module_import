@@ -5,7 +5,6 @@ from ..db.queries.user_errors import set_user_error
 from .utils import fill_map, set_is_valid, set_invalid_reason
 from ..wrappers import checker
 from ..logs import logger
-import pdb
 
 
 @checker('Data cleaning : row duplicates checked')

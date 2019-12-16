@@ -1,5 +1,4 @@
 from geonature.utils.env import DB
-import pdb
 
 
 def set_user_error(id_import, id_error, col_name, n_errors):

@@ -21,7 +21,6 @@ export class ContentMappingService {
         // get list of existing content mapping in the select
 		this._ds.getMappings(mapping_type, importId).subscribe(
 			(result) => {
-                console.log(result);
                 this.userContentMappings = result['mappings'];
 			},
 			(error) => {
@@ -56,7 +55,6 @@ export class ContentMappingService {
         let mappingType = 'CONTENT';
 		this._ds.postMappingName(value, mappingType).subscribe(
 			(res) => {
-                console.log(res);
 				this.newMapping = false;
 				this.getMappingNamesList(mappingType, importId);
 				mappingForm.controls['contentMapping'].setValue(res);

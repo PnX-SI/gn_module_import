@@ -32,9 +32,7 @@ export class FieldMappingService {
                                 selected: false
                             };
                         });
-                }
-                console.log(this.userFieldMappings);
-                
+                }                
 			},
 			(error) => {
 				console.error(error);
@@ -115,9 +113,6 @@ export class FieldMappingService {
 			(mappingFields) => {
 				if (mappingFields[0] != 'empty') {
 					for (let field of mappingFields) {
-                        console.log(mappingFields);
-                        console.log(field);
-                        //targetFormName.controls[field['target_field']].enable();
                         this.enableMapping(targetFormName);
 						targetFormName.get(field['target_field']).setValue(field['source_field']);
                     }

@@ -5,7 +5,6 @@ from ..db.queries.altitudes import (
     generate_altitudes
 )
 from ..utils.utils import create_col_name
-import pdb
 
 
 @checker('Data cleaning : altitudes created')

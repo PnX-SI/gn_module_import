@@ -11,8 +11,6 @@ from ..logs import logger
 from ..db.queries.user_table_queries import get_uuid_list
 from ..utils.utils import create_col_name
 
-import pdb
-
 
 def fill_nan_uuid(value):
     if pd.isnull(value):

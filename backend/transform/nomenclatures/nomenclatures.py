@@ -17,8 +17,6 @@ from ...utils.clean_names import clean_string
 from ...wrappers import checker
 from ...logs import logger
 
-import pdb
-
 
 def get_nomenc_info(form_data, schema_name, table_name):
     try:

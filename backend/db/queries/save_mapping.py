@@ -1,7 +1,6 @@
 from geonature.utils.env import DB
 
 from ..models import TMappingsFields, TMappingsValues
-import pdb
 
 
 def save_field_mapping(form_data, id_mapping, select_type):
