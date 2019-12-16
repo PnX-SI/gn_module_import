@@ -14,11 +14,12 @@ SET default_with_oids = false;
 
 CREATE TABLE t_imports(
     id_import serial NOT NULL,
-    format_source_file character varying(5),
+    format_source_file character varying(10),
     SRID integer,
     separator character varying,
     encoding character varying,
     import_table character varying(255),
+    full_file_name character varying(255),
     id_dataset integer,
     id_field_mapping integer,
     id_content_mapping integer,
@@ -41,7 +42,7 @@ CREATE TABLE cor_role_import(
 );
 
 
-CREATE TABLE user_errors(
+CREATE TABLE t_user_errors(
     id_error integer NOT NULL,
     error_type character varying(100) NOT NULL,
     name character varying(255) NOT NULL UNIQUE,
@@ -59,7 +60,9 @@ CREATE TABLE t_mappings_fields(
     id_match_fields serial NOT NULL,
     id_mapping integer NOT NULL,
     source_field character varying(255) NOT NULL,
-    target_field character varying(255) NOT NULL
+    target_field character varying(255) NOT NULL,
+    is_selected boolean NOT NULL,
+    is_added boolean NOT NULL
 );
 
 
@@ -72,7 +75,7 @@ CREATE TABLE t_mappings_values(
 );
 
 
-CREATE TABLE bib_mappings(
+CREATE TABLE t_mappings(
     id_mapping serial NOT NULL,
     mapping_label character varying(255) NOT NULL,
     mapping_type character varying(10) NOT NULL,
@@ -80,15 +83,7 @@ CREATE TABLE bib_mappings(
 );
 
 
-/*
-CREATE TABLE bib_type_mapping_values(
-    id_type_mapping integer NOT NULL,
-    mapping_type character varying(10)
-);
-*/
-
-
-CREATE TABLE bib_themes(
+CREATE TABLE dict_themes(
     id_theme integer,
     name_theme character varying(100) NOT NULL,
     fr_label_theme character varying(100) NOT NULL,
@@ -98,7 +93,7 @@ CREATE TABLE bib_themes(
 );
 
 
-CREATE TABLE bib_fields(
+CREATE TABLE dict_fields(
     id_field integer,
     name_field character varying(100) NOT NULL,
     fr_label character varying(100) NOT NULL,
@@ -116,8 +111,17 @@ CREATE TABLE bib_fields(
 
 
 CREATE TABLE cor_synthese_nomenclature(
-    id_type integer NOT NULL,
-    id_field integer NOT NULL
+    mnemonique character varying(50) NOT NULL,
+    synthese_col character varying(50) NOT NULL
+);
+
+
+CREATE TABLE t_user_error_list(
+    id_user_error serial NOT NULL,
+    id_import integer NOT NULL,
+    id_error integer NOT NULL,
+    column_error character varying(100) NOT NULL,
+    count_error integer NOT NULL
 );
 
 
@@ -132,7 +136,7 @@ ALTER TABLE ONLY t_imports
 ALTER TABLE ONLY cor_role_import 
     ADD CONSTRAINT pk_cor_role_import PRIMARY KEY (id_role, id_import);
 
-ALTER TABLE ONLY user_errors 
+ALTER TABLE ONLY t_user_errors 
     ADD CONSTRAINT pk_user_errors PRIMARY KEY (id_error);
 
 ALTER TABLE ONLY cor_role_mapping
@@ -144,22 +148,23 @@ ALTER TABLE ONLY t_mappings_fields
 ALTER TABLE ONLY t_mappings_values
     ADD CONSTRAINT pk_t_mappings_values PRIMARY KEY (id_match_values);
 
-ALTER TABLE ONLY bib_mappings
-    ADD CONSTRAINT pk_bib_mappings PRIMARY KEY (id_mapping);
+ALTER TABLE ONLY t_mappings
+    ADD CONSTRAINT pk_t_mappings PRIMARY KEY (id_mapping);
 
 --ALTER TABLE ONLY bib_type_mapping_values
 --    ADD CONSTRAINT pk_bib_type_mapping_values PRIMARY KEY (id_type_mapping, mapping_type);
 
-ALTER TABLE ONLY bib_themes
-    ADD CONSTRAINT pk_bib_themes_id_theme PRIMARY KEY (id_theme);
+ALTER TABLE ONLY dict_themes
+    ADD CONSTRAINT pk_dict_themes_id_theme PRIMARY KEY (id_theme);
 
-ALTER TABLE ONLY bib_fields
-    ADD CONSTRAINT pk_bib_fields_id_theme PRIMARY KEY (id_field);
+ALTER TABLE ONLY dict_fields
+    ADD CONSTRAINT pk_dict_fields_id_theme PRIMARY KEY (id_field);
 
 ALTER TABLE ONLY cor_synthese_nomenclature
-    ADD CONSTRAINT pk_cor_synthese_nomenclature PRIMARY KEY (id_type, id_field);
+    ADD CONSTRAINT pk_cor_synthese_nomenclature PRIMARY KEY (mnemonique, synthese_col);
 
-
+ALTER TABLE ONLY t_user_error_list
+    ADD CONSTRAINT pk_t_user_error_list PRIMARY KEY (id_user_error);
 
 ---------------
 --FOREIGN KEY--
@@ -175,33 +180,36 @@ ALTER TABLE ONLY cor_role_mapping
     ADD CONSTRAINT fk_utilisateurs_t_roles FOREIGN KEY (id_role) REFERENCES utilisateurs.t_roles(id_role) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY cor_role_mapping
-    ADD CONSTRAINT fk_gn_imports_bib_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.bib_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_gn_imports_t_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_mappings_fields
-    ADD CONSTRAINT fk_gn_imports_bib_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.bib_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_gn_imports_t_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_mappings_values
-    ADD CONSTRAINT fk_gn_imports_bib_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.bib_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_gn_imports_t_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --ALTER TABLE ONLY t_mappings_values
 --    ADD CONSTRAINT fk_gn_imports_bib_type_mapping_values_id_type_mapping FOREIGN KEY (id_type_mapping) REFERENCES gn_imports.bib_type_mapping_values(id_type_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE ONLY bib_fields
-    ADD CONSTRAINT fk_gn_imports_bib_themes_id_theme FOREIGN KEY (id_theme) REFERENCES gn_imports.bib_themes(id_theme) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY dict_fields
+    ADD CONSTRAINT fk_gn_imports_dict_themes_id_theme FOREIGN KEY (id_theme) REFERENCES gn_imports.dict_themes(id_theme) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY cor_synthese_nomenclature
-    ADD CONSTRAINT fk_cor_synthese_nomenclature_id_type FOREIGN KEY (id_type) REFERENCES ref_nomenclatures.bib_nomenclatures_types(id_type) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_cor_synthese_nomenclature_id_type FOREIGN KEY (mnemonique) REFERENCES ref_nomenclatures.bib_nomenclatures_types(mnemonique) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE ONLY cor_synthese_nomenclature
-    ADD CONSTRAINT fk_cor_synthese_nomenclature_id_field FOREIGN KEY (id_field) REFERENCES gn_imports.bib_fields(id_field) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY t_user_error_list
+    ADD CONSTRAINT fk_t_user_error_list_id_import FOREIGN KEY (id_import) REFERENCES gn_imports.t_imports(id_import) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY t_user_error_list
+    ADD CONSTRAINT fk_t_user_error_list_id_error FOREIGN KEY (id_error) REFERENCES gn_imports.t_user_errors(id_error) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 ---------------------
 --OTHER CONSTRAINTS--
 ---------------------
 
-ALTER TABLE ONLY bib_mappings
-   ADD CONSTRAINT check_mapping_type_in_bib_mappings CHECK (mapping_type IN ('FIELD', 'CONTENT'));
+ALTER TABLE ONLY t_mappings
+   ADD CONSTRAINT check_mapping_type_in_t_mappings CHECK (mapping_type IN ('FIELD', 'CONTENT'));
 
 
 
@@ -221,7 +229,7 @@ ALTER TABLE ONLY bib_mappings
 --INSERTIONS--
 --------------
 
-INSERT INTO user_errors (id_error, error_type, name, description) VALUES
+INSERT INTO t_user_errors (id_error, error_type, name, description) VALUES
 	(1, 'invalid type error', 'invalid integer type', 'type integer invalide'),
 	(2, 'invalid type error', 'invalid date type', 'type date invalide'),
 	(3, 'invalid type error', 'invalid uuid type', 'type uuid invalide'),
@@ -236,10 +244,12 @@ INSERT INTO user_errors (id_error, error_type, name, description) VALUES
 	(12, 'invalid type error', 'invalid real type', 'type real invalide'),
 	(13, 'inconsistency_error', 'inconsistent geographic coordinate', 'coordonnée géographique incohérente'),
     (14, 'uuid value error', 'uuid existing in gn_synthese.synthese table', 'uuid déjà existant dans la table gn_synthese.synthese'),
-    (15, 'invalid value', 'id_digitiser is not present in "t_roles" table', 'id_digitizer n''existe pas dans la table "t_roles"');
+    (15, 'invalid value', 'id_digitiser is not present in "t_roles" table', 'id_digitizer n''existe pas dans la table "t_roles"'),
+    (16, 'invalid type error', 'invalid wkt type', 'type wkt invalide'),
+    (17, 'duplicates error', 'duplicated observations for selected columns', 'observations en doublon sur les colonnes sélectionnées');
 
 
-INSERT INTO bib_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme) VALUES
+INSERT INTO dict_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme) VALUES
 	(1, 'general_info', 'Informations générales', '', '', 1),
     (2, 'statement_info', 'Informations de relevés', '', '', 2),
     (3, 'occurrence_sensitivity', 'Informations d''occurrences & sensibilité', '', '', 3),
@@ -247,7 +257,7 @@ INSERT INTO bib_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, d
     (5, 'validation', 'Détermination et validité', '', '', 5);
 
 
-INSERT INTO bib_fields (id_field, name_field, fr_label, eng_label, desc_field, type_field, synthese_field, mandatory, autogenerated, nomenclature, id_theme, order_field, display) VALUES
+INSERT INTO dict_fields (id_field, name_field, fr_label, eng_label, desc_field, type_field, synthese_field, mandatory, autogenerated, nomenclature, id_theme, order_field, display) VALUES
 	(1, 'entity_source_pk_value', 'Identifiant source', '', '', 'character varying', TRUE, FALSE, FALSE, FALSE, 1, 1, TRUE),
 	(2, 'unique_id_sinp', 'Identifiant SINP (uuid)', '', '', 'uuid', TRUE, FALSE, FALSE, FALSE, 1, 2, TRUE),
 	(3, 'unique_id_sinp_generate', 'Générer l''identifiant SINP', '', 'Génère automatiquement un identifiant de type uuid pour chaque observation', '', FALSE, FALSE, TRUE, FALSE, 1, 3, TRUE), 
@@ -259,12 +269,12 @@ INSERT INTO bib_fields (id_field, name_field, fr_label, eng_label, desc_field, t
 	(9, 'altitude_min', 'Altitude min', '', '', 'integer', TRUE, FALSE, FALSE, FALSE, 2, 3, TRUE),
 	(10, 'altitude_max', 'Altitude max', '', '', 'integer', TRUE, FALSE, FALSE, FALSE, 2, 4, TRUE),
 	(11, 'altitudes_generate', 'Générer les altitudes', '', 'Génère automatiquement les altitudes pour chaque observation', '', FALSE, FALSE, TRUE, FALSE, 2, 5, TRUE),
-	(12, 'longitude', 'Longitude (coord x)', '', '', '', FALSE, TRUE, FALSE, FALSE, 2, 6, TRUE),
-	(13, 'latitude', 'Latitude (coord y)', '', '', '', FALSE, TRUE, FALSE, FALSE, 2, 7, TRUE),
-	(14, 'observers', 'Observateur(s)', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, 2, 8, TRUE),
-	(15, 'comment_description', 'Commentaire de relevé', '', '', 'text', TRUE, FALSE, FALSE, FALSE, 2, 9, TRUE),
-	(16, 'id_nomenclature_info_geo_type', 'Type d''information géographique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 10, TRUE),
-	(17, 'id_nomenclature_grp_typ', 'Type de relevé/regroupement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 11, TRUE),
+	(12, 'longitude', 'Longitude (coord x)', '', '', 'real', FALSE, TRUE, FALSE, FALSE, 2, 6, TRUE),
+	(13, 'latitude', 'Latitude (coord y)', '', '', 'real', FALSE, TRUE, FALSE, FALSE, 2, 7, TRUE),
+	(14, 'observers', 'Observateur(s)', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, 2, 9, TRUE),
+	(15, 'comment_description', 'Commentaire de relevé', '', '', 'text', TRUE, FALSE, FALSE, FALSE, 2, 10, TRUE),
+	(16, 'id_nomenclature_info_geo_type', 'Type d''information géographique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 11, TRUE),
+	(17, 'id_nomenclature_grp_typ', 'Type de relevé/regroupement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 12, TRUE),
 	(18, 'nom_cite', 'Nom du taxon cité', '', '', 'character varying(1000)', TRUE, TRUE, FALSE, FALSE, 3, 1, TRUE),
 	(19, 'cd_nom', 'Cd nom taxref', '', '', 'integer', TRUE, TRUE, FALSE, FALSE, 3, 2, TRUE),
 	(20, 'id_nomenclature_obs_meth', 'Méthode d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 3, TRUE),
@@ -295,27 +305,29 @@ INSERT INTO bib_fields (id_field, name_field, fr_label, eng_label, desc_field, t
     (45, 'id_nomenclature_geo_object_nature', 'Nature d''objet géographique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 12, TRUE),
     (46, 'id_nomenclature_obs_technique', 'Techniques d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 11, TRUE),
     (47, 'id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 12, TRUE),
-    (48, 'id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 13, TRUE);
+    (48, 'id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 13, TRUE),
+    (49, 'WKT', 'WKT (Point)', '', '', 'wkt', FALSE, TRUE, FALSE, FALSE, 2, 8, TRUE);
 
 
-INSERT INTO cor_synthese_nomenclature (id_type, id_field) VALUES
-    (3, 45),
-    (24, 17), 
-    (14, 20),
-    (100, 46),
-    (13, 21),
-    (8, 23),
-    (7, 22),
-    (15, 37),
-    (101, 41),
-    (5, 26),
-    (10, 28),
-    (9, 29),
-    (6, 31),
-    (21, 30),
-    (16, 25),
-    (18, 47),
-    (4, 27),
-    (19, 48),
-    (23, 16),
-    (106, 34);
+INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
+    ('NAT_OBJ_GEO',	'id_nomenclature_geo_object_nature'),
+    ('DEE_FLOU',	'id_nomenclature_blurring'),
+    ('NIV_PRECIS',	'id_nomenclature_diffusion_level'),
+    ('OBJ_DENBR',	'id_nomenclature_obj_count'),
+    ('ETA_BIO',	'id_nomenclature_bio_condition'),
+    ('NATURALITE',	'id_nomenclature_naturalness'),
+    ('SEXE',	'id_nomenclature_sex'),
+    ('STADE_VIE',	'id_nomenclature_life_stage'),
+    ('STATUT_BIO',	'id_nomenclature_bio_status'),
+    ('METH_OBS',	'id_nomenclature_obs_meth'),
+    ('PREUVE_EXIST',	'id_nomenclature_exist_proof'),
+    ('SENSIBILITE',	'id_nomenclature_sensitivity'),
+    ('STATUT_OBS',	'id_nomenclature_observation_status'),
+    ('STATUT_SOURCE',	'id_nomenclature_source_status'),
+    ('TYP_DENBR',	'id_nomenclature_type_count'),
+    ('TYP_INF_GEO',	'id_nomenclature_info_geo_type'),
+    ('TYP_GRP',	'id_nomenclature_grp_typ'),
+    ('TECHNIQUE_OBS',	'id_nomenclature_obs_technique'),
+    ('STATUT_VALID',	'id_nomenclature_valid_status'),
+    ('METH_DETERMIN',	'id_nomenclature_determination_method');
+

@@ -1,14 +1,16 @@
 import os
 
 
-def create_col_name(df, col_dict, key, value, import_id):
+def create_col_name(df, col_dict, key, import_id):
     try:
-        if value not in df.columns:
-            col_dict[key] = value
+        colname = '_'.join(['gn', import_id, key])
+        if colname not in df.columns:
+            col_dict[key] = colname
         else:
-            colname = '_'.join(['gn', import_id, value])
+            i = 2
             while colname in df.columns:
-                colname = '_'.join(['gn',colname])
+                colname = '_'.join(['gn', import_id, key, str(i)])
+                i = i+1
             col_dict[key] = colname
     except Exception:
         raise

@@ -1,36 +1,38 @@
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0"> Mapping des contenus </h5>
-    </div>
-    <div class="card-body">
+<div class=container>
+    <stepper [step]=3></stepper>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0"> Mapping des contenus </h5>
+        </div>
+        <div class="card-body">
 
         <!-- Choix du mapping -->
-        <form [formGroup]="selectContentMappingForm" class="was-validated">
+        <form [formGroup]="contentMappingForm" class="was-validated">
                 <fieldset>
                     <legend class="px-1">
                         Choix du mapping
                     </legend>
-                    <div *ngIf="userContentMapping" class="form-group">
+                    <div *ngIf="_cm.userContentMappings" class="form-group">
                         <select class="form-control form-control-sm" id="contentMappingSelection"
                             formControlName="contentMapping">
                             <option [value]=""></option>
-                            <option *ngFor="let data of userContentMapping" [value]="data.id_mapping">
+                            <option *ngFor="let data of _cm.userContentMappings" [value]="data.id_mapping">
                                 {{data.mapping_label}}</option>
                         </select>
                     </div>
                     <button
                         class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
-                        (click)="createMapping()">
+                        (click)="_cm.createMapping(contentMappingForm)">
                         Nouveau mapping
                     </button>
-                    <div *ngIf="newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
+                    <div *ngIf="_cm.newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
                         <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
                         <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
-                            (click)="onMappingContentName(selectContentMappingForm.value)">
+                            (click)="_cm.saveMappingName(contentMappingForm.value, importId, contentMappingForm)">
                             ok
                         </button>
                         <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
-                            (click)="onCancelMapping()">
+                            (click)="_cm.cancelMapping(contentMappingForm)">
                             annuler
                         </button>
                     </div>
@@ -38,8 +40,8 @@
             </form>
 
 
-        <form [formGroup]="contentForm" *ngIf="showForm">
-            <div *ngFor="let contentMapping of contentMappingInfo">
+        <form [formGroup]="contentTargetForm" *ngIf="showForm">
+            <div *ngFor="let contentMapping of stepData.contentMappingInfo">
                 <div class="card field-card">
                     <div class="field-header" (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed">
                         <div class="card-title mb-0">{{contentMapping.nomenc_name}}</div>
@@ -47,21 +49,27 @@
                         <i *ngIf="!contentMapping.isCollapsed" class="material-icons">keyboard_arrow_up</i>
                     </div>
                     <div [ngbCollapse]="contentMapping.isCollapsed" class="card-body">
+
                         <div *ngFor="let value_def of contentMapping.nomenc_values_def">
                             <div class="form-group row">
                                 <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
                                 <div class="col-sm-8">
-                                    <pnx-multiselect [values]="contentMapping.user_values.values"
-                                        [parentFormControl]="contentForm.controls[value_def.id]"
-                                        keyLabel="value" keyValue="value" debounceTime="500"
-                                        [searchBar]="false" [disabled]="disabled"
-                                        (onChange) = "onSelectChange($event,contentMapping)"
-                                        (onDelete) = "onSelectDelete($event,contentMapping)"
+                                    <pnx-multiselect 
+                                        [values]="contentMapping.user_values.values"
+                                        [parentFormControl]="contentTargetForm.controls[value_def.id]"
+                                        keyLabel="value" 
+                                        keyValue="value" 
+                                        debounceTime="500"
+                                        [searchBar]="false"
+                                        [disabled]="disabled"
+                                        (onChange) = "onSelectChange($event,contentMapping,value_def.id)"
+                                        (onDelete) = "onSelectDelete($event,contentMapping,value_def.id)"
                                         >
                                     </pnx-multiselect>
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -71,14 +79,18 @@
                     <i class="material-icons"> navigate_before </i>
                     Précédent
                 </button>
-                <button (click)="onContentMapping(contentForm.value)"
-                    class="btn btn-success box-shadow d-flex justify-content-center align-content-between">
+                <button (click)="onContentMapping(contentTargetForm.value)"
+                    class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
+                    [disabled]="disabled">
                     Suivant
                     <i class="material-icons"> navigate_next </i>
                 </button>
             </div>
         </form>
     </div>
+    <footer>
+        <footer-stepper importId={{stepData.importId}}></footer-stepper>
+    </footer>
 </div>
 <!-- Spinner -->
 <div *ngIf="spinner" class="spinner">

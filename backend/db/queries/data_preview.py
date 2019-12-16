@@ -1,6 +1,7 @@
 from geonature.utils.env import DB
 from ..models import TImports
 
+
 def get_valid_user_data(schema_name, table_name, limit):
     try:
         preview = DB.session.execute("""
@@ -52,3 +53,18 @@ def get_id_dataset(import_id):
         return id_dataset
     except Exception:
         raise
+
+
+def get_synthese_dict_fields(schema_name):
+    try:
+        fields = DB.session.execute("""
+            SELECT name_field
+            FROM {schema_name}.dict_fields
+            WHERE synthese_field = TRUE;
+        """.format(schema_name = schema_name)
+        ).fetchall()
+        fields_list = [field[0] for field in fields]
+        return fields_list
+    except Exception:
+        raise
+        

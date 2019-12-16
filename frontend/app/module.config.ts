@@ -1,7 +1,7 @@
 export const ModuleConfig = {
  "ALLOWED_EXTENSIONS": [
   ".csv",
-  ".json"
+  ".geojson"
  ],
  "ARCHIVES_SCHEMA_NAME": "gn_import_archives",
  "DEFAULT_COUNT_VALUE": 1,
@@ -18,8 +18,9 @@ export const ModuleConfig = {
   "the_geom_local",
   "last_action"
  ],
- "ID_MODULE": 17,
+ "ID_MODULE": 18,
  "IMPORTS_SCHEMA_NAME": "gn_imports",
+ "INVALID_CSV_NAME": "invalid",
  "LIST_COLUMNS_FRONTEND": [
   {
    "max_width": 50,
@@ -82,18 +83,22 @@ export const ModuleConfig = {
  "SEPARATOR": [
   {
    "code": ",",
+   "db_code": "comma",
    "name": "virgule (,)"
   },
   {
    "code": "\t",
+   "db_code": "tab",
    "name": "tabulation"
   },
   {
    "code": ";",
+   "db_code": "colon",
    "name": "point-virgule (;)"
   },
   {
    "code": " ",
+   "db_code": "space",
    "name": "espace"
   }
  ],

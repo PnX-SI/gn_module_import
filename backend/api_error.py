@@ -1,5 +1,6 @@
 class GeonatureImportApiError(Exception):
     status_code = 500
+    
     def __init__(self, message, details, status_code=None):
         Exception.__init__(self)
         self.message = message

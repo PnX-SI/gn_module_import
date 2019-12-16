@@ -4,31 +4,6 @@ from .goodtables_errors import*
 from ..logs import logger
 from ..wrappers import checker
 
-import pdb
-
-"""
-Vérifications :
-    https://github.com/frictionlessdata/goodtables-py :
-    - all basic checks:
-        -> encoding-error is not utf-8 or utf-16
-        -> source-error
-        -> format-error
-    - all structural checks:
-        -> blank-header
-        -> duplicate header
-        -> blank_row
-        -> duplicate-row
-        -> extra-value
-        -> missing-value
-    - no schema checks
-    - no custom checks
-
-Notes encodages :
-- encodage : utf8 et 16 : pas d'erreur
-- encodage : Europe occidentale ISO-8859-15/EURO (=latin-9) et ISO-8859-1 (=latin-1) : erreur ('source-error')
-- pb : il faut donc convertir en utf-8 avant de passer dans goodtables
-"""
-
 
 @checker('User file validity checked')
 def check_user_file(full_path, row_limit=100000000):
@@ -37,7 +12,7 @@ def check_user_file(full_path, row_limit=100000000):
 
         errors = []
 
-        report = validate(full_path, row_limit=row_limit)
+        report = validate(full_path, skip_checks=['duplicate-row'], row_limit=row_limit)
 
         if report['valid'] is False:
 
@@ -47,7 +22,6 @@ def check_user_file(full_path, row_limit=100000000):
                     user_error = set_error(error['code'], 'No such file or directory', '')
                     errors.append(user_error)
                 else:
-                    #print(error['message'])
                     # other goodtable errors :
                     user_error = set_error(error['code'], '', error['message'])
                     errors.append(user_error)
