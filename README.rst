@@ -28,7 +28,7 @@ Configuration du module
 =======================
 TODO
 
-Il est également possible de paramétrer l'ordonnancement des champs (ordre, regroupements dans des blocs) dans l'interface du mapping de champs. A l'instar des attributs gérés dans taxhub, il est possible de définir des "blocs" dans la table gn_imports.dict_themes, et d'y attribuer des champs (dict_fields) en y définissant leur ordre de rangement. Les champs sont également masquables via le champs 
+Il est également possible de paramétrer l'ordonnancement des champs (ordre, regroupements dans des blocs) dans l'interface du mapping de champs. A l'instar des attributs gérés dans taxhub, il est possible de définir des "blocs" dans la table gn_imports.dict_themes, et d'y attribuer des champs (dict_fields) en y définissant leur ordre de rangement. Les champs sont également masquables via le champs booléen "display". Un champs masqué sera traité comme un champs non rempli, et se verra associer des valeurs par défaut ou une information vide. Masquer les champs obligatoires rendra donc impossible l'import de données. 
 
 Après avoir regroupé les champs dans leurs "blocs" et leur avoir associé un rang, vous devrez relancer le build de l'interface. 
 
