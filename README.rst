@@ -1,40 +1,33 @@
-Fichiers relatifs à l'installation
+Installation du module d'imports
 ==================================
 
-* manifest.tml (Obligatoire): fichier contenant la description du module (nom, version de gn supportée, ...)
-* install_env.sh: installation des paquets debian
-* install_gn_module.py: installation du module :
-    * commande sql
-    * extra commandes python
-    * ce fichier doit contenir la méthode suivante : gnmodule_install_app(gn_db, gn_app)
-* requirements.txt: liste des paquets python
-
-
-* config/conf_schema_toml.py : Schéma Marshmallow de spécification des paramètres du module
-
-Fichiers relatifs au bon fonctionnement du module
-=================================================
-
-
-Backend
--------
-Si votre module comporte des routes il doit comporter le fichier suivant : backend/blueprint.py
-avec une variable blueprint qui contient toutes les routes
+Télécharger le module (version test sur la branche develop)
 
 ::
 
-    blueprint = Blueprint('gn_module_import', __name__)
+   cd
+   wget https://github.com/PnX-SI/gn_module_import/archive/develop.zip
+   unzip develop.zip
 
 
-Frontend
---------
+Le temps d'une correction à venir, il est nécessaire d'installer manuellement les pré-requis du module avant de procéder à son installation en le nommant "import"
 
-Le dossier ``frontend`` comprend les élements suivant:
+::
 
-- le dossier ``app``: comprend le code typescript du module
+   cd
+   source geonature/backend/venv/bin/activate
+   pip install goodtables==2.1.4 pandas==0.24.2 dask==0.19.1 dask[dataframe]==2.0.0 geopandas==0.5.1 psutil==5.4.7
+   geonature install_gn_module /home/geonatureadmin/gn_module_import-develop import
+   deactivate
+   
+   
+ Le module est installé et prêt à être testé.
+ 
 
-     Il doit inclure le "module Angular racine", celui-ci doit impérativement s'appeler ``gnModule.module.ts`` 
 
-- le dossier ``assets`` l'ensemble des médias (images, son).
-    
-- Un fichier package.json qui décrit l'ensemble des librairies JS necessaire au module.
+Fonctionnement du module d'imports
+==================================
+
+Le module permet de traiter un fichier csv ou json sous tout format de données, d'établir les correspondances nécessaires, et d'intégrer les données dans la synthèse de GeoNature. Il semble préférable de prévoir un serveur disposant a minima de 4Go de RAM. 
+
+
