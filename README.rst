@@ -21,7 +21,7 @@ Le temps d'une correction à venir, il est nécessaire d'installer manuellement 
    deactivate
    
    
- Le module est installé et prêt à être testé.
+Le module est installé et prêt à être testé.
  
 
 
