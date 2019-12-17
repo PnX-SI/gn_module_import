@@ -24,6 +24,20 @@ Le temps d'une correction à venir, il est nécessaire d'installer manuellement 
 Le module est installé et prêt à être testé.
  
 
+Configuration du module
+=======================
+TODO
+
+Il est également possible de paramétrer l'ordonnancement des champs (ordre, regroupements dans des blocs) dans l'interface du mapping de champs. A l'instar des attributs gérés dans taxhub, il est possible de définir des "blocs" dans la table gn_imports.dict_themes, et d'y attribuer des champs (dict_fields) en y définissant leur ordre de rangement. Les champs sont également masquables via le champs 
+
+Après avoir regroupé les champs dans leurs "blocs" et leur avoir associé un rang, vous devrez relancer le build de l'interface. 
+
+::
+
+   cd
+   cd geonature/frontend
+   npm run build
+
 
 Fonctionnement du module d'imports
 ==================================
