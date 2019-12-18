@@ -10,13 +10,13 @@ Télécharger le module (version test sur la branche develop)
    unzip develop.zip
 
 
-Le temps d'une correction à venir, il est nécessaire d'installer manuellement les pré-requis du module avant de procéder à son installation en le nommant "import"
+Le temps d'une correction à venir, il est nécessaire d'installer manuellement les pré-requis du module avant de procéder à son installation en le nommant "import" (pensez à corriger les chemins si votre utilisateur ne s'appelle pas geonatureadmin)
 
 ::
 
    cd
    source geonature/backend/venv/bin/activate
-   pip install goodtables==2.1.4 pandas==0.24.2 dask==0.19.1 dask[dataframe]==2.0.0 geopandas==0.5.1 psutil==5.4.7
+   pip install -r /home/geonatureadmin/gn_module_import-develop/backend/requirements.txt
    geonature install_gn_module /home/geonatureadmin/gn_module_import-develop import
    deactivate
    
