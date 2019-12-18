@@ -2,8 +2,8 @@
 CHANGELOG
 =========
 
-0.1.0
------
+0.1.0 (2019-12-19)
+------------------
 
 Première version fonctionelle du module Import de GeoNature
 
