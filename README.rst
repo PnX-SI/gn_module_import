@@ -45,3 +45,8 @@ Fonctionnement du module d'imports
 Le module permet de traiter un fichier csv ou json sous tout format de données, d'établir les correspondances nécessaires, et d'intégrer les données dans la synthèse de GeoNature. Il semble préférable de prévoir un serveur disposant a minima de 4Go de RAM. 
 
 
+
+
+
+--
+Financement : DREAL et Conseil Régional Auvergne-hône-Alpes
