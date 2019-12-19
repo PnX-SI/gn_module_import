@@ -19,5 +19,5 @@ Première version fonctionelle du module Import de GeoNature
 * Possibilité de corriger, mettre à jour ou compléter la table enrichie en cours de processus
 * Enregistrement des mappings pour pouvoir les réutiliser pour un autre import
 * Contrôle des erreurs et téléchargement des données erronées
-* Flexibilité de l'interface et des regroupements de champs, paramétrable via les tables gn_import.dict_themes et gn_import.dict_fields
+* Flexibilité de l'interface et des regroupements de champs, paramétrable via les tables ``gn_import.dict_themes`` et ``gn_import.dict_fields``
 * Import des données dans la synthèse
