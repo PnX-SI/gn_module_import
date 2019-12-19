@@ -16,6 +16,8 @@ Première version fonctionelle du module Import de GeoNature
 * Contrôle automatique des fichiers (#17)
 * Mapping des champs puis des valeurs des champs, définis dans 2 tables listant les champs de destination
 * Création d'une table des données enrichies pour chaque import
+* Possibilité de corriger, mettre à jour ou compléter la table enrichie en cours de processus
 * Enregistrement des mappings pour pouvoir les réutiliser pour un autre import
 * Contrôle des erreurs et téléchargement des données erronées
+* Flexibilité de l'interface et des regroupements de champs, paramétrable via les tables gn_import.dict_themes et gn_import.dict_fields
 * Import des données dans la synthèse
