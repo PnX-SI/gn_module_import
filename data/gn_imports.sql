@@ -211,7 +211,13 @@ ALTER TABLE ONLY t_user_error_list
 ALTER TABLE ONLY t_mappings
    ADD CONSTRAINT check_mapping_type_in_t_mappings CHECK (mapping_type IN ('FIELD', 'CONTENT'));
 
-
+ALTER TABLE ONLY dict_fields
+    ADD CONSTRAINT chk_mandatory CHECK (
+    CASE
+        WHEN name_field IN ('date_min', 'longitude', 'latitude', 'nom_cite', 'cd_nom', 'wkt') 
+        THEN mandatory=TRUE
+    END
+);
 
 ------------
 --TRIGGERS--
