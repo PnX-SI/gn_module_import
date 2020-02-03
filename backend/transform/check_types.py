@@ -32,7 +32,7 @@ def is_uuid(value, version=4):
             return True
         else:
             converted_uuid = UUID(str(value), version=version)
-            return converted_uuid.hex == value.replace('-', '')
+            return converted_uuid.hex == value.lower().replace('-', '')
     except ValueError:
         return False
 
