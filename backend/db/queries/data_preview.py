@@ -32,14 +32,16 @@ def get_synthese_fields():
         raise
 
 
-def get_id_module():
+def get_id_module(module_name):
     # set 'IMPORT' as variable initialized in configuration parameter ?
     try:
         id_module = DB.session.execute("""
             SELECT id_module
             FROM gn_commons.t_modules
-            WHERE module_code = 'IMPORT';
-            """).fetchone()[0]
+            WHERE module_code = '{module_name}';
+            """.format(
+                module_name=module_name
+            )).fetchone()[0]
         return id_module
     except Exception:
         raise

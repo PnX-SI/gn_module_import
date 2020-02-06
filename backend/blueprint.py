@@ -464,7 +464,7 @@ def cancel_import(info_role, import_id):
 
 
 @blueprint.route('/uploads', methods=['GET', 'POST'])
-@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@permissions.check_cruved_scope('C', True, module_code="MY_IMPORT")
 @json_resp
 @checker('Total time to post user file and fill metadata')
 def post_user_file(info_role):
@@ -1187,6 +1187,7 @@ def import_data(info_role, import_id):
         logger.info('Importing data in gn_synthese.synthese table')
 
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        MODULE_CODE = blueprint.config['MODULE_CODE']
 
         # get table name
         table_name = set_imports_table_name(get_table_name(import_id))
@@ -1195,7 +1196,7 @@ def import_data(info_role, import_id):
         id_mapping = get_id_field_mapping(import_id)
         selected_cols = get_selected_columns(id_mapping)
         added_cols = get_added_columns(id_mapping)
-        total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME)
+        total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME, MODULE_CODE)
 
         ### CONTENT MAPPING ###
 
@@ -1276,6 +1277,7 @@ def get_valid_data(info_role, import_id):
 
         ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        MODULE_CODE = blueprint.config['MODULE_CODE']
 
         if import_id != 'undefined':
 
@@ -1287,7 +1289,7 @@ def get_valid_data(info_role, import_id):
             id_mapping = get_id_field_mapping(import_id)
             selected_cols = get_selected_columns(id_mapping)
             added_cols = get_added_columns(id_mapping)
-            total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME)
+            total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME, MODULE_CODE)
 
             # get content mapping data
             id_content_mapping = get_id_mapping(import_id)

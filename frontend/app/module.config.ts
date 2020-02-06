@@ -18,7 +18,7 @@ export const ModuleConfig = {
   "the_geom_local",
   "last_action"
  ],
- "ID_MODULE": 18,
+ "ID_MODULE": 24,
  "IMPORTS_SCHEMA_NAME": "gn_imports",
  "INVALID_CSV_NAME": "invalid",
  "LIST_COLUMNS_FRONTEND": [
@@ -72,8 +72,8 @@ export const ModuleConfig = {
   "NaN",
   "na"
  ],
- "MODULE_CODE": "IMPORT",
- "MODULE_URL": "import",
+ "MODULE_CODE": "MY_IMPORT",
+ "MODULE_URL": "my_import",
  "NOT_NULLABLE_SYNTHESE_FIELDS": [
   "cd_nom",
   "nom_cite",

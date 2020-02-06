@@ -69,7 +69,7 @@ def get_synthese_dict(synthese_fields):
         raise
 
 
-def set_total_columns(selected_cols, added_cols, import_id, schema_name):
+def set_total_columns(selected_cols, added_cols, import_id, schema_name, module_name):
     try:
 
         total_columns = {**selected_cols, **added_cols}
@@ -82,7 +82,7 @@ def set_total_columns(selected_cols, added_cols, import_id, schema_name):
                 del total_columns[field]
 
         # add fixed synthese fields :
-        total_columns['id_module'] = get_id_module()
+        total_columns['id_module'] = get_id_module(module_name)
         total_columns['id_dataset'] = get_id_dataset(import_id)       
 
         return total_columns
