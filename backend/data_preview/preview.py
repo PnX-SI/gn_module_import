@@ -13,6 +13,7 @@ from ..db.queries.nomenclatures import (
     get_nomenc_values
 )
 
+import pdb
 
 def get_preview(schema_name, table_name, total_columns, selected_content):
 
@@ -45,6 +46,8 @@ def get_preview(schema_name, table_name, total_columns, selected_content):
                     # if it is a nomenclature column and it is not provided by user : set default value
                     if value['key'] in get_SINP_synthese_cols():
                         synthese_dict[key]['value'] = get_mnemo(set_default_value(get_nomenc_abb_from_name(value['key'])))
+                    if value['key'] == 'last_action':
+                        synthese_dict[key]['value'] = 'I'
             if synthese_dict[4]['key'] == 'id_source':
                 del synthese_dict[4]
             valid_data_list.append(synthese_dict)
