@@ -2,12 +2,24 @@
 CHANGELOG
 =========
 
-0.1.1 (unreleased)
+0.2.0 (unreleased)
 ------------------
 
 **Corrections**
 
-*
+* Contrôle des doublons sur les uuid fournis dans les données sources
+* Prise en charge des uuid sources lorsqu'ils sont importés en majuscule
+* Correction de la récupération des jeux de données en fonction de l'utilisateur
+* Correction du calcul du nombre de taxons importés (basé sur le cd_ref et non plus sur le cd_nom)
+* Masquage des champs obligatoires rendu impossible dans la configuration de l'interface
+* Ajout de la constante 'I' (Import) dans le champ "last action" de la synthèse lors de l'import
+* Correction du chemin du répertoire upload
+* Nom du module repassé en variable lors de l'installation
+
+
+**Améliorations**
+
+* Précision au survol sur l'icone de téléchargement des données invalides (étape 1)
 
 0.1.0 (2019-12-19)
 ------------------
