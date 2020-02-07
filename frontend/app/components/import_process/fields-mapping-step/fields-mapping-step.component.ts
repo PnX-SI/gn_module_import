@@ -86,7 +86,6 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
-
 	generateSyntheseForm() {
 		this._ds.getBibFields().subscribe(
 			(res) => {
@@ -124,7 +123,6 @@ export class FieldsMappingStepComponent implements OnInit {
 		);
 	}
 
-
 	onDataCleaning(value, id_mapping) {
 		this.spinner = true;
 		this._ds.postMapping(value, this.stepData.importId, id_mapping, this.stepData.srid).subscribe(
@@ -133,7 +131,15 @@ export class FieldsMappingStepComponent implements OnInit {
 				this.spinner = false;
 				this.getValidationErrors(res['n_table_rows'], this.stepData.importId);
 				this.table_name = this.mappingRes['table_name'];
-				this.mappingIsValidate = true;				
+				this.mappingIsValidate = true;	
+				let step2data :Step2Data = {
+					importId: this.stepData.importId,
+					srid: this.stepData.srid,
+					id_field_mapping: this.id_mapping,
+					mappingRes: this.mappingRes,
+					mappingIsValidate : this.mappingIsValidate
+				};
+				this.stepService.setStepData(2, step2data);			
 			},
 			(error) => {
 				this.spinner = false;
@@ -169,17 +175,8 @@ export class FieldsMappingStepComponent implements OnInit {
 					};
 					let savedStep3: Step3Data = this.stepService.getStepData(3);
 					if (savedStep3 && savedStep3.id_content_mapping)
-						step3data.id_content_mapping = savedStep3.id_content_mapping;
-					let step2data: Step2Data = {
-						importId: this.stepData.importId,
-						srid: this.stepData.srid,
-						id_field_mapping: this.id_mapping,
-						mappingRes: this.mappingRes,
-						mappingIsValidate : this.mappingIsValidate
-					};
-
+						step3data.id_content_mapping = savedStep3.id_content_mapping;	
 					this.stepService.setStepData(3, step3data);
-					this.stepService.setStepData(2, step2data);
 					this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/3` ]);
 				},
 				(error) => {
@@ -207,6 +204,7 @@ export class FieldsMappingStepComponent implements OnInit {
 				let step2data = this.stepData;
 				step2data.mappingIsValidate = false;
 				this.stepService.setStepData(2, step2data);
+
 			}
 		});
 	}
