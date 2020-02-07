@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { DataService } from '../../services/data.service';
 import { ModuleConfig } from '../../module.config';
 import { StepsService } from '../import_process/steps.service';
+import { DataFormService } from '@geonature_common/form/data-form.service';
 
 @Component({
 	selector: 'import-modal-dataset',
@@ -20,10 +21,12 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 	public datasetResponse: JSON;
 	public isUserDatasetError: Boolean = false; // true if user does not have any declared dataset
 	public datasetError: string;
-	private modalRef: NgbModalRef;
+    private modalRef: NgbModalRef;
+    public datasets = [];
 
 
 	constructor(
+        private _dfs: DataFormService,
 		private modalService: NgbModal,
 		private _fb: FormBuilder,
 		public _ds: DataService,
@@ -38,7 +41,7 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 
 
 	ngOnInit() {
-		this.getUserDataset();
+        this.getUserDataset();
 	}
 
 
@@ -46,7 +49,7 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 		this.stepService.resetStepoer()
 		this.modalRef = this.modalService.open(content, {
 			size: 'lg'
-		});
+        });
 	}
 
 
@@ -66,9 +69,9 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 
 	getUserDataset() {
 		// get list of all declared dataset of the user
-		this._ds.getUserDatasets().subscribe(
+		this._dfs.getDatasets().subscribe(
 			(result) => {
-				this.userDatasetsResponse = result;
+                this.datasets = result['data'];
 			},
 			(err) => {
 				if (err.statusText === 'Unknown Error') {

@@ -562,6 +562,7 @@ def post_user_file(info_role):
             # CREATES CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
 
             # Check if id_dataset value is allowed (prevent from forbidden manual change in url (url/process/N))
+            """
             is_dataset_allowed = test_user_dataset(
                 info_role.id_role, metadata['datasetId'])
             if not is_dataset_allowed:
@@ -570,6 +571,7 @@ def post_user_file(info_role):
                            'message': 'L\'utilisateur {} n\'est pas autorisé à importer des données vers \
                            l\'id_dataset {}'.format(info_role.id_role, int(metadata['datasetId']))
                        }, 403
+            """
 
             # start t_imports filling and fill cor_role_import
             if metadata['importId'] == 'undefined':
