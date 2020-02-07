@@ -54,7 +54,7 @@ def check_uuid(df, added_cols, selected_columns, synthese_info, is_generate_uuid
                     logger.info('- checking duplicates in unique_id_sinp column (= %s user column)',
                                 uuid_col_name)
 
-                    df['temp'] = df.duplicated(uuid_col_name, keep=False)
+                    df['temp'] = df[uuid_col_name].str.lower().duplicated(keep=False)
                     df['temp'] = df['temp']\
                         .where(
                             cond = df[uuid_col_name].notnull(),
