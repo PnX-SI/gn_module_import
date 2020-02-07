@@ -252,7 +252,8 @@ INSERT INTO t_user_errors (id_error, error_type, name, description) VALUES
     (14, 'uuid value error', 'uuid existing in gn_synthese.synthese table', 'uuid déjà existant dans la table gn_synthese.synthese'),
     (15, 'invalid value', 'id_digitiser is not present in "t_roles" table', 'id_digitizer n''existe pas dans la table "t_roles"'),
     (16, 'invalid type error', 'invalid wkt type', 'type wkt invalide'),
-    (17, 'duplicates error', 'duplicated observations for selected columns', 'observations en doublon sur les colonnes sélectionnées');
+    (17, 'duplicates error', 'duplicated observations for selected columns', 'observations en doublon sur les colonnes sélectionnées'),
+    (18, 'duplicates error', 'unique_id_sinp value duplicates', 'des valeurs de unique_id_sinp ne sont pas uniques');
 
 
 INSERT INTO dict_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme) VALUES
