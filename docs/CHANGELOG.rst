@@ -15,6 +15,7 @@ CHANGELOG
 * Ajout de la constante 'I' (Insert) dans le champ "last action" de la synthèse lors de l'import (#52)
 * Correction du chemin du répertoire upload (#46)
 * Nom du module repassé en variable lors de l'installation (#47)
+* Champs WKT Point renommé WKT (prend en compte les lignes et polygones)
 
 **Améliorations**
 
