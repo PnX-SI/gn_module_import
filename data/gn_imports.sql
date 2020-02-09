@@ -313,7 +313,7 @@ INSERT INTO dict_fields (id_field, name_field, fr_label, eng_label, desc_field, 
     (46, 'id_nomenclature_obs_technique', 'Techniques d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 11, TRUE),
     (47, 'id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 12, TRUE),
     (48, 'id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 13, TRUE),
-    (49, 'WKT', 'WKT (Point)', '', '', 'wkt', FALSE, TRUE, FALSE, FALSE, 2, 8, TRUE);
+    (49, 'WKT', 'WKT', '', '', 'wkt', FALSE, TRUE, FALSE, FALSE, 2, 8, TRUE);
 
 
 INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
