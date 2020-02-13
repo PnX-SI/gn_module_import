@@ -17,7 +17,7 @@ Le temps d'une correction à venir, il est nécessaire d'installer manuellement 
 
    cd
    source geonature/backend/venv/bin/activate
-   geonature install_gn_module /home/geonatureadmin/gn_module_importimport
+   geonature install_gn_module /home/`whoami`/gn_module_import import
    deactivate
    
    
