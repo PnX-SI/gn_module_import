@@ -5,14 +5,19 @@ CHANGELOG
 0.2.0 (unreleased)
 ------------------
 
+TODO avant release : 
+* Revoir ``manifest.toml``
+* Fixer versions de toolz et cloudpickle dans ``requirements.txt``
+
 **Corrections**
 
+* Compatibilité avec GeoNature 2.3.1
 * Contrôle des doublons sur les UUID fournis dans les données sources
 * Prise en charge des UUID sources lorsqu'ils sont importés en majuscule (#61)
 * Correction de la récupération des jeux de données en fonction de l'utilisateur (#48)
 * Correction du calcul du nombre de taxons importés (basé sur le ``cd_ref`` et non plus sur le ``cd_nom``) (#60)
 * Masquage des champs obligatoires rendu impossible dans la configuration de l'interface (#53)
-* Ajout de la constante 'I' (Insert) dans le champ "last action" de la synthèse lors de l'import (#52)
+* Ajout de la constante ``I`` (Insert) dans le champ ``last action`` de la synthèse lors de l'import (#52)
 * Correction du chemin du répertoire upload (#46)
 * Nom du module repassé en variable lors de l'installation (#47)
 * Champs WKT Point renommé WKT (prend en compte les lignes et polygones)
