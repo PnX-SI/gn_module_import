@@ -173,6 +173,12 @@ ALTER TABLE ONLY t_user_error_list
 ALTER TABLE ONLY t_imports
     ADD CONSTRAINT fk_gn_meta_t_datasets FOREIGN KEY (id_dataset) REFERENCES gn_meta.t_datasets(id_dataset) ON UPDATE CASCADE ON DELETE CASCADE;
 
+ALTER TABLE ONLY t_imports
+    ADD CONSTRAINT fk_gn_imports_t_mappings_fields FOREIGN KEY (id_field_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY t_imports
+    ADD CONSTRAINT fk_gn_import_t_mappings_values FOREIGN KEY (id_content_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+
 ALTER TABLE ONLY cor_role_import
     ADD CONSTRAINT fk_utilisateurs_t_roles FOREIGN KEY (id_role) REFERENCES utilisateurs.t_roles(id_role) ON UPDATE CASCADE ON DELETE CASCADE;
 
@@ -203,6 +209,11 @@ ALTER TABLE ONLY t_user_error_list
 ALTER TABLE ONLY t_user_error_list
     ADD CONSTRAINT fk_t_user_error_list_id_error FOREIGN KEY (id_error) REFERENCES gn_imports.t_user_errors(id_error) ON UPDATE CASCADE ON DELETE CASCADE;
 
+ALTER TABLE ONLY cor_role_import
+    ADD CONSTRAINT fk_cor_role_import_role FOREIGN KEY (id_role) REFERENCES utilisateurs.t_roles(id_role) ON UPDATE CASCADE ON DELETE CASCADE;
+    
+ ALTER TABLE ONLY cor_role_import
+ ADD CONSTRAINT fk_cor_role_import_import FOREIGN KEY (id_import) REFERENCES gn_imports.t_imports(id_import) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ---------------------
 --OTHER CONSTRAINTS--
