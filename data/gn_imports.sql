@@ -211,7 +211,13 @@ ALTER TABLE ONLY t_user_error_list
 ALTER TABLE ONLY t_mappings
    ADD CONSTRAINT check_mapping_type_in_t_mappings CHECK (mapping_type IN ('FIELD', 'CONTENT'));
 
-
+ALTER TABLE ONLY dict_fields
+    ADD CONSTRAINT chk_mandatory CHECK (
+    CASE
+        WHEN name_field IN ('date_min', 'longitude', 'latitude', 'nom_cite', 'cd_nom', 'wkt') 
+        THEN mandatory=TRUE
+    END
+);
 
 ------------
 --TRIGGERS--
@@ -246,7 +252,8 @@ INSERT INTO t_user_errors (id_error, error_type, name, description) VALUES
     (14, 'uuid value error', 'uuid existing in gn_synthese.synthese table', 'uuid déjà existant dans la table gn_synthese.synthese'),
     (15, 'invalid value', 'id_digitiser is not present in "t_roles" table', 'id_digitizer n''existe pas dans la table "t_roles"'),
     (16, 'invalid type error', 'invalid wkt type', 'type wkt invalide'),
-    (17, 'duplicates error', 'duplicated observations for selected columns', 'observations en doublon sur les colonnes sélectionnées');
+    (17, 'duplicates error', 'duplicated observations for selected columns', 'observations en doublon sur les colonnes sélectionnées'),
+    (18, 'duplicates error', 'unique_id_sinp value duplicates', 'des valeurs de unique_id_sinp ne sont pas uniques');
 
 
 INSERT INTO dict_themes (id_theme, name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme) VALUES
@@ -272,7 +279,7 @@ INSERT INTO dict_fields (id_field, name_field, fr_label, eng_label, desc_field, 
 	(12, 'longitude', 'Longitude (coord x)', '', '', 'real', FALSE, TRUE, FALSE, FALSE, 2, 6, TRUE),
 	(13, 'latitude', 'Latitude (coord y)', '', '', 'real', FALSE, TRUE, FALSE, FALSE, 2, 7, TRUE),
 	(14, 'observers', 'Observateur(s)', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, 2, 9, TRUE),
-	(15, 'comment_description', 'Commentaire de relevé', '', '', 'text', TRUE, FALSE, FALSE, FALSE, 2, 10, TRUE),
+	(15, 'comment_context', 'Commentaire de relevé', '', '', 'text', TRUE, FALSE, FALSE, FALSE, 2, 10, TRUE),
 	(16, 'id_nomenclature_info_geo_type', 'Type d''information géographique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 11, TRUE),
 	(17, 'id_nomenclature_grp_typ', 'Type de relevé/regroupement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 2, 12, TRUE),
 	(18, 'nom_cite', 'Nom du taxon cité', '', '', 'character varying(1000)', TRUE, TRUE, FALSE, FALSE, 3, 1, TRUE),
@@ -281,7 +288,7 @@ INSERT INTO dict_fields (id_field, name_field, fr_label, eng_label, desc_field, 
 	(21, 'id_nomenclature_bio_status', 'Statut biologique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 4, TRUE),
 	(22, 'id_nomenclature_bio_condition', 'Etat biologique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 5, TRUE),
 	(23, 'id_nomenclature_naturalness', 'Naturalité', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 6, TRUE),
-	(24, 'comment_context', 'Commentaire d''occurrence', '', '', 'text', TRUE, FALSE, FALSE, FALSE, 3, 7, TRUE),
+	(24, 'comment_description', 'Commentaire d''occurrence', '', '', 'text', TRUE, FALSE, FALSE, FALSE, 3, 7, TRUE),
 	(25, 'id_nomenclature_sensitivity', 'Sensibilité', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 8, TRUE),
 	(26, 'id_nomenclature_diffusion_level', 'Niveau de diffusion', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 9, TRUE),
 	(27, 'id_nomenclature_blurring', 'Niveau de Floutage', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 10, TRUE),
@@ -306,7 +313,8 @@ INSERT INTO dict_fields (id_field, name_field, fr_label, eng_label, desc_field, 
     (46, 'id_nomenclature_obs_technique', 'Techniques d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 11, TRUE),
     (47, 'id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 12, TRUE),
     (48, 'id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, 3, 13, TRUE),
-    (49, 'WKT', 'WKT (Point)', '', '', 'wkt', FALSE, TRUE, FALSE, FALSE, 2, 8, TRUE);
+    (49, 'WKT', 'WKT', '', '', 'wkt', FALSE, TRUE, FALSE, FALSE, 2, 8, TRUE),
+    (50, 'unique_id_sinp_grp','Identifiant relevé (uuid)','','','uuid', TRUE, FALSE, FALSE, FALSE, 2, 13, TRUE);
 
 
 INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
@@ -331,3 +339,99 @@ INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
     ('STATUT_VALID',	'id_nomenclature_valid_status'),
     ('METH_DETERMIN',	'id_nomenclature_determination_method');
 
+
+INSERT INTO gn_imports.t_mappings (id_mapping, mapping_label, mapping_type, active)
+VALUES
+(1, 'Synthèse GeoNature', 'FIELD', true),
+(2, 'Nomenclatures SINP (labels)', 'CONTENT', true),
+(3, 'Nomenclatures SINP (codes)', 'CONTENT', true);
+
+
+INSERT INTO gn_imports.cor_role_mapping(id_mapping, id_role)
+VALUES
+-- Administrateur test
+(1,1),
+(2,1),
+(3,1),
+-- Groupe Admin
+(1,9),
+(2,9),
+(3,9);
+
+INSERT INTO gn_imports.t_mappings_fields (id_mapping, source_field, target_field, is_selected, is_added)
+VALUES 
+(1, 'permid','unique_id_sinp',true,false),
+(1, 'permid','entity_source_pk_value',true,false),
+(1, 'permidgrp','unique_id_sinp_grp',true,false),
+(1, '','unique_id_sinp_generate',false,false),
+(1, '','meta_create_date',false,false),
+(1, 'vtaxref','meta_v_taxref',true,false),
+(1, '','meta_update_date',false,false),
+(1, 'datedebut','date_min',true,false),
+(1, 'datefin','date_max',true,false),
+(1, 'altmin','altitude_min',true,false),
+(1, 'altmax','altitude_max',true,false),
+(1, '','altitudes_generate',false,false),
+(1, '','longitude',false,false),
+(1, '','latitude',false,false),
+(1, 'observer','observers',true,false),
+(1, 'obsdescr','comment_description',true,false),
+(1, 'typinfgeo','id_nomenclature_info_geo_type',true,false),
+(1, 'methgrp','id_nomenclature_grp_typ',true,false),
+(1, 'nomcite','nom_cite',true,false),
+(1, 'cdnom','cd_nom',true,false),
+(1, 'obsmeth','id_nomenclature_obs_meth',true,false),
+(1, 'ocetatbio','id_nomenclature_bio_status',true,false),
+(1, '','id_nomenclature_bio_condition',false,false),
+(1, 'ocnat','id_nomenclature_naturalness',true,false),
+(1, 'obsctx','comment_context',true,false),
+(1, 'sensiniv','id_nomenclature_sensitivity',true,false),
+(1, 'difnivprec','id_nomenclature_diffusion_level',true,false),
+(1, 'deeflou','id_nomenclature_blurring',true,false),
+(1, 'ocstade','id_nomenclature_life_stage',true,false),
+(1, 'ocsex','id_nomenclature_sex',true,false),
+(1, 'denbrtyp','id_nomenclature_type_count',true,false),
+(1, 'objdenbr','id_nomenclature_obj_count',true,false),
+(1, 'denbrmin','count_min',true,false),
+(1, 'denbrmax','count_max',true,false),
+(1, '','id_nomenclature_determination_method',false,false),
+(1, '','determiner',false,false),
+(1, '','id_digitiser',false,false),
+(1, 'preuveoui','id_nomenclature_exist_proof',true,false),
+(1, '','digital_proof',false,false),
+(1, '','non_digital_proof',false,false),
+(1, '','sample_number_proof',false,false),
+(1, '','id_nomenclature_valid_status',false,false),
+(1, 'validateur','validator',true,false),
+(1, '','meta_validation_date',false,false),
+(1, '','validation_comment',false,false),
+(1, 'objgeotyp','id_nomenclature_geo_object_nature',true,false),
+(1, '','id_nomenclature_obs_technique',false,false),
+(1, 'statobs','id_nomenclature_observation_status',true,false),
+(1, 'statsource','id_nomenclature_source_status',true,false),
+(1, 'wkt','WKT',true,false),
+(1, 'gn_1_the_geom_point_2','the_geom_point',false,true),
+(1, 'gn_1_the_geom_local_2','the_geom_local',false,true),
+(1, 'gn_1_the_geom_4326_2','the_geom_4326',false,true);
+
+
+-- Intégration du mapping de valeurs SINP (labels) par défaut pour les nomenclatures de la synthèse 
+INSERT INTO gn_imports.t_mappings_values (id_mapping, source_value, id_target_value)
+SELECT
+'2', 
+n.label_fr,
+n.id_nomenclature
+FROM ref_nomenclatures.t_nomenclatures n
+join ref_nomenclatures.bib_nomenclatures_types bnt ON bnt.id_type=n.id_type 
+WHERE bnt.mnemonique IN (SELECT DISTINCT(mnemonique) FROM gn_imports.cor_synthese_nomenclature);
+
+
+-- Intégration du mapping de valeurs SINP (codes) par défaut pour les nomenclatures de la synthèse
+INSERT INTO gn_imports.t_mappings_values (id_mapping, source_value, id_target_value)
+SELECT
+'3', 
+n.cd_nomenclature,
+n.id_nomenclature
+FROM ref_nomenclatures.t_nomenclatures n
+join ref_nomenclatures.bib_nomenclatures_types bnt ON bnt.id_type=n.id_type 
+WHERE bnt.mnemonique IN (SELECT DISTINCT(mnemonique) FROM gn_imports.cor_synthese_nomenclature);
