@@ -7,7 +7,6 @@ CHANGELOG
 
 TODO avant release : 
 * Revoir ``manifest.toml``
-* Fixer versions de toolz et cloudpickle dans ``requirements.txt``
 
 **Corrections**
 
@@ -21,10 +20,16 @@ TODO avant release :
 * Correction du chemin du répertoire upload (#46)
 * Nom du module repassé en variable lors de l'installation (#47)
 * Champs ``WKT (Point)`` renommé ``WKT`` (prend en charge les lignes et polygones)
+* Versions de toolz et cloudpickle fixées dans requirements.txt (#70)
+* Suppression du doublon de la colonne "date d'import" dans l'interface de l'étape 1
+* Correction de clés étrangères manquantes (#81)
+* Ajout du champs 'unique-id-sinp-grp' dans la configuration par défaut du module (#67)
+
 
 **Améliorations**
 
 * Précision au survol sur l'icone de téléchargement des données invalides (étape 1) (#62)
+* Ajout d'un mapping par défaut pour les données issues de la Synthèse GeoNature et les nomenclatures/cd du SINP correspondant aux champs de la synthèse
 
 0.1.0 (2019-12-19)
 ------------------
