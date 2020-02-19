@@ -16,6 +16,21 @@ def set_wkt(value):
         return wkt.loads('POINT(nan nan)')
 
 
+def check_wkt(value, min_x, max_x, min_y, max_y):
+    try:
+        if value.x > max_x:
+            return False
+        if value.x < min_x:
+            return False
+        if value.y > max_y:
+            return False
+        if value.y < min_y:
+            return False
+        return True
+    except Exception:
+        return True
+
+
 @checker('Data cleaning : geographic data checked')
 def check_geography(df, import_id, added_cols, selected_columns, srid, local_srid, schema_name):
     try:
@@ -72,11 +87,29 @@ def check_geography(df, import_id, added_cols, selected_columns, srid, local_sri
             df['temp'] = user_gdf['geometry'].is_valid
 
         else:
+
             # create wkt with crs provided by user
             crs = {'init': 'epsg:{}'.format(srid)}
+
+            # load wkt
             df[selected_columns['WKT']] = df[selected_columns['WKT']].apply(lambda x: set_wkt(x))
+            
+            # check coordinates consistancy
+            df['temp'] = df[selected_columns['WKT']].apply(lambda x: check_wkt(x, min_x, max_x, min_y, max_y))
+            set_is_valid(df, 'temp')
+            n_bad_coo = df['temp'].astype(str).str.contains('False').sum()
+            
+            logger.info('%s inconsistant values detected in %s column', n_bad_coo,
+                            selected_columns['WKT'])
+
+            if n_bad_coo > 0:
+                set_user_error(import_id, 13, selected_columns['WKT'], n_bad_coo)
+                set_invalid_reason(df, schema_name, 'temp', import_id, 13, selected_columns['WKT'])
+    
             user_gdf = gpd.GeoDataFrame(df, crs=crs, geometry=df[selected_columns['WKT']])
+            
             df['temp'] = user_gdf['geometry'].is_valid
+            
 
         # set column names :
         create_col_name(df=df, col_dict=added_cols, key='the_geom_4326', import_id=import_id)
