@@ -131,9 +131,9 @@ CREATE TABLE t_user_error_list(
 
 
 
----------------
---PRIMARY KEY--
----------------
+----------------------------
+--PRIMARY KEY AND UNICITY---
+----------------------------
 
 ALTER TABLE ONLY t_imports 
     ADD CONSTRAINT pk_gn_imports_t_imports PRIMARY KEY (id_import);
@@ -156,6 +156,7 @@ ALTER TABLE ONLY t_mappings_values
 ALTER TABLE ONLY t_mappings
     ADD CONSTRAINT pk_t_mappings PRIMARY KEY (id_mapping);
 
+
 --ALTER TABLE ONLY bib_type_mapping_values
 --    ADD CONSTRAINT pk_bib_type_mapping_values PRIMARY KEY (id_type_mapping, mapping_type);
 
@@ -164,6 +165,10 @@ ALTER TABLE ONLY dict_themes
 
 ALTER TABLE ONLY dict_fields
     ADD CONSTRAINT pk_dict_fields_id_theme PRIMARY KEY (id_field);
+
+ALTER TABLE ONLY dict_fields
+    ADD CONSTRAINT unicity_t_mappings_fields_name_field UNIQUE (name_field);
+
 
 ALTER TABLE ONLY cor_synthese_nomenclature
     ADD CONSTRAINT pk_cor_synthese_nomenclature PRIMARY KEY (mnemonique, synthese_col);
@@ -196,8 +201,15 @@ ALTER TABLE ONLY cor_role_mapping
 ALTER TABLE ONLY t_mappings_fields
     ADD CONSTRAINT fk_gn_imports_t_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
 
+ALTER TABLE ONLY t_mappings_fields
+    ADD CONSTRAINT fk_gn_imports_t_mappings_fields_target_field FOREIGN KEY (target_field) REFERENCES gn_imports.dict_fields(name_field) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
 ALTER TABLE ONLY t_mappings_values
     ADD CONSTRAINT fk_gn_imports_t_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY t_mappings_values
+    ADD CONSTRAINT fk_gn_imports_t_mappings_values_id_nomenclature FOREIGN KEY (id_target_value) REFERENCES ref_nomenclatures.t_nomenclatures(id_nomenclature) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --ALTER TABLE ONLY t_mappings_values
 --    ADD CONSTRAINT fk_gn_imports_bib_type_mapping_values_id_type_mapping FOREIGN KEY (id_type_mapping) REFERENCES gn_imports.bib_type_mapping_values(id_type_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
