@@ -12,8 +12,7 @@ DEFAULT_LIST_COLUMN = [
     {'prop': 'taxa_count', 'name': 'Nb de taxons', 'max_width': 200, 'show': True},
     {'prop': 'import_count', 'name': 'Nb de donnees', 'max_width': 200, 'show': True},
     {'prop': 'date_create_import', 'name': 'Debut import',
-        'max_width': 200, 'show': True},
-    {'prop': 'date_end_import', 'name': 'Fin import', 'max_width': 200, 'show': True}
+        'max_width': 200, 'show': True}
 ]
 
 UPLOAD_DIRECTORY = "upload"
