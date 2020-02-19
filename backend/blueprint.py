@@ -882,6 +882,8 @@ def postMapping(info_role, import_id, id_mapping):
             added_cols = transform_errors['added_cols']
             if 'temp' in partition_df.columns:
                 partition_df = partition_df.drop('temp', axis=1)
+            if 'temp2' in partition_df.columns:
+                partition_df = partition_df.drop('temp2', axis=1)
             if 'check_dates' in partition_df.columns:
                 partition_df = partition_df.drop('check_dates', axis=1)
             if 'temp_longitude' in partition_df.columns:
