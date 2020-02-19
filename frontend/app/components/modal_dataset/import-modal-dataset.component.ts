@@ -46,8 +46,9 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
   onSubmit() {
     this.stepService.setStepData(1);
     this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/1`], {
-      queryParams: { datasetId: this.selectDatasetForm.value.dataset }
+      queryParams: { datasetId: this.selectDatasetForm.value }
     });
+
     this.closeModal();
   }
 
