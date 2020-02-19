@@ -91,7 +91,7 @@ VALUES
 INSERT INTO gn_imports.t_mappings_values (id_mapping, source_value, id_target_value)
 SELECT
 m.id_mapping, 
-n.label_fr,
+n.label_default,
 n.id_nomenclature
 FROM gn_imports.t_mappings m, ref_nomenclatures.t_nomenclatures n
 join ref_nomenclatures.bib_nomenclatures_types bnt ON bnt.id_type=n.id_type 
