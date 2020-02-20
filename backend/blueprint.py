@@ -192,38 +192,6 @@ def get_import_list(info_role):
             details=str(e))
 
 
-@blueprint.route('/datasets', methods=['GET'])
-@permissions.check_cruved_scope('C', True, module_code="IMPORT")
-@json_resp
-def get_user_datasets(info_role):
-    """
-        load user datasets
-    """
-
-    try:
-        results = DB.session.query(TDatasets). \
-            filter(TDatasets.id_dataset == Synthese.id_dataset). \
-            filter(CorObserverSynthese.id_synthese == Synthese.id_synthese). \
-            filter(CorObserverSynthese.id_role == info_role.id_role).all()
-
-        if results:
-            datasets = []
-            for row in results:
-                d = {
-                    'datasetId': row.id_dataset,
-                    'datasetName': row.dataset_name
-                }
-                datasets.append(d)
-            return datasets, 200
-        else:
-            return {
-                       'message': 'Attention, vous n\'avez aucun jeu de données déclaré'
-                   }, 400
-    except Exception as e:
-        raise GeonatureImportApiError(
-            message='INTERNAL SERVER ERROR - checking dataset id: contactez l\'administrateur du site',
-            details=str(e))
-
 
 @blueprint.route('/mappings/<mapping_type>/<import_id>', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")

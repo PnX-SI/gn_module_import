@@ -1,8 +1,12 @@
 import subprocess
-from pathlib import Path
 import sys
 
+import logging
+from pathlib import Path
+
+
 ROOT_DIR = Path(__file__).absolute().parent
+log = logging.getLogger(__name__)
 
 
 def gnmodule_install_app(gn_db, gn_app):
@@ -13,26 +17,18 @@ def gnmodule_install_app(gn_db, gn_app):
     '''
 
     with gn_app.app_context():
-
-        # install python libs listed in requirements
-        requirements_path = ROOT_DIR / 'backend' / 'requirements.txt'
-        assert requirements_path.is_file()
-        subprocess.call(
-            [sys.executable, '-m', 'pip', 'install', '-r', '{}'.format(requirements_path)],
-            cwd=str(ROOT_DIR))
-
         # install db schema and tables
-        gn_db.session.execute(
-            open(str(ROOT_DIR / "data/gn_imports.sql"), "r").read()
-        )
-        gn_db.session.execute(
-            open(str(ROOT_DIR / "data/gn_import_archives.sql"), "r").read()
-        )
-        gn_db.session.commit()
-
-        # install frontend
-        subprocess.call(
-            ['npm install'], 
-            cwd=str(ROOT_DIR / 'frontend'), shell=True)
-
-    
+        try:
+            gn_db.session.execute(
+                open(str(ROOT_DIR / "data/import_db.sql"), "r").read()
+            )
+            gn_db.session.execute(
+                open(str(ROOT_DIR / "data/data.sql"), "r").read()
+            )
+            gn_db.session.execute(
+                open(str(ROOT_DIR / "data/default_mappings_data.sql"), "r").read()
+            )
+            gn_db.session.commit()
+        except Exception as e:
+            log.error(e)
+            raise

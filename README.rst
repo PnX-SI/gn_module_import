@@ -6,8 +6,9 @@ Télécharger le module (version test sur la branche develop)
 ::
 
    cd
-   wget https://github.com/PnX-SI/gn_module_import/archive/develop.zip
-   unzip develop.zip
+   wget https://github.com/PnX-SI/gn_module_import/archive/X.Y.Z.zip
+   unzip X.Y.Z.zip
+   mv gn_module_import-X.Y.Z gn_module_import
 
 
 Le temps d'une correction à venir, il est nécessaire d'installer manuellement les pré-requis du module avant de procéder à son installation en le nommant "import" (pensez à corriger les chemins si votre utilisateur ne s'appelle pas geonatureadmin)
@@ -16,8 +17,7 @@ Le temps d'une correction à venir, il est nécessaire d'installer manuellement 
 
    cd
    source geonature/backend/venv/bin/activate
-   pip install -r /home/geonatureadmin/gn_module_import-develop/backend/requirements.txt
-   geonature install_gn_module /home/geonatureadmin/gn_module_import-develop import
+   geonature install_gn_module /home/`whoami`/gn_module_import import
    deactivate
    
    
