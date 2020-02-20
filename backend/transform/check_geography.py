@@ -1,6 +1,7 @@
 import geopandas as gpd
 import pandas as pd
 from shapely import wkt
+import numpy as np
 
 from ..db.queries.user_errors import set_user_error
 from ..logs import logger
@@ -18,14 +19,26 @@ def set_wkt(value):
 
 def check_wkt(value, min_x, max_x, min_y, max_y):
     try:
-        if value.x > max_x:
-            return False
-        if value.x < min_x:
-            return False
-        if value.y > max_y:
-            return False
-        if value.y < min_y:
-            return False
+        if value.geom_type == 'Point':
+            if value.x > max_x:
+                return False
+            if value.x < min_x:
+                return False
+            if value.y > max_y:
+                return False
+            if value.y < min_y:
+                return False
+        if value.geom_type == 'Polygon':
+            for x_coord in value.exterior.coords.xy[0]:
+                if x_coord > max_x:
+                    return False
+                if x_coord < min_x:
+                    return False
+            for y_coord in value.exterior.coords.xy[1]:
+                if y_coord > max_y:
+                    return False
+                if y_coord < min_y:
+                    return False
         return True
     except Exception:
         return True
@@ -87,7 +100,6 @@ def check_geography(df, import_id, added_cols, selected_columns, srid, local_sri
             df['temp'] = user_gdf['geometry'].is_valid
 
         else:
-
             # create wkt with crs provided by user
             crs = {'init': 'epsg:{}'.format(srid)}
 
@@ -96,6 +108,13 @@ def check_geography(df, import_id, added_cols, selected_columns, srid, local_sri
             
             # check coordinates consistancy
             df['temp'] = df[selected_columns['WKT']].apply(lambda x: check_wkt(x, min_x, max_x, min_y, max_y))
+            
+            # set coordinates consistancy errors as an empty wkt in order to avoid error when converting geometries to other srid
+            df[selected_columns['WKT']] = df[selected_columns['WKT']] \
+                .where(
+                    cond=df['temp']==True,
+                    other=wkt.loads('POINT(nan nan)')
+                )
             set_is_valid(df, 'temp')
             n_bad_coo = df['temp'].astype(str).str.contains('False').sum()
             
