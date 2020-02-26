@@ -157,17 +157,19 @@ export class ContentMappingStepComponent implements OnInit {
         }
       });
       // find id in nomenc
-      if (contentMapping.nomenc_abbr == this.nomencName) {
-        contentMapping.user_values.values.map(value => {
-          if (value.value == userValue) {
-            this.idInfo = value.id;
-            contentMapping.user_values.values = contentMapping.user_values.values.filter(
-              obj => obj.id !== value.id
-            );
-          }
-        });
-      }
+      // if (contentMapping.nomenc_abbr == this.nomencName) {
+      //   contentMapping.user_values.values.map(value => {
+      //     if (value.value == userValue) {
+      //       this.idInfo = value.id;
+      //       // contentMapping.user_values.values = contentMapping.user_values.values.filter(
+      //       //   obj => obj.id !== value.id
+      //       // );
+      //     }
+      //   });
+      // }
     });
+    console.log(this.idInfo);
+
     return this.idInfo;
   }
 
@@ -175,10 +177,14 @@ export class ContentMappingStepComponent implements OnInit {
     this.id_mapping = id_mapping;
     this._ds.getMappingContents(id_mapping).subscribe(
       mappingContents => {
+        console.log(mappingContents);
+
         this.contentTargetForm.reset();
         if (mappingContents[0] != "empty") {
           for (let content of mappingContents) {
             let arrayVal: any = [];
+            // console.log(content);
+
             for (let val of content) {
               if (val["source_value"] != "") {
                 let id_info = this.getId(
@@ -188,9 +194,20 @@ export class ContentMappingStepComponent implements OnInit {
                 arrayVal.push({ id: id_info, value: val["source_value"] });
               }
             }
-            this.contentTargetForm
-              .get(String(content[0]["id_target_value"]))
-              .setValue(arrayVal);
+            const formControl = this.contentTargetForm.get(
+              String(content[0]["id_target_value"])
+            );
+            if (formControl) {
+              formControl.setValue(arrayVal);
+            } else {
+              console.log("PAS BOOON");
+              console.log(content[0]["id_target_value"]);
+
+              //formControl.setValue(arrayVal);
+            }
+            // this.contentTargetForm
+            //   .get(String(content[0]["id_target_value"]))
+            //   .setValue(arrayVal);
           }
         } else {
           this.contentTargetForm.reset();
