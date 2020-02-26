@@ -24,6 +24,7 @@ CHANGELOG
 * Ajout de clés étrangères manquantes (#81)
 * Ajout du champs ``unique_id_sinp_grp`` dans la configuration par défaut du module (#67)
 * Sérialisation des identifiants dans la BDD du module (#82)
+* Correction du contrôle de cohérence des coordonnées géographiques pour les wkt (#64)
 
 **Améliorations**
 
