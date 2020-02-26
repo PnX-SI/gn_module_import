@@ -2,13 +2,14 @@
 CHANGELOG
 =========
 
-1.0.0 (unreleased)
+1.0.0 (2020-02-26)
 ------------------
 
 
 **Corrections**
 
 * Compatibilité avec GeoNature 2.3.1
+* Corrections du mapping de contenus et composant multiselect (#85 et #71)
 * Contrôle des doublons sur les UUID fournis dans les données sources
 * Prise en charge des UUID sources lorsqu'ils sont importés en majuscule (#61)
 * Correction de la récupération des jeux de données en fonction de l'utilisateur et limitation aux jdd actifs (#79)
@@ -18,11 +19,11 @@ CHANGELOG
 * Correction du chemin du répertoire upload (#46)
 * Nom du module repassé en variable lors de l'installation (#47)
 * Champs ``WKT (Point)`` renommé ``WKT`` (prend en charge les lignes et polygones)
-* Versions de toolz et cloudpickle fixées dans requirements.txt (#70)
+* Versions de toolz et cloudpickle fixées dans requirements.txt (#70 et #80)
 * Suppression du doublon de la colonne "date d'import" dans l'interface de l'étape 1
-* Correction de clés étrangères manquantes (#81)
-* Ajout du champs 'unique-id-sinp-grp' dans la configuration par défaut du module (#67)
-
+* Ajout de clés étrangères manquantes (#81)
+* Ajout du champs ``unique_id_sinp_grp`` dans la configuration par défaut du module (#67)
+* Sérialisation des identifiants dans la BDD du module (#82)
 
 **Améliorations**
 
