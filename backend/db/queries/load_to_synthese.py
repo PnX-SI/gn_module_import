@@ -1,5 +1,6 @@
 from geonature.utils.env import DB
 
+import pdb
 
 def get_data_type(column_name):
     try:
@@ -14,8 +15,9 @@ def get_data_type(column_name):
         raise
 
 
-def insert_into_synthese(schema_name, table_name, select_part, total_columns):
-    try:    
+def insert_into_synthese(schema_name, table_name, select_part, total_columns, import_id):
+    try:
+        # insert user values in synthese
         DB.session.execute("""
             INSERT INTO gn_synthese.synthese ({into_part})
             SELECT {select_part}
@@ -27,6 +29,24 @@ def insert_into_synthese(schema_name, table_name, select_part, total_columns):
                 schema_name=schema_name,
                 table_name=table_name
             ))
+        
+        # update last_action in synthese
+        id_source = DB.session.execute("""
+            SELECT id_source
+            FROM gn_synthese.t_sources
+            WHERE name_source = 'Import(id={import_id})';
+            """.format(
+                import_id = import_id
+            )).fetchone()[0]
+
+        DB.session.execute("""
+            UPDATE gn_synthese.synthese
+            SET last_action = 'I'
+            WHERE id_source = {id_source};
+        """.format(
+            id_source = id_source
+        ))
+
         DB.session.flush()
     except Exception:
         DB.session.rollback()

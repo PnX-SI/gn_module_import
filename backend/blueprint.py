@@ -192,38 +192,6 @@ def get_import_list(info_role):
             details=str(e))
 
 
-@blueprint.route('/datasets', methods=['GET'])
-@permissions.check_cruved_scope('C', True, module_code="IMPORT")
-@json_resp
-def get_user_datasets(info_role):
-    """
-        load user datasets
-    """
-
-    try:
-        results = DB.session.query(TDatasets). \
-            filter(TDatasets.id_dataset == Synthese.id_dataset). \
-            filter(CorObserverSynthese.id_synthese == Synthese.id_synthese). \
-            filter(CorObserverSynthese.id_role == info_role.id_role).all()
-
-        if results:
-            datasets = []
-            for row in results:
-                d = {
-                    'datasetId': row.id_dataset,
-                    'datasetName': row.dataset_name
-                }
-                datasets.append(d)
-            return datasets, 200
-        else:
-            return {
-                       'message': 'Attention, vous n\'avez aucun jeu de données déclaré'
-                   }, 400
-    except Exception as e:
-        raise GeonatureImportApiError(
-            message='INTERNAL SERVER ERROR - checking dataset id: contactez l\'administrateur du site',
-            details=str(e))
-
 
 @blueprint.route('/mappings/<mapping_type>/<import_id>', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
@@ -464,7 +432,7 @@ def cancel_import(info_role, import_id):
 
 
 @blueprint.route('/uploads', methods=['GET', 'POST'])
-@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@permissions.check_cruved_scope('C', True, module_code="MY_IMPORT")
 @json_resp
 @checker('Total time to post user file and fill metadata')
 def post_user_file(info_role):
@@ -562,6 +530,7 @@ def post_user_file(info_role):
             # CREATES CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
 
             # Check if id_dataset value is allowed (prevent from forbidden manual change in url (url/process/N))
+            """
             is_dataset_allowed = test_user_dataset(
                 info_role.id_role, metadata['datasetId'])
             if not is_dataset_allowed:
@@ -570,6 +539,7 @@ def post_user_file(info_role):
                            'message': 'L\'utilisateur {} n\'est pas autorisé à importer des données vers \
                            l\'id_dataset {}'.format(info_role.id_role, int(metadata['datasetId']))
                        }, 403
+            """
 
             # start t_imports filling and fill cor_role_import
             if metadata['importId'] == 'undefined':
@@ -880,6 +850,8 @@ def postMapping(info_role, import_id, id_mapping):
             added_cols = transform_errors['added_cols']
             if 'temp' in partition_df.columns:
                 partition_df = partition_df.drop('temp', axis=1)
+            if 'temp2' in partition_df.columns:
+                partition_df = partition_df.drop('temp2', axis=1)
             if 'check_dates' in partition_df.columns:
                 partition_df = partition_df.drop('check_dates', axis=1)
             if 'temp_longitude' in partition_df.columns:
@@ -1177,7 +1149,6 @@ def content_mapping(info_role, import_id, id_mapping):
             message='INTERNAL SERVER ERROR during content mapping (user values to id_types',
             details=str(e))
 
-
 @blueprint.route('/importData/<import_id>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
@@ -1187,15 +1158,15 @@ def import_data(info_role, import_id):
         logger.info('Importing data in gn_synthese.synthese table')
 
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        MODULE_CODE = blueprint.config['MODULE_CODE']
 
         # get table name
         table_name = set_imports_table_name(get_table_name(import_id))
-
         # set total user columns
         id_mapping = get_id_field_mapping(import_id)
         selected_cols = get_selected_columns(id_mapping)
         added_cols = get_added_columns(id_mapping)
-        total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME)
+        total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME, MODULE_CODE)
 
         ### CONTENT MAPPING ###
 
@@ -1276,6 +1247,7 @@ def get_valid_data(info_role, import_id):
 
         ARCHIVES_SCHEMA_NAME = blueprint.config['ARCHIVES_SCHEMA_NAME']
         IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
+        MODULE_CODE = blueprint.config['MODULE_CODE']
 
         if import_id != 'undefined':
 
@@ -1287,7 +1259,7 @@ def get_valid_data(info_role, import_id):
             id_mapping = get_id_field_mapping(import_id)
             selected_cols = get_selected_columns(id_mapping)
             added_cols = get_added_columns(id_mapping)
-            total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME)
+            total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME, MODULE_CODE)
 
             # get content mapping data
             id_content_mapping = get_id_mapping(import_id)

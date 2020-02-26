@@ -271,9 +271,10 @@ def get_n_valid_rows(schema_name, table_name):
 def get_n_taxa(schema_name, table_name, cd_nom_col):
     try:
         n_taxa = DB.session.execute("""
-            SELECT COUNT(DISTINCT {cd_nom_col})
-            FROM {schema_name}.{table_name}
-            WHERE gn_is_valid = 'True';
+            SELECT COUNT(DISTINCT TAXREF.cd_ref)
+            FROM {schema_name}.{table_name} SOURCE
+            JOIN taxonomie.taxref TAXREF ON TAXREF.cd_nom = SOURCE.{cd_nom_col}::integer
+            WHERE SOURCE.gn_is_valid = 'True';
             """.format(
             schema_name=schema_name,
             table_name=table_name,

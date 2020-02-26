@@ -6,14 +6,11 @@
     </button>
 </div>
 <div class="modal-body">
-    <form *ngIf="userDatasetsResponse" [formGroup]="selectDatasetForm" class="was-validated">
-        <div class="form-group">
-            <small>Jeu de données :</small>
-            <select class="form-control form-control-sm" id="datasetSelection" formControlName="dataset" required>
-                <option *ngFor="let data of userDatasetsResponse" [value]="data.datasetId">{{data.datasetName}}</option>
-            </select>
-        </div>
-    </form>
+    <pnx-datasets
+        label="{{ 'MetaData.Datasets' | translate }}"
+        [parentFormControl]="selectDatasetForm"
+    >
+    </pnx-datasets>
     <div id="datasetError" *ngIf="isUserDatasetError">
         <i id="warningDataset" class="material-icons">warning</i> {{datasetError}}
     </div>

@@ -11,6 +11,7 @@ from ..logs import logger
 from ..db.queries.user_table_queries import get_uuid_list
 from ..utils.utils import create_col_name
 
+import pdb
 
 def fill_nan_uuid(value):
     if pd.isnull(value):
@@ -48,7 +49,30 @@ def check_uuid(df, added_cols, selected_columns, synthese_info, is_generate_uuid
                 if col == 'unique_id_sinp':
 
                     uuid_col_name = selected_columns[col]
+                    
+                    # check duplicates in user file
+                    logger.info('- checking duplicates in unique_id_sinp column (= %s user column)',
+                                uuid_col_name)
 
+                    df['temp'] = df[uuid_col_name].str.lower().duplicated(keep=False)
+                    df['temp'] = df['temp']\
+                        .where(
+                            cond = df[uuid_col_name].notnull(),
+                            other = False)\
+                        .map(fill_map)\
+                        .astype('bool')
+                    df['temp2'] = ~df['temp'].astype('bool')
+
+                    set_is_valid(df, 'temp2')
+                    n_uuid_duplicates = df['temp2'].astype(str).str.contains('False').sum()
+
+                    logger.info('%s duplicates errors in unique_id_sinp column (= %s user column)', n_uuid_duplicates,
+                                uuid_col_name)
+
+                    if n_uuid_duplicates > 0:
+                        set_user_error(import_id, 18, uuid_col_name, n_uuid_duplicates)
+                        set_invalid_reason(df, schema_name, 'temp2', import_id, 18, uuid_col_name)
+                    
                     # if unique_id_sinp col provided, uuid value created if any missing field:
                     if df[selected_columns[col]].isnull().any():
                         if is_generate_uuid:

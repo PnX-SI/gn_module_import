@@ -25,7 +25,7 @@ def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
             select_part.append('::'.join([str(value), key_type]))
 
         # insert into synthese
-        insert_into_synthese(schema_name, table_name, select_part, total_columns)
+        insert_into_synthese(schema_name, table_name, select_part, total_columns, import_id)
     except Exception:
         DB.session.rollback()
         raise

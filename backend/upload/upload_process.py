@@ -46,7 +46,7 @@ def upload(request, size_max, allowed_extensions, directory_name, module_url):
 
             # get file path
             upload_directory_path = directory_name
-            module_directory_path = os.path.join(os.path.dirname(os.getcwd()), 'external_modules/{}'.format(module_url))
+            module_directory_path = os.path.join(os.path.dirname(os.getcwd()), 'external_modules{}'.format(module_url))
             uploads_directory = os.path.join(module_directory_path, upload_directory_path)
 
             filename = secure_filename(file.filename)
