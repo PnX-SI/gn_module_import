@@ -1149,7 +1149,6 @@ def content_mapping(info_role, import_id, id_mapping):
             message='INTERNAL SERVER ERROR during content mapping (user values to id_types',
             details=str(e))
 
-
 @blueprint.route('/importData/<import_id>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
@@ -1163,7 +1162,6 @@ def import_data(info_role, import_id):
 
         # get table name
         table_name = set_imports_table_name(get_table_name(import_id))
-
         # set total user columns
         id_mapping = get_id_field_mapping(import_id)
         selected_cols = get_selected_columns(id_mapping)
