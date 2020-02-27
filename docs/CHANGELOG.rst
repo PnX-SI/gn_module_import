@@ -5,24 +5,21 @@ CHANGELOG
 1.0.1 (unreleased)
 ------------------
 
-
-**🚀 Nouveautés**
-
-
 **🐛 Corrections**
 
+*
 
-1.0.0 - A vos marques, prêts, importez! (2020-02-26)
-----------------------------------------------------
+
+1.0.0 - A vos marques, prêts, importez ! (2020-02-26)
+-----------------------------------------------------
 
 
 **🚀 Nouveautés**
 
 * Précision au survol sur l'icone de téléchargement des données invalides (étape 1) (#62)
-* Ajout d'un mapping par défaut pour les données issues de la Synthèse GeoNature et les nomenclatures/cd du SINP correspondant aux champs de la synthèse
+* Ajout d'un mapping par défaut pour les données issues de la Synthèse GeoNature et les nomenclatures/codes du SINP correspondant aux champs de la synthèse
 * Sérialisation des identifiants dans la BDD du module (#82)
-* Scission des fichiers sql d'installation de la BDD, des données obligatoires, et des données de mapping par défaut 
-
+* Scission des fichiers SQL d'installation de la BDD, des données obligatoires, et des données de mapping par défaut 
 
 **🐛 Corrections**
 
@@ -30,20 +27,18 @@ CHANGELOG
 * Corrections du mapping de contenus et composant multiselect (#85 et #71)
 * Contrôle des doublons sur les UUID fournis dans les données sources
 * Prise en charge des UUID sources lorsqu'ils sont importés en majuscule (#61)
-* Correction de la récupération des jeux de données en fonction de l'utilisateur et limitation aux jdd actifs (#79)
+* Correction de la récupération des jeux de données en fonction de l'utilisateur et limitation aux JDD actifs (#79)
 * Correction du calcul du nombre de taxons importés (basé sur le ``cd_ref`` et non plus sur le ``cd_nom``) (#60)
 * Masquage des champs obligatoires rendu impossible dans la configuration de l'interface (#53)
-* Ajout de la constante ``I`` (Insert) dans le champ ``last action`` de la synthèse lors de l'import (#52)
+* Ajout de la constante ``I`` (Insert) dans le champ ``last_action`` de la synthèse lors de l'import (#52)
 * Correction du chemin du répertoire upload (#46)
 * Nom du module repassé en variable lors de l'installation (#47)
 * Champs ``WKT (Point)`` renommé ``WKT`` (prend en charge les lignes et polygones)
-* Versions de toolz et cloudpickle fixées dans requirements.txt (#70 et #80)
+* Versions de ``toolz`` et ``cloudpickle`` fixées dans ``requirements.txt`` (#70 et #80)
 * Suppression du doublon de la colonne "date d'import" dans l'interface de l'étape 1
 * Ajout de clés étrangères manquantes (#81)
 * Ajout du champs ``unique_id_sinp_grp`` dans la configuration par défaut du module (#67)
-* Correction du contrôle de cohérence des coordonnées géographiques pour les wkt (#64)
-
-
+* Correction du contrôle de cohérence des coordonnées géographiques pour les WKT (#64)
 
 0.1.0 (2019-12-19)
 ------------------
