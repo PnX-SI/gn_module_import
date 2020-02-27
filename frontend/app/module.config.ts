@@ -18,7 +18,7 @@ export const ModuleConfig = {
   "the_geom_local",
   "last_action"
  ],
- "ID_MODULE": 26,
+ "ID_MODULE": 11,
  "IMPORTS_SCHEMA_NAME": "gn_imports",
  "INVALID_CSV_NAME": "invalid",
  "LIST_COLUMNS_FRONTEND": [
@@ -60,8 +60,8 @@ export const ModuleConfig = {
   },
   {
    "max_width": 200,
-   "name": "Fin import",
-   "prop": "date_end_import",
+   "name": "Auteur",
+   "prop": "nom_auteur",
    "show": true
   }
  ],
