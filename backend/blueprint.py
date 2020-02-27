@@ -17,6 +17,7 @@ from geonature.core.gn_synthese.models import (
     CorObserverSynthese
 )
 from geonature.core.gn_permissions import decorators as permissions
+from pypnusershub.db.models import User
 
 from .db.models import (
     TImports,
@@ -173,6 +174,10 @@ def get_import_list(info_role):
                 "date_min_data": str(r.date_min_data),
                 "date_max_data": str(r.date_max_data),
                 "step": r.step,
+                "nom_auteur": DB.session \
+                    .query(User.nom_role + ('' if User.prenom_role is None else ' ' + User.prenom_role)) \
+                    .filter(CorRoleImport.id_role == User.id_role, CorRoleImport.id_import == r.id_import) \
+                    .one()[0],
                 "is_finished": r.is_finished,
                 "dataset_name": DB.session \
                     .query(TDatasets.dataset_name) \
