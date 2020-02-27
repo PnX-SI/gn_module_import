@@ -36,6 +36,7 @@ class TImports(DB.Model):
     date_min_data = DB.Column(DB.DateTime, nullable=True)
     date_max_data = DB.Column(DB.DateTime, nullable=True)
     step = DB.Column(DB.Integer, nullable=True)
+    nom_auteur = DB.Column(DB.Unicode, nullable=True)
     is_finished = DB.Column(DB.Boolean, nullable=False, default=False)
 
 

@@ -173,6 +173,7 @@ def get_import_list(info_role):
                 "date_min_data": str(r.date_min_data),
                 "date_max_data": str(r.date_max_data),
                 "step": r.step,
+                "nom_auteur": r.nom_auteur,
                 "is_finished": r.is_finished,
                 "dataset_name": DB.session \
                     .query(TDatasets.dataset_name) \
@@ -548,7 +549,8 @@ def post_user_file(info_role):
                 insert_t_imports = TImports(
                     date_create_import=init_date,
                     date_update_import=init_date,
-                    full_file_name=uploaded_file['file_name']
+                    full_file_name=uploaded_file['file_name'],
+                    nom_auteur=info_role.nom_role + ('' if info_role.prenom_role is None else ' ' + info_role.prenom_role)
                 )
                 DB.session.add(insert_t_imports)
                 DB.session.flush()

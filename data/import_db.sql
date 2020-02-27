@@ -37,6 +37,7 @@ CREATE TABLE t_imports(
     date_min_data timestamp without time zone,
     date_max_data timestamp without time zone,
     step integer,
+    nom_auteur character varying(255),
     is_finished boolean DEFAULT 'f'
 );
 
