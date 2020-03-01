@@ -38,7 +38,7 @@ CREATE TABLE t_imports(
     date_max_data timestamp without time zone,
     step integer,
     is_finished boolean DEFAULT 'f', 
-    comment character varying
+    comment text
 );
 
 
