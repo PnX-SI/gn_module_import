@@ -5,6 +5,10 @@ CHANGELOG
 1.0.1 (unreleased)
 ------------------
 
+**🚀 Nouveautés**
+
+* Ajout d'un champ commentaire sur la table t_imports (#93)
+
 **🐛 Corrections**
 
 *
