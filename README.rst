@@ -8,6 +8,7 @@ Télécharger puis renommer la version actuelle du module :
    cd
    wget https://github.com/PnX-SI/gn_module_import/archive/X.Y.Z.zip
    unzip X.Y.Z.zip
+   rm X.Y.Z.zip
    mv gn_module_import-X.Y.Z gn_module_import
 
 
