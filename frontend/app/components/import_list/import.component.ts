@@ -56,29 +56,33 @@ export class ImportComponent implements OnInit {
 
   updateFilter(val: any) {
     const value = val.toString().toLowerCase().trim();
-    console.log(value);
-    
+
+    // listes des colonnes selon lesquelles filtrer
+    const cols = this.config.LIST_COLUMNS_FRONTEND.filter(item => {
+      return item['filter'];
+    });
+
+    // Un resultat est retenu si au moins une colonne contient le mot-cle
     this.filteredHistory = this.history.filter(item => {
-      if (
-        (item['dataset_name'] &&
-          item['dataset_name']
-            .toString()
-            .toLowerCase()
-            .indexOf(value) !== -1) ||
-        !value
-      ) {
-        return true;
+      for (let i = 0; i < cols.length; i++) {
+        if (
+          (item[cols[i]['prop']] && item[cols[i]['prop']]
+              .toString()
+              .toLowerCase()
+              .indexOf(value) !== -1) ||
+          !value
+        ) {
+          return true;
+        }
       }
     });
   }
 
   private onImportList() {
-    console.log('onImportList');
     this._ds.getImportList().subscribe(
       res => {
         this.history = res.history;
         this.filteredHistory = this.history;
-        console.log(this.history);
         this.empty = res.empty;
       },
       error => {

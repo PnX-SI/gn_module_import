@@ -18,50 +18,50 @@ export const ModuleConfig = {
   "the_geom_local",
   "last_action"
  ],
- "ID_MODULE": 26,
+ "ID_MODULE": 11,
  "IMPORTS_SCHEMA_NAME": "gn_imports",
  "INVALID_CSV_NAME": "invalid",
  "LIST_COLUMNS_FRONTEND": [
   {
+   "filter": false,
    "max_width": 50,
    "name": "Id",
    "prop": "id_import",
    "show": true
   },
   {
+   "filter": false,
    "max_width": 50,
    "name": "File format",
    "prop": "format_source_file",
    "show": false
   },
   {
+   "filter": true,
    "max_width": 400,
    "name": "JDD",
    "prop": "dataset_name",
    "show": true
   },
   {
+   "filter": false,
    "max_width": 200,
    "name": "Nb de taxons",
    "prop": "taxa_count",
    "show": true
   },
   {
+   "filter": false,
    "max_width": 200,
    "name": "Nb de donnees",
    "prop": "import_count",
    "show": true
   },
   {
+   "filter": true,
    "max_width": 200,
    "name": "Debut import",
    "prop": "date_create_import",
-   "show": true
-  },
-  {
-   "max_width": 200,
-   "name": "Fin import",
-   "prop": "date_end_import",
    "show": true
   }
  ],
