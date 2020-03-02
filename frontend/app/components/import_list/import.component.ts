@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 import { Router } from "@angular/router";
 import { CommonService } from "@geonature_common/service/common.service";
 import { DataService } from "../../services/data.service";
@@ -10,6 +10,8 @@ import {
   Step4Data
 } from "../import_process/steps.service";
 import { CsvExportService } from "../../services/csv-export.service";
+import { fromEvent } from 'rxjs';
+import { map, debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: "pnx-import",
@@ -19,11 +21,14 @@ import { CsvExportService } from "../../services/csv-export.service";
 export class ImportComponent implements OnInit {
   public deletedStep1;
   public history;
+  public filteredHistory;
   public empty: boolean = false;
   public config = ModuleConfig;
   historyId: any;
   n_invalid: any;
   csvDownloadResp: any;
+
+  @ViewChild('search') search: any;
 
   constructor(
     private _ds: DataService,
@@ -36,10 +41,44 @@ export class ImportComponent implements OnInit {
     this.onImportList();
   }
 
+  ngAfterViewInit(): void {
+    // Called after ngAfterContentInit when the component's view has been initialized. Applies to components only.
+    // Add 'implements AfterViewInit' to the class.
+    fromEvent(this.search.nativeElement, 'keydown')
+      .pipe(
+        debounceTime(550),
+        map(x => x['target']['value'])
+      )
+      .subscribe(value => {
+        this.updateFilter(value);
+      });
+  }
+
+  updateFilter(val: any) {
+    const value = val.toString().toLowerCase().trim();
+    console.log(value);
+    
+    this.filteredHistory = this.history.filter(item => {
+      if (
+        (item['dataset_name'] &&
+          item['dataset_name']
+            .toString()
+            .toLowerCase()
+            .indexOf(value) !== -1) ||
+        !value
+      ) {
+        return true;
+      }
+    });
+  }
+
   private onImportList() {
+    console.log('onImportList');
     this._ds.getImportList().subscribe(
       res => {
         this.history = res.history;
+        this.filteredHistory = this.history;
+        console.log(this.history);
         this.empty = res.empty;
       },
       error => {
