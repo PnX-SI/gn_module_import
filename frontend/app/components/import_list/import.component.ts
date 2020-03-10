@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild } from "@angular/core";
 import { Router } from "@angular/router";
+import { FormControl } from "@angular/forms";
 import { CommonService } from "@geonature_common/service/common.service";
 import { DataService } from "../../services/data.service";
 import { ModuleConfig } from "../../module.config";
@@ -10,8 +11,6 @@ import {
   Step4Data
 } from "../import_process/steps.service";
 import { CsvExportService } from "../../services/csv-export.service";
-import { fromEvent } from 'rxjs';
-import { map, debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: "pnx-import",
@@ -28,7 +27,8 @@ export class ImportComponent implements OnInit {
   n_invalid: any;
   csvDownloadResp: any;
 
-  @ViewChild('search') search: any;
+  public search = new FormControl()
+
 
   constructor(
     private _ds: DataService,
@@ -44,14 +44,9 @@ export class ImportComponent implements OnInit {
   ngAfterViewInit(): void {
     // Called after ngAfterContentInit when the component's view has been initialized. Applies to components only.
     // Add 'implements AfterViewInit' to the class.
-    fromEvent(this.search.nativeElement, 'keydown')
-      .pipe(
-        debounceTime(550),
-        map(x => x['target']['value'])
-      )
-      .subscribe(value => {
-        this.updateFilter(value);
-      });
+    this.search.valueChanges.subscribe(value => {
+      this.updateFilter(value);
+    });
   }
 
   updateFilter(val: any) {

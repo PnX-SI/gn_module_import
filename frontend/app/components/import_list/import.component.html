@@ -6,7 +6,7 @@
         <div class="card-body">
             <div *ngIf="!empty">
                 <input
-                    #search
+                    [formControl]="search"
                     id="search"
                     type="text"
                     class="form-control"
