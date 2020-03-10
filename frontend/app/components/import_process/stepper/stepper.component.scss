@@ -46,8 +46,12 @@
   cursor: pointer;
 }
 
+.step ul li.jumped:before {
+  background-color: #969c9e;
+}
+
 .step ul li.done:before {
-  background-color: #28a745;
+  background-color:  #28a745;
 }
 
 .step ul li:after {
@@ -63,6 +67,10 @@
 }
 
 .step ul li.done+li:after {
+  background-color: #28a745;
+}
+
+.step ul li.jumped+li:after {
   background-color: #28a745;
 }
 

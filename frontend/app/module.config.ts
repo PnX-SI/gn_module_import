@@ -4,6 +4,7 @@ export const ModuleConfig = {
   ".geojson"
  ],
  "ARCHIVES_SCHEMA_NAME": "gn_import_archives",
+ "CONTENT_MAPPING_ID": 3,
  "DEFAULT_COUNT_VALUE": 1,
  "ENCODAGE": [
   "UTF-8"
@@ -18,7 +19,8 @@ export const ModuleConfig = {
   "the_geom_local",
   "last_action"
  ],
- "ID_MODULE": 26,
+ "GINCO_TREATMENT": true,
+ "ID_MODULE": 7,
  "IMPORTS_SCHEMA_NAME": "gn_imports",
  "INVALID_CSV_NAME": "invalid",
  "LIST_COLUMNS_FRONTEND": [
@@ -56,12 +58,6 @@ export const ModuleConfig = {
    "max_width": 200,
    "name": "Debut import",
    "prop": "date_create_import",
-   "show": true
-  },
-  {
-   "max_width": 200,
-   "name": "Fin import",
-   "prop": "date_end_import",
    "show": true
   }
  ],

@@ -8,7 +8,8 @@ from geonature.utils.env import DB
 from collections import defaultdict
 
 from ..models import (
-    TMappingsValues
+    TMappingsValues,
+    TMappings
 )
 
 
@@ -285,3 +286,13 @@ def get_saved_content_mapping(id_mapping):
         return selected_content
     except Exception:
         raise
+
+def exists_content_mapping(id_mapping):
+    try:
+        return DB.session \
+            .query(TMappings) \
+            .filter(TMappings.id_mapping == int(id_mapping)) \
+            .scalar() is not None
+    except Exception:
+        raise
+

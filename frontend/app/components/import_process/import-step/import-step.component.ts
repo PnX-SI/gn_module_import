@@ -39,7 +39,11 @@ export class ImportStepComponent implements OnInit {
   }
 
   onStepBack() {
-    this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
+    if(!ModuleConfig.GINCO_TREATMENT){
+      this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/2`]);
+    }else{
+      this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
+    }  
   }
 
   onImport() {
