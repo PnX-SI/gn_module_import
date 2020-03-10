@@ -260,7 +260,7 @@ def get_imports_by_dataset(info_role, id_dataset):
         return imports, 200
     except Exception as e:
         raise GeonatureImportApiError(
-            message='INTERNAL SERVER ERROR - get_mappings() error : contactez l\'administrateur du site',
+            message='INTERNAL SERVER ERROR - get_imports_by_dataset() error : contactez l\'administrateur du site',
             details=str(e))
 
 
