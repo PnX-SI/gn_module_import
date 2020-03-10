@@ -5,15 +5,12 @@
 from marshmallow import Schema, fields
 
 DEFAULT_LIST_COLUMN = [
-    {'prop': 'id_import', 'name': 'Id', 'max_width': 50, 'show': True},
-    {'prop': 'format_source_file', 'name': 'File format',
-        'max_width': 50, 'show': False},
-    {'prop': 'dataset_name', 'name': 'JDD', 'max_width': 400, 'show': True},
-    {'prop': 'taxa_count', 'name': 'Nb de taxons', 'max_width': 200, 'show': True},
-    {'prop': 'import_count', 'name': 'Nb de donnees', 'max_width': 200, 'show': True},
-    {'prop': 'date_create_import', 'name': 'Debut import',
-        'max_width': 200, 'show': True},
-    {'prop': 'nom_auteur', 'name': 'Auteur', 'max_width': 200, 'show': True}
+    {'prop': 'id_import', 'name': 'Id', 'max_width': 50, 'show': True, 'filter': False},
+    {'prop': 'format_source_file', 'name': 'File format', 'max_width': 50, 'show': False, 'filter': False},
+    {'prop': 'dataset_name', 'name': 'JDD', 'max_width': 400, 'show': True, 'filter': True},
+    {'prop': 'taxa_count', 'name': 'Nb de taxons', 'max_width': 200, 'show': True, 'filter': False},
+    {'prop': 'import_count', 'name': 'Nb de donnees', 'max_width': 200, 'show': True, 'filter': False},
+    {'prop': 'date_create_import', 'name': 'Debut import', 'max_width': 200, 'show': True, 'filter': True}
 ]
 
 UPLOAD_DIRECTORY = "upload"
