@@ -11,6 +11,15 @@ from geonature.utils.utilssqlalchemy import (
     geoserializable
 )
 from geonature.core.gn_meta.models import TDatasets
+from pypnusershub.db.models import User
+
+@serializable
+class CorRoleImport(DB.Model):
+    __tablename__ = 'cor_role_import'
+    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
+
+    id_role = DB.Column(DB.Integer, primary_key=True)
+    id_import = DB.Column(DB.Integer, primary_key=True)
 
 @serializable
 class TImports(DB.Model):
@@ -36,16 +45,18 @@ class TImports(DB.Model):
     date_min_data = DB.Column(DB.DateTime, nullable=True)
     date_max_data = DB.Column(DB.DateTime, nullable=True)
     step = DB.Column(DB.Integer, nullable=True)
+    auteur = DB.relationship(
+        User,
+        lazy="joined",
+        secondary=CorRoleImport.__table__,
+        primaryjoin=(CorRoleImport.id_import == id_import),
+        secondaryjoin=(CorRoleImport.id_role == User.id_role),
+        foreign_keys=[
+            CorRoleImport.id_import,
+            CorRoleImport.id_role,
+        ],
+    )
     is_finished = DB.Column(DB.Boolean, nullable=False, default=False)
-
-
-@serializable
-class CorRoleImport(DB.Model):
-    __tablename__ = 'cor_role_import'
-    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
-
-    id_role = DB.Column(DB.Integer, primary_key=True)
-    id_import = DB.Column(DB.Integer, primary_key=True)
 
 
 @serializable

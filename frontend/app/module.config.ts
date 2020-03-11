@@ -3,7 +3,7 @@ export const ModuleConfig = {
   ".csv",
   ".geojson"
  ],
- "ALLOW_VALUE_MAPPING": false,
+ "ALLOW_VALUE_MAPPING": true,
  "ARCHIVES_SCHEMA_NAME": "gn_import_archives",
  "DEFAULT_COUNT_VALUE": 1,
  "DEFAULT_MAPPING_ID": 3,
