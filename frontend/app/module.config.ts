@@ -66,7 +66,7 @@ export const ModuleConfig = {
   },
   {
    "filter": true,
-   "max_width": 200,
+   "max_width": 400,
    "name": "Auteur",
    "prop": "nom_auteur",
    "show": true

@@ -154,6 +154,11 @@ def get_import_list(info_role):
             else:
                 date_end_import = r.date_end_import
 
+            auteurStr = r.auteur[0].nom_role + ' ' + r.auteur[0].prenom_role
+            if len(r.auteur) > 1 :
+                for role in r.auteur:
+                    auteurStr += '; ' + role.nom_role + ' ' + role.prenom_role
+
             prop = {
                 "id_import": r.id_import,
                 "format_source_file": r.format_source_file,
@@ -174,7 +179,7 @@ def get_import_list(info_role):
                 "date_min_data": str(r.date_min_data),
                 "date_max_data": str(r.date_max_data),
                 "step": r.step,
-                "nom_auteur": r.auteur[0].nom_role + ('' if r.auteur[0].prenom_role is None else ' ' + r.auteur[0].prenom_role),
+                "nom_auteur": auteurStr,
                 "is_finished": r.is_finished,
                 "dataset_name": DB.session \
                     .query(TDatasets.dataset_name) \

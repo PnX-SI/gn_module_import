@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormControl } from "@angular/forms";
 import { CommonService } from "@geonature_common/service/common.service";
@@ -39,11 +39,6 @@ export class ImportComponent implements OnInit {
 
   ngOnInit() {
     this.onImportList();
-  }
-
-  ngAfterViewInit(): void {
-    // Called after ngAfterContentInit when the component's view has been initialized. Applies to components only.
-    // Add 'implements AfterViewInit' to the class.
     this.search.valueChanges.subscribe(value => {
       this.updateFilter(value);
     });
