@@ -63,10 +63,10 @@ NOT_NULLABLE_SYNTHESE_FIELDS = ['cd_nom', 'nom_cite', 'date_min']
 INVALID_CSV_NAME = 'invalid'
 
 
-GINCO_TREATMENT = True
+ALLOW_VALUE_MAPPING = True
 
-# If the processing is different than ginco, you must specify the content_Id_Mapping 
-CONTENT_MAPPING_ID = 3
+# If VALUE MAPPING is allowed, you must specify the DEFAULT_MAPPING_ID 
+DEFAULT_MAPPING_ID = 3
 
 class GnModuleSchemaConf(Schema):
     LIST_COLUMNS_FRONTEND = fields.List(
@@ -87,6 +87,6 @@ class GnModuleSchemaConf(Schema):
     NOT_NULLABLE_SYNTHESE_FIELDS = fields.List(
         fields.String, missing=NOT_NULLABLE_SYNTHESE_FIELDS)
     INVALID_CSV_NAME = fields.String(missing=INVALID_CSV_NAME)
-    GINCO_TREATMENT = fields.Boolean(missing=GINCO_TREATMENT)
-    CONTENT_MAPPING_ID = fields.Integer(missing=CONTENT_MAPPING_ID)
+    ALLOW_VALUE_MAPPING = fields.Boolean(missing=ALLOW_VALUE_MAPPING)
+    DEFAULT_MAPPING_ID = fields.Integer(missing=DEFAULT_MAPPING_ID)
 

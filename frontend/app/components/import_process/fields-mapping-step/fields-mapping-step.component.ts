@@ -207,8 +207,8 @@ export class FieldsMappingStepComponent implements OnInit {
 
           this.stepService.setStepData(2, step2data);
 
-          if(!ModuleConfig.GINCO_TREATMENT){
-            this._ds.postDataToStep4(this.stepData.importId, this.id_mapping, ModuleConfig.CONTENT_MAPPING_ID)
+          if(!ModuleConfig.ALLOW_VALUE_MAPPING){
+            this._ds.postDataToStep4(this.stepData.importId, this.id_mapping, ModuleConfig.DEFAULT_MAPPING_ID)
             .subscribe(arg => {
               this.stepService.setStepData(4, step4Data);
               this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);

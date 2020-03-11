@@ -3,9 +3,10 @@ export const ModuleConfig = {
   ".csv",
   ".geojson"
  ],
+ "ALLOW_VALUE_MAPPING": false,
  "ARCHIVES_SCHEMA_NAME": "gn_import_archives",
- "CONTENT_MAPPING_ID": 3,
  "DEFAULT_COUNT_VALUE": 1,
+ "DEFAULT_MAPPING_ID": 3,
  "ENCODAGE": [
   "UTF-8"
  ],
@@ -19,7 +20,6 @@ export const ModuleConfig = {
   "the_geom_local",
   "last_action"
  ],
- "GINCO_TREATMENT": true,
  "ID_MODULE": 7,
  "IMPORTS_SCHEMA_NAME": "gn_imports",
  "INVALID_CSV_NAME": "invalid",
