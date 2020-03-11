@@ -244,6 +244,26 @@ def get_mappings(info_role, mapping_type, import_id):
             details=str(e))
 
 
+@blueprint.route('/by_dataset/<int:id_dataset>', methods=['GET'])
+@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@json_resp
+def get_imports_by_dataset(info_role, id_dataset):
+    try:
+        results = DB.session \
+            .query(TImports) \
+            .filter(TImports.id_dataset == int(id_dataset)) \
+            .all()
+        imports = []
+        for row in results:
+            d = row.as_dict()
+            imports.append(d)
+        return imports, 200
+    except Exception as e:
+        raise GeonatureImportApiError(
+            message='INTERNAL SERVER ERROR - get_imports_by_dataset() error : contactez l\'administrateur du site',
+            details=str(e))
+
+
 @blueprint.route('/field_mappings/<id_mapping>', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
