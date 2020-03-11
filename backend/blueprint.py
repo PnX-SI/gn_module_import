@@ -156,7 +156,7 @@ def get_import_list(info_role):
 
             auteurStr = r.auteur[0].nom_role + ' ' + r.auteur[0].prenom_role
             if len(r.auteur) > 1 :
-                for role in r.auteur:
+                for role in r.auteur[1:]:
                     auteurStr += '; ' + role.nom_role + ' ' + role.prenom_role
 
             prop = {
@@ -179,7 +179,7 @@ def get_import_list(info_role):
                 "date_min_data": str(r.date_min_data),
                 "date_max_data": str(r.date_max_data),
                 "step": r.step,
-                "nom_auteur": auteurStr,
+                "author_name": auteurStr,
                 "is_finished": r.is_finished,
                 "dataset_name": DB.session \
                     .query(TDatasets.dataset_name) \
