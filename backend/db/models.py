@@ -45,7 +45,7 @@ class TImports(DB.Model):
     date_min_data = DB.Column(DB.DateTime, nullable=True)
     date_max_data = DB.Column(DB.DateTime, nullable=True)
     step = DB.Column(DB.Integer, nullable=True)
-    auteur = DB.relationship(
+    author = DB.relationship(
         User,
         lazy="joined",
         secondary=CorRoleImport.__table__,

@@ -1,5 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
+import { FormControl } from "@angular/forms";
 import { CommonService } from "@geonature_common/service/common.service";
 import { DataService } from "../../services/data.service";
 import { ModuleConfig } from "../../module.config";
@@ -19,11 +20,15 @@ import { CsvExportService } from "../../services/csv-export.service";
 export class ImportComponent implements OnInit {
   public deletedStep1;
   public history;
+  public filteredHistory;
   public empty: boolean = false;
   public config = ModuleConfig;
   historyId: any;
   n_invalid: any;
   csvDownloadResp: any;
+
+  public search = new FormControl()
+
 
   constructor(
     private _ds: DataService,
@@ -34,12 +39,40 @@ export class ImportComponent implements OnInit {
 
   ngOnInit() {
     this.onImportList();
+    this.search.valueChanges.subscribe(value => {
+      this.updateFilter(value);
+    });
+  }
+
+  updateFilter(val: any) {
+    const value = val.toString().toLowerCase().trim();
+
+    // listes des colonnes selon lesquelles filtrer
+    const cols = this.config.LIST_COLUMNS_FRONTEND.filter(item => {
+      return item['filter'];
+    });
+
+    // Un resultat est retenu si au moins une colonne contient le mot-cle
+    this.filteredHistory = this.history.filter(item => {
+      for (let i = 0; i < cols.length; i++) {
+        if (
+          (item[cols[i]['prop']] && item[cols[i]['prop']]
+              .toString()
+              .toLowerCase()
+              .indexOf(value) !== -1) ||
+          !value
+        ) {
+          return true;
+        }
+      }
+    });
   }
 
   private onImportList() {
     this._ds.getImportList().subscribe(
       res => {
         this.history = res.history;
+        this.filteredHistory = this.history;
         this.empty = res.empty;
       },
       error => {
