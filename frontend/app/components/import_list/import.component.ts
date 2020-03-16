@@ -121,7 +121,7 @@ export class ImportComponent implements OnInit {
 
   onViewDataset(row) {
     this._router.navigate([
-      `metadata/dataset_fiche/${row.id_dataset}`
+      `metadata/dataset_detail/${row.id_dataset}`
     ]);
   }
 
