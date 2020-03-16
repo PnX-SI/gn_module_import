@@ -1,6 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { CommonService } from "@geonature_common/service/common.service";
+import { CruvedStoreService } from '@geonature_common/../services/cruved-store.service';
 import { DataService } from "../../services/data.service";
 import { ModuleConfig } from "../../module.config";
 import {
@@ -26,6 +27,7 @@ export class ImportComponent implements OnInit {
   csvDownloadResp: any;
 
   constructor(
+    public _cruvedStore: CruvedStoreService, 
     private _ds: DataService,
     private _csvExport: CsvExportService,
     private _router: Router,
@@ -116,4 +118,11 @@ export class ImportComponent implements OnInit {
       `${ModuleConfig.MODULE_URL}/process/step/${row.step}`
     ]);
   }
+
+  onViewDataset(row) {
+    this._router.navigate([
+      `metadata/dataset/${row.id_dataset}`
+    ]);
+  }
+
 }

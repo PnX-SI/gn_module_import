@@ -27,6 +27,16 @@
                             </button>
                         </ng-template>
                     </ngx-datatable-column>
+                    <ngx-datatable-column maxWidth="80" >
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <button *ngIf="_cruvedStore.cruved?.METADATA?.cruved.U !== '0'"
+                            class="clickable btn btn-sm btn-info" style="margin-top: -10px;"
+                                (click)="onViewDataset(row)" 
+                                title='JDD associé'> 
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </ng-template>
+                    </ngx-datatable-column>
                 </ngx-datatable>
             </div>
             <div *ngIf="empty">
