@@ -65,7 +65,7 @@ INVALID_CSV_NAME = 'invalid'
 
 ALLOW_VALUE_MAPPING = True
 
-# If VALUE MAPPING is allowed, you must specify the DEFAULT_MAPPING_ID 
+# If VALUE MAPPING is not allowed, you must specify the DEFAULT_MAPPING_ID 
 DEFAULT_MAPPING_ID = 3
 
 class GnModuleSchemaConf(Schema):
