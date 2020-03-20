@@ -158,4 +158,24 @@ export class ImportComponent implements OnInit {
     ]);
   }
 
+
+  onDeleteImport(row) {
+    console.log("onDeleteImport");
+    this._ds.cancelImport(row.id_import).subscribe(
+      error => {
+        if (error.statusText === "Unknown Error") {
+          // show error message if no connexion
+          this._commonService.regularToaster(
+            "error",
+            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+          );
+        } else {
+          // show error message if other server error
+          this._commonService.regularToaster("error", error.message);
+        }
+        // update displayed list
+        this.onImportList();
+      }
+    );
+  }
 }
