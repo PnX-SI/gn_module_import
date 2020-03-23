@@ -28,9 +28,8 @@ tatus
 config/settings.ini
 
 # generated/updated with geonature commands
-config/conf_gn_module.toml
-frontend/app/module.config.ts
 conf_gn_module.toml
+frontend/app/module.config.ts
 module.config.ts
 
 
