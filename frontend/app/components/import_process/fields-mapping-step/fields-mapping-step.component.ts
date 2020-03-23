@@ -10,7 +10,7 @@ import {
   FormBuilder,
   Validators
 } from "@angular/forms";
-import { StepsService, Step2Data, Step3Data } from "../steps.service";
+import { StepsService, Step2Data, Step3Data, Step4Data } from "../steps.service";
 import { forkJoin } from "rxjs/observable/forkJoin";
 
 @Component({
@@ -201,9 +201,36 @@ export class FieldsMappingStepComponent implements OnInit {
             mappingIsValidate: this.mappingIsValidate
           };
 
-          this.stepService.setStepData(3, step3data);
+          let step4Data: Step4Data = {
+            importId: this.stepData.importId
+          };
+
           this.stepService.setStepData(2, step2data);
-          this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
+
+          if(!ModuleConfig.ALLOW_VALUE_MAPPING){
+            this._ds.postDataToStep4(this.stepData.importId, this.id_mapping, ModuleConfig.DEFAULT_MAPPING_ID)
+            .subscribe(arg => {
+              this.stepService.setStepData(4, step4Data);
+              this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
+            },
+            error => {
+              if (error.statusText === "Unknown Error") {
+                // show error message if no connexion
+                this._commonService.regularToaster(
+                  "error",
+                  "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+                );
+              } else {
+                // show error message if other server error
+                console.error(error);
+                this._commonService.regularToaster("error", error.error.message);
+              }
+            });
+          }else{
+            this.stepService.setStepData(3, step3data);
+            this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
+          }
+            
         },
         error => {
           this.spinner = false;

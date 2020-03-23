@@ -39,7 +39,6 @@ export class ContentMappingStepComponent implements OnInit {
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(3);
-
     this.contentMappingForm = this._fb.group({
       contentMapping: [null],
       mappingName: [""]
@@ -168,7 +167,7 @@ export class ContentMappingStepComponent implements OnInit {
       //   });
       // }
     });
-    console.log(this.idInfo);
+    // console.log(this.idInfo);
 
     return this.idInfo;
   }
@@ -177,7 +176,7 @@ export class ContentMappingStepComponent implements OnInit {
     this.id_mapping = id_mapping;
     this._ds.getMappingContents(id_mapping).subscribe(
       mappingContents => {
-        console.log(mappingContents);
+        // console.log(mappingContents);
 
         this.contentTargetForm.reset();
         if (mappingContents[0] != "empty") {
@@ -200,8 +199,8 @@ export class ContentMappingStepComponent implements OnInit {
             if (formControl) {
               formControl.setValue(arrayVal);
             } else {
-              console.log("PAS BOOON");
-              console.log(content[0]["id_target_value"]);
+              // console.log("PAS BOOON");
+              // console.log(content[0]["id_target_value"]);
 
               //formControl.setValue(arrayVal);
             }

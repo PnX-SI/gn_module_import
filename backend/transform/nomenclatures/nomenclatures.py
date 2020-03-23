@@ -86,12 +86,13 @@ def set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, sele
         for key, value in selected_content.items():
             abb = get_nomenc_abb(key)
             synthese_name = get_synthese_col(abb)
-            d = {
-                'id_type': key,
-                'user_values': value,
-                'user_col': selected_cols[synthese_name]
-            }
-            content_list.append(d)
+            if synthese_name in selected_cols:
+                d = {
+                    'id_type': key,
+                    'user_values': value,
+                    'user_col': selected_cols[synthese_name]
+                }
+                content_list.append(d)
 
         for element in content_list:
             for val in element['user_values']:

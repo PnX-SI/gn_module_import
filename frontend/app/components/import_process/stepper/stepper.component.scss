@@ -17,7 +17,7 @@
 
 .step ul li {
   box-sizing: border-box;
-  width: 25%;
+  width: 50%;
   text-align: center;
   position: relative;
   padding-top: 40px;
@@ -47,7 +47,7 @@
 }
 
 .step ul li.done:before {
-  background-color: #28a745;
+  background-color:  #28a745;
 }
 
 .step ul li:after {
