@@ -84,7 +84,14 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'wkt','WKT',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'gn_1_the_geom_point_2','the_geom_point',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'gn_1_the_geom_local_2','the_geom_local',false,true),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'gn_1_the_geom_4326_2','the_geom_4326',false,true);
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'gn_1_the_geom_4326_2','the_geom_4326',false,true),
+
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'codeCommune','code_commune',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'codeMaille','code_maille',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'codeDepartement','code_departement',true,false),
+
+
+;
 
 
 -- Intégration du mapping de valeurs SINP (labels) par défaut pour les nomenclatures de la synthèse 
