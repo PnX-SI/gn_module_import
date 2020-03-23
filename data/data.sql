@@ -62,14 +62,13 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('longitude', 'Longitude (coord x)', '', '', 'real', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 11, TRUE),
 	('latitude', 'Latitude (coord y)', '', '', 'real', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 12, TRUE),
 	('WKT', 'WKT', '', '', 'wkt', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 13, TRUE),
-	('codecommune', 'Code commune', '', '', 'character varying(50)', FALSE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 14, TRUE),
-	('codemaille', 'Code maille', '', '', 'character varying(50)', FALSE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 15, TRUE),
-	('codedepartement', 'Code département', '', '', 'character varying(50)', FALSE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 16, TRUE),
+	('codecommune', 'Code commune', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 14, TRUE),
+	('codemaille', 'Code maille', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 15, TRUE),
+	('codedepartement', 'Code département', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 16, TRUE),
 	('id_nomenclature_geo_object_nature', 'Nature d''objet géographique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 17, TRUE),
 	('the_geom_point','Geométrie (Point)','','','geometry', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 18, FALSE),
 	('the_geom_local','Geométrie (SRID local)','','','geometry', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 19, FALSE),
 	('the_geom_4326','Geométrie (SRID 4326)','','','geometry', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 20, FALSE),
-
 
 
 	('nom_cite', 'Nom du taxon cité', '', '', 'character varying(1000)', TRUE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 1, TRUE),
