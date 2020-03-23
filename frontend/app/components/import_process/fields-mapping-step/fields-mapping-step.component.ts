@@ -445,19 +445,28 @@ export class FieldsMappingStepComponent implements OnInit {
 
   geoTypeSelect(targetForm) {
     /*
-        3 cases :
-        - one coordinates == '' && wkt == '' : lat && long && wkt set as required
-        - wkt == '' and both coordinates != '' : wkt not required, coordinates required
-        - wkt != '' : wkt required, coordinates not required
+        6 cases :
+        - all empty : all required
+        - wkt == '' and both coordinates != '' : wkt not required, codes not required, coordinates required
+        - wkt != '' : wkt required, coordinates and codes not required
+        - one of the code not empty: others not required
         */
     if (
       targetForm.get("WKT").value === "" &&
       (targetForm.get("longitude").value === "" ||
         targetForm.get("latitude").value === "")
+      && (
+        targetForm.get("codemaille").value === "" ||
+        targetForm.get("codecommune").value === "" ||
+        targetForm.get("codedepartement").value === ""
+      )
     ) {
       this.setFormControlRequired(targetForm, "WKT");
       this.setFormControlRequired(targetForm, "longitude");
       this.setFormControlRequired(targetForm, "latitude");
+      this.setFormControlRequired(targetForm, "codemaille");
+      this.setFormControlRequired(targetForm, "codecommune");
+      this.setFormControlRequired(targetForm, "codedepartement");
     }
     if (
       targetForm.get("WKT").value === "" &&
@@ -467,12 +476,45 @@ export class FieldsMappingStepComponent implements OnInit {
       this.setFormControlNotRequired(targetForm, "WKT");
       this.setFormControlRequired(targetForm, "longitude");
       this.setFormControlRequired(targetForm, "latitude");
+      this.setFormControlNotRequired(targetForm, "codecommune");
+      this.setFormControlNotRequired(targetForm, "codedepartement");
+      this.setFormControlNotRequired(targetForm, "codemaille");
     }
     if (targetForm.get("WKT").value !== "") {
       this.setFormControlRequired(targetForm, "WKT");
       this.setFormControlNotRequired(targetForm, "longitude");
       this.setFormControlNotRequired(targetForm, "latitude");
+      this.setFormControlNotRequired(targetForm, "codemaille");
+      this.setFormControlNotRequired(targetForm, "codecommune");
+      this.setFormControlNotRequired(targetForm, "codedepartement");
     }
+  if (targetForm.get("codemaille").value !== "") {
+    this.setFormControlRequired(targetForm, "codemaille");
+    this.setFormControlNotRequired(targetForm, "WKT");
+    this.setFormControlNotRequired(targetForm, "longitude");
+    this.setFormControlNotRequired(targetForm, "latitude");
+    this.setFormControlNotRequired(targetForm, "codecommune");
+    this.setFormControlNotRequired(targetForm, "codedepartement");
+  }
+  if (targetForm.get("codecommune").value !== "") {
+    this.setFormControlRequired(targetForm, "codecommune");
+    this.setFormControlNotRequired(targetForm, "WKT");
+    this.setFormControlNotRequired(targetForm, "longitude");
+    this.setFormControlNotRequired(targetForm, "latitude");
+    this.setFormControlNotRequired(targetForm, "codemaille");
+    this.setFormControlNotRequired(targetForm, "codedepartement");
+  }
+  if (targetForm.get("codedepartement").value !== "") {
+    this.setFormControlRequired(targetForm, "codedepartement");
+    this.setFormControlNotRequired(targetForm, "WKT");
+    this.setFormControlNotRequired(targetForm, "longitude");
+    this.setFormControlNotRequired(targetForm, "latitude");
+    this.setFormControlNotRequired(targetForm, "codecommune");
+    this.setFormControlNotRequired(targetForm, "codemaille");
+  }
+
+
+
   }
 
   onSelect(id_mapping, targetForm) {
