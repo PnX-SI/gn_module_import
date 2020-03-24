@@ -57,6 +57,14 @@ export class FieldsMappingStepComponent implements OnInit {
     });
     this.syntheseForm = this._fb.group({});
 
+    // subscribe to mapping change
+
+    this.fieldMappingForm.get("fieldMapping").valueChanges.subscribe(
+      id_mapping => {
+        this.onMappingChange(id_mapping);
+      },
+    );
+
     if (this.stepData.mappingRes) {
       this.mappingRes = this.stepData.mappingRes;
       this.table_name = this.mappingRes["table_name"];
@@ -251,6 +259,7 @@ export class FieldsMappingStepComponent implements OnInit {
 
   onFormMappingChange() {
     this.syntheseForm.valueChanges.subscribe(() => {
+      
       if (this.mappingIsValidate) {
         this.mappingRes = null;
         this.mappingIsValidate = false;
@@ -300,10 +309,9 @@ export class FieldsMappingStepComponent implements OnInit {
           this.fieldMappingForm.controls["fieldMapping"].setValue(
             this.stepData.id_field_mapping
           );
-          this.fillMapping(this.stepData.id_field_mapping, this.syntheseForm);
+          this.fillMapping(this.stepData.id_field_mapping);
         } else {
           this.formReady = true;
-          this.onMappingName(this.fieldMappingForm, this.syntheseForm);
         }
       },
       error => {
@@ -321,51 +329,36 @@ export class FieldsMappingStepComponent implements OnInit {
     );
   }
 
-  onMappingName(mappingForm, targetFormName): void {
-    mappingForm.get("fieldMapping").valueChanges.subscribe(
-      id_mapping => {
-        this.id_mapping = id_mapping;
-        if (this.id_mapping && id_mapping != "") {
-          this.fillMapping(this.id_mapping, targetFormName);
-        } else {
-          this.fillEmptyMapping(targetFormName);
-          this.disableMapping(targetFormName);
-          this.shadeSelectedColumns(targetFormName);
-        }
-      },
-      error => {
-        if (error.statusText === "Unknown Error") {
-          // show error message if no connexion
-          this._commonService.regularToaster(
-            "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-          );
-        } else {
-          console.error(error);
-          this._commonService.regularToaster("error", error.error);
-        }
-      }
-    );
+  onMappingChange( id_mapping): void {
+    
+    this.id_mapping = id_mapping;
+    if (this.id_mapping && id_mapping != "") {
+      this.fillMapping(this.id_mapping);
+    } else {
+      this.fillEmptyMapping(this.syntheseForm);
+      this.disableMapping(this.syntheseForm);
+      this.shadeSelectedColumns(this.syntheseForm);
+    }
   }
 
-  fillMapping(id_mapping, targetFormName) {
+  fillMapping(id_mapping) {    
     this.id_mapping = id_mapping;
     this._ds.getMappingFields(this.id_mapping).subscribe(
       mappingFields => {
+        this.enableMapping(this.syntheseForm);
+
         if (mappingFields[0] != "empty") {
           for (let field of mappingFields) {
-            this.enableMapping(targetFormName);
-            targetFormName
+            this.syntheseForm
               .get(field["target_field"])
               .setValue(field["source_field"]);
           }
-          this.shadeSelectedColumns(targetFormName);
-          this._fm.geoFormValidator(targetFormName);
+          this.shadeSelectedColumns(this.syntheseForm);
+          this._fm.geoFormValidator(this.syntheseForm);
         } else {
-          this.fillEmptyMapping(targetFormName);
+          this.fillEmptyMapping(this.syntheseForm);
         }
         this.onFormMappingChange();
-        this.onMappingName(this.fieldMappingForm, this.syntheseForm);
         this.formReady = true;
       },
       error => {
