@@ -7,12 +7,12 @@
 </div>
 <div class="modal-body">
   <p>
-    Supprimer cet import ? {{idImport}}
+    Supprimer cet import associé au JDD "{{dataset_name}}" et commencé le {{date_create_import}}? 
   </p>
   <button type="button" (click)="c()" class="btn btn-secondary">Annuler</button>
 
   <button type="button" 
-    (click)="deleteImport(modalDelete); c()"
+    (click)="deleteImport(modalDelete)"
     class="btn btn-danger">Supprimer</button>
 </div>
 

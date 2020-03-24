@@ -8,7 +8,9 @@ import { Router } from "@angular/router";
   templateUrl: "./delete-modal.component.html"
 })
 export class ModalDeleteImport implements OnInit {
-  @Input() idImport: number;
+  @Input() id_import: number;
+  @Input() dataset_name: string;
+  @Input() date_create_import: string;
   @Input() c: any;
   @Output() onDelete = new EventEmitter();
   constructor(
@@ -20,10 +22,8 @@ export class ModalDeleteImport implements OnInit {
   ngOnInit() {}
 
   deleteImport() {
-    this.onDelete.emit();
-    
     console.log("deleteImport");
-    this._ds.cancelImport(this.idImport).subscribe(
+    this._ds.cancelImport(this.id_import).subscribe(
       error => {
         if (error.statusText === "Unknown Error") {
           // show error message if no connexion
@@ -35,6 +35,8 @@ export class ModalDeleteImport implements OnInit {
           // show error message if other server error
           this._commonService.regularToaster("error", error.message);
         }
+        this.onDelete.emit();
+        this.c();
       }
     );
   }
