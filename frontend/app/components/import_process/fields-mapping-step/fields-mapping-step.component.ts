@@ -47,7 +47,7 @@ export class FieldsMappingStepComponent implements OnInit {
     private _fb: FormBuilder,
     private stepService: StepsService,
     private _router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(2);
@@ -215,30 +215,30 @@ export class FieldsMappingStepComponent implements OnInit {
 
           this.stepService.setStepData(2, step2data);
 
-          if(!ModuleConfig.ALLOW_VALUE_MAPPING){
+          if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
             this._ds.postDataToStep4(this.stepData.importId, this.id_mapping, ModuleConfig.DEFAULT_MAPPING_ID)
-            .subscribe(arg => {
-              this.stepService.setStepData(4, step4Data);
-              this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
-            },
-            error => {
-              if (error.statusText === "Unknown Error") {
-                // show error message if no connexion
-                this._commonService.regularToaster(
-                  "error",
-                  "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-                );
-              } else {
-                // show error message if other server error
-                console.error(error);
-                this._commonService.regularToaster("error", error.error.message);
-              }
-            });
-          }else{
+              .subscribe(arg => {
+                this.stepService.setStepData(4, step4Data);
+                this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
+              },
+                error => {
+                  if (error.statusText === "Unknown Error") {
+                    // show error message if no connexion
+                    this._commonService.regularToaster(
+                      "error",
+                      "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+                    );
+                  } else {
+                    // show error message if other server error
+                    console.error(error);
+                    this._commonService.regularToaster("error", error.error.message);
+                  }
+                });
+          } else {
             this.stepService.setStepData(3, step3data);
             this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
           }
-            
+
         },
         error => {
           this.spinner = false;
@@ -259,7 +259,7 @@ export class FieldsMappingStepComponent implements OnInit {
 
   onFormMappingChange() {
     this.syntheseForm.valueChanges.subscribe(() => {
-      
+
       if (this.mappingIsValidate) {
         this.mappingRes = null;
         this.mappingIsValidate = false;
@@ -309,7 +309,7 @@ export class FieldsMappingStepComponent implements OnInit {
           this.fieldMappingForm.controls["fieldMapping"].setValue(
             this.stepData.id_field_mapping
           );
-          this.fillMapping(this.stepData.id_field_mapping);
+          this.fillMapping(this.stepData.id_field_mapping, this.columns);
         } else {
           this.formReady = true;
         }
@@ -329,11 +329,11 @@ export class FieldsMappingStepComponent implements OnInit {
     );
   }
 
-  onMappingChange( id_mapping): void {
-    
+  onMappingChange(id_mapping): void {
+
     this.id_mapping = id_mapping;
     if (this.id_mapping && id_mapping != "") {
-      this.fillMapping(this.id_mapping);
+      this.fillMapping(this.id_mapping, this.columns);
     } else {
       this.fillEmptyMapping(this.syntheseForm);
       this.disableMapping(this.syntheseForm);
@@ -341,17 +341,28 @@ export class FieldsMappingStepComponent implements OnInit {
     }
   }
 
-  fillMapping(id_mapping) {    
+  /**
+   * Fill the field form with the value define in the given mapping
+   * @param id_mapping : id of the mapping
+   * @param fileColumns : columns of the provided file at step 1
+   */
+  fillMapping(id_mapping, fileColumns) {
     this.id_mapping = id_mapping;
+    // build an array from array of object
+    const columnsArray: Array<string> = this.columns.map(col => col.id);
+    console.log(columnsArray);
+
     this._ds.getMappingFields(this.id_mapping).subscribe(
       mappingFields => {
         this.enableMapping(this.syntheseForm);
-
         if (mappingFields[0] != "empty") {
+
           for (let field of mappingFields) {
-            this.syntheseForm
-              .get(field["target_field"])
-              .setValue(field["source_field"]);
+            if (columnsArray.includes(field['source_field'])) {
+              this.syntheseForm
+                .get(field["target_field"])
+                .setValue(field["source_field"]);
+            }
           }
           this.shadeSelectedColumns(this.syntheseForm);
           this._fm.geoFormValidator(this.syntheseForm);
