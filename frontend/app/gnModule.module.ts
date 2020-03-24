@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { ImportModalDatasetComponent } from "./components/modal_dataset/import-modal-dataset.component";
+import { ModalDeleteImport } from "./components/delete-modal/delete-modal.component";
 import { DataService } from "./services/data.service";
 import { CsvExportService } from "./services/csv-export.service";
 import { StepperGuardService } from "./services/stepper-guard";
@@ -50,6 +51,7 @@ const routes: Routes = [
   declarations: [
     ImportComponent,
     ImportModalDatasetComponent,
+    ModalDeleteImport,
     UploadFileStepComponent,
     FieldsMappingStepComponent,
     ContentMappingStepComponent,
@@ -66,7 +68,7 @@ const routes: Routes = [
     MatCheckboxModule,
     NgbModule
   ],
-
+  entryComponents: [ModalDeleteImport],
   providers: [
     DataService,
     StepsService,
