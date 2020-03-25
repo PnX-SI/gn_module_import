@@ -65,9 +65,7 @@
             <ng-template #deleteModal let-c="close " let-d="dismiss">
           
                 <import-delete 
-                  [id_import]="deleteOne.id_import"
-                  [dataset_name]="deleteOne.dataset_name"
-                  [date_create_import]="deleteOne.date_create_import"
+                  [row]="deleteOne"
                   [c]="c"
                   (onDelete)="onImportList()">
                 </import-delete>

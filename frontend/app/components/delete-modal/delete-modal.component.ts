@@ -8,9 +8,7 @@ import { Router } from "@angular/router";
   templateUrl: "./delete-modal.component.html"
 })
 export class ModalDeleteImport implements OnInit {
-  @Input() id_import: number;
-  @Input() dataset_name: string;
-  @Input() date_create_import: string;
+  @Input() row: any;
   @Input() c: any;
   @Output() onDelete = new EventEmitter();
   constructor(
@@ -23,7 +21,7 @@ export class ModalDeleteImport implements OnInit {
 
   deleteImport() {
     console.log("deleteImport");
-    this._ds.cancelImport(this.id_import).subscribe(
+    this._ds.cancelImport(this.row.id_import).subscribe(
       error => {
         if (error.statusText === "Unknown Error") {
           // show error message if no connexion
