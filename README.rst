@@ -12,7 +12,7 @@ Télécharger puis renommer la version actuelle du module :
    mv gn_module_import-X.Y.Z gn_module_import
 
 
-Le module doit ainsi être installé comme suit :
+Le module doit ensuite être installé comme suit :
 
 ::
 
@@ -49,7 +49,7 @@ Le module permet de traiter un fichier CSV ou GeoJSON sous toute structure de do
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-01.jpg
 
-2. Choisissez à quel JDD les données importées vont être associées. Si vous souhaitez les associer à un nouveau JDD, il faut l'avoir créé au préalable.
+2. Choisissez à quel JDD les données importées vont être associées. Si vous souhaitez les associer à un nouveau JDD, il faut l'avoir créé au préalable dans le module métadonnées.
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-02.jpg
 
@@ -57,11 +57,11 @@ Le module permet de traiter un fichier CSV ou GeoJSON sous toute structure de do
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-03.jpg
 
-4. Mapping des champs. Il s'agit de faire correspondre les champs du fichier importé aux champs de la Synthèse (basé sur le standard "Occurrences de taxons" du SINP). Vous pouvez utiliser un mapping déjà existant ou en créé un nouveau. Le module contient par défaut un mapping correspondant à un fichier exporté depuis une synthèse de GeoNature. Si vous créez un nouveau mapping, il sera ensuite réutilisable pour les imports suivants. Il est aussi possible de choisir si les UUID uniques doivent être générés et si les altitudes doivent être calculées automatiquement si elles ne sont pas renseignées dans le fichier importé.
+4. Mapping des champs. Il s'agit de faire correspondre les champs du fichier importé aux champs de la Synthèse (basé sur le standard "Occurrences de taxons" du SINP). Vous pouvez utiliser un mapping déjà existant ou en créer un nouveau. Le module contient par défaut un mapping correspondant à un fichier exporté au format par défaut de la synthèse de GeoNature. Si vous créez un nouveau mapping, il sera ensuite réutilisable pour les imports suivants. Il est aussi possible de choisir si les UUID uniques doivent être générés et si les altitudes doivent être calculées automatiquement si elles ne sont pas renseignées dans le fichier importé.
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-04.jpg
 
-6. Une fois le mapping des champs réalisé, au moins sur les champs obligatoires, il faut alors valider le mapping pour lancer le contrôle des données. Vous pouvez ensuite consulter les éventuelles erreurs. Il est alors possible de corriger les données en erreurs directement dans la base de données, dans la table temporaire des données en cours d'import, puis de revalider le mapping, ou de passer à l'étape suivante. Les données en erreur ne seront pas importées et seront téléchargeables dans un fichier dédié. 
+6. Une fois le mapping des champs réalisé, au moins sur les champs obligatoires, il faut alors valider le mapping pour lancer le contrôle des données. Vous pouvez ensuite consulter les éventuelles erreurs. Il est alors possible de corriger les données en erreurs directement dans la base de données, dans la table temporaire des données en cours d'import, puis de revalider le mapping, ou de passer à l'étape suivante. Les données en erreur ne seront pas importées et seront téléchargeables dans un fichier dédié à l'issue du processus.
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-05.jpg
 
