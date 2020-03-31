@@ -8,7 +8,6 @@ from ..logs import logger
 from .utils import fill_map, set_is_valid, set_invalid_reason
 from ..wrappers import checker
 from ..utils.utils import create_col_name
-from ..db.queries.geometries import get_id_area_type, calculate_geom_from_code
 
 
 def set_wkb(value):
@@ -132,8 +131,15 @@ def check_geography(
                 if n_bad_coo > 0:
                     set_user_error(import_id, 13, selected_columns[col], n_bad_coo)
                     set_invalid_reason(
-                        df, schema_name, "temp", import_id, 13, selected_columns[col]
+                        df,
+                        schema_name,
+                        "valid_lat_long",
+                        import_id,
+                        13,
+                        selected_columns[col],
                     )
+                df.drop("invalid_lat_long", axis=1)
+                df.drop("valid_lat_long", axis=1)
 
         elif "WKT" in selected_columns.keys():
             # create wkt with crs provided by user
@@ -157,8 +163,9 @@ def check_geography(
             if n_bad_coo > 0:
                 set_user_error(import_id, 13, selected_columns["WKT"], n_bad_coo)
                 set_invalid_reason(
-                    df, schema_name, "temp", import_id, 13, selected_columns["WKT"]
+                    df, schema_name, "valid_wkt", import_id, 13, selected_columns["WKT"]
                 )
+            df.drop("valid_wkt", axis=1)
 
         if (
             "codemaille" in selected_columns.keys()
@@ -191,6 +198,8 @@ def check_geography(
                 19,
                 selected_columns["codecommune"],
             )
+            df.drop("line_with_one_code", axis=1)
+            df.drop("is_multiple_type_code", axis=1)
 
             #  check if the value in the code are not multiple (ex code_commune = '77005, 77006')
             df["one_comm_code"] = df[selected_columns["codecommune"]].apply(
@@ -205,6 +214,7 @@ def check_geography(
                 selected_columns["codecommune"],
                 (~df["one_comm_code"]).sum(),
             )
+            df.drop("one_comm_code", axis=1)
 
             df["one_maille_code"] = df[selected_columns["codemaille"]].apply(
                 lambda x: check_multiple_code(x)
@@ -218,6 +228,7 @@ def check_geography(
                 selected_columns["codemaille"],
                 (~df["one_maille_code"]).sum(),
             )
+            df.drop("one_maille_code", axis=1)
 
             df["one_dep_code"] = df[selected_columns["codedepartement"]].apply(
                 lambda x: check_multiple_code(x)
@@ -231,5 +242,6 @@ def check_geography(
                 selected_columns["codedepartement"],
                 (~df["one_dep_code"]).sum(),
             )
+            df.drop("one_dep_code", axis=1)
     except Exception:
         raise

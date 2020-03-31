@@ -903,7 +903,6 @@ def postMapping(info_role, import_id, id_mapping):
             logger.info('* END DATA CLEANING partition %s', i)
 
             # LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
-
             logger.info('* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s', i)
             load(partition_df, i, IMPORTS_SCHEMA_NAME, temp_table_name, engine)
             logger.info('* END LOAD PYTHON DATAFRAME TO DB TABLE partition %s', i)
@@ -921,13 +920,17 @@ def postMapping(info_role, import_id, id_mapping):
 
         # alter primary key type into integer
         alter_column_type(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], index_col, 'integer')
-        
-        # calculate geometries and altitudes
+        print('LAAAA')
+        print(data)
+        # # # calculate geometries and altitudes
         set_geometry(
             schema_name=IMPORTS_SCHEMA_NAME, 
             table_name=table_names['imports_table_name'], 
-            given_geometry="given_geometry",
-            local_srid=local_srid
+            given_srid=srid,
+            local_srid=local_srid,
+            code_commune_col=data['codecommune'],
+            code_maille_col=data['codemaille'],
+            code_dep_col=data['codedepartement']
         )
 
         # set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME,
