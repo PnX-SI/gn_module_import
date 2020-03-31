@@ -92,13 +92,16 @@ Fonctionnement du module (serveur et BDD)
 1. Lors de la phase d'upload, le fichier source est chargé sur le serveur au format CSV ou GeoJson dans le répertoire "upload" du module. Le fichier en sera supprimé suite au processus afin de limiter l'espace occupé sur le serveur.
 
 2. Suite à l'upload, les fichiers GeoJson sont convertis en CSV. Le CSV source ou le fichier converti en CSV est alors copié deux fois dans la base de données : 
+
 - une fois dans le schéma ``gn_imports_archives`` : cette archive ne sera jamais modifiée, et permettra de garder une trace des données brutes telles qu'elles ont été transmises
 - une fois dans le schéma ``gn_imports`` : cette copie est la table d'imports
 
 3. La table créée dans le schéma gn_imports est la table de travail sur laquelle les différentes transformations et différents compléments seront effectués au cours du processus. Cette table se voit dotée de 3 champs "techniques" : ``gn_is_valid`` (booléen qui précise la validité de la ligne lors du processus d'import), ``gn_invalid_reason`` (ensemble des erreurs détectées rendant la donnée invalide), et ``gn_pk`` (clé primaire purement technique).
+
 A la fin du processus, seules les données ``gn_is_valid=true`` seront importées dans la synthèse. 
 
 4. Entre les différents mappings et à l'issue de l'étape 3 (mapping de contenus), des modifications peuvent être effectuées sur la table de travail, directement dans la base de données. 
+
 Le module permet ainsi l'ajout de nouveaux champs (ajout et calcul d'un champs cd_nom par l'administrateur par exemple), ou le travail sur les données en cours d'import (rentre invalides des données n'appartenant pas à un territoire etc). Le module, initialement conçu comme un outil d'aide à l'import des données pour les administrateurs, permet donc de modifier, corriger, ou travailler sur les données dans la base au cours du processus.  
 
 Financement de la version 1.0.0 : DREAL et Conseil Régional Auvergne-Rhône-Alpes.
