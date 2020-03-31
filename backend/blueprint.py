@@ -752,8 +752,10 @@ def post_user_file(info_role):
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
 def postMapping(info_role, import_id, id_mapping):
+    """
+    Field mapping step
+    """
     try:
-        
         is_running = True
         is_temp_table_name = False
         is_table_names = False
@@ -794,18 +796,10 @@ def postMapping(info_role, import_id, id_mapping):
 
         engine = DB.engine
         column_names = get_table_info(table_names['imports_table_name'], 'column_name')
-
         local_srid = get_local_srid()
 
-        if data['unique_id_sinp_generate'] == 'true':
-            is_generate_uuid = True
-        else:
-            is_generate_uuid = False
-
-        if data['altitudes_generate'] == 'true':
-            is_generate_alt = True
-        else:
-            is_generate_alt = False
+        is_generate_uuid = True if data['unique_id_sinp_generate'] == 'true' else False
+        is_generate_alt = True if data['altitudes_generate'] == 'true' else False
 
         logger.debug('import_id = %s', import_id)
         logger.debug('DB tabel name = %s', table_names['imports_table_name'])
@@ -814,7 +808,6 @@ def postMapping(info_role, import_id, id_mapping):
         selected_columns = get_selected_columns(id_mapping)
 
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
-
         # check if column names provided in the field form exists in the user table
         for key, value in selected_columns.items():
             if key not in ['unique_id_sinp_generate', 'altitudes_generate']:
@@ -827,11 +820,25 @@ def postMapping(info_role, import_id, id_mapping):
         # check if required fields are not empty:
         missing_cols = []
         required_cols = get_required(IMPORTS_SCHEMA_NAME, 'dict_fields')
-        if 'WKT' in selected_columns.keys():
-            required_cols.remove('longitude')
-            required_cols.remove('latitude')
-        else:
-            required_cols.remove('WKT')
+        try:
+            selected_columns_tab = selected_columns.keys()
+            if 'WKT' in selected_columns_tab:
+                required_cols.remove('longitude')
+                required_cols.remove('latitude')
+                required_cols.remove('codecommune')
+                required_cols.remove('codemaille')
+                required_cols.remove('codedepartement')
+            if 'longitude' and 'latitude' in selected_columns_tab:
+                required_cols.remove('WKT')
+                required_cols.remove('codecommune')
+                required_cols.remove('codemaille')
+                required_cols.remove('codedepartement')
+            if ('codecommune' or 'codemaille' or 'codedepartement') in selected_columns_tab:
+                required_cols.remove('WKT')
+                required_cols.remove('longitude')
+                required_cols.remove('latitude')
+        except ValueError:
+            logger.info('Try no remove an inexisting columns... pass')
         for col in required_cols:
             if col not in selected_columns.keys():
                 missing_cols.append(col)
@@ -842,35 +849,43 @@ def postMapping(info_role, import_id, id_mapping):
 
 
         # DELETE USER ERRORS
-
         delete_user_errors(IMPORTS_SCHEMA_NAME, import_id)
-
-
         # EXTRACT
 
         logger.info('* START EXTRACT FROM DB TABLE TO PYTHON')
-        df = extract(table_names['imports_table_name'], IMPORTS_SCHEMA_NAME, column_names, index_col, import_id)
+        df = extract(
+            table_names['imports_table_name'],
+            IMPORTS_SCHEMA_NAME,
+            column_names,
+            index_col,
+            import_id
+        )
         logger.info('* END EXTRACT FROM DB TABLE TO PYTHON')
 
         # get cd_nom list
         cd_nom_list = get_cd_nom_list()
 
-
         # TRANSFORM (data checking and cleaning)
-
         # start process (transform and load)
         for i in range(df.npartitions):
-
             logger.info('* START DATA CLEANING partition %s', i)
-
             partition = df.get_partition(i)
             partition_df = compute_df(partition)
-            transform_errors = data_cleaning(partition_df, import_id, \
-                                             selected_columns, MISSING_VALUES, \
-                                             DEFAULT_COUNT_VALUE, cd_nom_list, srid, local_srid, \
-                                             is_generate_uuid, IMPORTS_SCHEMA_NAME, is_generate_alt, PREFIX)
+            transform_errors = data_cleaning(
+                partition_df,
+                import_id,
+                selected_columns,
+                MISSING_VALUES,
+                DEFAULT_COUNT_VALUE,
+                cd_nom_list,
+                srid,
+                local_srid,
+                is_generate_uuid,
+                IMPORTS_SCHEMA_NAME,
+                is_generate_alt,
+                PREFIX
+            )
 
-            
             added_cols = transform_errors['added_cols']
             if 'temp' in partition_df.columns:
                 partition_df = partition_df.drop('temp', axis=1)
@@ -908,12 +923,16 @@ def postMapping(info_role, import_id, id_mapping):
         alter_column_type(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], index_col, 'integer')
         
         # calculate geometries and altitudes
-        set_geometry(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], local_srid,
-                     added_cols['the_geom_4326'], added_cols['the_geom_point'], added_cols['the_geom_local'])
+        set_geometry(
+            schema_name=IMPORTS_SCHEMA_NAME, 
+            table_name=table_names['imports_table_name'], 
+            given_geometry="given_geometry",
+            local_srid=local_srid
+        )
 
-        set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME,
-                      table_names['imports_full_table_name'], table_names['imports_table_name'],
-                      index_col, is_generate_alt, added_cols['the_geom_local'], added_cols)
+        # set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME,
+        #               table_names['imports_full_table_name'], table_names['imports_table_name'],
+        #               index_col, is_generate_alt, added_cols['the_geom_local'], added_cols)
 
         DB.session.commit()
         DB.session.close()

@@ -1,6 +1,6 @@
 from ..wrappers import checker
 from ..logs import logger
-from ..db.queries.geometries import *
+from ..db.queries.geometries import set_given_geom, transform_geom, calculate_geom_point
 
 
 @checker("Data cleaning : geometries created")
@@ -10,9 +10,11 @@ def set_geometry(
 
     try:
 
-        logger.info("creating geometries (postgis from wkt):")
+        logger.info("creating  geometry columns and transform them (srid and points):")
 
         if given_geometry == "4326":
+            set_given_geom(schema_name, table_name, "the_geom_4326", "given_geom")
+
             transform_geom(
                 schema_name=schema_name,
                 table_name=table_name,
@@ -21,6 +23,7 @@ def set_geometry(
                 target_srid=local_srid,
             )
         else:
+            set_given_geom(schema_name, table_name, "the_geom_4326", "given_geom")
             transform_geom(
                 schema_name=schema_name,
                 table_name=table_name,
