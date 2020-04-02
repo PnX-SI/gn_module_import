@@ -99,7 +99,7 @@ from .upload.geojson_to_csv import parse_geojson
 from .goodtables_checks.check_user_file import check_user_file
 
 from .transform.transform import data_cleaning
-from .transform.set_geometry import set_geometry
+from .transform.set_geometry import GeometrySetter
 from .transform.set_altitudes import set_altitudes
 from .transform.nomenclatures.nomenclatures import (
     get_nomenc_info,
@@ -111,6 +111,7 @@ from .logs import logger
 from .api_error import GeonatureImportApiError
 from .extract.extract import extract
 from .load.load import load
+from .load.import_class import ImportDescriptor
 from .load.utils import compute_df
 from .data_preview.preview import get_preview, set_total_columns
 from .load.into_synthese.import_data import load_data_to_synthese
@@ -807,6 +808,15 @@ def postMapping(info_role, import_id, id_mapping):
         # get synthese fields filled in the user form:
         selected_columns = get_selected_columns(id_mapping)
 
+        importObject = ImportDescriptor(
+            id_import=import_id,
+            id_mapping=id_mapping,
+            table_name= "{}.{}".format(IMPORTS_SCHEMA_NAME, table_names['imports_table_name']),
+            column_names=column_names,
+            selected_columns=selected_columns,
+            import_srid=srid
+        )
+
         logger.debug('selected columns in correspondance mapping = %s', selected_columns)
         # check if column names provided in the field form exists in the user table
         for key, value in selected_columns.items():
@@ -920,18 +930,15 @@ def postMapping(info_role, import_id, id_mapping):
 
         # alter primary key type into integer
         alter_column_type(IMPORTS_SCHEMA_NAME, table_names['imports_table_name'], index_col, 'integer')
-        print('LAAAA')
-        print(data)
         # # # calculate geometries and altitudes
-        set_geometry(
-            schema_name=IMPORTS_SCHEMA_NAME, 
-            table_name=table_names['imports_table_name'], 
-            given_srid=srid,
+        geometry_setter = GeometrySetter(
+            importObject, 
             local_srid=local_srid,
             code_commune_col=data['codecommune'],
             code_maille_col=data['codemaille'],
             code_dep_col=data['codedepartement']
         )
+        geometry_setter.set_geometry()
 
         # set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME,
         #               table_names['imports_full_table_name'], table_names['imports_table_name'],

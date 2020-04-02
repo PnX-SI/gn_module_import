@@ -1,4 +1,17 @@
+from sqlalchemy.sql import text
+
 from geonature.utils.env import DB
+
+
+def execute_query(query, commit=False, params={}):
+    try:
+        results = DB.session.execute(text(query), params)
+        if commit:
+            DB.session.commit()
+        return results
+    except Exception:
+        DB.session.rollback()
+        raise
 
 
 def is_cd_nom_required(schema_name):
@@ -19,14 +32,16 @@ def is_cd_nom_required(schema_name):
 
 def get_types(schema_name, selected_columns):
     try:
-        data_types = DB.session.execute("""
+        data_types = DB.session.execute(
+            """
             SELECT DISTINCT type_field
             FROM {schema_name}.dict_fields
             WHERE name_field IN ({col_list});
             """.format(
                 schema_name=schema_name,
-                col_list=",".join(map(repr, selected_columns.keys()))
-            )).fetchall()
+                col_list=",".join(map(repr, selected_columns.keys())),
+            )
+        ).fetchall()
         types = [data.type_field for data in data_types]
         return types
     except Exception:
