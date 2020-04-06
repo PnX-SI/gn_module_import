@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormControl } from "@angular/forms";
 import { CommonService } from "@geonature_common/service/common.service";
@@ -17,8 +17,7 @@ import { CsvExportService } from "../../services/csv-export.service";
 @Component({
   selector: "pnx-import",
   styleUrls: ["import.component.scss"],
-  templateUrl: "import.component.html",
-  encapsulation: ViewEncapsulation.None
+  templateUrl: "import.component.html"
 })
 export class ImportComponent implements OnInit {
   public deletedStep1;
