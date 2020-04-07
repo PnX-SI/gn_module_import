@@ -37,7 +37,8 @@ CREATE TABLE t_imports(
     date_min_data timestamp without time zone,
     date_max_data timestamp without time zone,
     step integer,
-    is_finished boolean DEFAULT 'f'
+    is_finished boolean DEFAULT 'f',
+    error_report_path character varying(255)
 );
 
 
@@ -51,7 +52,8 @@ CREATE TABLE t_user_errors(
     id_error serial NOT NULL,
     error_type character varying(100) NOT NULL,
     name character varying(255) NOT NULL UNIQUE,
-    description character varying(255) NOT NULL
+    description text,
+    error_level character varying(25)
 );
 
 
@@ -126,7 +128,8 @@ CREATE TABLE t_user_error_list(
     id_import integer NOT NULL,
     id_error integer NOT NULL,
     column_error character varying(100) NOT NULL,
-    count_error integer NOT NULL
+    count_error integer NOT NULL,
+    id_rows integer[]
 );
 
 
