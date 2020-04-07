@@ -1,7 +1,6 @@
 from ..wrappers import checker
 from ..logs import logger
 from ..db.queries.geometries import get_id_area_type
-from ..db.queries.user_errors import set_user_error
 from ..db.queries.utils import execute_query
 from ..load.import_class import ImportDescriptor
 

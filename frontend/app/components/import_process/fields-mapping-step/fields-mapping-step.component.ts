@@ -350,8 +350,6 @@ export class FieldsMappingStepComponent implements OnInit {
     this.id_mapping = id_mapping;
     // build an array from array of object
     const columnsArray: Array<string> = this.columns.map(col => col.id);
-    console.log(columnsArray);
-
     this._ds.getMappingFields(this.id_mapping).subscribe(
       mappingFields => {
         this.enableMapping(this.syntheseForm);

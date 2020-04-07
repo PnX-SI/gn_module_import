@@ -3,12 +3,11 @@ from uuid import UUID
 import numpy as np
 from shapely import wkt
 
-from ..db.queries.user_errors import set_user_error
 from ..db.queries.nomenclatures import get_SINP_synthese_cols
 from ..db.queries.utils import get_types
 from ..wrappers import checker
 from ..logs import logger
-from .utils import fill_map, set_is_valid, set_invalid_reason
+from .utils import fill_map, set_is_valid, set_error_and_invalid_reason
 
 
 def convert_to_datetime(value):
@@ -95,21 +94,23 @@ def check_types(
             )
 
             set_is_valid(df, "temp")
-            n_invalid_date_error = df["temp"].astype(str).str.contains("False").sum()
+            id_rows_errors = df.index[df["temp"] == False].to_list()
 
             logger.info(
                 "%s date type error detected in %s synthese column (= %s user column)",
-                n_invalid_date_error,
+                len(id_rows_errors),
                 field,
                 selected_columns[field],
             )
 
-            if n_invalid_date_error > 0:
-                set_user_error(
-                    import_id, 2, selected_columns[field], n_invalid_date_error
-                )
-                set_invalid_reason(
-                    df, schema_name, "temp", import_id, 2, selected_columns[field]
+            if len(id_rows_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="INVALID_DATE",
+                    col_name_error=selected_columns["field"],
+                    df_col_name_valid="temp",
+                    id_rows_error=id_rows_errors,
                 )
 
         # UUID TYPE COLUMNS :
@@ -146,19 +147,23 @@ def check_types(
                 )
 
                 set_is_valid(df, "temp")
-                n_invalid_uuid = df["temp"].astype(str).str.contains("False").sum()
+                id_rows_errors = df.index[df["temp"] == False].to_list()
 
                 logger.info(
                     "%s invalid uuid detected in %s synthese column (= %s user column)",
-                    n_invalid_uuid,
+                    len(id_rows_errors),
                     col,
                     selected_columns[col],
                 )
 
-                if n_invalid_uuid > 0:
-                    set_user_error(import_id, 3, selected_columns[col], n_invalid_uuid)
-                    set_invalid_reason(
-                        df, schema_name, "temp", import_id, 3, selected_columns[col]
+                if len(id_rows_errors) > 0:
+                    set_error_and_invalid_reason(
+                        df=df,
+                        id_import=import_id,
+                        error_code="INVALID_UUID",
+                        col_name_error=selected_columns[col],
+                        df_col_name_valid="temp",
+                        id_rows_error=id_rows_errors,
                     )
 
         # CHARACTER VARYING TYPE COLUMNS :
@@ -197,21 +202,23 @@ def check_types(
                 )
 
                 set_is_valid(df, "temp")
-                n_invalid_string = df["temp"].astype(str).str.contains("False").sum()
+                id_rows_errors = df.index[df["temp"] == False].to_list()
 
                 logger.info(
                     "%s varchar type errors detected in %s synthese column (= %s user column)",
-                    n_invalid_string,
+                    len(id_rows_errors),
                     col,
                     selected_columns[col],
                 )
 
-                if n_invalid_string > 0:
-                    set_user_error(
-                        import_id, 4, selected_columns[col], n_invalid_string
-                    )
-                    set_invalid_reason(
-                        df, schema_name, "temp", import_id, 4, selected_columns[col]
+                if len(id_rows_errors) > 0:
+                    set_error_and_invalid_reason(
+                        df=df,
+                        id_import=import_id,
+                        error_code="INVALID_CHAR_LENGTH",
+                        col_name_error=selected_columns[col],
+                        df_col_name_valid="temp",
+                        id_rows_error=id_rows_errors,
                     )
 
         # INTEGER TYPE COLUMNS :
@@ -260,21 +267,23 @@ def check_types(
                     )
 
                     set_is_valid(df, "temp")
-                    n_invalid_int = df["temp"].astype(str).str.contains("False").sum()
+                    id_rows_errors = df.index[df["temp"] == False].to_list()
 
                     logger.info(
                         "%s integer type errors detected in %s synthese column (= %s user column)",
-                        n_invalid_int,
+                        len(id_rows_errors),
                         col,
                         selected_columns[col],
                     )
 
-                    if n_invalid_int > 0:
-                        set_user_error(
-                            import_id, 1, selected_columns[col], n_invalid_int
-                        )
-                        set_invalid_reason(
-                            df, schema_name, "temp", import_id, 1, selected_columns[col]
+                    if len(id_rows_errors) > 0:
+                        set_error_and_invalid_reason(
+                            df=df,
+                            id_import=import_id,
+                            error_code="INVALID_INTEGER",
+                            col_name_error=selected_columns[col],
+                            df_col_name_valid="temp",
+                            id_rows_error=id_rows_errors,
                         )
 
         # REAL TYPE COLUMNS :
@@ -308,19 +317,23 @@ def check_types(
                     ).notnull()
 
                 set_is_valid(df, "temp")
-                n_invalid_real = df["temp"].astype(str).str.contains("False").sum()
+                id_rows_errors = df.index[df["temp"] == False].to_list()
 
                 logger.info(
                     "%s real type errors detected in %s synthese column (= %s user column)",
-                    n_invalid_real,
+                    len(id_rows_errors),
                     col,
                     selected_columns[col],
                 )
 
-                if n_invalid_real > 0:
-                    set_user_error(import_id, 12, selected_columns[col], n_invalid_real)
-                    set_invalid_reason(
-                        df, schema_name, "temp", import_id, 12, selected_columns[col]
+                if len(id_rows_errors) > 0:
+                    set_error_and_invalid_reason(
+                        df=df,
+                        id_import=import_id,
+                        error_code="INVALID_REAL",
+                        col_name_error=selected_columns[col],
+                        df_col_name_valid="temp",
+                        id_rows_error=id_rows_errors,
                     )
 
                 del df["temp"]

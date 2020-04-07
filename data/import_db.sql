@@ -128,7 +128,6 @@ CREATE TABLE t_user_error_list(
     id_import integer NOT NULL,
     id_error integer NOT NULL,
     column_error character varying(100) NOT NULL,
-    count_error integer NOT NULL,
     id_rows integer[]
 );
 

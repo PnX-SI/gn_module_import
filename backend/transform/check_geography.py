@@ -3,9 +3,8 @@ import pandas as pd
 from shapely import wkt, wkb
 import numpy as np
 
-from ..db.queries.user_errors import set_user_error
 from ..logs import logger
-from .utils import fill_map, set_is_valid, set_invalid_reason
+from .utils import fill_map, set_is_valid, set_error_and_invalid_reason
 from ..wrappers import checker
 from ..utils.utils import create_col_name
 
@@ -49,19 +48,27 @@ def check_wkt(value, min_x, max_x, min_y, max_y):
     except Exception:
         return True
 
+        # id_rows_invalid = df.index[df["temp"] == False].to_list()
+
 
 def manage_erros_and_validity(
-    df, import_id, schema_name, id_error, df_temp_col, column_invalid, nb_invalid
+    df, import_id, schema_name, code_error, df_temp_col, column_invalid, id_rows_error
 ):
     """
             High level function to set column which are valid in the dataframe
             and to write in database the errors
         """
     set_is_valid(df, df_temp_col)
-    if nb_invalid > 0:
-        set_user_error(import_id, id_error, column_invalid, nb_invalid)
-        set_invalid_reason(
-            df, schema_name, df_temp_col, import_id, id_error, column_invalid,
+    if len(id_rows_error) > 0:
+        print("????????????")
+        print(code_error)
+        set_error_and_invalid_reason(
+            df=df,
+            id_import=import_id,
+            error_code=code_error,
+            col_name_error=column_invalid,
+            df_col_name_valid=df_temp_col,
+            id_rows_error=id_rows_error,
         )
 
 
@@ -72,13 +79,18 @@ def check_geography(
     try:
 
         logger.info("CHECKING GEOGRAPHIC DATA:")
-        line_with_codes = df.index[
-            (df["codecommune"].notnull())
-            | (df["codemaille"].notnull())
-            | (df["codedepartement"].notnull())
-        ]
+        line_with_codes = []
+        try:
+            line_with_codes = df.index[
+                (df[selected_columns["codecommune"]].notnull())
+                | (df[selected_columns["codemaille"]].notnull())
+                | (df[selected_columns["codedepartement"]].notnull())
+            ]
+        except KeyError:
+            pass
         # index starting at 1 -> so -1
-        line_with_codes = line_with_codes - 1
+        if len(line_with_codes) > 0:
+            line_with_codes = line_with_codes - 1
         if srid == 4326:
             max_x = 180
             min_x = -180
@@ -116,27 +128,26 @@ def check_geography(
                 # remove invalid where codecommune/maille or dep are fill
                 df.iloc[line_with_codes, df.columns.get_loc("valid_lat_long")] = True
                 set_is_valid(df, "valid_lat_long")
-                n_bad_coo = (df["invalid_lat_long"]).sum()
+                id_rows_errors = df.index[df["valid_lat_long"] == False].to_list()
 
                 # setting eventual inconsistent values to pd.np.nan
                 df[col_name] = df[col_name].where(df["temp"], pd.np.nan)
 
                 logger.info(
                     "%s inconsistant values detected in %s synthese column (= %s user column)",
-                    n_bad_coo,
+                    len(id_rows_errors),
                     col,
                     selected_columns[col],
                 )
 
-                if n_bad_coo > 0:
-                    set_user_error(import_id, 13, selected_columns[col], n_bad_coo)
-                    set_invalid_reason(
-                        df,
-                        schema_name,
-                        "valid_lat_long",
-                        import_id,
-                        13,
-                        selected_columns[col],
+                if len(id_rows_errors) > 0:
+                    set_error_and_invalid_reason(
+                        df=df,
+                        id_import=import_id,
+                        error_code="GEOMETRY_OUT_OF_BOX",
+                        col_name_error=selected_columns[col],
+                        df_col_name_valid="valid_lat_long",
+                        id_rows_error=id_rows_errors,
                     )
                 df.drop("invalid_lat_long", axis=1)
                 df.drop("valid_lat_long", axis=1)
@@ -153,17 +164,22 @@ def check_geography(
             # remove invalid where codecommune/maille or dep are fill
             df.iloc[line_with_codes, df.columns.get_loc("valid_wkt")] = True
             set_is_valid(df, "valid_wkt")
-            n_bad_coo = (~df["valid_wkt"]).sum()
+            id_rows_errors = df.index[df["valid_wkt"] == False].to_list()
+
             logger.info(
                 "%s inconsistant values detected in %s column",
-                n_bad_coo,
+                len(id_rows_errors),
                 selected_columns["WKT"],
             )
 
-            if n_bad_coo > 0:
-                set_user_error(import_id, 13, selected_columns["WKT"], n_bad_coo)
-                set_invalid_reason(
-                    df, schema_name, "valid_wkt", import_id, 13, selected_columns["WKT"]
+            if len(id_rows_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="INVALID_WKT",
+                    col_name_error=selected_columns["WKT"],
+                    df_col_name_valid="valid_wkt",
+                    id_rows_error=id_rows_errors,
                 )
             df.drop("valid_wkt", axis=1)
 
@@ -188,16 +204,17 @@ def check_geography(
             # set gn_is_valid where not is_multiple_type_code = true (~ invert a boolean)
             df["line_with_one_code"] = ~df["is_multiple_type_code"]
             set_is_valid(df, "line_with_one_code")
-            nb_invalid = (df["is_multiple_type_code"]).sum()
-            set_user_error(import_id, 19, selected_columns["codecommune"], nb_invalid)
-            set_invalid_reason(
-                df,
-                schema_name,
-                "line_with_one_code",
-                import_id,
-                19,
-                selected_columns["codecommune"],
-            )
+            id_rows_errors = df.index[df["line_with_one_code"] == False].to_list()
+
+            if len(id_rows_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="MULTIPLE_ATTACHMENT_TYPE_CODE",
+                    col_name_error=selected_columns["codecommune"],
+                    df_col_name_valid="line_with_one_code",
+                    id_rows_error=id_rows_errors,
+                )
             df.drop("line_with_one_code", axis=1)
             df.drop("is_multiple_type_code", axis=1)
 
@@ -205,42 +222,47 @@ def check_geography(
             df["one_comm_code"] = df[selected_columns["codecommune"]].apply(
                 lambda x: check_multiple_code(x)
             )
+            id_rows_error = df.index[df["one_comm_code"] == False].to_list()
             manage_erros_and_validity(
                 df,
                 import_id,
                 schema_name,
-                20,
+                "MULTIPLE_CODE_ATTACHMENT",
                 "one_comm_code",
                 selected_columns["codecommune"],
-                (~df["one_comm_code"]).sum(),
+                id_rows_error,
             )
             df.drop("one_comm_code", axis=1)
 
             df["one_maille_code"] = df[selected_columns["codemaille"]].apply(
                 lambda x: check_multiple_code(x)
             )
+            id_rows_error = df.index[df["one_maille_code"] == False].to_list()
+
             manage_erros_and_validity(
                 df,
                 import_id,
                 schema_name,
-                20,
+                "MULTIPLE_CODE_ATTACHMENT",
                 "one_maille_code",
                 selected_columns["codemaille"],
-                (~df["one_maille_code"]).sum(),
+                id_rows_error,
             )
             df.drop("one_maille_code", axis=1)
 
             df["one_dep_code"] = df[selected_columns["codedepartement"]].apply(
                 lambda x: check_multiple_code(x)
             )
+            id_rows_error = df.index[df["one_dep_code"] == False].to_list()
+
             manage_erros_and_validity(
                 df,
                 import_id,
                 schema_name,
-                20,
+                "MULTIPLE_CODE_ATTACHMENT",
                 "one_dep_code",
                 selected_columns["codedepartement"],
-                (~df["one_dep_code"]).sum(),
+                id_rows_error,
             )
             df.drop("one_dep_code", axis=1)
     except Exception:

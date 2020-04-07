@@ -191,10 +191,9 @@ def set_default_nomenclature_id(schema_name, table_name, nomenc_abb, user_col, i
         ).fetchone()[0]
 
         if default_value is None:
-            print('IS NULLLLLLLLLLLLLLLLll')
-            print(nomenc_abb)
             default_value = 'NULL'
-
+        print(schema_name)
+        print(table_name)
         query = """
             UPDATE {schema_name}.{table_name}
             SET {user_col} = :default_value
