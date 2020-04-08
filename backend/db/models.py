@@ -78,8 +78,22 @@ class TImports(DB.Model):
         foreign_keys=[CorRoleImport.id_import, CorRoleImport.id_role,],
     )
     is_finished = DB.Column(DB.Boolean, nullable=False, default=False)
-    errors = DB.relationship("VUserImportsErrors", lazy="joined")
+    errors = DB.relationship(
+        "VUserImportsErrors", lazy="joined", order_by="VUserImportsErrors.error_type"
+    )
     dataset = DB.relationship("TDatasets", lazy="joined")
+
+    def to_dict(self):
+        import_as_dict = self.as_dict(True)
+        if import_as_dict["date_end_import"] is None:
+            import_as_dict["date_end_import"] = "En cours"
+        import_as_dict["author_name"] = "; ".join(
+            [a.nom_role + " " + a.prenom_role for a in self.author]
+        )
+        import_as_dict["dataset_name"] = import_as_dict["dataset"]["dataset_name"]
+        import_as_dict.pop("dataset")
+        import_as_dict["errors"] = import_as_dict.get("errors", [])
+        return import_as_dict
 
 
 @serializable

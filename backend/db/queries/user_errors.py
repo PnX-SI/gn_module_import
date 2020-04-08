@@ -1,6 +1,7 @@
 from sqlalchemy import text
 
 from geonature.utils.env import DB
+from ..models import VUserImportsErrors
 
 
 def get_error_from_code(error_code):
@@ -88,34 +89,42 @@ def delete_user_errors(schema_name, id_import):
         raise
 
 
-def get_user_error_list(schema_name, id_import):
-    try:
-        user_errors = DB.session.execute(
-            """
-                SELECT *
-                FROM {schema_name}.t_user_error_list UEL
-                LEFT JOIN {schema_name}.t_user_errors UE ON UE.id_error = UEL.id_error
-                WHERE id_import = {id_import}
-                ORDER BY UE.error_type 
-                ;
-            """.format(
-                id_import=id_import, schema_name=schema_name
-            )
-        ).fetchall()
-        if user_errors:
-            user_error_list = [
-                {
-                    "type": error.error_type,
-                    "description": error.description,
-                    "column": error.column_error,
-                    "id_error_lines": str(error.id_rows).strip("[]"),
-                }
-                for error in user_errors
-            ]
-        else:
-            user_error_list = [
-                {"id": "", "type": "", "description": "", "column": "", "n_errors": ""}
-            ]
-        return user_error_list
-    except Exception:
-        raise
+def get_user_error_list(id_import):
+    data = (
+        DB.session.query(VUserImportsErrors)
+        .filter(VUserImportsErrors.id_import == id_import)
+        .order_by(VUserImportsErrors.error_type)
+        .all()
+    )
+    return [d.as_dict() for d in data]
+
+    # try:
+    #     user_errors = DB.session.execute(
+    #         """
+    #             SELECT *
+    #             FROM {schema_name}.t_user_error_list UEL
+    #             LEFT JOIN {schema_name}.t_user_errors UE ON UE.id_error = UEL.id_error
+    #             WHERE id_import = {id_import}
+    #             ORDER BY UE.error_type
+    #             ;
+    #         """.format(
+    #             id_import=id_import, schema_name=schema_name
+    #         )
+    #     ).fetchall()
+    #     if user_errors:
+    #         user_error_list = [
+    #             {
+    #                 "type": error.error_type,
+    #                 "description": error.description,
+    #                 "column": error.column_error,
+    #                 "id_error_lines": str(error.id_rows).strip("[]"),
+    #             }
+    #             for error in user_errors
+    #         ]
+    #     else:
+    #         user_error_list = [
+    #             {"id": "", "type": "", "description": "", "column": "", "n_errors": ""}
+    #         ]
+    #     return user_error_list
+    # except Exception:
+    #     raise

@@ -13,6 +13,7 @@ import { StepperGuardService } from "./services/stepper-guard";
 import { FieldMappingService } from "./services/mappings/field-mapping.service";
 import { ContentMappingService } from "./services/mappings/content-mapping.service";
 import { ImportComponent } from "./components/import_list/import.component";
+import { ImportErrorsComponent } from "./components/import_errors/import_errors.component";
 import { StepsService } from "./components/import_process/steps.service";
 import { UploadFileStepComponent } from "./components/import_process/upload-file-step/upload-file-step.component";
 import { FieldsMappingStepComponent } from "./components/import_process/fields-mapping-step/fields-mapping-step.component";
@@ -24,6 +25,7 @@ import { FooterStepperComponent } from "./components/import_process/footer-stepp
 // my module routing
 const routes: Routes = [
   { path: "", component: ImportComponent },
+  { path: "errors/:id_import", component: ImportErrorsComponent },
   {
     path: "process/step/1",
     component: UploadFileStepComponent,
@@ -49,6 +51,7 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     ImportComponent,
+    ImportErrorsComponent,
     ImportModalDatasetComponent,
     UploadFileStepComponent,
     FieldsMappingStepComponent,
@@ -78,4 +81,4 @@ const routes: Routes = [
 
   bootstrap: []
 })
-export class GeonatureModule {}
+export class GeonatureModule { }
