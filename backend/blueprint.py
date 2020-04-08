@@ -138,30 +138,18 @@ def get_import_list(info_role):
     try:
         results = DB.session.query(TImports) \
             .order_by(TImports.id_import) \
-            .filter(TImports.step >= 2)
+            .filter(TImports.step >= 2).all()
 
         nrows = DB.session.query(TImports).count()
 
-        history = []
 
         if not results or nrows == 0:
             return {
                        "empty": True
                    }, 200
-        for r in results:
-            import_as_dict = r.as_dict(True)
-            if import_as_dict['date_end_import'] is None:
-                import_as_dict['date_end_import'] = 'En cours'
-            import_as_dict["author_name"]  = '; '.join([a.nom_role + ' ' + a.prenom_role for a in r.author])
-            import_as_dict['dataset_name'] = import_as_dict['dataset']['dataset_name']
-            import_as_dict.pop('dataset')
-            import_as_dict['errors'] = import_as_dict.get('errors', [])
-
-            history.append(import_as_dict)
-
         return {
                    "empty": False,
-                   "history": history,
+                   "history": [r.to_dict() for r in results],
                }, 200
 
     except Exception as e:
@@ -169,7 +157,14 @@ def get_import_list(info_role):
             message='INTERNAL SERVER ERROR - affichage de l\'historique : contactez l\'administrateur du site',
             details=str(e))
 
-
+@blueprint.route('/<import_id>', methods=['GET'])
+@permissions.check_cruved_scope('R', module_code="IMPORT")
+@json_resp
+def get_one_import(import_id):
+    import_obj = TImports.query.get(import_id)
+    if import_obj:
+        return import_obj.to_dict()
+    return None
 
 @blueprint.route('/mappings/<mapping_type>/<import_id>', methods=['GET'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
@@ -1444,11 +1439,10 @@ def check_invalid(info_role, import_id):
 @json_resp
 def get_errors(info_role, import_id):
     try:
-        IMPORTS_SCHEMA_NAME = blueprint.config['IMPORTS_SCHEMA_NAME']
-        user_error = get_user_error_list(IMPORTS_SCHEMA_NAME, import_id)
-        return user_error, 200
+        return get_user_error_list(import_id)
     except Exception as e:
         logger.exception(e)
         raise GeonatureImportApiError(
             message='INTERNAL SERVER ERROR when getting user error list',
-            details=str(e))
+            details=str(e)
+        )

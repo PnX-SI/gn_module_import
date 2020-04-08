@@ -10,10 +10,14 @@ const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 
 @Injectable()
 export class DataService {
-  constructor(private _http: HttpClient) {}
+  constructor(private _http: HttpClient) { }
 
   getImportList() {
     return this._http.get<any>(urlApi);
+  }
+
+  getOneImport(id_import) {
+    return this._http.get(`${urlApi}/${id_import}`)
   }
 
   postUserFile(value, datasetId, importId, isFileChanged, fileName) {
