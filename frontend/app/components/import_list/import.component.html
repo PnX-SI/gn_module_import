@@ -14,8 +14,17 @@
                     aria-label="Search"
                     aria-describedby="basic-addon1"
                 />
-                <ngx-datatable #table class="material striped" [rows]="filteredHistory" [columnMode]="'force'"
-                    [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" [limit]="15" [selectionType]='single'>
+                <ngx-datatable 
+                    #table 
+                    class="material striped" 
+                    [rows]="filteredHistory" 
+                    [columnMode]="'force'"
+                    [headerHeight]="35" 
+                    [footerHeight]="40" 
+                    [rowHeight]="40" 
+                    [limit]="15" 
+                    [selectionType]='single'
+                >
                     <ngx-datatable-column *ngFor="let col of config.LIST_COLUMNS_FRONTEND" name="{{col.name}}"
                         prop="{{col.prop}}" maxWidth="{{col.max_width}}">
                     </ngx-datatable-column>
@@ -25,6 +34,14 @@
                                 (click)="onFinishImport(row)"> Finir 
                             </button>
                             <p *ngIf="row.is_finished" >{{row.date_end_import}}</p>
+                        </ng-template>
+                    </ngx-datatable-column>
+                    <ngx-datatable-column maxWidth="200" name="Rapport d'erreur" [sortable]="true" >
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <button *ngIf="row.errors.length > 0" matTooltip="Rapport d'erreur" class="clickable btn btn-sm btn-danger" style="margin-top: -10px;"
+                                [routerLink]="['/errors', row.id_import]"> 
+                                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> 
+                            </button>
                         </ng-template>
                     </ngx-datatable-column>
                     <ngx-datatable-column maxWidth="120" >
