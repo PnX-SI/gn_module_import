@@ -2,7 +2,7 @@
     <stepper [step]=2></stepper>
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title mb-0"> Mapping des champs </h5>
+            <h5 class="card-title mb-0"> Mapping des champs  </h5>
         </div>
         <div class="card-body" *ngIf="formReady">
             <!-- Choix du mapping -->
@@ -81,11 +81,24 @@
                         <i class="material-icons"> navigate_before </i>
                         Précédent
                     </button>
-                    <button *ngIf="n_error_lines >= 0  && mappingRes"
+                    <button 
+                        class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
+                        *ngIf="n_error_lines >= 0  && mappingRes"
+                    >
+                            <a  target="_blank" [routerLink]="['/import/errors', stepData.importId]"> 
+                                    <!-- <button 
+                                        class="btn btn-warning box-shadow d-flex justify-content-center align-content-between">
+                                            
+                                    </button> -->
+                                    {{n_error_lines}} lignes avec erreurs - Voir le rapport complet
+                                </a>
+                    </button>
+
+                    <!-- <button *ngIf="n_error_lines >= 0  && mappingRes"
                         class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
                         (click)="ErrorButtonClicked()">
                         {{n_error_lines}} lignes avec erreurs
-                    </button>
+                    </button> -->
                     <button *ngIf="!mappingRes"
                         class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                         [disabled]="syntheseForm.invalid" (click)="onDataCleaning(syntheseForm.value, id_mapping)">
@@ -99,28 +112,8 @@
                 </div>
             </form>
             <!-- Error list in table -->
-            <br>
-            <div id="dataCleaningErrorList" *ngIf="isErrorButtonClicked && mappingIsValidate && n_error_lines>0">
-                <div> Attention, des erreurs ont été détectées dans le fichier : </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="ErrorType"> Type </th>
-                            <th class="ErrorDescription"> Description </th>
-                            <th class="ErrorColumnName"> Nom colonne</th>
-                            <th class="ErrorLine"> Ligne(s) concernée(s)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let error of dataCleaningErrors">
-                            <td> {{error.type}} </td>
-                            <td> {{error.description}} </td>
-                            <td> {{error.column}} </td>
-                            <td> {{error.id_error_lines}} </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+
+
         </div>
     </div>
     <footer>
