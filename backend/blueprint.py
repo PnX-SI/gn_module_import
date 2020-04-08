@@ -136,7 +136,6 @@ def get_import_list(info_role):
         return import list
     """
     try:
-        print(info_role)
         results = DB.session.query(TImports) \
             .order_by(TImports.id_import) \
             .filter(TImports.step >= 2)
@@ -149,42 +148,16 @@ def get_import_list(info_role):
             return {
                        "empty": True
                    }, 200
-
         for r in results:
+            import_as_dict = r.as_dict(True)
+            if import_as_dict['date_end_import'] is None:
+                import_as_dict['date_end_import'] = 'En cours'
+            import_as_dict["author_name"]  = '; '.join([a.nom_role + ' ' + a.prenom_role for a in r.author])
+            import_as_dict['dataset_name'] = import_as_dict['dataset']['dataset_name']
+            import_as_dict.pop('dataset')
+            import_as_dict['errors'] = import_as_dict.get('errors', [])
 
-            if r.date_end_import is None:
-                date_end_import = 'En cours'
-            else:
-                date_end_import = r.date_end_import
-
-            prop = {
-                "id_import": r.id_import,
-                "format_source_file": r.format_source_file,
-                "srid": r.srid,
-                "separator": r.separator,
-                "encoding": r.encoding,
-                "import_table": r.import_table,
-                "full_file_name": r.full_file_name,
-                "id_dataset": r.id_dataset,
-                "id_field_mapping": r.id_field_mapping,
-                "id_content_mapping": r.id_content_mapping,
-                "date_create_import": str(r.date_create_import),
-                "date_update_import": str(r.date_update_import),
-                "date_end_import": str(date_end_import),
-                "source_count": r.source_count,
-                "import_count": r.import_count,
-                "taxa_count": r.taxa_count,
-                "date_min_data": str(r.date_min_data),
-                "date_max_data": str(r.date_max_data),
-                "step": r.step,
-                "author_name": '; '.join([a.nom_role + ' ' + a.prenom_role for a in r.author]),
-                "is_finished": r.is_finished,
-                "dataset_name": DB.session \
-                    .query(TDatasets.dataset_name) \
-                    .filter(TDatasets.id_dataset == r.id_dataset) \
-                    .one()[0]
-            }
-            history.append(prop)
+            history.append(import_as_dict)
 
         return {
                    "empty": False,
