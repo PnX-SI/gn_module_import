@@ -37,15 +37,6 @@
                     </select>
                     <div class="invalid-feedback">Sélectionnez un SRID</div>
                 </div>
-                <!-- separator field -->
-                <div class="form-group">
-                    <label>Séparateur de votre fichier :</label>
-                    <select class="custom-select mr-sm-2" id="separator" formControlName="separator" required>
-                        <option *ngFor="let separator of importConfig.SEPARATOR" [value]="separator.code">
-                            {{separator.name}}</option>
-                    </select>
-                    <div class="invalid-feedback">Sélectionnez un séparateur</div>
-                </div>
             </form>
             <!-- Navigation buttons -->
             <div class="navigate-btn">

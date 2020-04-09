@@ -1,3 +1,4 @@
+import csv
 from flask import (
     Blueprint,
     request,
@@ -507,32 +508,9 @@ def post_user_file(info_role):
                 os.remove(full_path)
                 full_path = output
 
-            # CHECKS USER FILE
 
-            logger.info('* START CHECK USER FILE VALIDITY')
-
-            report = check_user_file(full_path, N_MAX_ROWS_CHECK)
-
-            # reports user file errors:
-            if len(report['errors']) > 0:
-                logger.error(report['errors'])
-                return report['errors'], 400
-
-            logger.info('* END CHECK USER FILE VALIDITY')
 
             # CREATES CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
-
-            # Check if id_dataset value is allowed (prevent from forbidden manual change in url (url/process/N))
-            """
-            is_dataset_allowed = test_user_dataset(
-                info_role.id_role, metadata['datasetId'])
-            if not is_dataset_allowed:
-                logger.error('Provided dataset is not allowed')
-                return {
-                           'message': 'L\'utilisateur {} n\'est pas autorisé à importer des données vers \
-                           l\'id_dataset {}'.format(info_role.id_role, int(metadata['datasetId']))
-                       }, 403
-            """
 
             # start t_imports filling and fill cor_role_import
             if metadata['importId'] == 'undefined':
@@ -566,6 +544,19 @@ def post_user_file(info_role):
             if isinstance(id_import, int):
                 is_id_import = True
 
+            # CHECKS USER FILE
+
+            logger.info('* START CHECK USER FILE VALIDITY')
+
+            report = check_user_file(full_path, N_MAX_ROWS_CHECK)
+
+            # reports user file errors:
+            if len(report['errors']) > 0:
+                logger.error(report['errors'])
+                return report['errors'], 400
+
+            logger.info('* END CHECK USER FILE VALIDITY')
+
             # set step to 1 in t_imports table
             DB.session.query(TImports) \
                 .filter(TImports.id_import == id_import) \
@@ -582,11 +573,6 @@ def post_user_file(info_role):
                 # if user file name is not valid, an error is returned
                 return file_name_cleaner['errors'], 400
 
-            # get/set table and column names
-            if uploaded_file['extension'] == '.geojson':
-                separator = ','
-            else:
-                separator = metadata['separator']
 
             table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, file_name_cleaner['clean_name'])
             logger.debug('full DB user table name = %s', table_names['imports_full_table_name'])
@@ -624,11 +610,11 @@ def post_user_file(info_role):
             cur = conn.cursor()
 
             logger.info('* START COPY FROM CSV TO ARCHIVES SCHEMA')
-            load_csv_to_db(full_path, cur, table_names['archives_full_table_name'], separator, columns)
+            load_csv_to_db(full_path, cur, table_names['archives_full_table_name'], uploaded_file['separator'], columns)
             logger.info('* END COPY FROM CSV TO ARCHIVES SCHEMA')
 
             logger.info('* START COPY FROM CSV TO IMPORTS SCHEMA')
-            load_csv_to_db(full_path, cur, table_names['imports_full_table_name'], separator, columns)
+            load_csv_to_db(full_path, cur, table_names['imports_full_table_name'],  uploaded_file['separator'], columns)
             logger.info('* END COPY FROM CSV TO IMPORTS SCHEMA')
 
             conn.commit()
@@ -644,14 +630,9 @@ def post_user_file(info_role):
                                                     table_archive=table_names['archives_table_name'])
             DB.session.add(cor_import_archives)
 
-            if separator == ';':
-                separator = 'colon'
-            elif separator == '\t':
-                separator = 'tab'
-            elif separator == ',':
-                separator = 'comma'
-            else:
-                separator == 'space'
+            SEPARATOR_MAPPING = {";": "colon", "\t": "tab", ",": "comma", " ": "space"}
+            
+            separator = SEPARATOR_MAPPING.get(uploaded_file['separator'], 'Unknown')
 
             # update gn_import.t_imports with cleaned file name and step = 2
             DB.session.query(TImports) \
@@ -686,27 +667,27 @@ def post_user_file(info_role):
                    "is_running": is_running
                }, 200
 
-    except psycopg2.errors.BadCopyFileFormat as e:
-        logger.exception(e)
-        DB.session.rollback()
-        if is_id_import:
-            delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
-        DB.session.commit()
-        errors = [{
-            'code': 'psycopg2.errors.BadCopyFileFormat',
-            'message': 'Erreur probablement due à un problème de separateur',
-            'message_data': e.diag.message_primary
-        }]
-        logger.error(errors)
-        return errors, 400
+    # except psycopg2.errors.BadCopyFileFormat as e:
+    #     logger.exception(e)
+    #     DB.session.rollback()
+    #     if is_id_import:
+    #         delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
+    #     DB.session.commit()
+    #     errors = [{
+    #         'code': 'psycopg2.errors.BadCopyFileFormat',
+    #         'message': 'Erreur probablement due à un problème de separateur',
+    #         'message_data': e.diag.message_primary
+    #     }]
+    #     logger.error(errors)
+    #     return errors, 400
 
     except Exception as e:
         logger.error('*** ERROR WHEN POSTING FILE')
         logger.exception(e)
-        DB.session.rollback()
-        if is_id_import:
-            delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
-        DB.session.commit()
+        # DB.session.rollback()
+        # if is_id_import:
+        #     delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
+        # DB.session.commit()
         raise GeonatureImportApiError( \
             message='INTERNAL SERVER ERROR : Erreur pendant l\'enregistrement du fichier - contacter l\'administrateur',
             details=str(e))
@@ -1398,12 +1379,13 @@ def get_csv(info_role, import_id):
         full_path = os.path.join(uploads_directory, full_file_name)
 
         delimiter = get_delimiter(IMPORTS_SCHEMA_NAME, import_id, SEPARATOR)
+        SEPARATOR_MAPPING = {'colon': ';', 'tab': '\t', 'space': " "}
 
         # save csv in upload directory
         conn = DB.engine.raw_connection()
         cur = conn.cursor()
         logger.info('saving csv of invalid data in upload directory')
-        save_invalid_data(cur, full_archive_table_name, full_imports_table_name, full_path, pk_name, delimiter)
+        save_invalid_data(cur, full_archive_table_name, full_imports_table_name, full_path, pk_name, SEPARATOR_MAPPING.get(delimiter))
         logger.info(' -> csv saved')
 
         return send_file(full_path, as_attachment=True, attachment_filename=full_file_name)
