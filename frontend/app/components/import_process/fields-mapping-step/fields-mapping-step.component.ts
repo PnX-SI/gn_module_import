@@ -434,6 +434,10 @@ export class FieldsMappingStepComponent implements OnInit {
     });
   }
 
+  openErrorDetail() {
+    this.stepData.importId
+  }
+
 
 
   onSelect(id_mapping, targetForm) {

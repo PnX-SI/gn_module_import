@@ -1,3 +1,4 @@
+import csv
 import os
 import pathlib
 from werkzeug.utils import secure_filename
@@ -6,6 +7,7 @@ from geonature.utils.env import ROOT_DIR
 
 from ..logs import logger
 from ..wrappers import checker
+from ..api_error import GeonatureImportApiError
 
 
 @checker("Upload : file saved in directory")
@@ -81,12 +83,25 @@ def upload(request, size_max, allowed_extensions, directory_name, module_url):
                 logger.error("Saving user file : invalid path")
                 return {"error": "unknown", "is_uploaded": False}
 
+            # find separator
+            line_one = open(full_path, "r").readline()
+            sniffer = csv.Sniffer()
+            try:
+                separator = sniffer.sniff(line_one).delimiter
+            except Exception as e:
+                logger.error("No separator found for this file")
+                separator = ";"
+
             logger.debug("original file name = %s", filename)
+
+            if extension == ".geojson":
+                separator = ","
 
             return {
                 "file_name": filename,
                 "full_path": full_path,
                 "extension": extension,
+                "separator": separator,
                 "error": "",
                 "is_uploaded": True,
             }

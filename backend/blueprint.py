@@ -467,6 +467,7 @@ def post_user_file(info_role):
 
             logger.info('* START SAVE USER FILE IN UPLOAD DIRECTORY')
 
+            
             uploaded_file = upload(request, MAX_FILE_SIZE,
                                    ALLOWED_EXTENSIONS, DIRECTORY_NAME, MODULE_URL)
 
@@ -519,7 +520,12 @@ def post_user_file(info_role):
                 insert_t_imports = TImports(
                     date_create_import=init_date,
                     date_update_import=init_date,
-                    full_file_name=uploaded_file['file_name']
+                    full_file_name=uploaded_file['file_name'],
+                    id_dataset=metadata['datasetId'],
+                    encoding=metadata['encodage'],
+                    format_source_file=uploaded_file['extension'],
+                    srid=metadata['srid']
+
                 )
                 DB.session.add(insert_t_imports)
                 DB.session.flush()
@@ -547,13 +553,15 @@ def post_user_file(info_role):
             # CHECKS USER FILE
 
             logger.info('* START CHECK USER FILE VALIDITY')
-
-            report = check_user_file(full_path, N_MAX_ROWS_CHECK)
+            report = check_user_file(id_import, full_path, N_MAX_ROWS_CHECK)
 
             # reports user file errors:
             if len(report['errors']) > 0:
                 logger.error(report['errors'])
-                return report['errors'], 400
+                return {
+                    "id_import": id_import,
+                    'errors': report['errors']
+                } , 400
 
             logger.info('* END CHECK USER FILE VALIDITY')
 
@@ -640,11 +648,8 @@ def post_user_file(info_role):
                 .update({
                     TImports.import_table: table_names['archives_table_name'],
                     TImports.step: 2,
-                    TImports.id_dataset: int(metadata['datasetId']),
-                    TImports.srid: int(metadata['srid']),
                     TImports.format_source_file: uploaded_file['extension'],
                     TImports.separator: separator,
-                    TImports.encoding: metadata['encodage'],
                     TImports.source_count: report['row_count'] - 1
                 })
 
@@ -689,7 +694,7 @@ def post_user_file(info_role):
         #     delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
         # DB.session.commit()
         raise GeonatureImportApiError( \
-            message='INTERNAL SERVER ERROR : Erreur pendant l\'enregistrement du fichier - contacter l\'administrateur',
+            message=str(e),
             details=str(e))
     finally:
         if is_file_saved:

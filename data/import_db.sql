@@ -128,7 +128,8 @@ CREATE TABLE t_user_error_list(
     id_import integer NOT NULL,
     id_error integer NOT NULL,
     column_error character varying(100) NOT NULL,
-    id_rows integer[]
+    id_rows integer[],
+    comment text
 );
 
 
@@ -141,7 +142,8 @@ name AS error_name,
 error_level,
 description AS error_description,
 column_error,
-id_rows
+id_rows,
+comment
 FROM  gn_imports.t_user_error_list el 
 JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error;
 

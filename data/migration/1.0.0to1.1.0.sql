@@ -5,6 +5,7 @@ ADD COLUMN error_level character varying(25)
 
 ALTER TABLE gn_imports.t_user_error_list
 ADD COLUMN id_rows integer[],
+ADD COLUMN comment text,
 DROP COLUMN count_error;
 
 ALTER TABLE gn_imports.t_imports
@@ -20,6 +21,7 @@ name AS error_name,
 error_level,
 description AS error_description,
 column_error,
-id_rows
+id_rows,
+comment
 FROM  gn_imports.t_user_error_list el 
 JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error;

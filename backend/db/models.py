@@ -32,6 +32,7 @@ class VUserImportsErrors(DB.Model):
     error_description = DB.Column(DB.Unicode)
     column_error = DB.Column(DB.Unicode)
     id_rows = DB.Column(ARRAY(DB.Integer))
+    comment = DB.Column(DB.Unicode)
 
 
 @serializable

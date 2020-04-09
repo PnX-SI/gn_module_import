@@ -86,10 +86,6 @@
                         *ngIf="n_error_lines >= 0  && mappingRes"
                     >
                             <a  target="_blank" [routerLink]="['/import/errors', stepData.importId]"> 
-                                    <!-- <button 
-                                        class="btn btn-warning box-shadow d-flex justify-content-center align-content-between">
-                                            
-                                    </button> -->
                                     {{n_error_lines}} lignes avec erreurs - Voir le rapport complet
                                 </a>
                     </button>

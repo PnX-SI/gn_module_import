@@ -15,7 +15,7 @@ def get_error_from_code(error_code):
     return result
 
 
-def set_user_error(id_import, id_error, col_name, id_rows=[]):
+def set_user_error(id_import, id_error, col_name="", id_rows=[], comment=None):
     """
     Add a entry in t_user_error_list
 
@@ -23,14 +23,16 @@ def set_user_error(id_import, id_error, col_name, id_rows=[]):
     :params error_code str: the code of the error (t_user_errors)
     :params col_name str: column(s) concerned by the error
     :params n_errors int[]: id of the rows concerned by the errors
+    :params comment str: additional comment about the error
     """
     query = """
-        INSERT INTO gn_imports.t_user_error_list(id_import, id_error, column_error, id_rows)
+        INSERT INTO gn_imports.t_user_error_list(id_import, id_error, column_error, id_rows, comment)
         VALUES (
             :id_import, 
             :id_error, 
             :col_name, 
-            :id_rows
+            :id_rows,
+            :comment
         );
         """
     try:
@@ -41,6 +43,7 @@ def set_user_error(id_import, id_error, col_name, id_rows=[]):
                 "id_error": id_error,
                 "col_name": col_name,
                 "id_rows": id_rows,
+                "comment": comment,
             },
         )
         DB.session.commit()
