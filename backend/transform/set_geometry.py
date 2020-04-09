@@ -18,9 +18,13 @@ class GeometrySetter:
         self.import_srid = import_object.import_srid
         self.column_names = import_object.column_names
         self.local_srid = local_srid
-        self.code_commune_col = code_commune_col
-        self.code_maille_col = code_maille_col
-        self.code_dep_col = code_dep_col
+        self.code_commune_col = (
+            code_commune_col if code_commune_col != "" else "codecommune"
+        )
+        self.code_maille_col = (
+            code_maille_col if code_maille_col != "" else "codemaille"
+        )
+        self.code_dep_col = code_dep_col if code_dep_col != "" else "codedepartement"
 
     @checker("Data cleaning : geometries created")
     def set_geometry(self):

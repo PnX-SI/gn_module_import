@@ -100,14 +100,11 @@ export class UploadFileStepComponent implements OnInit {
   }
 
   onUpload(formValues: any) {
-    console.log('PASSE LA ?');
-
     if (!this.isUploadRunning) {
       this.isUploadRunning = true;
       this.uploadFileErrors = null;
       this.isUserErrors = false;
       this.spinner = true;
-      console.log(this.skip);
 
       if (!this.skip) {
         this._ds
@@ -154,10 +151,6 @@ export class UploadFileStepComponent implements OnInit {
                 if (error.status == 400) {
                   this.isUserErrors = true;
                   this.uploadFileErrors = error.error.errors;
-                  console.log('LAAAAA');
-                  console.log(error);
-
-
                   this.importId = error.error.id_import
                 } else {
                   this._commonService.regularToaster(

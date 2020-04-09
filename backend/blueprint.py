@@ -100,6 +100,7 @@ from .upload.geojson_to_csv import parse_geojson
 from .goodtables_checks.check_user_file import check_user_file
 
 from .transform.transform import data_cleaning
+from .transform.utils import add_code_columns
 from .transform.set_geometry import GeometrySetter
 from .transform.set_altitudes import set_altitudes
 from .transform.nomenclatures.nomenclatures import (
@@ -718,6 +719,7 @@ def postMapping(info_role, import_id, id_mapping):
         data = request.form.to_dict()
         srid = int(data['srid'])
         data.pop('srid')
+        print('LAAAAAAAAAAAAA')
 
         # SAVE MAPPING
 
@@ -824,6 +826,8 @@ def postMapping(info_role, import_id, id_mapping):
             index_col,
             import_id
         )
+        add_code_columns(data, selected_columns, df)
+        
         logger.info('* END EXTRACT FROM DB TABLE TO PYTHON')
 
         # get cd_nom list
@@ -1425,11 +1429,9 @@ def check_invalid(info_role, import_id):
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
 def get_errors(info_role, import_id):
-    try:
-        return get_user_error_list(import_id)
-    except Exception as e:
-        logger.exception(e)
-        raise GeonatureImportApiError(
-            message='INTERNAL SERVER ERROR when getting user error list',
-            details=str(e)
-        )
+    errors = get_user_error_list(import_id)
+    return {
+        'errors': errors
+    }
+ 
+        

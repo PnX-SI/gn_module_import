@@ -82,21 +82,17 @@ export class FieldsMappingStepComponent implements OnInit {
     let getRowErrorCount = this._ds.checkInvalid(importId);
     forkJoin([getErrorList, getRowErrorCount]).subscribe(
       ([errorList, errorCount]) => {
-        this.dataCleaningErrors = errorList;
+        this.dataCleaningErrors = errorList.errors;
         this.n_error_lines = Number(errorCount);
         this.isFullErrorCheck(n_table_rows, this.n_error_lines);
       },
       error => {
-        if (error.statusText === "Unknown Error") {
+        if (error.status === 500) {
           // show error message if no connexion
           this._commonService.regularToaster(
             "error",
             "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
           );
-        } else {
-          // show error message if other server error
-          console.error(error);
-          this._commonService.regularToaster("error", error.error.message);
         }
       }
     );

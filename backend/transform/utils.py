@@ -46,9 +46,19 @@ def set_error_and_invalid_reason(
         col_name=col_name_error,
         id_rows=id_rows_error,
     )
-    print("LAAAAAAAAA")
-    print(error_obj.error_type)
     print(id_rows_error)
     message = "{}: {}".format(error_obj.name, col_name_error)
     set_invalid_reason(df=df, source_col_name=df_col_name_valid, message=message)
+
+
+def add_code_columns(form_data, selected_columns, df):
+    if form_data["codecommune"] == "":
+        selected_columns["codecommune"] = "codecommune"
+        df["codecommune"] = None
+    if form_data["codemaille"] == "":
+        selected_columns["codemaille"] = "codemaille"
+        df["codemaille"] = None
+    if form_data["codedepartement"] == "":
+        selected_columns["codedepartement"] = "codedepartement"
+        df["codedepartement"] = None
 
