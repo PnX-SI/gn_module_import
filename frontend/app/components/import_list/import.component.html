@@ -19,7 +19,7 @@
                     <ngx-datatable-column *ngFor="let col of config.LIST_COLUMNS_FRONTEND" name="{{col.name}}"
                         prop="{{col.prop}}" maxWidth="{{col.max_width}}">
                     </ngx-datatable-column>
-                    <ngx-datatable-column maxWidth="200" name="Fin import" [sortable]="true" prop="date_end_import">
+                    <ngx-datatable-column maxWidth="200" name="Fin import" [sortable]="false" prop="date_end_import">
                         <ng-template let-row="row" ngx-datatable-cell-template>
                             <button *ngIf="!row.is_finished" class="clickable btn btn-sm btn-dark" style="margin-top: -10px;"
                                 (click)="onFinishImport(row)"> Finir 
@@ -27,7 +27,7 @@
                             <p *ngIf="row.is_finished" >{{row.date_end_import}}</p>
                         </ng-template>
                     </ngx-datatable-column>
-                    <ngx-datatable-column maxWidth="120" >
+                    <ngx-datatable-column maxWidth="120" [sortable]="false" >
                         <ng-template let-row="row" ngx-datatable-cell-template>
                             <button *ngIf="(row.is_finished) && ((row.source_count - row.import_count) > 0)" class="clickable btn btn-sm btn-warning" style="margin-top: -10px;"
                             (click)="_csvExport.onCSV(row.id_import)" 
@@ -36,7 +36,7 @@
                             </button>
                         </ng-template>
                     </ngx-datatable-column>
-                    <ngx-datatable-column maxWidth="80" >
+                    <ngx-datatable-column maxWidth="80" [sortable]="false" >
                         <ng-template let-row="row" ngx-datatable-cell-template>
                             <button *ngIf="_cruvedStore.cruved?.METADATA?.cruved.U !== '0'"
                             class="clickable btn btn-sm btn-info" style="margin-top: -10px;"

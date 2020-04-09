@@ -20,4 +20,4 @@ ngx-datatable{
   box-shadow: none !important
 }
 
-.sort-btn:not([class*="datatable-icon-"]):before { font-family: data-table; content: "c"; }
+.sortable .sort-btn:not([class*="datatable-icon-"]):before { font-family: data-table; content: "c"; }
