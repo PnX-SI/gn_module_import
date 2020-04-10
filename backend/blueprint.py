@@ -3,7 +3,8 @@ from flask import (
     Blueprint,
     request,
     jsonify,
-    send_file
+    send_file,
+    current_app
 )
 import os
 import datetime
@@ -69,7 +70,6 @@ from .db.queries.nomenclatures import (
     get_content_mapping,
     get_mnemo,
     get_saved_content_mapping,
-    exists_content_mapping
 )
 
 from .db.queries.save_mapping import (
@@ -1162,44 +1162,32 @@ def content_mapping(info_role, import_id, id_mapping):
             message='INTERNAL SERVER ERROR during content mapping (user values to id_types',
             details=str(e))
 
-@blueprint.route('/postDataToStep4/<import_id>/<id_mapping>', methods=['GET', 'POST'])
+@blueprint.route('/goToStep4/<int:import_id>/<int:id_mapping>', methods=['PUT'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
-def postDataToStep4(info_role, import_id, id_mapping):
+def goToStep4(info_role, import_id, id_mapping):
+    """
+    Route only use for where content mapping is skipped
+    Only check if the config default mapping exist
+    and update t_import to set the step and the id_value_mapping corresponding
+    """
     try:
         # CHECK IF DEFAULT CONTENT MAPPING EXISTS
-        id_mapping = int(id_mapping)
-        form_data = request.form.to_dict()
-        content_mapping = int(form_data['content_mapping'])
-        form_data.pop('content_mapping')
 
-        if exists_content_mapping(content_mapping) != True:
+        id_value_mapping = current_app.config['IMPORT']['DEFAULT_MAPPING_ID']
+        value_mapping = TMappings.query.get(id_value_mapping)
+        if not value_mapping:
             return {
                        'message': 'Content Mapping: le mapping n\'existe pas - contacter l\'administrateur'
                    }, 400
 
-        data = get_content_mapping(content_mapping)
-
-        return_value = defaultdict(list) 
-        for ele in data:
-            for value in ele:
-                id_target_value = value['id_target_value']
-                source_value = value['source_value']
-                return_value[id_target_value].append(source_value)
-
-        if id_mapping != 0:
-            logger.info('save content mapping')
-            save_content_mapping(return_value, id_mapping)
-            logger.info(' -> content mapping saved')
-        
-
         # UPDATE TIMPORTS
         logger.info('update t_imports from step 2 to step 4')
 
-        DB.session.query(TImports) \
-            .filter(TImports.id_import == int(import_id)) \
-            .update({
-                TImports.id_content_mapping: int(id_mapping),
+        DB.session.query(TImports).filter(
+            TImports.id_import == import_id
+            ).update({
+                TImports.id_content_mapping: id_value_mapping,
                 TImports.step: 4
             })
 
@@ -1212,11 +1200,12 @@ def postDataToStep4(info_role, import_id, id_mapping):
     except Exception as e:
         DB.session.rollback()
         DB.session.close()
-        logger.error('*** SERVER ERROR DURING CONTENT MAPPING (user values to id_types')
+        logger.error('SERVER ERROR DURING CONTENT MAPPING')
         logger.exception(e)
         raise GeonatureImportApiError(
-            message='INTERNAL SERVER ERROR during content mapping (user values to id_types',
-            details=str(e))
+            message='INTERNAL SERVER ERROR during content mapping',
+            details=str(e)
+        )
 
 
 @blueprint.route('/importData/<import_id>', methods=['GET', 'POST'])
