@@ -132,10 +132,8 @@ export class DataService {
     );
   }
 
-  postDataToStep4(import_id, id_mapping, content_mapping) {
-    let fd = new FormData();
-    fd.append("content_mapping", content_mapping);
-    return this._http.post<any>(`${urlApi}/postDataToStep4/${import_id}/${id_mapping}`, fd, HttpUploadOptions);
+  goToStep4(import_id, id_mapping) {
+    return this._http.put<any>(`${urlApi}/goToStep4/${import_id}/${id_mapping}`);
   }
 
   getNomencInfo(import_id) {

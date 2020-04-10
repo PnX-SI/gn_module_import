@@ -7,10 +7,7 @@ from geonature.utils.env import DB
 
 from collections import defaultdict
 
-from ..models import (
-    TMappingsValues,
-    TMappings
-)
+from ..models import TMappingsValues, TMappings
 
 
 def get_nomenc_details(nomenclature_abb):
@@ -23,8 +20,7 @@ def get_nomenc_details(nomenclature_abb):
             WHERE mnemonique = :nomenc;
         """
         nomenc_details = DB.session.execute(
-            text(query),
-            {'nomenc': nomenclature_abb}
+            text(query), {"nomenc": nomenclature_abb}
         ).fetchone()
         return nomenc_details
     except Exception:
@@ -41,25 +37,24 @@ def get_nomenc_values(nommenclature_abb):
             JOIN ref_nomenclatures.t_nomenclatures AS nom ON nom.id_type = bib.id_type
             WHERE bib.mnemonique = :nomenc
             """
-        return DB.session.execute(
-            text(query),
-            {'nomenc': nommenclature_abb}
-        ).fetchall()
+        return DB.session.execute(text(query), {"nomenc": nommenclature_abb}).fetchall()
     except Exception:
         raise
 
 
 def get_nomenc_user_values(user_nomenc_col, schema_name, table_name):
     try:
-        nomenc_user_values = DB.session.execute("""
+        nomenc_user_values = DB.session.execute(
+            """
             SELECT DISTINCT {user_nomenc_col} as user_val
             FROM {schema_name}.{table_name}
             WHERE gn_is_valid = 'True';
             """.format(
-            user_nomenc_col=user_nomenc_col,
-            schema_name=schema_name,
-            table_name=table_name)) \
-            .fetchall()
+                user_nomenc_col=user_nomenc_col,
+                schema_name=schema_name,
+                table_name=table_name,
+            )
+        ).fetchall()
         return nomenc_user_values
     except Exception:
         raise
@@ -67,12 +62,14 @@ def get_nomenc_user_values(user_nomenc_col, schema_name, table_name):
 
 def get_nomenc_abbs(form_data):
     try:
-        nomenc_abbs = DB.session.execute("""
+        nomenc_abbs = DB.session.execute(
+            """
             SELECT F.name_field as synthese_name, BNT.mnemonique as nomenc_abb
             FROM gn_imports.dict_fields F
             RIGHT JOIN gn_imports.cor_synthese_nomenclature CSN ON CSN.synthese_col = F.name_field
             LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.mnemonique = CSN.mnemonique;
-            """).fetchall()
+            """
+        ).fetchall()
         nomenc_list = []
         for nomenc in nomenc_abbs:
             if nomenc.synthese_name in form_data.keys():
@@ -91,10 +88,7 @@ def get_synthese_col(abb):
             LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.mnemonique = CSN.mnemonique
             WHERE BNT.mnemonique = :abb;
         """
-        nomenc_synthese_name = DB.session.execute(
-            text(query),
-            {'abb': abb}
-        ).fetchone()
+        nomenc_synthese_name = DB.session.execute(text(query), {"abb": abb}).fetchone()
         return nomenc_synthese_name.synthese_name
     except Exception:
         raise
@@ -102,12 +96,14 @@ def get_synthese_col(abb):
 
 def get_SINP_synthese_cols():
     try:
-        nomencs = DB.session.execute("""
+        nomencs = DB.session.execute(
+            """
             SELECT F.name_field as synthese_name
             FROM gn_imports.dict_fields F
             RIGHT JOIN gn_imports.cor_synthese_nomenclature CSN ON CSN.synthese_col = F.name_field
             LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.mnemonique = CSN.mnemonique;
-            """).fetchall()
+            """
+        ).fetchall()
         synthese_name_list = [nomenc.synthese_name for nomenc in nomencs]
         return synthese_name_list
     except Exception:
@@ -123,8 +119,7 @@ def get_nomenc_abb(id_nomenclature):
             WHERE id_nomenclature = :id_nomenclature;
             """
         nomenc_abb = DB.session.execute(
-            text(query),
-            {'id_nomenclature': int(id_nomenclature)}
+            text(query), {"id_nomenclature": int(id_nomenclature)}
         ).fetchone()
         return nomenc_abb.abb
     except Exception:
@@ -138,15 +133,10 @@ def set_nomenclature_id(schema_name, table_name, user_col, value, id_type):
                 SET {user_col} = :id_type
                 WHERE {user_col} = :value
                 """.format(
-                schema_name=schema_name,
-                table_name=table_name,
-                user_col=user_col,
+            schema_name=schema_name, table_name=table_name, user_col=user_col,
         )
         # escape paramter with sqlalchemy text to avoid injection and other errors
-        DB.session.execute(
-            text(query),
-            {'id_type': id_type, 'value': value}
-        )
+        DB.session.execute(text(query), {"id_type": id_type, "value": value})
     except Exception:
         raise
 
@@ -161,8 +151,7 @@ def get_nomenc_abb_from_name(synthese_name):
             WHERE F.name_field = :synthese_name;
             """
         nomenc = DB.session.execute(
-            text(query),
-            {'synthese_name': synthese_name}
+            text(query), {"synthese_name": synthese_name}
         ).fetchone()[0]
         return nomenc
     except Exception:
@@ -172,43 +161,36 @@ def get_nomenc_abb_from_name(synthese_name):
 def set_default_value(abb):
     try:
         default_value = DB.session.execute(
-            text('SELECT gn_synthese.get_default_nomenclature_value(:abb)'),
-            {'abb': abb}
+            text("SELECT gn_synthese.get_default_nomenclature_value(:abb)"),
+            {"abb": abb},
         ).fetchone()[0]
         if default_value is None:
-            print('LAAAAAAAAAAAAAAA')
-            default_value = 'NULL'
+            default_value = "NULL"
         return str(default_value)
     except Exception:
         raise
 
 
-def set_default_nomenclature_id(schema_name, table_name, nomenc_abb, user_col, id_types):
+def set_default_nomenclature_id(
+    schema_name, table_name, nomenc_abb, user_col, id_types
+):
     try:
         default_value = DB.session.execute(
-            text('SELECT gn_synthese.get_default_nomenclature_value(:nomenc_abb)'),
-            {'nomenc_abb': nomenc_abb}
+            text("SELECT gn_synthese.get_default_nomenclature_value(:nomenc_abb)"),
+            {"nomenc_abb": nomenc_abb},
         ).fetchone()[0]
 
         if default_value is None:
-            default_value = 'NULL'
-        print(schema_name)
-        print(table_name)
+            default_value = "NULL"
         query = """
             UPDATE {schema_name}.{table_name}
             SET {user_col} = :default_value
             WHERE {user_col} NOT IN :id_types;
             """.format(
-            schema_name=schema_name,
-            table_name=table_name,
-            user_col=user_col
+            schema_name=schema_name, table_name=table_name, user_col=user_col
         )
         DB.session.execute(
-            text(query),
-            {
-                'default_value': default_value,
-                'id_types': tuple(id_types)
-            }
+            text(query), {"default_value": default_value, "id_types": tuple(id_types)}
         )
 
     except Exception:
@@ -223,39 +205,41 @@ def get_mnemo(id_nomenc):
                 FROM ref_nomenclatures.t_nomenclatures
                 WHERE id_nomenclature = :id;
             """
-            mnemo = DB.session.execute(
-                text(query),
-                {'id': int(id_nomenc)}
-            ).fetchone()[0]
+            mnemo = DB.session.execute(text(query), {"id": int(id_nomenc)}).fetchone()[
+                0
+            ]
             return mnemo
         except ValueError:
-            return ''
+            return ""
     except Exception:
         raise
 
 
 def get_content_mapping(id_mapping):
     try:
-        contents = DB.session \
-            .query(TMappingsValues) \
-            .filter(TMappingsValues.id_mapping == int(id_mapping)) \
+        contents = (
+            DB.session.query(TMappingsValues)
+            .filter(TMappingsValues.id_mapping == int(id_mapping))
             .all()
+        )
         mapping_contents = []
         gb_mapping_contents = []
 
         if len(contents) > 0:
             for content in contents:
                 d = {
-                    'id_match_values': content.id_match_values,
-                    'id_mapping': content.id_mapping,
-                    'source_value': content.source_value,
-                    'id_target_value': content.id_target_value
+                    "id_match_values": content.id_match_values,
+                    "id_mapping": content.id_mapping,
+                    "source_value": content.source_value,
+                    "id_target_value": content.id_target_value,
                 }
                 mapping_contents.append(d)
-            for key, group in itertools.groupby(mapping_contents, key=lambda x: x['id_target_value']):
+            for key, group in itertools.groupby(
+                mapping_contents, key=lambda x: x["id_target_value"]
+            ):
                 gb_mapping_contents.append(list(group))
         else:
-            gb_mapping_contents.append('empty')
+            gb_mapping_contents.append("empty")
 
         return gb_mapping_contents
     except Exception:
@@ -264,18 +248,17 @@ def get_content_mapping(id_mapping):
 
 def get_saved_content_mapping(id_mapping):
     try:
-        contents = DB.session \
-            .query(TMappingsValues) \
-            .filter(TMappingsValues.id_mapping == int(id_mapping)) \
+        contents = (
+            DB.session.query(TMappingsValues)
+            .filter(TMappingsValues.id_mapping == int(id_mapping))
             .all()
+        )
         mapping_contents = []
 
         if len(contents) > 0:
             for content in contents:
-                if content.source_value != '':
-                    d = {
-                        str(content.id_target_value): content.source_value
-                    }
+                if content.source_value != "":
+                    d = {str(content.id_target_value): content.source_value}
                     mapping_contents.append(d)
         selected_content = defaultdict(list)
         for content in mapping_contents:
@@ -283,15 +266,6 @@ def get_saved_content_mapping(id_mapping):
                 selected_content[key].append(value)
 
         return selected_content
-    except Exception:
-        raise
-
-def exists_content_mapping(id_mapping):
-    try:
-        return DB.session \
-            .query(TMappings) \
-            .filter(TMappings.id_mapping == int(id_mapping)) \
-            .scalar() is not None
     except Exception:
         raise
 
