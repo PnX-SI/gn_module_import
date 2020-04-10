@@ -1235,7 +1235,9 @@ def import_data(info_role, import_id):
         # set total user columns
         id_mapping = get_id_field_mapping(import_id)
         selected_cols = get_selected_columns(id_mapping)
-        added_cols = get_added_columns(id_mapping)
+        # added_cols = get_added_columns(id_mapping)
+        #TODO: remove added cols
+        added_cols = {'the_geom_4326': 'gn_the_geom_4326', 'the_geom_local': 'gn_the_geom_local', 'the_geom_point': 'gn_the_geom_point'}
         total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME, MODULE_CODE)
 
         ### CONTENT MAPPING ###

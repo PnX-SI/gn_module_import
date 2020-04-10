@@ -44,22 +44,23 @@ class GeometrySetter:
             self.add_geom_column()
             #  take the column 'given_geom' to fill the appropriate column
             if self.import_srid == 4326:
-                self.set_given_geom("the_geom_4326", 4326)
+                self.set_given_geom("gn_the_geom_4326", 4326)
                 self.transform_geom(
-                    target_geom_col="the_geom_local",
+                    target_geom_col="gn_the_geom_local",
                     origin_srid="4326",
                     target_srid=self.local_srid,
                 )
             else:
-                self.set_given_geom("the_geom_local", self.local_srid)
+                self.set_given_geom("gn_the_geom_local", self.local_srid)
                 self.transform_geom(
-                    target_geom_col="the_geom_4326",
+                    target_geom_col="gn_the_geom_4326",
                     origin_srid=self.import_srid,
                     target_srid="4326",
                 )
 
             self.calculate_geom_point(
-                source_geom_column="the_geom_4326", target_geom_column="the_geom_point",
+                source_geom_column="gn_the_geom_4326",
+                target_geom_column="gn_the_geom_point",
             )
             (
                 id_type_comm,
@@ -101,14 +102,14 @@ class GeometrySetter:
         """
         query = """
             ALTER TABLE {schema_name}.{table_name}
-            DROP COLUMN IF EXISTS the_geom_4326,
-            DROP COLUMN IF EXISTS the_geom_local,
-            DROP COLUMN IF EXISTS the_geom_point,
+            DROP COLUMN IF EXISTS gn_the_geom_4326,
+            DROP COLUMN IF EXISTS gn_the_geom_local,
+            DROP COLUMN IF EXISTS gn_the_geom_point,
             DROP COLUMN IF EXISTS id_area_attachment,
             ADD COLUMN id_area_attachment integer;
-            SELECT public.AddGeometryColumn('{schema_name}', '{table_name}', 'the_geom_4326', 4326, 'Geometry', 2 );
-            SELECT public.AddGeometryColumn('{schema_name}', '{table_name}', 'the_geom_local', {local_srid}, 'Geometry', 2 );
-            SELECT public.AddGeometryColumn('{schema_name}', '{table_name}', 'the_geom_point', 4326, 'POINT', 2 );
+            SELECT public.AddGeometryColumn('{schema_name}', '{table_name}', 'gn_the_geom_4326', 4326, 'Geometry', 2 );
+            SELECT public.AddGeometryColumn('{schema_name}', '{table_name}', 'gn_the_geom_local', {local_srid}, 'Geometry', 2 );
+            SELECT public.AddGeometryColumn('{schema_name}', '{table_name}', 'gn_the_geom_point', 4326, 'POINT', 2 );
             """.format(
             schema_name=self.table_name.split(".")[0],
             table_name=self.table_name.split(".")[1],
@@ -164,9 +165,9 @@ class GeometrySetter:
         """
         query = """
                 ALTER TABLE {table_name}
-                ALTER COLUMN the_geom_local TYPE text,
-                ALTER COLUMN the_geom_4326 TYPE text,
-                ALTER COLUMN the_geom_point TYPE text;
+                ALTER COLUMN gn_the_geom_local TYPE text,
+                ALTER COLUMN gn_the_geom_4326 TYPE text,
+                ALTER COLUMN gn_the_geom_point TYPE text;
             """.format(
             table_name=self.table_name
         )
@@ -177,7 +178,7 @@ class GeometrySetter:
     ):
         """
         Find id_area_attachment in ref_geo.l_areas from code given in the file
-        Update only columns where the_geom_4326 is NULL AND id_area_attachment is NULL
+        Update only columns where gn_the_geom_4326 is NULL AND id_area_attachment is NULL
         
         :params id_area_type int: the id_area_type (ref_geo.bib_area_type) of the coresponding code (example: 25 for commune)
         :params str :code_col: column name where find the code for attachment in the inital table
@@ -187,13 +188,13 @@ class GeometrySetter:
         UPDATE {table} as i
                 SET 
                 id_area_attachment = sub.id_area,
-                the_geom_4326 = sub.geom_4326
+                gn_the_geom_4326 = sub.geom_4326
                 FROM (
                     SELECT id_area, la.geom_4326::text, gn_pk
                     FROM {table} 
                     JOIN ref_geo.l_areas la ON la.id_type = {id_area_type} and la.{ref_geo_area_code_col} = {code_col} 
                 ) as sub
-                WHERE id_area_attachment IS NULL AND the_geom_4326 IS NULL AND sub.gn_pk = i.gn_pk;
+                WHERE id_area_attachment IS NULL AND gn_the_geom_4326 IS NULL AND sub.gn_pk = i.gn_pk;
         """.format(
             table=self.table_name,
             ref_geo_area_code_col=ref_geo_area_code_col,
