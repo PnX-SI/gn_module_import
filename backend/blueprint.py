@@ -673,30 +673,18 @@ def post_user_file(info_role):
                    "is_running": is_running
                }, 200
 
-    # except psycopg2.errors.BadCopyFileFormat as e:
-    #     logger.exception(e)
-    #     DB.session.rollback()
-    #     if is_id_import:
-    #         delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
-    #     DB.session.commit()
-    #     errors = [{
-    #         'code': 'psycopg2.errors.BadCopyFileFormat',
-    #         'message': 'Erreur probablement due à un problème de separateur',
-    #         'message_data': e.diag.message_primary
-    #     }]
-    #     logger.error(errors)
-    #     return errors, 400
 
     except Exception as e:
         logger.error('*** ERROR WHEN POSTING FILE')
         logger.exception(e)
-        # DB.session.rollback()
-        # if is_id_import:
-        #     delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
-        # DB.session.commit()
-        raise GeonatureImportApiError( \
+        DB.session.rollback()
+        if is_id_import:
+            delete_tables(id_import, ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME)
+        DB.session.commit()
+        raise GeonatureImportApiError(
             message=str(e),
-            details=str(e))
+            details=str(e)
+        )
     finally:
         if is_file_saved:
             os.remove(full_path)
@@ -717,9 +705,7 @@ def postMapping(info_role, import_id, id_mapping):
         is_table_names = False
 
         data = request.form.to_dict()
-        srid = int(data['srid'])
-        data.pop('srid')
-        print('LAAAAAAAAAAAAA')
+        srid = int(data.pop('srid'))
 
         # SAVE MAPPING
 
@@ -1207,6 +1193,43 @@ def goToStep4(info_role, import_id, id_mapping):
             details=str(e)
         )
 
+from .transform.nomenclatures.nomenclatures import NomenclatureTransformer
+
+@blueprint.route('/check_nomenclatures/<int:import_id>', methods=['GET'])
+# @permissions.check_cruved_scope('C', module_code="IMPORT")
+@json_resp
+def check_and_set_nomenclature(import_id):
+    """
+    Check nomenclatures values
+    """
+    MODULE_CODE = blueprint.config['MODULE_CODE']
+
+    # get table name
+    table_name = set_imports_table_name(get_table_name(import_id))
+    # set total user columns
+    id_field_mapping = get_id_field_mapping(import_id)
+    selected_cols = get_selected_columns(id_field_mapping)
+    added_cols = {'the_geom_4326': 'gn_the_geom_4326', 'the_geom_local': 'gn_the_geom_local', 'the_geom_point': 'gn_the_geom_point'}
+
+    total_columns = set_total_columns(selected_cols, added_cols, import_id, MODULE_CODE)
+
+    ### CONTENT MAPPING ###
+
+    # get content mapping data
+    id_mapping_value = get_id_mapping(import_id)
+    # build nomenclature_transformer service
+    nomenclature_transformer = NomenclatureTransformer(id_mapping_value, selected_cols, table_name)
+    # with the mapping given, find all the corresponding nomenclatures
+    nomenclature_transformer.set_nomenclature_ids()
+
+    logger.info('Find nomenclature with errors :')
+    nomenclature_transformer.find_nomenclatures_errors(import_id)
+
+    if current_app.config['IMPORT']['FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE']:
+        nomenclature_transformer.set_default_nomenclature_ids()
+
+    return 'YES'
+
 
 @blueprint.route('/importData/<import_id>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
@@ -1224,9 +1247,7 @@ def import_data(info_role, import_id):
         # set total user columns
         id_mapping = get_id_field_mapping(import_id)
         selected_cols = get_selected_columns(id_mapping)
-        # added_cols = get_added_columns(id_mapping)
-        #TODO: remove added cols
-        added_cols = {'the_geom_4326': 'gn_the_geom_4326', 'the_geom_local': 'gn_the_geom_local', 'the_geom_point': 'gn_the_geom_point'}
+
         total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME, MODULE_CODE)
 
         ### CONTENT MAPPING ###
@@ -1319,7 +1340,11 @@ def get_valid_data(info_role, import_id):
             #form_data = request.form.to_dict(flat=False)
             id_mapping = get_id_field_mapping(import_id)
             selected_cols = get_selected_columns(id_mapping)
-            added_cols = get_added_columns(id_mapping)
+            
+            # added_cols = get_added_columns(id_mapping)
+            #TODO: remove added cols
+            added_cols = {'the_geom_4326': 'gn_the_geom_4326', 'the_geom_local': 'gn_the_geom_local', 'the_geom_point': 'gn_the_geom_point'}
+
             total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME, MODULE_CODE)
 
             # get content mapping data

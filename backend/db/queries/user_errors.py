@@ -15,7 +15,9 @@ def get_error_from_code(error_code):
     return result
 
 
-def set_user_error(id_import, id_error, col_name="", id_rows=[], comment=None):
+def set_user_error(
+    id_import, id_error=None, error_code=None, col_name="", id_rows=[], comment=None
+):
     """
     Add a entry in t_user_error_list
 
@@ -29,18 +31,23 @@ def set_user_error(id_import, id_error, col_name="", id_rows=[], comment=None):
         INSERT INTO gn_imports.t_user_error_list(id_import, id_error, column_error, id_rows, comment)
         VALUES (
             :id_import, 
-            :id_error, 
+            {id_error}, 
             :col_name, 
             :id_rows,
             :comment
         );
-        """
+        """.format(
+        id_error=id_error
+        if id_error
+        else "(SELECT id_error FROM gn_imports.t_user_errors WHERE name = '{}')".format(
+            error_code
+        ),
+    )
     try:
         DB.session.execute(
             text(query),
             {
                 "id_import": id_import,
-                "id_error": id_error,
                 "col_name": col_name,
                 "id_rows": id_rows,
                 "comment": comment,

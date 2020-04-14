@@ -1,5 +1,6 @@
 import itertools
 
+from flask import current_app
 from psycopg2.extensions import AsIs, QuotedString
 from sqlalchemy.sql import text
 
@@ -25,6 +26,21 @@ def get_nomenc_details(nomenclature_abb):
         return nomenc_details
     except Exception:
         raise
+
+
+def get_nomenclature_values(mnemoniques_type: list):
+    query = """
+    SELECT bib.mnemonique as mnemnonique,
+     array_agg(nom.id_nomenclature) as id_nomenclatures
+     FROM  ref_nomenclatures.t_nomenclatures as nom
+     JOIN ref_nomenclatures.bib_nomenclatures_types AS bib ON nom.id_type = bib.id_type
+     WHERE bib.mnemonique IN :mnemoniques_type
+     GROUP BY bib.mnemonique
+
+     """
+    return DB.session.execute(
+        text(query), {"mnemoniques_type": tuple(mnemoniques_type)}
+    ).fetchall()
 
 
 def get_nomenc_values(nommenclature_abb):
@@ -110,6 +126,25 @@ def get_SINP_synthese_cols():
         raise
 
 
+def get_SINP_synthese_cols_with_mnemonique():
+    nomencs = DB.session.execute(
+        """
+        SELECT F.name_field as synthese_name,
+        CSN.mnemonique as mnemonique_type
+        FROM gn_imports.dict_fields F
+        RIGHT JOIN gn_imports.cor_synthese_nomenclature CSN ON CSN.synthese_col = F.name_field
+        LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.mnemonique = CSN.mnemonique;
+        """
+    ).fetchall()
+    return [
+        {
+            "synthese_name": nomenc.synthese_name,
+            "mnemonique_type": nomenc.mnemonique_type,
+        }
+        for nomenc in nomencs
+    ]
+
+
 def get_nomenc_abb(id_nomenclature):
     try:
         query = """
@@ -126,19 +161,37 @@ def get_nomenc_abb(id_nomenclature):
         raise
 
 
-def set_nomenclature_id(schema_name, table_name, user_col, value, id_type):
+def set_nomenclature_id(table_name, user_col, value, id_type):
     try:
         query = """
                 UPDATE {schema_name}.{table_name}
                 SET {user_col} = :id_type
                 WHERE {user_col} = :value
                 """.format(
-            schema_name=schema_name, table_name=table_name, user_col=user_col,
+            schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+            table_name=table_name,
+            user_col=user_col,
         )
         # escape paramter with sqlalchemy text to avoid injection and other errors
         DB.session.execute(text(query), {"id_type": id_type, "value": value})
     except Exception:
         raise
+
+
+def find_row_with_nomenclatures_error(table_name, nomenclature_column, ids_accepted):
+    """
+    Return all the rows where the nomenclatures has not be found
+    """
+    query = """
+    SELECT gn_pk, {nomenclature_column}
+    FROM {schema_name}.{table_name}
+    WHERE {nomenclature_column} NOT IN :ids_accepted
+    """.format(
+        schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+        table_name=table_name,
+        nomenclature_column=nomenclature_column,
+    )
+    return DB.session.execute(query, {"ids_accepted": tuple(ids_accepted)}).fetchall()
 
 
 def get_nomenc_abb_from_name(synthese_name):
@@ -171,9 +224,7 @@ def set_default_value(abb):
         raise
 
 
-def set_default_nomenclature_id(
-    schema_name, table_name, nomenc_abb, user_col, id_types
-):
+def set_default_nomenclature_id(table_name, nomenc_abb, user_col, id_types):
     try:
         default_value = DB.session.execute(
             text("SELECT gn_synthese.get_default_nomenclature_value(:nomenc_abb)"),
@@ -187,7 +238,9 @@ def set_default_nomenclature_id(
             SET {user_col} = :default_value
             WHERE {user_col} NOT IN :id_types;
             """.format(
-            schema_name=schema_name, table_name=table_name, user_col=user_col
+            schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+            table_name=table_name,
+            user_col=user_col,
         )
         DB.session.execute(
             text(query), {"default_value": default_value, "id_types": tuple(id_types)}
@@ -268,4 +321,3 @@ def get_saved_content_mapping(id_mapping):
         return selected_content
     except Exception:
         raise
-
