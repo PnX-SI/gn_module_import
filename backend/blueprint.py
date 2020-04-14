@@ -389,7 +389,7 @@ def postMappingName(info_role):
 
 
 @blueprint.route('/cancel_import/<import_id>', methods=['GET'])
-@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@permissions.check_cruved_scope('D', True, module_code="IMPORT")
 @json_resp
 def cancel_import(info_role, import_id):
     try:
