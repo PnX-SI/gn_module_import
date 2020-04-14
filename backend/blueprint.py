@@ -398,8 +398,22 @@ def cancel_import(info_role, import_id):
             return {
                 'message':'Import annulé'
                 }, 200
+                
+        if info_role.value_filter != "3":
+            authors = [auth[0] for auth in DB.session.query(CorRoleImport.id_role).filter(
+                CorRoleImport.id_import == import_id).all()]
+            if info_role.value_filter != "1" or not (info_role.id_role in authors):
+                organisms = [org[0] for org in DB.session.query(User.id_organisme).join(
+                    CorRoleImport, CorRoleImport.id_role==info_role.id_role).filter(
+                    CorRoleImport.id_import == import_id).all()]
+                if info_role.value_filter != "2" or not (info_role.id_organisme in organisms):
+                    raise InsufficientRightsError(
+                        ('User "{}" cannot delete this current releve').format(
+                            user.id_role
+                        ),
+                        403,
+                    )
 
-        
         # delete imported data if the import is already finished
         is_finished = DB.session.query(TImports.is_finished) \
             .filter(TImports.id_import == import_id) \
