@@ -114,4 +114,5 @@ class GnModuleSchemaConf(Schema):
     INVALID_CSV_NAME = fields.String(missing=INVALID_CSV_NAME)
     ALLOW_VALUE_MAPPING = fields.Boolean(missing=ALLOW_VALUE_MAPPING)
     DEFAULT_MAPPING_ID = fields.Integer(missing=DEFAULT_MAPPING_ID)
+    FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(missing=False)
 
