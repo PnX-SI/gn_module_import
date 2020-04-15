@@ -412,7 +412,7 @@ def cancel_import(info_role, import_id):
                     assert info_role.id_role in actors or info_role.id_organism in organisms
             except AssertionError:
                 raise InsufficientRightsError(
-                    ('User "{}" cannot delete this current releve').format(
+                    ('User "{}" cannot delete this current import').format(
                         user.id_role
                     ),
                     403,
