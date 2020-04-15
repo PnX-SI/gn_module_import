@@ -5,6 +5,7 @@ import { CommonService } from "@geonature_common/service/common.service";
 import { CruvedStoreService } from '@geonature_common/../services/cruved-store.service';
 import { DataService } from "../../services/data.service";
 import { ModuleConfig } from "../../module.config";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import {
   Step2Data,
   Step1Data,
@@ -27,6 +28,7 @@ export class ImportComponent implements OnInit {
   historyId: any;
   n_invalid: any;
   csvDownloadResp: any;
+  public deleteOne: any;
 
   public search = new FormControl()
 
@@ -36,7 +38,8 @@ export class ImportComponent implements OnInit {
     private _ds: DataService,
     private _csvExport: CsvExportService,
     private _router: Router,
-    private _commonService: CommonService
+    private _commonService: CommonService,
+    private modal: NgbModal
   ) {}
 
   ngOnInit() {
@@ -156,6 +159,11 @@ export class ImportComponent implements OnInit {
     this._router.navigate([
       `metadata/dataset_detail/${row.id_dataset}`
     ]);
+  }
+
+  openDeleteModal(row, modalDelete) {
+    this.deleteOne = row;
+    this.modal.open(modalDelete);
   }
 
 }

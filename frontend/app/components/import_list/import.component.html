@@ -46,12 +46,31 @@
                             </button>
                         </ng-template>
                     </ngx-datatable-column>
+                    <ngx-datatable-column maxWidth="80" name="Suppr." >
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <button class="clickable btn btn-sm btn-danger" style="margin-top: -10px;"
+                                (click)="openDeleteModal(row, deleteModal)" 
+                                title='Supprimer'> 
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </ng-template>
+                    </ngx-datatable-column>
                 </ngx-datatable>
             </div>
             <div *ngIf="empty">
                 Vous n'avez effectué aucun import
             </div>
             <import-modal-dataset class="pull-right mt-3"></import-modal-dataset>
+
+            <ng-template #deleteModal let-c="close " let-d="dismiss">
+          
+                <import-delete 
+                  [row]="deleteOne"
+                  [c]="c"
+                  (onDelete)="onImportList()">
+                </import-delete>
+              
+            </ng-template>
         </div>
     </div>
 </div>

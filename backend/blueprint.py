@@ -15,6 +15,7 @@ from geonature.utils.env import DB
 from geonature.core.gn_meta.models import TDatasets
 from geonature.core.gn_synthese.models import (
     Synthese,
+    TSources,
     CorObserverSynthese
 )
 from geonature.core.gn_permissions import decorators as permissions
@@ -390,7 +391,7 @@ def postMappingName(info_role):
 
 
 @blueprint.route('/cancel_import/<import_id>', methods=['GET'])
-@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+@permissions.check_cruved_scope('D', True, module_code="IMPORT")
 @json_resp
 def cancel_import(info_role, import_id):
     try:
@@ -399,6 +400,43 @@ def cancel_import(info_role, import_id):
             return {
                 'message':'Import annulé'
                 }, 200
+                
+        if info_role.value_filter != '3':
+            try:
+                if info_role.value_filter == '1':
+                    actors = [auth[0] for auth in DB.session.query(CorRoleImport.id_role).filter(
+                        CorRoleImport.id_import == import_id).all()]
+                    assert info_role.id_role in actors
+                elif info_role.value_filter == '2':
+                    organisms = [org[0] for org in DB.session.query(User.id_organisme).join(
+                        CorRoleImport, CorRoleImport.id_role==info_role.id_role).filter(
+                        CorRoleImport.id_import == import_id).all()]
+                    assert info_role.id_role in actors or info_role.id_organism in organisms
+            except AssertionError:
+                raise InsufficientRightsError(
+                    ('User "{}" cannot delete this current import').format(
+                        user.id_role
+                    ),
+                    403,
+                )
+
+        # delete imported data if the import is already finished
+        is_finished = DB.session.query(TImports.is_finished) \
+            .filter(TImports.id_import == import_id) \
+            .one()[0] 
+        if is_finished:
+            print('OK')
+            name_source = 'Import(id='+import_id+')'
+            print(name_source)
+            id_source = DB.session.query(TSources.id_source) \
+                .filter(TSources.name_source == name_source) \
+                .one()[0]
+            DB.session.query(Synthese) \
+                .filter(Synthese.id_source == id_source) \
+                .delete()
+            DB.session.query(TSources) \
+                .filter(TSources.name_source == name_source) \
+                .delete()
 
         # get step number
         step = DB.session.query(TImports.step) \
