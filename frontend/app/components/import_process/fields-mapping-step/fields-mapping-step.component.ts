@@ -83,7 +83,7 @@ export class FieldsMappingStepComponent implements OnInit {
     forkJoin([getErrorList, getRowErrorCount]).subscribe(
       ([errorList, errorCount]) => {
         this.dataCleaningErrors = errorList.errors;
-        this.n_error_lines = Number(errorCount);
+        this.n_error_lines = errorList.errors.length;
         this.isFullErrorCheck(n_table_rows, this.n_error_lines);
       },
       error => {

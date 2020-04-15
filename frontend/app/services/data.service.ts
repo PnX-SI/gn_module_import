@@ -133,7 +133,7 @@ export class DataService {
   }
 
   goToStep4(import_id, id_mapping) {
-    return this._http.put<any>(`${urlApi}/goToStep4/${import_id}/${id_mapping}`);
+    return this._http.put<any>(`${urlApi}/goToStep4/${import_id}/${id_mapping}`, {});
   }
 
   getNomencInfo(import_id) {
