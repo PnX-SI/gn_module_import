@@ -144,8 +144,8 @@ class NomenclatureTransformer:
                 set_user_error(
                     id_import=id_import,
                     error_code="INVALID_NOMENCLATURE",
-                    col_name=el['user_col'],
-                    id_rows=[row.gn_pk],
+                    col_name=el["user_col"],
+                    id_rows=row.gn_pk,
                     comment="La valeur '{}' n'existe pas pour la nomenclature {}".format(
                         row[1], el["mnemonique_type"]
                     ),
@@ -156,15 +156,18 @@ class NomenclatureTransformer:
         try:
             for el in self.accepted_id_nomencatures:
                 set_default_nomenclature_id(
-                    table_name=self.table_name, 
-                    mnemonique_type=el['mnemonique_type'],
-                    user_col=el['user_col'],
-                    id_types=list(map(lambda id: str(id), el["accepted_id_nomenclature"]))
+                    table_name=self.table_name,
+                    mnemonique_type=el["mnemonique_type"],
+                    user_col=el["user_col"],
+                    id_types=list(
+                        map(lambda id: str(id), el["accepted_id_nomenclature"])
+                    ),
                 )
             DB.session.commit()
         except Exception:
             DB.session.rollback()
             raise
+
 
 @checker("Set nomenclature ids from content mapping form")
 def set_nomenclature_ids(table_name, selected_content, selected_cols):

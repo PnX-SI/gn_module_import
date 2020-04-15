@@ -161,19 +161,20 @@ def get_nomenc_abb(id_nomenclature):
         raise
 
 
-def set_nomenclature_id(table_name, user_col, value, id_type):
+def set_nomenclature_id(table_name, user_col, value, id_nomenclature):
     try:
         query = """
                 UPDATE {schema_name}.{table_name}
-                SET {user_col} = :id_type
+                SET {user_col} = :id_nomenclature
                 WHERE {user_col} = :value
                 """.format(
             schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
             table_name=table_name,
             user_col=user_col,
         )
-        # escape paramter with sqlalchemy text to avoid injection and other errors
-        DB.session.execute(text(query), {"id_type": id_type, "value": value})
+        DB.session.execute(
+            text(query), {"id_nomenclature": id_nomenclature, "value": value}
+        )
     except Exception:
         raise
 
@@ -183,9 +184,10 @@ def find_row_with_nomenclatures_error(table_name, nomenclature_column, ids_accep
     Return all the rows where the nomenclatures has not be found
     """
     query = """
-    SELECT gn_pk, {nomenclature_column}
+    SELECT array_agg(gn_pk) as gn_pk, {nomenclature_column}
     FROM {schema_name}.{table_name}
     WHERE {nomenclature_column} NOT IN :ids_accepted
+    GROUP BY {nomenclature_column}
     """.format(
         schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table_name=table_name,
