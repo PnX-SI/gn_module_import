@@ -1186,50 +1186,6 @@ def content_mapping(info_role, import_id, id_mapping):
             message='INTERNAL SERVER ERROR during content mapping (user values to id_types',
             details=str(e))
 
-@blueprint.route('/goToStep4/<int:import_id>/<int:id_mapping>', methods=['PUT'])
-@permissions.check_cruved_scope('C', True, module_code="IMPORT")
-@json_resp
-def goToStep4(info_role, import_id, id_mapping):
-    """
-    Route only use for where content mapping is skipped
-    Only check if the config default mapping exist
-    and update t_import to set the step and the id_value_mapping corresponding
-    """
-    try:
-        # CHECK IF DEFAULT CONTENT MAPPING EXISTS
-
-        id_value_mapping = current_app.config['IMPORT']['DEFAULT_MAPPING_ID']
-        value_mapping = TMappings.query.get(id_value_mapping)
-        if not value_mapping:
-            return {
-                       'message': 'Content Mapping: le mapping n\'existe pas - contacter l\'administrateur'
-                   }, 400
-
-        # UPDATE TIMPORTS
-        logger.info('update t_imports from step 2 to step 4')
-
-        DB.session.query(TImports).filter(
-            TImports.id_import == import_id
-            ).update({
-                TImports.id_content_mapping: id_value_mapping,
-                TImports.step: 4
-            })
-
-        DB.session.commit()
-
-        logger.info('-> t_imports updated from step 2 to step 4')
-
-        return 'content_mapping done', 200
-
-    except Exception as e:
-        DB.session.rollback()
-        DB.session.close()
-        logger.error('SERVER ERROR DURING CONTENT MAPPING')
-        logger.exception(e)
-        raise GeonatureImportApiError(
-            message='INTERNAL SERVER ERROR during content mapping',
-            details=str(e)
-        )
 
 from .transform.nomenclatures.nomenclatures import NomenclatureTransformer
 
@@ -1279,8 +1235,8 @@ def import_data(info_role, import_id):
         # set total user columns
         id_mapping = get_id_field_mapping(import_id)
         selected_cols = get_selected_columns(id_mapping)
-        added_columns = {}
-        total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME, MODULE_CODE)
+        added_cols = {'the_geom_4326': 'gn_the_geom_4326', 'the_geom_local': 'gn_the_geom_local', 'the_geom_point': 'gn_the_geom_point'}
+        total_columns = set_total_columns(selected_cols, added_cols, import_id, MODULE_CODE)
 
         # IMPORT DATA IN SYNTHESE
 

@@ -212,24 +212,9 @@ export class FieldsMappingStepComponent implements OnInit {
           this.stepService.setStepData(2, step2data);
 
           if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
-            this._ds.goToStep4(this.stepData.importId, this.id_mapping)
-              .subscribe(arg => {
-                this.stepService.setStepData(4, step4Data);
-                this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
-              },
-                error => {
-                  if (error.statusText === "Unknown Error") {
-                    // show error message if no connexion
-                    this._commonService.regularToaster(
-                      "error",
-                      "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-                    );
-                  } else {
-                    // show error message if other server error
-                    console.error(error);
-                    this._commonService.regularToaster("error", error.error.message);
-                  }
-                });
+            this.stepService.setStepData(4, step4Data);
+            this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
+
           } else {
             this.stepService.setStepData(3, step3data);
             this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);

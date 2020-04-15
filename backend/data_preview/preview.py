@@ -46,9 +46,6 @@ def get_preview(schema_name, table_name, total_columns, selected_content):
                             ] = get_nomenclature_label_from_id(
                                 id_nomenclature=row[total_columns[value["key"]]]
                             )
-                            la = get_nomenclature_label_from_id(
-                                id_nomenclature=row[total_columns[value["key"]]]
-                            )
                         else:
                             synthese_dict[key]["value"] = row[
                                 total_columns[value["key"]]
