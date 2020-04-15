@@ -699,6 +699,9 @@ def postMapping(info_role, import_id, id_mapping):
     """
     Field mapping step
     """
+    # Debug
+    DB.session.execute("DELETE FROM gn_imports.t_user_error_list WHERE id_import = {}".format(int(import_id)))
+    DB.session.commit()
     try:
         is_running = True
         is_temp_table_name = False
@@ -914,6 +917,41 @@ def postMapping(info_role, import_id, id_mapping):
             .update({
                 TImports.id_field_mapping: int(id_mapping)
             })
+
+        ############### IF field mapping skipped
+
+        if not current_app.config['IMPORT']['ALLOW_VALUE_MAPPING']:
+            logger.info('update t_imports from step 2 to step 4')
+            ### CONTENT MAPPING ###
+            # get content mapping data
+            id_mapping_value = current_app.config['IMPORT']['DEFAULT_MAPPING_ID']
+            # check if the default mapping exist
+            value_mapping = TMappings.query.get(id_mapping_value)
+            if not value_mapping:
+                return {
+                        'message': 'Content Mapping: le mapping n\'existe pas - contacter l\'administrateur'
+                    }, 400
+            
+
+            # build nomenclature_transformer service
+            nomenclature_transformer = NomenclatureTransformer(id_mapping_value, selected_columns, table_names['imports_table_name'])
+            # with the mapping given, find all the corresponding nomenclatures
+            nomenclature_transformer.set_nomenclature_ids()
+
+            logger.info('Find nomenclature with errors :')
+            nomenclature_transformer.find_nomenclatures_errors(import_id)
+
+            if current_app.config['IMPORT']['FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE']:
+                nomenclature_transformer.set_default_nomenclature_ids()
+
+            # update t_import
+            DB.session.query(TImports).filter(
+                TImports.id_import == import_id
+                ).update({
+                    TImports.id_content_mapping: id_mapping_value,
+                    TImports.step: 4
+                })
+
 
         DB.session.commit()
         DB.session.close()
@@ -1202,19 +1240,13 @@ def check_and_set_nomenclature(import_id):
     """
     Check nomenclatures values
     """
-    MODULE_CODE = blueprint.config['MODULE_CODE']
-
     # get table name
     table_name = set_imports_table_name(get_table_name(import_id))
     # set total user columns
     id_field_mapping = get_id_field_mapping(import_id)
     selected_cols = get_selected_columns(id_field_mapping)
-    added_cols = {'the_geom_4326': 'gn_the_geom_4326', 'the_geom_local': 'gn_the_geom_local', 'the_geom_point': 'gn_the_geom_point'}
-
-    total_columns = set_total_columns(selected_cols, added_cols, import_id, MODULE_CODE)
 
     ### CONTENT MAPPING ###
-
     # get content mapping data
     id_mapping_value = get_id_mapping(import_id)
     # build nomenclature_transformer service
@@ -1247,22 +1279,8 @@ def import_data(info_role, import_id):
         # set total user columns
         id_mapping = get_id_field_mapping(import_id)
         selected_cols = get_selected_columns(id_mapping)
-
+        added_columns = {}
         total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME, MODULE_CODE)
-
-        ### CONTENT MAPPING ###
-
-        # get content mapping data
-        id_mapping = get_id_mapping(import_id);
-        selected_content = get_saved_content_mapping(id_mapping)
-
-        logger.info('Generating nomenclature ids from content mapping form values :')
-        set_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, selected_content, total_columns)
-
-        logger.info('Generating default nomenclature ids :')
-        set_default_nomenclature_ids(IMPORTS_SCHEMA_NAME, table_name, total_columns)
-
-        logger.info('-> Content mapping : user values transformed to id_types in the user table')
 
         # IMPORT DATA IN SYNTHESE
 
