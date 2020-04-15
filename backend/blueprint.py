@@ -106,7 +106,8 @@ from .transform.set_altitudes import set_altitudes
 from .transform.nomenclatures.nomenclatures import (
     get_nomenc_info,
     set_nomenclature_ids,
-    set_default_nomenclature_ids
+    set_default_nomenclature_ids,
+    NomenclatureTransformer
 )
 
 from .logs import logger
@@ -1134,7 +1135,7 @@ def get_dict_fields(info_role):
             details=str(e))
 
 
-@blueprint.route('/contentMapping/<import_id>/<id_mapping>', methods=['GET', 'POST'])
+@blueprint.route('/contentMapping/<int:import_id>/<int:id_mapping>', methods=['GET', 'POST'])
 @permissions.check_cruved_scope('C', True, module_code="IMPORT")
 @json_resp
 def content_mapping(info_role, import_id, id_mapping):
@@ -1154,11 +1155,28 @@ def content_mapping(info_role, import_id, id_mapping):
 
         # SAVE MAPPING
 
-        id_mapping = int(id_mapping)
         if id_mapping != 0:
             logger.info('save content mapping')
             save_content_mapping(form_data, id_mapping)
             logger.info(' -> content mapping saved')
+
+            # Nomenclature checking
+            logger.info('Check and remplace nomenclature')
+            import_object = TImports.query.get(import_id)
+            selected_columns = get_selected_columns(import_object.id_field_mapping)
+            table_name = set_imports_table_name(get_table_name(import_id))
+            # build nomenclature_transformer service
+            nomenclature_transformer = NomenclatureTransformer(id_mapping, selected_columns, table_name)
+            # with the mapping given, find all the corresponding nomenclatures
+            nomenclature_transformer.set_nomenclature_ids()
+
+            logger.info('Find nomenclature with errors :')
+            nomenclature_transformer.find_nomenclatures_errors(import_id)
+
+            if current_app.config['IMPORT']['FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE']:
+                nomenclature_transformer.set_default_nomenclature_ids()
+
+
 
         # UPDATE TIMPORTS
 
@@ -1187,7 +1205,6 @@ def content_mapping(info_role, import_id, id_mapping):
             details=str(e))
 
 
-from .transform.nomenclatures.nomenclatures import NomenclatureTransformer
 
 @blueprint.route('/check_nomenclatures/<int:import_id>', methods=['GET'])
 # @permissions.check_cruved_scope('C', module_code="IMPORT")
