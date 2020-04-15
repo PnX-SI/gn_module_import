@@ -1363,7 +1363,7 @@ def get_valid_data(info_role, import_id):
             #TODO: remove added cols
             added_cols = {'the_geom_4326': 'gn_the_geom_4326', 'the_geom_local': 'gn_the_geom_local', 'the_geom_point': 'gn_the_geom_point'}
 
-            total_columns = set_total_columns(selected_cols, added_cols, import_id, IMPORTS_SCHEMA_NAME, MODULE_CODE)
+            total_columns = set_total_columns(selected_cols, added_cols, import_id, MODULE_CODE)
 
             # get content mapping data
             id_content_mapping = get_id_mapping(import_id)
@@ -1383,6 +1383,7 @@ def get_valid_data(info_role, import_id):
         else:
             valid_data_list = 'no data'
             total_columns = ''
+
 
         return {
                    #'total_columns': total_columns,

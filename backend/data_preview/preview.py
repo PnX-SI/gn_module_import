@@ -11,6 +11,7 @@ from ..db.queries.nomenclatures import (
     set_default_value,
     get_nomenc_abb_from_name,
     get_nomenc_values,
+    get_nomenclature_label_from_id,
 )
 
 
@@ -25,6 +26,7 @@ def get_preview(schema_name, table_name, total_columns, selected_content):
 
         # fill synthese template
         valid_data_list = []
+        nomenclature_synthese_cols = get_SINP_synthese_cols()
         for row in preview:
             synthese_dict = get_synthese_dict(synthese_fields)
             for key, value in synthese_dict.items():
@@ -38,13 +40,15 @@ def get_preview(schema_name, table_name, total_columns, selected_content):
                         synthese_dict[key]["value"] = total_columns[value["key"]]
                     else:
                         # if this is a nomenclature column : replace user voc by nomenclature voc
-                        if value["key"] in get_SINP_synthese_cols():
-                            nomenc_val = get_nomenc_name(
-                                value["key"],
-                                row[total_columns[value["key"]]],
-                                selected_content,
+                        if value["key"] in nomenclature_synthese_cols:
+                            synthese_dict[key][
+                                "value"
+                            ] = get_nomenclature_label_from_id(
+                                id_nomenclature=row[total_columns[value["key"]]]
                             )
-                            synthese_dict[key]["value"] = nomenc_val
+                            la = get_nomenclature_label_from_id(
+                                id_nomenclature=row[total_columns[value["key"]]]
+                            )
                         else:
                             synthese_dict[key]["value"] = row[
                                 total_columns[value["key"]]
