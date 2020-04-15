@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container-fluid">
     <div class="card">
         <div class="card-header">
             <h5 class="card-title mb-0">Liste des imports</h5>
@@ -18,8 +18,13 @@
                     [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" [limit]="15" [selectionType]='single'>
                     <ngx-datatable-column *ngFor="let col of config.LIST_COLUMNS_FRONTEND" name="{{col.name}}"
                         prop="{{col.prop}}" maxWidth="{{col.max_width}}">
+                        <div *ngIf="col.prop=='dataset_name'">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                <a routerLink="/metadata/dataset_detail/{{row.id_dataset}}">{{row.dataset_name}}</a>
+                            </ng-template>
+                        </div>
                     </ngx-datatable-column>
-                    <ngx-datatable-column maxWidth="200" name="Fin import" [sortable]="false" prop="date_end_import">
+                    <ngx-datatable-column maxWidth="200" name="Fin import" [sortable]="true" prop="date_end_import">
                         <ng-template let-row="row" ngx-datatable-cell-template>
                             <button *ngIf="!row.is_finished" class="clickable btn btn-sm btn-dark" style="margin-top: -10px;"
                                 (click)="onFinishImport(row)"> Finir 
@@ -33,16 +38,6 @@
                             (click)="_csvExport.onCSV(row.id_import)" 
                             title='Téléchargement des données invalides'> 
                             <i class="fa fa-download"></i>
-                            </button>
-                        </ng-template>
-                    </ngx-datatable-column>
-                    <ngx-datatable-column maxWidth="80" [sortable]="false" >
-                        <ng-template let-row="row" ngx-datatable-cell-template>
-                            <button *ngIf="_cruvedStore.cruved?.METADATA?.cruved.U !== '0'"
-                            class="clickable btn btn-sm btn-info" style="margin-top: -10px;"
-                                (click)="onViewDataset(row)" 
-                                title='JDD associé'> 
-                                <i class="fa fa-eye"></i>
                             </button>
                         </ng-template>
                     </ngx-datatable-column>
