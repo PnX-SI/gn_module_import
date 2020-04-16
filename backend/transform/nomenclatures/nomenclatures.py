@@ -143,6 +143,7 @@ class NomenclatureTransformer:
             for row in rows_with_err:
                 set_user_error(
                     id_import=id_import,
+                    step="CONTENT_MAPPING",
                     error_code="INVALID_NOMENCLATURE",
                     col_name=el["user_col"],
                     id_rows=row.gn_pk,

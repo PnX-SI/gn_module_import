@@ -42,6 +42,7 @@ def set_error_and_invalid_reason(
     error_obj = get_error_from_code(error_code)
     set_user_error(
         id_import=id_import,
+        step="FIELD_MAPPING",
         id_error=error_obj.id_error,
         col_name=col_name_error,
         id_rows=id_rows_error,

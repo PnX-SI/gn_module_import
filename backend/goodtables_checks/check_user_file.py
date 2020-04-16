@@ -31,6 +31,7 @@ def check_user_file(id_import, full_path, row_limit=100000000):
                 gn_error = get_error_from_code(gn_error_code)
                 set_user_error(
                     id_import=id_import,
+                    step="UPLOAD",
                     id_error=gn_error.id_error,
                     comment="Erreur d'origine :" + error["message"],
                 )
@@ -40,7 +41,7 @@ def check_user_file(id_import, full_path, row_limit=100000000):
         if report["tables"][0]["row-count"] == 0:
             gn_error = get_error_from_code("EMPTY_FILE")
             set_user_error(
-                id_import=id_import, id_error=gn_error.id_error,
+                id_import=id_import, step="UPLOAD", id_error=gn_error.id_error,
             )
             errors.append("no data")
 

@@ -1,3 +1,4 @@
+from flask import current_app
 from sqlalchemy import text
 
 from geonature.utils.env import DB
@@ -16,24 +17,32 @@ def get_error_from_code(error_code):
 
 
 def set_user_error(
-    id_import, id_error=None, error_code=None, col_name="", id_rows=[], comment=None
+    id_import,
+    step,
+    id_error=None,
+    error_code=None,
+    col_name="",
+    id_rows=[],
+    comment=None,
 ):
     """
     Add a entry in t_user_error_list
 
     :params id_import int: id of the import
+    :params step str: step of the error <'UPLOAD', 'FIELD_MAPPING', 'CONTENT_MAPPING'>
     :params error_code str: the code of the error (t_user_errors)
     :params col_name str: column(s) concerned by the error
     :params n_errors int[]: id of the rows concerned by the errors
     :params comment str: additional comment about the error
     """
     query = """
-        INSERT INTO gn_imports.t_user_error_list(id_import, id_error, column_error, id_rows, comment)
+        INSERT INTO gn_imports.t_user_error_list(id_import, id_error, column_error, id_rows, step, comment)
         VALUES (
             :id_import, 
             {id_error}, 
             :col_name, 
             :id_rows,
+            :step,
             :comment
         );
         """.format(
@@ -50,6 +59,7 @@ def set_user_error(
                 "id_import": id_import,
                 "col_name": col_name,
                 "id_rows": id_rows,
+                "step": step,
                 "comment": comment,
             },
         )
@@ -83,20 +93,22 @@ def get_error_message(schema_name, id_import, error_code, col_name):
         raise
 
 
-def delete_user_errors(schema_name, id_import):
-    try:
-        DB.session.execute(
-            """
-                DELETE FROM {schema_name}.t_user_error_list
-                WHERE id_import = {id_import};
-            """.format(
-                schema_name=schema_name, id_import=id_import
-            )
-        )
-        DB.session.commit()
-    except Exception:
-        DB.session.rollback()
-        raise
+def delete_user_errors(id_import, step=None):
+    """
+    Delete errors of a mapping
+    if step = None delete all errors otherwise only the errors of the given step
+    """
+    query = """
+            DELETE FROM {schema_name}.t_user_error_list
+            WHERE id_import = {id_import}
+        """.format(
+        schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+        id_import=id_import,
+    )
+    if step:
+        query = " {} AND step = '{}'".format(query, step)
+    DB.session.execute(query)
+    DB.session.commit()
 
 
 def get_user_error_list(id_import):

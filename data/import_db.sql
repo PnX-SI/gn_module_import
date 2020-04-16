@@ -129,6 +129,7 @@ CREATE TABLE t_user_error_list(
     id_error integer NOT NULL,
     column_error character varying(100) NOT NULL,
     id_rows integer[],
+    step character varying(20)
     comment text
 );
 

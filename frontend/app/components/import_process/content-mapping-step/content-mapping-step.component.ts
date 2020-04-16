@@ -27,6 +27,9 @@ export class ContentMappingStepComponent implements OnInit {
   public nomencName;
   public idInfo;
   public disabled: boolean = true;
+  public disableNextStep = true;
+  public n_errors: number;
+  public showValidateMappingBtn = true;
 
   constructor(
     private stepService: StepsService,
@@ -35,7 +38,7 @@ export class ContentMappingStepComponent implements OnInit {
     private _cm: ContentMappingService,
     private _commonService: CommonService,
     private _router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(3);
@@ -198,15 +201,7 @@ export class ContentMappingStepComponent implements OnInit {
             );
             if (formControl) {
               formControl.setValue(arrayVal);
-            } else {
-              // console.log("PAS BOOON");
-              // console.log(content[0]["id_target_value"]);
-
-              //formControl.setValue(arrayVal);
             }
-            // this.contentTargetForm
-            //   .get(String(content[0]["id_target_value"]))
-            //   .setValue(arrayVal);
           }
         } else {
           this.contentTargetForm.reset();
@@ -243,17 +238,15 @@ export class ContentMappingStepComponent implements OnInit {
       )
       .subscribe(
         res => {
-          this.contentMapRes = res;
-          let step4Data: Step4Data = {
-            importId: this.stepData.importId
-          };
-          let step3Data: Step3Data = this.stepData;
-          step3Data.id_content_mapping = this.id_mapping;
-          this.stepService.setStepData(3, step3Data);
-          this.stepService.setStepData(4, step4Data);
-
-          this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
           this.spinner = false;
+          this.contentMapRes = res;
+          this._ds.getErrorList(this.stepData.importId).subscribe(err => {
+            this.n_errors = err.errors.length;
+            if (this.n_errors == 0) {
+              this.disableNextStep = false;
+              this.showValidateMappingBtn = false;
+            }
+          })
         },
         error => {
           this.spinner = false;
@@ -270,5 +263,17 @@ export class ContentMappingStepComponent implements OnInit {
           }
         }
       );
+  }
+
+  goToPreview() {
+    let step4Data: Step4Data = {
+      importId: this.stepData.importId
+    };
+    let step3Data: Step3Data = this.stepData;
+    step3Data.id_content_mapping = this.id_mapping;
+    this.stepService.setStepData(3, step3Data);
+    this.stepService.setStepData(4, step4Data);
+    this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
+
   }
 }

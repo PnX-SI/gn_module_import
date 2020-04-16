@@ -22,7 +22,7 @@ from ..db.queries.user_table_queries import (
     get_n_loaded_rows,
     get_n_invalid_rows,
     get_required,
-    delete_table
+    delete_table,
 )
 
 from ..db.queries.save_mapping import (
@@ -66,13 +66,6 @@ def postMapping(info_role, import_id, id_mapping):
     Field mapping step
     Check and transform the data
     """
-    #  Debug
-    DB.session.execute(
-        "DELETE FROM gn_imports.t_user_error_list WHERE id_import = {}".format(
-            int(import_id)
-        )
-    )
-    DB.session.commit()
     try:
         is_running = True
         is_temp_table_name = False
@@ -194,9 +187,8 @@ def postMapping(info_role, import_id, id_mapping):
             )
 
         # DELETE USER ERRORS
-        delete_user_errors(IMPORTS_SCHEMA_NAME, import_id)
+        delete_user_errors(import_id, "FIELD_MAPPING")
         # EXTRACT
-
         logger.info("* START EXTRACT FROM DB TABLE TO PYTHON")
         df = extract(
             table_names["imports_table_name"],
@@ -424,6 +416,9 @@ def content_mapping(info_role, import_id, id_mapping):
     Check and transform the nomenclature values
     """
     try:
+        # delete existing errors
+        delete_user_errors(import_id, "CONTENT_MAPPING")
+
         if id_mapping == "0":
             return (
                 {"message": "Vous devez d'abord créer ou sélectionner un mapping"},
