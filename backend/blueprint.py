@@ -14,6 +14,7 @@ from geonature.utils.env import DB
 from geonature.core.gn_meta.models import TDatasets
 from geonature.core.gn_synthese.models import (
     Synthese,
+    TSources,
     CorObserverSynthese
 )
 from geonature.core.gn_permissions import decorators as permissions
@@ -153,6 +154,13 @@ def get_import_list(info_role):
                 date_end_import = 'En cours'
             else:
                 date_end_import = r.date_end_import
+            
+            name_source = 'Import(id=' + str(r.id_import) + ')'
+            id_source = DB.session.query(TSources.id_source) \
+                .filter(TSources.name_source == name_source) \
+                .first()
+            if id_source:
+                id_source = id_source[0]
 
             prop = {
                 "id_import": r.id_import,
@@ -162,6 +170,7 @@ def get_import_list(info_role):
                 "encoding": r.encoding,
                 "import_table": r.import_table,
                 "full_file_name": r.full_file_name,
+                "id_source" : id_source,
                 "id_dataset": r.id_dataset,
                 "id_field_mapping": r.id_field_mapping,
                 "id_content_mapping": r.id_content_mapping,
