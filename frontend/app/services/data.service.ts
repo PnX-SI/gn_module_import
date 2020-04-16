@@ -10,10 +10,14 @@ const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 
 @Injectable()
 export class DataService {
-  constructor(private _http: HttpClient) {}
+  constructor(private _http: HttpClient) { }
 
   getImportList() {
     return this._http.get<any>(urlApi);
+  }
+
+  getOneImport(id_import) {
+    return this._http.get(`${urlApi}/${id_import}`)
   }
 
   postUserFile(value, datasetId, importId, isFileChanged, fileName) {
@@ -128,10 +132,8 @@ export class DataService {
     );
   }
 
-  postDataToStep4(import_id, id_mapping, content_mapping) {
-    let fd = new FormData();
-    fd.append("content_mapping", content_mapping);
-    return this._http.post<any>(`${urlApi}/postDataToStep4/${import_id}/${id_mapping}`, fd, HttpUploadOptions);
+  goToStep4(import_id, id_mapping) {
+    return this._http.put<any>(`${urlApi}/goToStep4/${import_id}/${id_mapping}`, {});
   }
 
   getNomencInfo(import_id) {

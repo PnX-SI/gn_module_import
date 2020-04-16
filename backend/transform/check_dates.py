@@ -1,7 +1,6 @@
 import pandas as pd
 
-from ..db.queries.user_errors import set_user_error
-from .utils import fill_col, fill_map, set_is_valid, set_invalid_reason
+from .utils import fill_col, fill_map, set_is_valid, set_error_and_invalid_reason
 from ..wrappers import checker
 from ..logs import logger
 
@@ -19,54 +18,77 @@ def is_negative_date(value):
         return True
 
 
-@checker('Data cleaning : dates checked')
-def check_dates(df, added_cols, selected_columns, synthese_info, import_id, schema_name):
+@checker("Data cleaning : dates checked")
+def check_dates(
+    df, added_cols, selected_columns, synthese_info, import_id, schema_name
+):
     try:
 
-        logger.info('CHECKING DATES :')
-        
+        logger.info("CHECKING DATES :")
+
         # get user synthese fields having timestamp type
-        date_fields = [field for field in synthese_info if
-                       synthese_info[field]['data_type'] == 'timestamp without time zone']
+        date_fields = [
+            field
+            for field in synthese_info
+            if synthese_info[field]["data_type"] == "timestamp without time zone"
+        ]
 
         ## date_min and date_max :
 
         # set date_max (=if data_max not existing, then set equal to date_min)
-        if 'date_max' not in date_fields:
-            logger.info('- date_max not provided : set date_max = date_min')
-            added_cols['date_max'] = selected_columns['date_min']
-            df['date_max'] = df[selected_columns['date_min']]  # utile?
-            synthese_info.update({'date_max': synthese_info['date_min']})  # utile?
+        if "date_max" not in date_fields:
+            logger.info("- date_max not provided : set date_max = date_min")
+            added_cols["date_max"] = selected_columns["date_min"]
+            df["date_max"] = df[selected_columns["date_min"]]  # utile?
+            synthese_info.update({"date_max": synthese_info["date_min"]})  # utile?
 
         # check date min <= date max
-        if 'date_min' in date_fields and 'date_max' in date_fields:
+        if "date_min" in date_fields and "date_max" in date_fields:
 
-            logger.info('- checking date_min (= %s user column) <= date_max (= %s user column)',
-                        selected_columns['date_min'], selected_columns['date_max'])
+            logger.info(
+                "- checking date_min (= %s user column) <= date_max (= %s user column)",
+                selected_columns["date_min"],
+                selected_columns["date_max"],
+            )
 
-            df['check_dates'] = ''
+            df["check_dates"] = ""
             # pd.to_datetime(df[selected_columns['date_min']], errors='coerce').fillna(pd.np.nan)
-            df['check_dates'] = df[selected_columns['date_max']] - df[selected_columns['date_min']]
-            df['temp'] = ''
-            df['temp'] = df['temp'] \
+            df["check_dates"] = (
+                df[selected_columns["date_max"]] - df[selected_columns["date_min"]]
+            )
+            df["temp"] = ""
+            df["temp"] = (
+                df["temp"]
                 .where(
-                cond=df['check_dates'].apply(lambda x: is_negative_date(x)),
-                other=False) \
-                .map(fill_map) \
-                .astype('bool')
+                    cond=df["check_dates"].apply(lambda x: is_negative_date(x)),
+                    other=False,
+                )
+                .map(fill_map)
+                .astype("bool")
+            )
 
-            set_is_valid(df, 'temp')
-            n_date_min_sup = df['temp'].astype(str).str.contains('False').sum()
+            set_is_valid(df, "temp")
+            id_rows_errors = df.index[df["temp"] == False].to_list()
 
-            logger.info('%s date_min (= %s user column) > date_max (= %s user column) errors detected', n_date_min_sup,
-                        selected_columns['date_min'], selected_columns['date_max'])
+            logger.info(
+                "%s date_min (= %s user column) > date_max (= %s user column) errors detected",
+                len(id_rows_errors),
+                selected_columns["date_min"],
+                selected_columns["date_max"],
+            )
 
-            if n_date_min_sup > 0:
-                set_user_error(import_id, 7, selected_columns['date_min'], n_date_min_sup)
-                set_invalid_reason(df, schema_name, 'temp', import_id, 7, selected_columns['date_min'])
+            if len(id_rows_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="DATE_MIN_SUP_DATE_MAX",
+                    col_name_error=selected_columns["date_min"],
+                    df_col_name_valid="temp",
+                    id_rows_error=id_rows_errors,
+                )
 
-        if 'check_dates' in df.columns:
-            df = df.drop('check_dates', axis=1)
+        if "check_dates" in df.columns:
+            df = df.drop("check_dates", axis=1)
 
     except Exception:
         raise

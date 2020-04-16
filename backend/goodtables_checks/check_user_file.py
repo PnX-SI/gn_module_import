@@ -1,50 +1,65 @@
 from goodtables import validate
-from .goodtables_errors import*
+from .goodtables_errors import *
 
 from ..logs import logger
 from ..wrappers import checker
+from ..db.queries.user_errors import get_error_from_code, set_user_error
 
 
-@checker('User file validity checked')
-def check_user_file(full_path, row_limit=100000000):
+ERROR_MAPPING = {
+    "encoding-error": "ENCODING_ERROR",
+    "blank-header": "HEADER_COLUMN_EMPTY",
+    "format-error": "FILE_FORMAT_ERROR",
+    "duplicate-header": "HEADER_SAME_COLUMN_NAME",
+    "blank-row": "EMPTY_ROW",
+    "duplicate-row": "DUPLICATE_ROWS",
+    "extra-value": "ROW_HAVE_TOO_MUCH_COLUMN",
+    "missing-value": "ROW_HAVE_LESS_COLUMN",
+}
+
+
+@checker("User file validity checked")
+def check_user_file(id_import, full_path, row_limit=100000000):
 
     try:
-
         errors = []
-
-        report = validate(full_path, skip_checks=['duplicate-row'], row_limit=row_limit)
-
-        if report['valid'] is False:
-
-            for error in report['tables'][0]['errors']:
-                if 'No such file or directory' in error['message']:
-                    # avoid printing original goodtable message error containing the user full_path (security purpose)
-                    user_error = set_error(error['code'], 'No such file or directory', '')
-                    errors.append(user_error)
-                else:
-                    # other goodtable errors :
-                    user_error = set_error(error['code'], '', error['message'])
-                    errors.append(user_error)
+        report = validate(full_path, skip_checks=["duplicate-row"], row_limit=row_limit)
+        if report["valid"] is False:
+            for error in report["tables"][0]["errors"]:
+                # other goodtable errors :
+                gn_error_code = ERROR_MAPPING.get(error["code"], "UNKNOWN_ERROR")
+                gn_error = get_error_from_code(gn_error_code)
+                set_user_error(
+                    id_import=id_import,
+                    step="UPLOAD",
+                    id_error=gn_error.id_error,
+                    comment="Erreur d'origine :" + error["message"],
+                )
+                errors.append(error)
 
         # if no rows :
-        if report['tables'][0]['row-count'] == 0:
-            errors.append(no_data)
+        if report["tables"][0]["row-count"] == 0:
+            gn_error = get_error_from_code("EMPTY_FILE")
+            set_user_error(
+                id_import=id_import, step="UPLOAD", id_error=gn_error.id_error,
+            )
+            errors.append("no data")
 
         # get column names:
-        column_names = report['tables'][0]['headers']
+        column_names = report["tables"][0]["headers"]
         # get file format:
-        file_format = report['tables'][0]['format']
+        file_format = report["tables"][0]["format"]
         # get row number:
-        row_count = report['tables'][0]['row-count']
+        row_count = report["tables"][0]["row-count"]
 
-        logger.debug('column_names = %s', column_names)
-        logger.debug('row_count = %s', row_count)
+        logger.debug("column_names = %s", column_names)
+        logger.debug("row_count = %s", row_count)
 
         return {
-            'column_names': column_names,
-            'file_format': file_format,
-            'row_count': row_count,
-            'errors': errors
+            "column_names": column_names,
+            "file_format": file_format,
+            "row_count": row_count,
+            "errors": errors,
         }
 
     except Exception:

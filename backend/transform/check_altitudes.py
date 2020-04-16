@@ -1,8 +1,7 @@
 import pandas as pd
 import dask
-from .utils import fill_col, set_invalid_reason
+from .utils import fill_col, set_error_and_invalid_reason
 from ..wrappers import checker
-from ..db.queries.user_errors import set_user_error
 
 
 def check_alt_min_max(min_val, max_val):
@@ -18,8 +17,10 @@ def check_alt_min_max(min_val, max_val):
         return True
 
 
-@checker('Data cleaning : altitudes checked')
-def check_altitudes(df, selected_columns, synthese_info, calcul, import_id, schema_name):
+@checker("Data cleaning : altitudes checked")
+def check_altitudes(
+    df, selected_columns, synthese_info, calcul, import_id, schema_name
+):
     """
     - if user want to calculate altitudes:
         -> if only altitude max column provided, calculates altitude min column
@@ -41,7 +42,7 @@ def check_altitudes(df, selected_columns, synthese_info, calcul, import_id, sche
         altitudes = []
 
         for element in list(selected_columns.keys()):
-            if element == 'altitude_min' or element == 'altitude_max':
+            if element == "altitude_min" or element == "altitude_max":
                 altitudes.append(element)
 
         if calcul is False:
@@ -49,20 +50,29 @@ def check_altitudes(df, selected_columns, synthese_info, calcul, import_id, sche
             if len(altitudes) == 2:
 
                 # check max >= min
-                df['temp'] = ''
-                df['temp'] = df.apply(lambda x: check_alt_min_max(x[selected_columns['altitude_min']],
-                                                                  x[selected_columns['altitude_max']]), axis=1)
-                df['gn_is_valid'] = df['gn_is_valid'] \
-                    .where(
-                        cond=df['temp'].apply(lambda x: fill_col(x)), 
-                        other=False
+                df["temp"] = ""
+                df["temp"] = df.apply(
+                    lambda x: check_alt_min_max(
+                        x[selected_columns["altitude_min"]],
+                        x[selected_columns["altitude_max"]],
+                    ),
+                    axis=1,
+                )
+                df["gn_is_valid"] = df["gn_is_valid"].where(
+                    cond=df["temp"].apply(lambda x: fill_col(x)), other=False
+                )
+                # get invalid id rows
+                id_rows_errors = df.index[df["temp"] == False].to_list()
+
+                if len(id_rows_errors) > 0:
+                    set_error_and_invalid_reason(
+                        df=df,
+                        id_import=import_id,
+                        error_code="ALTI_MIN_SUP_ALTI_MAX",
+                        col_name_error=selected_columns["altitude_min"],
+                        df_col_name_valid="temp",
+                        id_rows_error=id_rows_errors,
                     )
-
-                n_alt_min_sup = df['temp'].astype(str).str.contains('False').sum()
-
-                if n_alt_min_sup > 0:
-                    set_user_error(import_id, 10, selected_columns['altitude_min'], n_alt_min_sup)
-                    set_invalid_reason(df, schema_name, 'temp', import_id, 10, selected_columns['altitude_min'])
 
     except Exception:
         raise

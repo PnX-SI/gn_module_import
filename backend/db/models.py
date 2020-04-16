@@ -1,30 +1,53 @@
-from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func, PrimaryKeyConstraint
+from sqlalchemy import (
+    Column,
+    DateTime,
+    String,
+    Integer,
+    ForeignKey,
+    func,
+    PrimaryKeyConstraint,
+)
 from sqlalchemy.orm import relationship
+from sqlalchemy.types import ARRAY
 from geoalchemy2 import Geometry
 
 import datetime
 
 from geonature.utils.env import DB
 
-from geonature.utils.utilssqlalchemy import (
-    serializable,
-    geoserializable
-)
+from geonature.utils.utilssqlalchemy import serializable, geoserializable
 from geonature.core.gn_meta.models import TDatasets
 from pypnusershub.db.models import User
 
+
+@serializable
+class VUserImportsErrors(DB.Model):
+    __tablename__ = "v_imports_errors"
+    __table_args__ = {"schema": "gn_imports"}
+    id_user_error = DB.Column(DB.Integer, primary_key=True)
+    id_import = DB.Column(DB.Integer, ForeignKey("gn_imports.t_imports.id_import"))
+    error_type = DB.Column(DB.Unicode)
+    error_name = DB.Column(DB.Unicode)
+    error_level = DB.Column(DB.Unicode)
+    error_description = DB.Column(DB.Unicode)
+    column_error = DB.Column(DB.Unicode)
+    id_rows = DB.Column(ARRAY(DB.Integer))
+    comment = DB.Column(DB.Unicode)
+
+
 @serializable
 class CorRoleImport(DB.Model):
-    __tablename__ = 'cor_role_import'
-    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
+    __tablename__ = "cor_role_import"
+    __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
     id_role = DB.Column(DB.Integer, primary_key=True)
     id_import = DB.Column(DB.Integer, primary_key=True)
 
+
 @serializable
 class TImports(DB.Model):
-    __tablename__ = 't_imports'
-    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
+    __tablename__ = "t_imports"
+    __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
     id_import = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     format_source_file = DB.Column(DB.Unicode, nullable=True)
@@ -33,7 +56,9 @@ class TImports(DB.Model):
     encoding = DB.Column(DB.Unicode, nullable=True)
     import_table = DB.Column(DB.Unicode, nullable=True)
     full_file_name = DB.Column(DB.Unicode, nullable=True)
-    id_dataset = DB.Column(DB.Integer, nullable=True)
+    id_dataset = DB.Column(
+        DB.Integer, ForeignKey("gn_meta.t_datasets.id_dataset"), nullable=True,
+    )
     id_field_mapping = DB.Column(DB.Integer, nullable=True)
     id_content_mapping = DB.Column(DB.Integer, nullable=True)
     date_create_import = DB.Column(DB.DateTime, nullable=True)
@@ -51,18 +76,31 @@ class TImports(DB.Model):
         secondary=CorRoleImport.__table__,
         primaryjoin=(CorRoleImport.id_import == id_import),
         secondaryjoin=(CorRoleImport.id_role == User.id_role),
-        foreign_keys=[
-            CorRoleImport.id_import,
-            CorRoleImport.id_role,
-        ],
+        foreign_keys=[CorRoleImport.id_import, CorRoleImport.id_role,],
     )
     is_finished = DB.Column(DB.Boolean, nullable=False, default=False)
+    errors = DB.relationship(
+        "VUserImportsErrors", lazy="joined", order_by="VUserImportsErrors.error_type"
+    )
+    dataset = DB.relationship("TDatasets", lazy="joined")
+
+    def to_dict(self):
+        import_as_dict = self.as_dict(True)
+        if import_as_dict["date_end_import"] is None:
+            import_as_dict["date_end_import"] = "En cours"
+        import_as_dict["author_name"] = "; ".join(
+            [a.nom_role + " " + a.prenom_role for a in self.author]
+        )
+        import_as_dict["dataset_name"] = import_as_dict["dataset"]["dataset_name"]
+        import_as_dict.pop("dataset")
+        import_as_dict["errors"] = import_as_dict.get("errors", [])
+        return import_as_dict
 
 
 @serializable
 class CorRoleMapping(DB.Model):
-    __tablename__ = 'cor_role_mapping'
-    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
+    __tablename__ = "cor_role_mapping"
+    __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
     id_role = DB.Column(DB.Integer, primary_key=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
@@ -70,8 +108,8 @@ class CorRoleMapping(DB.Model):
 
 @serializable
 class TMappingsFields(DB.Model):
-    __tablename__ = 't_mappings_fields'
-    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
+    __tablename__ = "t_mappings_fields"
+    __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
     id_match_fields = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
@@ -83,8 +121,8 @@ class TMappingsFields(DB.Model):
 
 @serializable
 class TMappingsValues(DB.Model):
-    __tablename__ = 't_mappings_values'
-    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
+    __tablename__ = "t_mappings_values"
+    __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
     id_match_values = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
@@ -94,8 +132,8 @@ class TMappingsValues(DB.Model):
 
 @serializable
 class TMappings(DB.Model):
-    __tablename__ = 't_mappings'
-    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
+    __tablename__ = "t_mappings"
+    __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
     id_mapping = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     mapping_label = DB.Column(DB.Unicode, nullable=False)
@@ -105,8 +143,8 @@ class TMappings(DB.Model):
 
 @serializable
 class BibFields(DB.Model):
-    __tablename__ = 'dict_fields'
-    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
+    __tablename__ = "dict_fields"
+    __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
     id_field = DB.Column(DB.Integer, primary_key=True)
     name_field = DB.Column(DB.Unicode, nullable=False)
@@ -124,8 +162,8 @@ class BibFields(DB.Model):
 
 @serializable
 class BibThemes(DB.Model):
-    __tablename__ = 'dict_themes'
-    __table_args__ = {'schema': 'gn_imports', "extend_existing": True}
+    __tablename__ = "dict_themes"
+    __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
     id_theme = DB.Column(DB.Integer, primary_key=True)
     name_theme = DB.Column(DB.Unicode, nullable=False)
@@ -137,14 +175,16 @@ class BibThemes(DB.Model):
 
 @serializable
 class CorImportArchives(DB.Model):
-    __tablename__ = 'cor_import_archives'
-    __table_args__ = {'schema': 'gn_import_archives', "extend_existing": True}
+    __tablename__ = "cor_import_archives"
+    __table_args__ = {"schema": "gn_import_archives", "extend_existing": True}
 
     id_import = DB.Column(DB.Integer, primary_key=True)
     table_archive = DB.Column(DB.Integer, primary_key=True)
 
 
-def generate_user_table_class(schema_name, table_name, pk_name, user_columns, id, schema_type):
+def generate_user_table_class(
+    schema_name, table_name, pk_name, user_columns, id, schema_type
+):
     """
         Generate dynamically the user file class used to copy user data (csv) into db tables
         parameters :
@@ -156,27 +196,34 @@ def generate_user_table_class(schema_name, table_name, pk_name, user_columns, id
 
     # create dict in order to create dynamically the user file class
 
-    if schema_type not in ['archives', 'gn_imports']:
+    if schema_type not in ["archives", "gn_imports"]:
         # penser à gérer retour d'erreur en front
-        return 'Wrong schema type', 400
+        return "Wrong schema type", 400
 
     user_table = {
-        '__tablename__': table_name,
-        '__table_args__': (PrimaryKeyConstraint(pk_name), {'schema': schema_name, "extend_existing": False})
+        "__tablename__": table_name,
+        "__table_args__": (
+            PrimaryKeyConstraint(pk_name),
+            {"schema": schema_name, "extend_existing": False},
+        ),
     }
 
-    if schema_type == 'gn_imports':
-        user_table.update({'gn_is_valid': DB.Column(DB.Text, nullable=True)})
-        user_table.update({'gn_invalid_reason': DB.Column(DB.Text, nullable=True)})
+    if schema_type == "gn_imports":
+        user_table.update({"gn_is_valid": DB.Column(DB.Text, nullable=True)})
+        user_table.update({"gn_invalid_reason": DB.Column(DB.Text, nullable=True)})
 
     user_table.update({pk_name: DB.Column(DB.Integer, autoincrement=True)})
     for column in user_columns:
         user_table.update({column: DB.Column(DB.Text, nullable=True)})
 
     # creation of the user file class :
-    if schema_type == 'archives':
-        UserTableClass = type('UserArchivesTableClass{}'.format(id), (DB.Model,), user_table)
+    if schema_type == "archives":
+        UserTableClass = type(
+            "UserArchivesTableClass{}".format(id), (DB.Model,), user_table
+        )
     else:
-        UserTableClass = type('UserTimportsTableClass{}'.format(id), (DB.Model,), user_table)
+        UserTableClass = type(
+            "UserTimportsTableClass{}".format(id), (DB.Model,), user_table
+        )
 
     return UserTableClass

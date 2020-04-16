@@ -9,6 +9,7 @@ SET client_min_messages = warning;
 --------------
 --GN_IMPORTS--
 --------------
+CREATE SCHEMA IF NOT EXISTS gn_imports;
 
 SET search_path = gn_imports, pg_catalog;
 SET default_with_oids = false;
@@ -37,7 +38,8 @@ CREATE TABLE t_imports(
     date_min_data timestamp without time zone,
     date_max_data timestamp without time zone,
     step integer,
-    is_finished boolean DEFAULT 'f'
+    is_finished boolean DEFAULT 'f',
+    error_report_path character varying(255)
 );
 
 
@@ -51,7 +53,8 @@ CREATE TABLE t_user_errors(
     id_error serial NOT NULL,
     error_type character varying(100) NOT NULL,
     name character varying(255) NOT NULL UNIQUE,
-    description character varying(255) NOT NULL
+    description text,
+    error_level character varying(25)
 );
 
 
@@ -126,8 +129,25 @@ CREATE TABLE t_user_error_list(
     id_import integer NOT NULL,
     id_error integer NOT NULL,
     column_error character varying(100) NOT NULL,
-    count_error integer NOT NULL
+    id_rows integer[],
+    step character varying(20),
+    comment text
 );
+
+
+CREATE VIEW gn_imports.v_imports_errors AS 
+SELECT 
+id_user_error,
+id_import,
+error_type,
+name AS error_name,
+error_level,
+description AS error_description,
+column_error,
+id_rows,
+comment
+FROM  gn_imports.t_user_error_list el 
+JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error;
 
 
 

@@ -118,7 +118,7 @@ export class FieldMappingService {
               .setValue(field["source_field"]);
           }
           this.shadeSelectedColumns(targetFormName);
-          this.geoTypeSelect(targetFormName);
+          this.geoFormValidator(targetFormName);
         } else {
           this.fillEmptyMapping(targetFormName);
         }
@@ -162,21 +162,33 @@ export class FieldMappingService {
     targetForm.get(formControlName).updateValueAndValidity();
   }
 
-  geoTypeSelect(targetForm) {
+  /**
+   * Add custom validator to the form
+   */
+  geoFormValidator(targetForm) {
     /*
-        3 cases :
-        - one coordinates == '' && wkt == '' : lat && long && wkt set as required
-        - wkt == '' and both coordinates != '' : wkt not required, coordinates required
-        - wkt != '' : wkt required, coordinates not required
+        6 cases :
+        - all empty : all required
+        - wkt == '' and both coordinates != '' : wkt not required, codes not required, coordinates required
+        - wkt != '' : wkt required, coordinates and codes not required
+        - one of the code not empty: others not required
         */
     if (
       targetForm.get("WKT").value === "" &&
       (targetForm.get("longitude").value === "" ||
         targetForm.get("latitude").value === "")
+      && (
+        targetForm.get("codemaille").value === "" ||
+        targetForm.get("codecommune").value === "" ||
+        targetForm.get("codedepartement").value === ""
+      )
     ) {
       this.setFormControlRequired(targetForm, "WKT");
       this.setFormControlRequired(targetForm, "longitude");
       this.setFormControlRequired(targetForm, "latitude");
+      this.setFormControlRequired(targetForm, "codemaille");
+      this.setFormControlRequired(targetForm, "codecommune");
+      this.setFormControlRequired(targetForm, "codedepartement");
     }
     if (
       targetForm.get("WKT").value === "" &&
@@ -186,18 +198,48 @@ export class FieldMappingService {
       this.setFormControlNotRequired(targetForm, "WKT");
       this.setFormControlRequired(targetForm, "longitude");
       this.setFormControlRequired(targetForm, "latitude");
+      this.setFormControlNotRequired(targetForm, "codecommune");
+      this.setFormControlNotRequired(targetForm, "codedepartement");
+      this.setFormControlNotRequired(targetForm, "codemaille");
     }
     if (targetForm.get("WKT").value !== "") {
       this.setFormControlRequired(targetForm, "WKT");
       this.setFormControlNotRequired(targetForm, "longitude");
       this.setFormControlNotRequired(targetForm, "latitude");
+      this.setFormControlNotRequired(targetForm, "codemaille");
+      this.setFormControlNotRequired(targetForm, "codecommune");
+      this.setFormControlNotRequired(targetForm, "codedepartement");
     }
+  if (targetForm.get("codemaille").value !== "") {
+    this.setFormControlRequired(targetForm, "codemaille");
+    this.setFormControlNotRequired(targetForm, "WKT");
+    this.setFormControlNotRequired(targetForm, "longitude");
+    this.setFormControlNotRequired(targetForm, "latitude");
+    this.setFormControlNotRequired(targetForm, "codecommune");
+    this.setFormControlNotRequired(targetForm, "codedepartement");
   }
+  if (targetForm.get("codecommune").value !== "") {
+    this.setFormControlRequired(targetForm, "codecommune");
+    this.setFormControlNotRequired(targetForm, "WKT");
+    this.setFormControlNotRequired(targetForm, "longitude");
+    this.setFormControlNotRequired(targetForm, "latitude");
+    this.setFormControlNotRequired(targetForm, "codemaille");
+    this.setFormControlNotRequired(targetForm, "codedepartement");
+  }
+  if (targetForm.get("codedepartement").value !== "") {
+    this.setFormControlRequired(targetForm, "codedepartement");
+    this.setFormControlNotRequired(targetForm, "WKT");
+    this.setFormControlNotRequired(targetForm, "longitude");
+    this.setFormControlNotRequired(targetForm, "latitude");
+    this.setFormControlNotRequired(targetForm, "codecommune");
+    this.setFormControlNotRequired(targetForm, "codemaille");
+  }
+}
 
   onSelect(id_mapping, targetForm) {
     this.id_mapping = id_mapping;
     this.shadeSelectedColumns(targetForm);
-    this.geoTypeSelect(targetForm);
+    this.geoFormValidator(targetForm);
   }
 
   disableMapping(targetForm) {

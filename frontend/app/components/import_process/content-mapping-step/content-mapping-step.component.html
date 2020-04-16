@@ -80,9 +80,28 @@
                     <i class="material-icons"> navigate_before </i>
                     Précédent
                 </button>
+                <button 
+                    class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
+                    *ngIf="n_errors > 0  && contentMapRes"
+                >
+                    <a   target="_blank" [routerLink]="['/import/errors', stepData.importId]"> 
+                        {{n_errors}} lignes avec erreurs - Voir le rapport complet
+                    </a>
+                </button>
                 <button (click)="onContentMapping(contentTargetForm.value)"
+                        class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
+                        [disabled]="disabled"
+                        *ngIf="showValidateMappingBtn"
+                    >
+                        Valider le mapping
+                </button>
+                <span *ngIf="n_errors == 0" class="alert alert-success"> Aucune erreur détéctée dans le fichier </span>
+
+                <button
                     class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                    [disabled]="disabled">
+                    [disabled]="disableNextStep"
+                    (click)="goToPreview()"
+                >
                     Suivant
                     <i class="material-icons"> navigate_next </i>
                 </button>

@@ -34,13 +34,13 @@ export class ImportComponent implements OnInit {
 
 
   constructor(
-    public _cruvedStore: CruvedStoreService, 
+    public _cruvedStore: CruvedStoreService,
     private _ds: DataService,
     private _csvExport: CsvExportService,
     private _router: Router,
     private _commonService: CommonService,
     private modal: NgbModal
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.onImportList();
@@ -62,9 +62,9 @@ export class ImportComponent implements OnInit {
       for (let i = 0; i < cols.length; i++) {
         if (
           (item[cols[i]['prop']] && item[cols[i]['prop']]
-              .toString()
-              .toLowerCase()
-              .indexOf(value) !== -1) ||
+            .toString()
+            .toLowerCase()
+            .indexOf(value) !== -1) ||
           !value
         ) {
           return true;
@@ -97,9 +97,6 @@ export class ImportComponent implements OnInit {
 
   onFinishImport(row) {
     localStorage.setItem("startPorcess", JSON.stringify(true));
-    let separator = ModuleConfig.SEPARATOR.find(
-      separator => separator.db_code === row.separator
-    );
     let dataStep1: Step1Data = {
       importId: row.id_import,
       datasetId: row.id_dataset,
@@ -107,7 +104,6 @@ export class ImportComponent implements OnInit {
         fileName: row.full_file_name,
         encoding: row.encoding,
         srid: row.srid,
-        separator: separator.code /// separator to convert
       }
     };
     localStorage.setItem("step1Data", JSON.stringify(dataStep1));

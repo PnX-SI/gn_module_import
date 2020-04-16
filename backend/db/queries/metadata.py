@@ -1,17 +1,10 @@
 from geonature.utils.env import DB
 
-from geonature.core.gn_synthese.models import (
-    Synthese,
-    CorObserverSynthese
-)
+from geonature.core.gn_synthese.models import Synthese, CorObserverSynthese
 
 from geonature.core.gn_meta.models import TDatasets
 
-from ..models import (
-    CorRoleImport,
-    CorImportArchives,
-    TImports
-)
+from ..models import CorRoleImport, CorImportArchives, TImports
 
 
 def delete_import_CorImportArchives(id_import):
@@ -23,9 +16,9 @@ def delete_import_CorImportArchives(id_import):
             None
 
     """
-    DB.session.query(CorImportArchives) \
-        .filter(CorImportArchives.id_import == id_import) \
-        .delete()
+    DB.session.query(CorImportArchives).filter(
+        CorImportArchives.id_import == id_import
+    ).delete()
 
 
 def delete_import_CorRoleImport(id_import):
@@ -37,9 +30,9 @@ def delete_import_CorRoleImport(id_import):
             None
 
     """
-    DB.session.query(CorRoleImport) \
-        .filter(CorRoleImport.id_import == id_import) \
-        .delete()
+    DB.session.query(CorRoleImport).filter(
+        CorRoleImport.id_import == id_import
+    ).delete()
 
 
 def delete_import_TImports(id_import):
@@ -51,9 +44,7 @@ def delete_import_TImports(id_import):
         None
 
     """
-    DB.session.query(TImports) \
-        .filter(TImports.id_import == id_import) \
-        .delete()
+    DB.session.query(TImports).filter(TImports.id_import == id_import).delete()
 
 
 def test_user_dataset(id_role, current_dataset_id):
@@ -68,12 +59,14 @@ def test_user_dataset(id_role, current_dataset_id):
             Boolean : True if allowed, False if not allowed
     """
 
-    results = DB.session.query(TDatasets) \
-        .filter(TDatasets.id_dataset == Synthese.id_dataset) \
-        .filter(CorObserverSynthese.id_synthese == Synthese.id_synthese) \
-        .filter(CorObserverSynthese.id_role == id_role) \
-        .distinct(Synthese.id_dataset) \
+    results = (
+        DB.session.query(TDatasets)
+        .filter(TDatasets.id_dataset == Synthese.id_dataset)
+        .filter(CorObserverSynthese.id_synthese == Synthese.id_synthese)
+        .filter(CorObserverSynthese.id_role == id_role)
+        .distinct(Synthese.id_dataset)
         .all()
+    )
 
     dataset_ids = []
 
@@ -87,31 +80,32 @@ def test_user_dataset(id_role, current_dataset_id):
 
 
 def get_id_roles():
-    ids = DB.session.execute("""
+    ids = DB.session.execute(
+        """
         SELECT id_role
         FROM utilisateurs.t_roles
-        """)
+        """
+    )
     id_roles = [str(id[0]) for id in ids]
     return id_roles
 
 
 def get_id_mapping(import_id):
     try:
-        t_import = DB.session \
-            .query(TImports.id_content_mapping) \
-            .filter(TImports.id_import == int(import_id)) \
+        t_import = (
+            DB.session.query(TImports.id_content_mapping)
+            .filter(TImports.id_import == int(import_id))
             .one()
+        )
         return t_import.id_content_mapping
     except Exception:
         raise
 
 
 def get_id_field_mapping(import_id):
-    try:
-        t_import = DB.session \
-            .query(TImports.id_field_mapping) \
-            .filter(TImports.id_import == int(import_id)) \
-            .one()
-        return t_import.id_field_mapping
-    except Exception:
-        raise
+    t_import = (
+        DB.session.query(TImports.id_field_mapping)
+        .filter(TImports.id_import == int(import_id))
+        .one()
+    )
+    return t_import.id_field_mapping
