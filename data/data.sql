@@ -12,9 +12,8 @@ SET default_with_oids = false;
 --INSERTIONS--
 --------------
 
-INSERT INTO t_user_errors (error_type,"name",description,error_level) VALUES 
+INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level) VALUES 
 ('Ouverture du fichier','NO_FILE_DETECTED','Aucun fichier détecté.','ERROR')
-,('Ouverture du fichier','NO_FILE_SENDED','Aucun fichier envoué','ERROR')
 ,('Erreur de format','INVALID_INTEGER','Format numérique entier incorrect ou négatif dans une des colonnes de type Entier.','ERROR')
 ,('Erreur de format','INVALID_DATE','Le format de date est incorrect dans une colonne de type Datetime.','ERROR')
 ,('Erreur de format','INVALID_UUID','L''identifiant permanent doit être un UUID valide, ou sa valeur doit être vide.','ERROR')
@@ -33,17 +32,15 @@ INSERT INTO t_user_errors (error_type,"name",description,error_level) VALUES
 ,('Doublon','DUPLICATE_ROWS','Deux lignes du fichier sont identiques ; les lignes ne peuvent pas être dupliquées.','ERROR')
 ,('Duplication','DUPLICATE_UUID','L''identificant sinp n''est pas unique dans le fichier fournis','ERROR')
 ,('Erreur de format','MULTIPLE_CODE_ATTACHMENT','Plusieurs codes de rattachement fournis pour une même ligne. Une ligne doit avoir un seul code rattachement (code commune OU code maille OU code département)','ERROR')
-,('Erreur de format','MULTIPLE_TYPE_CODE_ATTACHMENT','Plusieurs codes sont fournis pour un les colonnes codecommune, codemaille ou codedepartement. Veuillez fournir un seul code de rattachement','ERROR')
 ,('Ouverture du fichier','FILE_WITH_NO_DATA','Le fichier ne comporte aucune donnée.','ERROR')
 ,('Format du fichier','FILE_EXTENSION_ERROR','L''extension de fichier fournie n''est pas correct','ERROR')
 ,('Erreur de ligne sur le fichier','ROW_HAVE_LESS_COLUMN','Une ligne du fichier a moins de colonnes que l''en-tête.','ERROR')
 ,('Nom du fichier','FILE_NAME_TOO_LONG','Nom de fichier trop long ; la longueur du nom de fichier ne doit pas être supérieure à 100 caractères','ERROR')
 ,('Taille du fichier','FILE_OVERSIZE','La taille du fichier dépasse la taille du fichier autorisée ','ERROR')
-,('Lecture du fichier','FIELD_FORMAT_ERROR','Erreur de lecture des données ; l''un des champs n’est pas au format attendu.','ERROR')
 ,('Lecture du fichier','FILE_FORMAT_ERROR','Erreur de lecture des données ; le format du fichier est incorrect.','ERROR')
 ,('Lecture du fichier','ENCODING_ERROR','Erreur de lecture des données en raison d''un problème d''encodage.','ERROR')
 ,('En-tête du fichier','HEADER_COLUMN_EMPTY','Un des noms de colonne de l’en-tête est vide ; tous les noms de colonne doivent avoir une valeur.','ERROR')
-('En-tête du fichier','HEADER_SAME_COLUMN_NAME','Plusieurs colonnes de l''en-tête portent le même nom ; tous les noms de colonne de l''en-tête doivent être uniques.','ERROR')
+,('En-tête du fichier','HEADER_SAME_COLUMN_NAME','Plusieurs colonnes de l''en-tête portent le même nom ; tous les noms de colonne de l''en-tête doivent être uniques.','ERROR')
 ,('Erreur de ligne sur le fichier','EMPTY_ROW','Une ligne du fichier est vide ; les lignes doivent avoir au moins une cellule non vide.','ERROR')
 ,('Erreur de ligne sur le fichier','ROW_HAVE_TOO_MUCH_COLUMN','Une ligne du fichier a plus de colonnes que l''en-tête.','ERROR')
 ,('Erreur de nomenclature','INVALID_NOMENCLATURE','Code nomenclature erroné ; La valeur du champ n’est pas dans la liste des codes attendus pour ce champ. Pour connaître la liste des codes autorisés, reportez-vous au Standard en cours.','ERROR')
@@ -53,10 +50,13 @@ INSERT INTO t_user_errors (error_type,"name",description,error_level) VALUES
 ,('Erreur de format','INVALID_URL_PROOF','PreuveNumerique n’est pas une url ; le champ “preuveNumérique” indique l’adresse web à laquelle on pourra trouver la preuve numérique ou l’archive contenant toutes les preuves numériques. Il doit commencer par “http://”, “https://”, ou “ftp://”.','ERROR')
 ,('Erreur de réferentiel','INVALID_ATTACHMENT_CODE','Le code commune/maille/département indiqué ne fait pas partie du référentiel des géographique; la valeur de codeCommune/codeMaille/codeDepartement n’a pu être trouvée dans la version courante du référentiel.','ERROR')
 ,('Géométrie','INVALID_GEOMETRY','Géométrie invalide','ERROR')
-,('Géoréférencement','MULTIPLE_ATTACHMENT_CODE','Plusieurs géoréférencements ; un seul géoréférencement doit être livré. Une seule des colonnes codeCommune/codeMaille/codeDépartement ne doit être remplie pour chaque ligne','ERROR')
+,('Géoréférencement','MULTIPLE_ATTACHMENT_TYPE_CODE','Plusieurs géoréférencements ; un seul géoréférencement doit être livré. Une seule des colonnes codeCommune/codeMaille/codeDépartement doit être remplie pour chaque ligne','ERROR')
+,('Ouverture du fichier','NO_FILE_SENDED','Aucun fichier envoyé','ERROR')
 ,('Champ obligatoire conditionnel','CONDITIONAL_MANDATORY_FIELD_ERROR','Champs obligatoires conditionnels manquants. Il existe des ensembles de champs liés à un concept qui sont “obligatoires conditionnels”, c’est à dire que si l''un des champs du concept est utilisé, alors d''autres champs du concept deviennent obligatoires. ','ERROR')
 ,('Incohérence','INVALID_EXISTING_PROOF_VALUE','Incohérence entre les champs de preuve ; si le champ “preuveExistante” vaut oui, alors l’un des deux champs “preuveNumérique” ou “preuveNonNumérique” doit être rempli. A l’inverse, si l’un de ces deux champs est rempli, alors “preuveExistante” ne doit pas prendre une autre valeur que “oui” (code 1).','ERROR')
 ,('Incohérence','INVALID_STATUT_SOURCE_VALUE','Référence bibliographique manquante ; si le champ “statutSource” a la valeur “Li” (Littérature), alors une référence bibliographique doit être indiquée.','ERROR')
+,('Erreur','UNKNOWN_ERROR','','ERROR')
+,('Ouverture du fichier','EMPTY_FILE','Le fichier fournit est vide','ERROR')
 ;
 
 
@@ -96,8 +96,6 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('the_geom_point','Geométrie (Point)','','','geometry', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 18, FALSE),
 	('the_geom_local','Geométrie (SRID local)','','','geometry', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 19, FALSE),
 	('the_geom_4326','Geométrie (SRID 4326)','','','geometry', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 20, FALSE),
-
-
 	('nom_cite', 'Nom du taxon cité', '', '', 'character varying(1000)', TRUE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 1, TRUE),
 	('cd_nom', 'Cd nom taxref', '', '', 'integer', TRUE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 2, TRUE),
 	('id_nomenclature_obs_meth', 'Méthode d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 3, TRUE),
@@ -127,8 +125,7 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('validation_comment', 'Commentaire de validation', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 11, TRUE),
 	('id_nomenclature_obs_technique', 'Techniques d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 11, TRUE),
 	('id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE),
-	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE),
-
+	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE)
 ;
 
 INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES

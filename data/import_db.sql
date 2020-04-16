@@ -9,6 +9,7 @@ SET client_min_messages = warning;
 --------------
 --GN_IMPORTS--
 --------------
+CREATE SCHEMA IF NOT EXISTS gn_imports;
 
 SET search_path = gn_imports, pg_catalog;
 SET default_with_oids = false;
@@ -129,7 +130,7 @@ CREATE TABLE t_user_error_list(
     id_error integer NOT NULL,
     column_error character varying(100) NOT NULL,
     id_rows integer[],
-    step character varying(20)
+    step character varying(20),
     comment text
 );
 
