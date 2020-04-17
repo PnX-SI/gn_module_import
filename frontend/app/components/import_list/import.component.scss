@@ -1,19 +1,23 @@
- @media screen and (max-width: 800px) {
-        .desktop-hidden {
-          display: initial;
-        }
-        .mobile-hidden {
-          display: none;
-        }
-      }
-      @media screen and (min-width: 800px) {
-        .desktop-hidden {
-          display: none;
-        }
-        .mobile-hidden {
-          display: initial;
-        }
-      }
-      ngx-datatable{
-        box-shadow: none !important
-      }
+@media screen and (max-width: 800px) {
+  .desktop-hidden {
+    display: initial;
+  }
+  .mobile-hidden {
+    display: none;
+  }
+}
+
+@media screen and (min-width: 800px) {
+  .desktop-hidden {
+    display: none;
+  }
+  .mobile-hidden {
+    display: initial;
+  }
+}
+
+ngx-datatable{
+  box-shadow: none !important
+}
+
+.sortable .sort-btn:not([class*="datatable-icon-"]):before { font-family: data-table; content: "c"; }

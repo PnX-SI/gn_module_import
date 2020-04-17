@@ -47,7 +47,8 @@ def get_import_list(info_role):
 
         if not results or nrows == 0:
             return {"empty": True}, 200
-        return {"empty": False, "history": [r.to_dict() for r in results],}, 200
+
+        return {"empty": False, "history": [r.to_dict() for r in results]}, 200
 
     except Exception as e:
         raise GeonatureImportApiError(
