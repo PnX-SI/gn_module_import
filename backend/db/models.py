@@ -17,6 +17,7 @@ from geonature.utils.env import DB
 
 from geonature.utils.utilssqlalchemy import serializable, geoserializable
 from geonature.core.gn_meta.models import TDatasets
+from geonature.core.gn_synthese.models import TSources
 from pypnusershub.db.models import User
 
 
@@ -94,6 +95,16 @@ class TImports(DB.Model):
         import_as_dict["dataset_name"] = import_as_dict["dataset"]["dataset_name"]
         import_as_dict.pop("dataset")
         import_as_dict["errors"] = import_as_dict.get("errors", [])
+        name_source = "Import(id=" + str(self.id_import) + ")"
+        id_source = None
+        source = (
+            DB.session.query(TSources.id_source)
+            .filter(TSources.name_source == name_source)
+            .first()
+        )
+        if source:
+            id_source = source[0]
+        import_as_dict["id_source"] = id_source
         return import_as_dict
 
 

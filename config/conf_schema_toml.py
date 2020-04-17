@@ -5,13 +5,33 @@
 from marshmallow import Schema, fields
 
 DEFAULT_LIST_COLUMN = [
-    {"prop": "id_import", "name": "Id", "max_width": 50, "show": True, "filter": False},
+    {
+        "prop": "id_import",
+        "name": "Id import",
+        "max_width": 50,
+        "show": True,
+        "filter": False,
+    },
+    {
+        "prop": "id_source",
+        "name": "Id source",
+        "max_width": 80,
+        "show": True,
+        "filter": True,
+    },
     {
         "prop": "format_source_file",
-        "name": "File format",
-        "max_width": 50,
+        "name": "Format",
+        "max_width": 80,
         "show": False,
         "filter": False,
+    },
+    {
+        "prop": "full_file_name",
+        "name": "Fichier",
+        "max_width": 320,
+        "show": True,
+        "filter": True,
     },
     {
         "prop": "dataset_name",
@@ -23,14 +43,14 @@ DEFAULT_LIST_COLUMN = [
     {
         "prop": "taxa_count",
         "name": "Nb de taxons",
-        "max_width": 200,
+        "max_width": 120,
         "show": True,
         "filter": False,
     },
     {
         "prop": "import_count",
         "name": "Nb de donnees",
-        "max_width": 200,
+        "max_width": 120,
         "show": True,
         "filter": False,
     },
@@ -44,7 +64,7 @@ DEFAULT_LIST_COLUMN = [
     {
         "prop": "author_name",
         "name": "Auteur",
-        "max_width": 400,
+        "max_width": 320,
         "show": True,
         "filter": True,
     },
