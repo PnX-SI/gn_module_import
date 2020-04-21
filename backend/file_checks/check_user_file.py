@@ -19,20 +19,26 @@ ERROR_MAPPING = {
 
 
 @checker("User file validity checked")
-def check_user_file_good_table(id_import, full_path, row_limit=100000000):
-
+def check_user_file_good_table(
+    id_import, full_path, given_encoding, row_limit=100000000
+):
     try:
         errors = []
         report = validate(full_path, skip_checks=["duplicate-row"], row_limit=row_limit)
+        detected_encoding = report["tables"][0]["encoding"]
+        if given_encoding.lower() != detected_encoding:
+            set_user_error(
+                id_import=id_import, step="UPLOAD", error_code="ENCODING_ERROR",
+            )
+            errors.append({"error": "ENCODING_ERROR"})
+            return {"errors": errors}
         if report["valid"] is False:
             for error in report["tables"][0]["errors"]:
                 # other goodtable errors :
-                gn_error_code = ERROR_MAPPING.get(error["code"], "UNKNOWN_ERROR")
-                gn_error = get_error_from_code(gn_error_code)
                 set_user_error(
                     id_import=id_import,
                     step="UPLOAD",
-                    id_error=gn_error.id_error,
+                    error_code=ERROR_MAPPING.get(error["code"], "UNKNOWN_ERROR"),
                     comment="Erreur d'origine :" + error["message"],
                 )
                 errors.append(error)

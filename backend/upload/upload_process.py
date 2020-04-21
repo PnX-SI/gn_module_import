@@ -73,6 +73,7 @@ def upload(
         # check user file extension (changer)
         extension = pathlib.Path(full_path).suffix.lower()
         if extension not in allowed_extensions:
+            print("PASSE LA ???")
             logger.error("Saving user file : extension not allowed")
             set_user_error(
                 id_import=id_import, step="UPLOAD", error_code="FILE_EXTENSION_ERROR",
@@ -104,9 +105,9 @@ def upload(
             return {"error": "ERROR_WHILE_LOADING_FILE"}
 
         # find separator
-        line_one = open(full_path, "r").readline()
-        sniffer = csv.Sniffer()
         try:
+            line_one = open(full_path, "r").readline()
+            sniffer = csv.Sniffer()
             separator = sniffer.sniff(line_one).delimiter
         except Exception:
             logger.error("No separator found for this file")

@@ -139,7 +139,7 @@ def post_user_file(info_role):
 
             # checks if error in user file or user http request:
             if "error" in uploaded_file:
-                return uploaded_file["error"], 400
+                return {"id_import": id_import, "errors": uploaded_file["error"]}, 400
 
             full_path = uploaded_file["full_path"]
             is_file_saved = uploaded_file["is_uploaded"]
@@ -161,7 +161,9 @@ def post_user_file(info_role):
                 full_path = output
 
             logger.info("* START CHECK USER FILE VALIDITY")
-            report = check_user_file_good_table(id_import, full_path, N_MAX_ROWS_CHECK)
+            report = check_user_file_good_table(
+                id_import, full_path, metadata["encodage"], N_MAX_ROWS_CHECK
+            )
 
             # reports user file errors:
             if len(report["errors"]) > 0:
