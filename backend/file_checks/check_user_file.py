@@ -19,7 +19,7 @@ ERROR_MAPPING = {
 
 
 @checker("User file validity checked")
-def check_user_file(id_import, full_path, row_limit=100000000):
+def check_user_file_good_table(id_import, full_path, row_limit=100000000):
 
     try:
         errors = []

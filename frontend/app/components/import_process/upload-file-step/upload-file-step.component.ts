@@ -151,6 +151,10 @@ export class UploadFileStepComponent implements OnInit {
                 if (error.status == 400) {
                   this.isUserErrors = true;
                   this.uploadFileErrors = error.error.errors;
+                  console.log(error);
+                  console.log(this.uploadFileErrors);
+
+
                   this.importId = error.error.id_import
                 } else {
                   this._commonService.regularToaster(
