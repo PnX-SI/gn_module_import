@@ -1,6 +1,7 @@
 import geopandas as gpd
 import pandas as pd
 from shapely import wkt, wkb
+from shapely.geometry import Point
 import numpy as np
 
 from ..logs import logger
@@ -13,6 +14,13 @@ def set_wkb(value):
     try:
         return wkb.dumps(wkt.loads(value)).hex()
     except Exception:
+        return None
+
+
+def x_y_to_wkb(x, y):
+    try:
+        return Point(float(x), float(y)).wkb.hex()
+    except Exception as e:
         return None
 
 
@@ -60,8 +68,6 @@ def manage_erros_and_validity(
         """
     set_is_valid(df, df_temp_col)
     if len(id_rows_error) > 0:
-        print("????????????")
-        print(code_error)
         set_error_and_invalid_reason(
             df=df,
             id_import=import_id,
@@ -91,66 +97,32 @@ def check_geography(
         # index starting at 1 -> so -1
         if len(line_with_codes) > 0:
             line_with_codes = line_with_codes - 1
-        if srid == 4326:
-            max_x = 180
-            min_x = -180
-            max_y = 90
-            min_y = -90
-        if srid == 2154:
-            max_x = 1300000
-            min_x = 100000
-            max_y = 7200000
-            min_y = 6000000
         if "latitude" and "longitude" in selected_columns.keys():
-            coordinates = ["longitude", "latitude"]
+            df["given_geom"] = df.apply(
+                lambda row: x_y_to_wkb(
+                    row[selected_columns["longitude"]],
+                    row[selected_columns["latitude"]],
+                ),
+                axis=1,
+            )
+            df["valid_x_y"] = df["given_geom"].notnull()
 
-            for col in coordinates:
-                logger.info("- converting %s in numeric values", selected_columns[col])
-
-                col_name = "_".join(["temp", col])
-                df[col_name] = pd.to_numeric(df[selected_columns[col]], "coerce")
-
-                logger.info(
-                    "- checking consistency of values in %s synthese column (= %s user column):",
-                    col,
-                    selected_columns[col],
+            # remove invalid where codecommune/maille or dep are fill
+            df.iloc[line_with_codes, df.columns.get_loc("valid_x_y")] = True
+            set_is_valid(df, "valid_x_y")
+            id_rows_errors = df.index[df["valid_x_y"] == False].to_list()
+            if len(id_rows_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="INVALID_GEOMETRY",
+                    col_name_error=selected_columns["longitude"]
+                    + " "
+                    + selected_columns["latitude"],
+                    df_col_name_valid="valid_x_y",
+                    id_rows_error=id_rows_errors,
                 )
-
-                if col == "longitude":
-                    df["invalid_lat_long"] = df[col_name].le(min_x) | df[col_name].ge(
-                        max_x
-                    )
-                if col == "latitude":
-                    df["invalid_lat_long"] = df[col_name].le(min_y) | df[col_name].ge(
-                        max_y
-                    )
-                df["valid_lat_long"] = ~df["invalid_lat_long"]
-                # remove invalid where codecommune/maille or dep are fill
-                df.iloc[line_with_codes, df.columns.get_loc("valid_lat_long")] = True
-                set_is_valid(df, "valid_lat_long")
-                id_rows_errors = df.index[df["valid_lat_long"] == False].to_list()
-
-                # setting eventual inconsistent values to pd.np.nan
-                df[col_name] = df[col_name].where(df["temp"], pd.np.nan)
-
-                logger.info(
-                    "%s inconsistant values detected in %s synthese column (= %s user column)",
-                    len(id_rows_errors),
-                    col,
-                    selected_columns[col],
-                )
-
-                if len(id_rows_errors) > 0:
-                    set_error_and_invalid_reason(
-                        df=df,
-                        id_import=import_id,
-                        error_code="GEOMETRY_OUT_OF_BOX",
-                        col_name_error=selected_columns[col],
-                        df_col_name_valid="valid_lat_long",
-                        id_rows_error=id_rows_errors,
-                    )
-                df.drop("invalid_lat_long", axis=1)
-                df.drop("valid_lat_long", axis=1)
+            df.drop("valid_x_y", axis=1)
 
         elif "WKT" in selected_columns.keys():
             # create wkt with crs provided by user

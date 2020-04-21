@@ -188,13 +188,13 @@ class GeometrySetter:
         UPDATE {table} as i
                 SET 
                 id_area_attachment = sub.id_area,
-                gn_the_geom_4326 = sub.geom_4326
+                gn_the_geom_local = sub.geom
                 FROM (
-                    SELECT id_area, la.geom_4326::text, gn_pk
+                    SELECT id_area, la.geom::text, gn_pk
                     FROM {table} 
                     JOIN ref_geo.l_areas la ON la.id_type = {id_area_type} and la.{ref_geo_area_code_col} = {code_col} 
                 ) as sub
-                WHERE id_area_attachment IS NULL AND gn_the_geom_4326 IS NULL AND sub.gn_pk = i.gn_pk;
+                WHERE id_area_attachment IS NULL AND gn_the_geom_local IS NULL AND sub.gn_pk = i.gn_pk;
         """.format(
             table=self.table_name,
             ref_geo_area_code_col=ref_geo_area_code_col,
