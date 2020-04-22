@@ -17,11 +17,10 @@ def check_row_duplicates(df, selected_columns, import_id, schema_name):
         for field in generate_fields:
             if field in selected_cols.keys():
                 del selected_cols[field]
-
-        df["temp"] = df.duplicated(subset=selected_cols.values(), keep=False)
-        df["temp"] = ~df["temp"]
-        set_is_valid(df, "temp")
-        id_rows_errors = df.index[df["temp"] == False].to_list()
+        df["duplicate"] = df.duplicated(subset=selected_cols.values(), keep=False)
+        df["no_duplicate"] = ~df["duplicate"]
+        set_is_valid(df, "no_duplicate")
+        id_rows_errors = df.index[df["duplicate"] == True].to_list()
 
         logger.info("%s duplicated rows detected", len(id_rows_errors))
 
@@ -31,11 +30,12 @@ def check_row_duplicates(df, selected_columns, import_id, schema_name):
                 id_import=import_id,
                 error_code="DUPLICATE_ROWS",
                 col_name_error="",
-                df_col_name_valid="temp",
+                df_col_name_valid="duplicate",
                 id_rows_error=id_rows_errors,
             )
 
-        df.drop("temp", axis=1)
+        df.drop("duplicate", axis=1)
+        df.drop("no_duplicate", axis=1)
 
     except Exception:
         raise

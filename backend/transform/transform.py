@@ -84,7 +84,15 @@ def data_cleaning(
         check_dates(
             df, added_cols, selected_columns, synthese_info, import_id, schema_name
         )
-        # check_uuid(df, added_cols, selected_columns, synthese_info, is_generate_uuid, import_id, schema_name)
+        # check_uuid(
+        #     df,
+        #     added_cols,
+        #     selected_columns,
+        #     synthese_info,
+        #     is_generate_uuid,
+        #     import_id,
+        #     schema_name,
+        # )
         check_counts(
             df,
             selected_columns,
