@@ -224,6 +224,7 @@ def check_types(
                         col_name_error=selected_columns[col],
                         df_col_name_valid="temp",
                         id_rows_error=id_rows_errors,
+                        comment="Longueur maximale: {}".format(n_char),
                     )
 
         # INTEGER TYPE COLUMNS :

@@ -33,7 +33,13 @@ def set_warning_reason(df, source_col_name, message, col_name):
 
 
 def set_error_and_invalid_reason(
-    df, id_import, error_code, col_name_error, df_col_name_valid, id_rows_error
+    df,
+    id_import,
+    error_code,
+    col_name_error,
+    df_col_name_valid,
+    id_rows_error,
+    comment=None,
 ):
     """
     Add errors in gn_import.t_user_errors_list
@@ -46,8 +52,8 @@ def set_error_and_invalid_reason(
         id_error=error_obj.id_error,
         col_name=col_name_error,
         id_rows=id_rows_error,
+        comment=comment,
     )
-    print(id_rows_error)
     message = "{}: {}".format(error_obj.name, col_name_error)
     set_invalid_reason(df=df, source_col_name=df_col_name_valid, message=message)
 
