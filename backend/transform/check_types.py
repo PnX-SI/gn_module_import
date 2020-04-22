@@ -1,5 +1,8 @@
-import pandas as pd
+import re
 from uuid import UUID
+
+from flask import current_app
+import pandas as pd
 import numpy as np
 from shapely import wkt
 
@@ -11,10 +14,20 @@ from .utils import fill_map, set_is_valid, set_error_and_invalid_reason
 
 
 def convert_to_datetime(value):
-    try:
-        return pd.to_datetime(value)
-    except ValueError:
-        return value
+    """
+    Try to convert datetime with different strf format
+    if do not succeed must return the unmodifed date
+    an error will be raise later if the returned value is not a Timestamp
+    """
+    formated_date = re.sub("[/.: ]", "-", value)
+    strftime_format = ["%Y-%m-%d", "%Y-%m-%d-%H-%M", "%Y-%m-%d-%H-%M-%S"]
+    for format in strftime_format:
+        try:
+            date = pd.to_datetime(formated_date, format=format)
+            return date
+        except ValueError:
+            pass
+    return value
 
 
 def is_datetime(value):
@@ -75,23 +88,15 @@ def check_types(
                 field,
                 selected_columns[field],
             )
-
-            if df[selected_columns[field]].dtype != "datetime64[ns]":
-                df[selected_columns[field]] = pd.to_datetime(
-                    df[selected_columns[field]], "coerce"
-                ).where(
-                    ~df[selected_columns[field]]
-                    .astype("object")
-                    .str.isdigit()
-                    .astype(bool)
-                )
-            df["temp"] = ""
-            df["temp"] = (
-                df["temp"]
-                .where(cond=df[selected_columns[field]].notnull(), other=False)
-                .map(fill_map)
-                .astype("bool")
+            df[selected_columns[field]] = df[selected_columns[field]].apply(
+                lambda x: convert_to_datetime(x)
             )
+            # set valid where is Timestamp object
+            df["temp"] = df[selected_columns[field]].map(
+                lambda x: type(x) is pd.Timestamp
+            )
+            print("LAAAAAAAA")
+            print(df["temp"])
 
             set_is_valid(df, "temp")
             id_rows_errors = df.index[df["temp"] == False].to_list()
@@ -108,7 +113,7 @@ def check_types(
                     df=df,
                     id_import=import_id,
                     error_code="INVALID_DATE",
-                    col_name_error=selected_columns["field"],
+                    col_name_error=selected_columns[field],
                     df_col_name_valid="temp",
                     id_rows_error=id_rows_errors,
                 )

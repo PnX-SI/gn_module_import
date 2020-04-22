@@ -6,16 +6,29 @@ from ..logs import logger
 
 
 def is_negative_date(value):
+    print("AAAAA")
+    print(value)
     try:
         if type(value) != pd.Timedelta:
             return True
         else:
+            print("YESSSS")
+            print(value)
             if value.total_seconds() >= 0:
                 return True
             else:
                 return False
     except TypeError:
         return True
+
+
+def check_date_min_inf_date_max(row, selected_columns):
+    """set true in check_dates if date_min <= date_max"""
+    interval = row[selected_columns["date_max"]] - row[selected_columns["date_min"]]
+    if interval.total_seconds() >= 0:
+        row["check_dates"] = True
+    else:
+        row["check_dates"] = False
 
 
 @checker("Data cleaning : dates checked")
@@ -50,24 +63,16 @@ def check_dates(
                 selected_columns["date_min"],
                 selected_columns["date_max"],
             )
-
-            df["check_dates"] = ""
-            # pd.to_datetime(df[selected_columns['date_min']], errors='coerce').fillna(pd.np.nan)
-            df["check_dates"] = (
-                df[selected_columns["date_max"]] - df[selected_columns["date_min"]]
-            )
+            df["interval"] = ""
             df["temp"] = ""
-            df["temp"] = (
-                df["temp"]
-                .where(
-                    cond=df["check_dates"].apply(lambda x: is_negative_date(x)),
-                    other=False,
+            try:
+                df["interval"] = (
+                    df[selected_columns["date_max"]] - df[selected_columns["date_min"]]
                 )
-                .map(fill_map)
-                .astype("bool")
-            )
+            except Exception:
+                logger.error("Error on date")
+            df["temp"] = df["interval"].apply(lambda x: is_negative_date(x))
 
-            set_is_valid(df, "temp")
             id_rows_errors = df.index[df["temp"] == False].to_list()
 
             logger.info(
