@@ -1,3 +1,5 @@
+import re
+import numpy as np
 from ..wrappers import checker
 from .utils import set_is_valid, fill_map, set_error_and_invalid_reason
 from ..logs import logger
@@ -93,3 +95,36 @@ def check_id_digitizer(df, selected_columns, synthese_info, import_id, schema_na
 
     except Exception:
         raise
+
+
+@checker("Data cleaning : url checked")
+def check_url(df, selected_columns, import_id):
+    regex = re.compile(
+        r"^(?:http|ftp)s?://"  # http:// or https://
+        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # domain...
+        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
+        r"(?::\d+)?"  # optional port
+        r"(?:/?|[/?]\S+)$",
+        re.IGNORECASE,
+    )
+    if "digital_proof" in selected_columns:
+        digit_col = df[selected_columns["digital_proof"]]
+        # regex return none where the value null or not a string. We put true in this case
+        df["valid_url"] = digit_col.str.contains(regex).where(
+            digit_col.notnull(), other=True
+        )
+        invalid_rows = df[df["valid_url"] == False]
+        invalid_values = invalid_rows[selected_columns["digital_proof"]].to_list()
+        if len(invalid_rows) > 0:
+            set_error_and_invalid_reason(
+                df=df,
+                id_import=import_id,
+                error_code="INVALID_URL_PROOF",
+                col_name_error=selected_columns["digital_proof"],
+                df_col_name_valid="valid_url",
+                id_rows_error=invalid_rows.index.to_list(),
+                comment="Les valeurs suivantes ne sont pas des URL conformes '{}'".format(
+                    ", ".join(invalid_values)
+                ),
+            )
+
