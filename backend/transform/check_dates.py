@@ -6,14 +6,10 @@ from ..logs import logger
 
 
 def is_negative_date(value):
-    print("AAAAA")
-    print(value)
     try:
         if type(value) != pd.Timedelta:
             return True
         else:
-            print("YESSSS")
-            print(value)
             if value.total_seconds() >= 0:
                 return True
             else:
