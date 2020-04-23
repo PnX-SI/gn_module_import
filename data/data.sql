@@ -12,10 +12,10 @@ SET default_with_oids = false;
 --INSERTIONS--
 --------------
 
-INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level) VALUES 
+INSERT INTO gn_imports.t_user_eFormat numériquerrors (error_type,"name",description,error_level) VALUES 
 ('Ouverture du fichier','NO_FILE_DETECTED','Aucun fichier détecté.','ERROR')
 ,('Erreur de format','INVALID_INTEGER','Format numérique entier incorrect ou négatif dans une des colonnes de type Entier.','ERROR')
-,('Erreur de format','INVALID_DATE','Le format de date est incorrect dans une colonne de type Datetime. Le format attendu est YYYY-MM-DD ou YYYY-MM-DD HH:MM ou YYYY-MM-DD ou HH:MM:SS - Les séparateurs / . : sont également acceptés','ERROR')
+,('Erreur de format','INVALID_DATE','Le format de date est incorrect dans une colonne de type Datetime. Le format attendu est YYYY-MM-DD ou DD-MM-YYYY (les heures sont acceptées sous ce format: HH:MM:SS) - Les séparateurs / . : sont également acceptés','ERROR')
 ,('Erreur de format','INVALID_UUID','L''identifiant permanent doit être un UUID valide, ou sa valeur doit être vide.','ERROR')
 ,('Erreur de format','INVALID_CHAR_LENGTH','Chaîne de caractères trop longue ; la longueur de la chaîne dépasse la longueur maximale autorisée.','ERROR')
 ,('Champ obligatoire','MISSING_VALUE','Valeur manquante dans un champs obligatoire','ERROR')

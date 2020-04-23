@@ -6,7 +6,7 @@ from .check_dates import check_dates
 from .check_missing import format_missing, check_missing
 from .check_uuid import check_uuid
 from .check_types import check_types
-from .check_other_fields import check_entity_source, check_id_digitizer
+from .check_other_fields import check_entity_source, check_id_digitizer, check_url
 from .check_counts import check_counts
 from .check_altitudes import check_altitudes
 from .check_geography import check_geography
@@ -117,6 +117,7 @@ def data_cleaning(
             import_id,
             schema_name,
         )
+        check_url(df, selected_columns, import_id)
 
         return {
             #'user_errors': user_error,

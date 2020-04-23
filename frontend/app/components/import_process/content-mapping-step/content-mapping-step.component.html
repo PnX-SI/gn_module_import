@@ -85,7 +85,7 @@
                     *ngIf="n_errors > 0  && contentMapRes"
                 >
                     <a   target="_blank" [routerLink]="['/import/errors', stepData.importId]"> 
-                        {{n_errors}} lignes avec erreurs - Voir le rapport complet
+                        {{n_errors}} erreur(s) détectée(s) - Voir le rapport complet
                     </a>
                 </button>
                 <button (click)="onContentMapping(contentTargetForm.value)"
