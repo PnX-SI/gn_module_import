@@ -296,3 +296,48 @@ def get_saved_content_mapping(id_mapping):
             selected_content[key].append(value)
 
     return selected_content
+
+
+####### conditional check
+
+
+def exist_proof_check(
+    table_name, field_proof, field_digital_proof, field_non_digital_proof
+):
+    """
+    If exist proof = Oui (code 1), digital proof or non_digital_proof must be fill
+    we check if the columns exist to build the query
+    """
+    #  case no proof column, return an empty list -> no error
+    if field_proof is None:
+        return []
+    #  case exist proof = 1 and no other proof col -> raise error on all column where exist_proof = 1
+    query = """
+        SELECT array_agg(gn_pk) as id_rows
+        FROM {schema}.{table}
+        WHERE ref_nomenclatures.get_cd_nomenclature({field_proof}::integer) = '1' 
+        """.format(
+        schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+        table=table_name,
+        field_proof=field_proof,
+    )
+    #  case digital proof is None and non digital proof not exist
+    if field_proof and field_digital_proof and field_non_digital_proof is None:
+        query = "{query} AND {field_digital_proof} IS NULL ".format(
+            query=query, field_digital_proof=field_digital_proof,
+        )
+    #  case non digital proof is None and digital_proof not exist
+    elif field_proof and field_non_digital_proof and field_digital_proof is None:
+        query = "{query} AND {field_non_digital_proof} IS NULL ".format(
+            query=query, field_non_digital_proof=field_non_digital_proof,
+        )
+    #  case both digital and non digital exist and are None
+    elif field_proof and field_digital_proof and field_non_digital_proof:
+        query = "{query} AND {field_digital_proof} IS NULL AND {field_non_digital_proof} IS NULL ".format(
+            query=query,
+            field_non_digital_proof=field_non_digital_proof,
+            field_digital_proof=field_digital_proof,
+        )
+    print(query)
+    return DB.session.execute(query).fetchone()
+

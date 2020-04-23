@@ -15,6 +15,7 @@ from ...db.queries.nomenclatures import (
     get_nomenc_abb_from_name,
     set_default_nomenclature_id,
     get_saved_content_mapping,
+    exist_proof_check,
 )
 from ...db.queries.user_errors import set_user_error
 
@@ -49,6 +50,7 @@ class NomenclatureTransformer:
         self.formated_mapping_content = self.__formated_mapping_content(
             selected_columns
         )
+        self.selected_columns = selected_columns
         self.accepted_id_nomencatures = self.__set_accepted_id_nomencatures()
 
     def __set_nomenclature_fields(self, selected_columns):
@@ -134,6 +136,9 @@ class NomenclatureTransformer:
             raise
 
     def find_nomenclatures_errors(self, id_import):
+        """
+        Detect nomenclature which not check with the given value mapping
+        """
         for el in self.accepted_id_nomencatures:
             rows_with_err = find_row_with_nomenclatures_error(
                 self.table_name,
@@ -168,6 +173,24 @@ class NomenclatureTransformer:
         except Exception:
             DB.session.rollback()
             raise
+
+    def check_conditionnal_values(self, id_import):
+        # if proof
+
+        row_with_errors = exist_proof_check(
+            self.table_name,
+            self.selected_columns.get("id_nomenclature_exist_proof"),
+            self.selected_columns.get("digital_proof"),
+            self.selected_columns.get("non_digital_proof"),
+        )
+        if row_with_errors:
+            set_user_error(
+                id_import=id_import,
+                step="CONTENT_MAPPING",
+                error_code="INVALID_EXISTING_PROOF_VALUE",
+                col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
+                id_rows=row_with_errors.id_rows,
+            )
 
 
 @checker("Set nomenclature ids from content mapping form")
