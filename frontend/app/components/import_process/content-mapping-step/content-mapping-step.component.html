@@ -2,15 +2,15 @@
     <stepper [step]=3></stepper>
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title mb-0"> Mapping des contenus </h5>
+            <h5 class="card-title mb-0"> Correspondance des nomenclatures </h5>
         </div>
         <div class="card-body">
 
-        <!-- Choix du mapping -->
+        <!-- Choix de la liste des nomenclatures -->
         <form [formGroup]="contentMappingForm" class="was-validated">
                 <fieldset>
                     <legend class="px-1">
-                        Choix du mapping
+                        Choix de la liste des nomenclatures
                     </legend>
                     <div *ngIf="_cm.userContentMappings" class="form-group">
                         <select class="form-control form-control-sm" id="contentMappingSelection"
