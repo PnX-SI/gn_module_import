@@ -19,22 +19,25 @@ def convert_to_datetime(value):
     if do not succeed must return the unmodifed date
     an error will be raise later if the returned value is not a Timestamp
     """
-    formated_date = re.sub("[/.: ]", "-", value)
-    strftime_format = [
-        "%Y-%m-%d",
-        "%Y-%m-%d-%H-%M",
-        "%Y-%m-%d-%H-%M-%S",
-        "%d-%m-%Y",
-        "%d-%m-%Y-%H-%M",
-        "%d-%m-%Y-%H-%M-%S",
-    ]
-    for _format in strftime_format:
-        try:
-            date = pd.to_datetime(formated_date, format=_format)
-            return date
-        except ValueError:
-            pass
-    return value
+    try:
+        formated_date = re.sub("[/.: ]", "-", value)
+        strftime_format = [
+            "%Y-%m-%d",
+            "%Y-%m-%d-%H-%M",
+            "%Y-%m-%d-%H-%M-%S",
+            "%d-%m-%Y",
+            "%d-%m-%Y-%H-%M",
+            "%d-%m-%Y-%H-%M-%S",
+        ]
+        for _format in strftime_format:
+            try:
+                date = pd.to_datetime(formated_date, format=_format)
+                return date
+            except ValueError:
+                pass
+        return value
+    except Exception:
+        return value
 
 
 def is_datetime(value):
@@ -123,7 +126,7 @@ def check_types(
                     df_col_name_valid="temp",
                     id_rows_error=invalid_rows.index.to_list(),
                     comment="Les dates suivantes ne sont pas au bon format: {}".format(
-                        ", ".join(values_error)
+                        ", ".join(map(lambda x: str(x), values_error))
                     ),
                 )
 
