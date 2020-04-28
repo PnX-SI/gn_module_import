@@ -134,7 +134,9 @@ def check_geography(
             df["valid_wkt"] = df["given_geom"].notnull()
 
             # remove invalid where codecommune/maille or dep are fill
-            df.iloc[line_with_codes, df.columns.get_loc("valid_wkt")] = True
+            df["valid_wkt"] = df.iloc[
+                line_with_codes, df.columns.get_loc("valid_wkt")
+            ] = True
             set_is_valid(df, "valid_wkt")
             id_rows_errors = df.index[df["valid_wkt"] == False].to_list()
 

@@ -2,6 +2,7 @@ from ..wrappers import checker
 from ..logs import logger
 from ..db.queries.geometries import get_id_area_type
 from ..db.queries.utils import execute_query
+from ..db.queries.user_errors import set_user_error
 from ..load.import_class import ImportDescriptor
 
 
@@ -14,6 +15,7 @@ class GeometrySetter:
         code_maille_col=None,
         code_dep_col=None,
     ):
+        self.id_import = import_object.id_import
         self.table_name = import_object.table_name
         self.import_srid = import_object.import_srid
         self.column_names = import_object.column_names
@@ -32,9 +34,6 @@ class GeometrySetter:
         Add 3 geometry columns and 1 column id_area_attachmet to the temp table and fill them from the "given_geom" col
         calculated in python in the geom_check step
         Also calculate the attachment geoms
-
-        :params import_object ImportDescriport: the import descriptor object
-        :params local_srid int: the local srid of the database
         """
         try:
 
@@ -92,7 +91,53 @@ class GeometrySetter:
                 )
             #  calcul des erreurs
             errors = self.set_attachment_referential_errors()
+            commune_errors = {"id_rows": [], "code_error": []}
+            maille_errors = {"id_rows": [], "code_error": []}
+            dep_errors = {"id_rows": [], "code_error": []}
+            for er in errors:
+                if er.code_com:
+                    commune_errors["id_rows"].append(er.gn_pk)
+                    commune_errors["code_error"].append(er.code_com)
+                elif er.code_maille:
+                    maille_errors["id_rows"].append(er.gn_pk)
+                    maille_errors["code_error"].append(er.code_maille)
+                elif er.code_dep:
+                    dep_errors["id_rows"].append(er.gn_pk)
+                    dep_errors["code_error"].append(er.code_dep)
 
+            if len(commune_errors["id_rows"]) > 0:
+                set_user_error(
+                    id_import=self.id_import,
+                    step="FIELD_MAPPING",
+                    error_code="INVALID_GEOM_CODE",
+                    col_name=self.code_commune_col,
+                    id_rows=commune_errors["id_rows"],
+                    comment="Les codes communes suivant sont invalides : {}".format(
+                        ", ".join(commune_errors["code_error"])
+                    ),
+                )
+            if len(maille_errors["id_rows"]) > 0:
+                set_user_error(
+                    id_import=self.id_import,
+                    step="FIELD_MAPPING",
+                    error_code="INVALID_GEOM_CODE",
+                    col_name=self.code_maille_col,
+                    id_rows=maille_errors["id_rows"],
+                    comment="Les codes mailles suivant sont invalides : {}".format(
+                        ", ".join(maille_errors["code_error"])
+                    ),
+                )
+            if len(dep_errors["id_rows"]) > 0:
+                set_user_error(
+                    id_import=self.id_import,
+                    step="FIELD_MAPPING",
+                    error_code="INVALID_GEOM_CODE",
+                    col_name=self.code_dep_col,
+                    id_rows=dep_errors["id_rows"],
+                    comment="Les codes départements suivant sont invalides : {}".format(
+                        ", ".join(dep_errors["code_error"])
+                    ),
+                )
         except Exception:
             raise
 
@@ -212,7 +257,7 @@ class GeometrySetter:
         query = """
         UPDATE {table} as i
         SET gn_is_valid = 'False',
-        gn_invalid_reason = 'TODO'
+        gn_invalid_reason = 'INVALID_GEOM_CODE'
         FROM (
             SELECT gn_pk
             FROM {table}
@@ -223,7 +268,11 @@ class GeometrySetter:
             )
         ) as sub 
         WHERE sub.gn_pk = i.gn_pk AND i.gn_is_valid = 'True'
-        RETURNING i.gn_pk
+        RETURNING i.gn_pk, 
+        {code_commune_col} as code_com,
+        {code_maille_col} as code_maille,
+        {code_dep_col} as code_dep
+
         """.format(
             table=self.table_name,
             code_commune_col=self.code_commune_col,
