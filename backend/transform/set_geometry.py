@@ -233,7 +233,9 @@ class GeometrySetter:
         UPDATE {table} as i
                 SET 
                 id_area_attachment = sub.id_area,
-                gn_the_geom_local = sub.geom
+                gn_the_geom_local = sub.geom,
+                gn_the_geom_4326 = st_transform(sub.geom, 4326),
+                gn_the_geom_point = st_centroid(sub.geom)
                 FROM (
                     SELECT id_area, la.geom::text, gn_pk
                     FROM {table} 

@@ -19,8 +19,10 @@ def set_wkb(value):
 
 def x_y_to_wkb(x, y):
     try:
+        assert not pd.isna(x)
+        assert not pd.isna(y)
         return Point(float(x), float(y)).wkb.hex()
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -63,9 +65,9 @@ def manage_erros_and_validity(
     df, import_id, schema_name, code_error, df_temp_col, column_invalid, id_rows_error
 ):
     """
-            High level function to set column which are valid in the dataframe
-            and to write in database the errors
-        """
+        High level function to set column which are valid in the dataframe
+        and to write in database the errors
+    """
     set_is_valid(df, df_temp_col)
     if len(id_rows_error) > 0:
         set_error_and_invalid_reason(
@@ -87,11 +89,13 @@ def check_geography(
         logger.info("CHECKING GEOGRAPHIC DATA:")
         line_with_codes = []
         try:
-            line_with_codes = df.index[
+            mask_with_code = (
                 (df[selected_columns["codecommune"]].notnull())
                 | (df[selected_columns["codemaille"]].notnull())
                 | (df[selected_columns["codedepartement"]].notnull())
-            ]
+            )
+
+            line_with_codes = df[mask_with_code].index
         except KeyError:
             pass
         # index starting at 1 -> so -1
@@ -107,8 +111,23 @@ def check_geography(
             )
             df["valid_x_y"] = df["given_geom"].notnull()
 
+            #  row with not code and no valid wkt
+            df["no_geom"] = ~mask_with_code & ~df["valid_x_y"]
+            no_geom_errors = df[df["no_geom"] == True]
+            if len(no_geom_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="NO-GEOM",
+                    col_name_error="Colonnes géometriques",
+                    df_col_name_valid="no_geom",
+                    id_rows_error=no_geom_errors.index.to_list(),
+                )
+
             # remove invalid where codecommune/maille or dep are fill
-            df.iloc[line_with_codes, df.columns.get_loc("valid_x_y")] = True
+            df["valid_x_y"] = df.iloc[
+                line_with_codes, df.columns.get_loc("valid_x_y")
+            ] = True
             set_is_valid(df, "valid_x_y")
             id_rows_errors = df.index[df["valid_x_y"] == False].to_list()
             if len(id_rows_errors) > 0:
@@ -124,7 +143,7 @@ def check_geography(
                 )
             df.drop("valid_x_y", axis=1)
 
-        elif "WKT" in selected_columns.keys():
+        elif "WKT" in selected_columns:
             # create wkt with crs provided by user
             crs = {"init": "epsg:{}".format(srid)}
 
@@ -132,6 +151,19 @@ def check_geography(
             df["given_geom"] = df[selected_columns["WKT"]].apply(lambda x: set_wkb(x))
 
             df["valid_wkt"] = df["given_geom"].notnull()
+
+            #  row with not code and no valid wkt
+            df["no_geom"] = ~mask_with_code & ~df["valid_wkt"]
+            no_geom_errors = df[df["no_geom"] == True]
+            if len(no_geom_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="NO-GEOM",
+                    col_name_error="Colonnes géometriques",
+                    df_col_name_valid="no_geom",
+                    id_rows_error=no_geom_errors.index.to_list(),
+                )
 
             # remove invalid where codecommune/maille or dep are fill
             df["valid_wkt"] = df.iloc[
@@ -155,7 +187,6 @@ def check_geography(
                     df_col_name_valid="valid_wkt",
                     id_rows_error=id_rows_errors,
                 )
-            df.drop("valid_wkt", axis=1)
 
         if (
             "codemaille" in selected_columns.keys()
@@ -238,6 +269,8 @@ def check_geography(
                 selected_columns["codedepartement"],
                 id_rows_error,
             )
+
             df.drop("one_dep_code", axis=1)
+
     except Exception:
         raise
