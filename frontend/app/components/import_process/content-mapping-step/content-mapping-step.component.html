@@ -20,11 +20,19 @@
                                 {{data.mapping_label}}</option>
                         </select>
                     </div>
-                    <button
-                        class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
-                        (click)="_cm.createMapping(contentMappingForm)">
-                        Nouveau mapping
-                    </button>
+                    <div class="row">
+                        <div class="col">
+                            <button
+                                class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
+                                (click)="_cm.createMapping(contentMappingForm)">
+                                Nouveau mapping
+                            </button>
+                        </div>
+                        <div class="col">
+                            <input type="checkbox" [(ngModel)]="displayMapped" [ngModelOptions]="{standalone: true}">
+                            Afficher les champs automatiquement associés
+                        </div>
+                    </div>
                     <div *ngIf="_cm.newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
                         <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
                         <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
@@ -42,7 +50,7 @@
 
         <form [formGroup]="contentTargetForm" *ngIf="showForm">
             <div *ngFor="let contentMapping of stepData.contentMappingInfo">
-                <div class="card field-card">
+                <div *ngIf="containsEnabled(contentMapping) || displayMapped" class="card field-card">
                     <div class="field-header" (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed">
                         <div class="card-title mb-0">{{contentMapping.nomenc_name}}</div>
                         <i *ngIf="contentMapping.isCollapsed" class="material-icons">keyboard_arrow_down</i>
@@ -51,7 +59,7 @@
                     <div [ngbCollapse]="contentMapping.isCollapsed" class="card-body">
 
                         <div *ngFor="let value_def of contentMapping.nomenc_values_def">
-                            <div class="form-group row">
+                            <div *ngIf="contentTargetForm.controls[value_def.id].enabled || displayMapped" class="form-group row">
                                 <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
                                 <div class="col-sm-8">
                                     <pnx-multiselect 

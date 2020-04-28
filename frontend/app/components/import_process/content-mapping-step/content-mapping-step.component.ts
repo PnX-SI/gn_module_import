@@ -30,6 +30,7 @@ export class ContentMappingStepComponent implements OnInit {
   public disableNextStep = true;
   public n_errors: number;
   public showValidateMappingBtn = true;
+  public displayMapped = false;
 
   constructor(
     private stepService: StepsService,
@@ -123,15 +124,31 @@ export class ContentMappingStepComponent implements OnInit {
     this.contentTargetForm.controls[formControlName].setValue(values);
   }
 
+
+  containsEnabled(contentMapping : any) {
+    for (let value_def of contentMapping.nomenc_values_def)
+      if (this.contentTargetForm.controls[value_def.id].enabled)
+        return true;
+    return false;
+  }
+
   onMappingName(): void {
     this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
       id_mapping => {
         if (id_mapping) {
+          console.log('id_mapping');
           this.disabled = false;
           this.fillMapping(id_mapping);
         } else {
+          console.log('pas de id_mapping');
           this.getNomencInf();
           this.contentTargetForm.reset();
+          Object.keys(this.contentTargetForm.controls).forEach(key => {
+            this.contentTargetForm.controls[key].enable();
+          });
+          for (let contentMapping of this.stepData.contentMappingInfo) {
+            contentMapping.isCollapsed = false;
+          }
           this.disabled = true;
         }
       },
@@ -183,6 +200,7 @@ export class ContentMappingStepComponent implements OnInit {
 
         this.contentTargetForm.reset();
         if (mappingContents[0] != "empty") {
+          console.log('pas vide');
           for (let content of mappingContents) {
             let arrayVal: any = [];
             // console.log(content);
@@ -201,6 +219,11 @@ export class ContentMappingStepComponent implements OnInit {
             );
             if (formControl) {
               formControl.setValue(arrayVal);
+              if (arrayVal[0]) {
+                formControl.disable();
+              } else {
+                formControl.enable();
+              }
             }
           }
         } else {
