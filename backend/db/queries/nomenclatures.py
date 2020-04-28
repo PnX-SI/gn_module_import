@@ -1,4 +1,5 @@
 import itertools
+from types import SimpleNamespace
 
 from flask import current_app
 from psycopg2.extensions import AsIs, QuotedString
@@ -310,7 +311,7 @@ def exist_proof_check(
     """
     #  case no proof column, return an empty list -> no error
     if field_proof is None:
-        return []
+        return None
     #  case exist proof = 1 and no other proof col -> raise error on all column where exist_proof = 1
     query = """
         SELECT array_agg(gn_pk) as id_rows
@@ -338,6 +339,39 @@ def exist_proof_check(
             field_non_digital_proof=field_non_digital_proof,
             field_digital_proof=field_digital_proof,
         )
-    print(query)
     return DB.session.execute(query).fetchone()
 
+
+def statut_source_check(statut_source_col):
+    pass
+
+
+def dee_bluring_check(table_name, id_import, bluring_col):
+    """
+    If ds_public = private -> bluring must be fill
+    """
+    query_ds_pub = """
+    SELECT ref_nomenclatures.get_cd_nomenclature(id_nomenclature_data_origin) as code
+    FROM gn_meta.t_datasets
+    WHERE id_dataset = (
+        SELECT id_dataset FROM gn_imports.t_imports
+        WHERE id_import = :id_import
+        )
+    """
+    ds_public = DB.session.execute(query_ds_pub, {"id_import": id_import}).fetchone()
+    if ds_public.code != "Pr":
+        return None
+    else:
+        if bluring_col:
+            query = """
+                SELECT array_agg(gn_pk) as id_rows
+                FROM {schema}.{table}
+                WHERE {bluring_col} IS NULL
+            """.format(
+                schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+                table=table_name,
+                bluring_col=bluring_col,
+            )
+            return DB.session.execute(query).fetchone()
+        else:
+            return SimpleNamespace(id_rows="All")

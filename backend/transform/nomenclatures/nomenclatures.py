@@ -16,6 +16,7 @@ from ...db.queries.nomenclatures import (
     set_default_nomenclature_id,
     get_saved_content_mapping,
     exist_proof_check,
+    dee_bluring_check,
 )
 from ...db.queries.user_errors import set_user_error
 
@@ -175,8 +176,7 @@ class NomenclatureTransformer:
             raise
 
     def check_conditionnal_values(self, id_import):
-        # if proof
-
+        # Proof checker
         row_with_errors = exist_proof_check(
             self.table_name,
             self.selected_columns.get("id_nomenclature_exist_proof"),
@@ -190,6 +190,22 @@ class NomenclatureTransformer:
                 error_code="INVALID_EXISTING_PROOF_VALUE",
                 col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
                 id_rows=row_with_errors.id_rows,
+            )
+
+        # bluering checker
+        row_with_errors = dee_bluring_check(
+            self.table_name,
+            id_import,
+            self.selected_columns.get("id_nomenclature_blurring"),
+        )
+        if row_with_errors:
+            set_user_error(
+                id_import=id_import,
+                step="CONTENT_MAPPING",
+                error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
+                col_name=self.selected_columns.get("id_nomenclature_blurring"),
+                id_rows=row_with_errors.id_rows,
+                comment="Le champ dEEFloutage doit être remplit si le jeu de données est privé",
             )
 
 
