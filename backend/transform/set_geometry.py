@@ -68,36 +68,29 @@ class GeometrySetter:
                 source_geom_column="gn_the_geom_4326",
                 target_geom_column="gn_the_geom_point",
             )
-            (
-                id_type_comm,
-                id_type_dep,
-                id_type_m1,
-                id_type_m6,
-                id_type_m10,
-            ) = get_id_area_type()
             #  retransform the geom col in text (otherwise dask not working)
             self.set_text()
             # calculate the geom attachement for communes / maille et département
             if self.code_commune_col:
                 self.calculate_geom_attachement(
-                    id_area_type=id_type_comm,
+                    area_type_code="COM",
                     code_col=self.code_commune_col,
                     ref_geo_area_code_col="area_code",
                 )
             if self.code_dep_col:
                 self.calculate_geom_attachement(
-                    id_area_type=id_type_dep,
+                    area_type_code="DEP",
                     code_col=self.code_dep_col,
                     ref_geo_area_code_col="area_code",
                 )
             if self.code_maille_col:
                 self.calculate_geom_attachement(
-                    id_area_type=id_type_m10,
+                    area_type_code="M10",
                     code_col=self.code_maille_col,
                     ref_geo_area_code_col="area_name",
                 )
             #  calcul des erreurs
-            # si aucun code fournis -> on ne vérifie pas les erreurs sur les codes
+            #  si aucun code fournis -> on ne vérifie pas les erreurs sur les codes
             if self.code_commune_col or self.code_maille_col or self.code_dep_col:
                 errors = self.set_attachment_referential_errors()
                 commune_errors = {"id_rows": [], "code_error": []}
@@ -204,7 +197,7 @@ class GeometrySetter:
 
     def calculate_geom_point(self, source_geom_column, target_geom_column):
         query = """
-            UPDATE {table_name} 
+            UPDATE {table_name}
             SET {target_geom_column} = ST_centroid({source_geom_column});
             """.format(
             table_name=self.table_name,
@@ -227,8 +220,9 @@ class GeometrySetter:
         )
         execute_query(query, commit=True)
 
+    @checker("Calcul des rattachements")
     def calculate_geom_attachement(
-        self, id_area_type, code_col, ref_geo_area_code_col,
+        self, area_type_code, code_col, ref_geo_area_code_col,
     ):
         """
         Find id_area_attachment in ref_geo.l_areas from code given in the file
@@ -237,25 +231,26 @@ class GeometrySetter:
         :params id_area_type int: the id_area_type (ref_geo.bib_area_type) of the coresponding code (example: 25 for commune)
         :params str :code_col: column name where find the code for attachment in the inital table
         :params str ref_geo_area_code_col: column of the ref_geo.l_area table where find the coresponding code (for maille its area_name, for other: area_code)
-    """
+        """
         query = """
-        UPDATE {table} as i
-                SET 
-                id_area_attachment = sub.id_area,
-                gn_the_geom_local = sub.geom,
-                gn_the_geom_4326 = st_transform(sub.geom, 4326),
-                gn_the_geom_point = st_centroid(sub.geom)
-                FROM (
-                    SELECT id_area, la.geom::text, gn_pk
-                    FROM {table} 
-                    JOIN ref_geo.l_areas la ON la.id_type = {id_area_type} and la.{ref_geo_area_code_col} = {code_col} 
-                ) as sub
-                WHERE id_area_attachment IS NULL AND gn_the_geom_local IS NULL AND sub.gn_pk = i.gn_pk;
+            WITH sub as (
+                SELECT id_area, la.geom::text, gn_pk
+                FROM {table} 
+                JOIN ref_geo.l_areas la ON la.{ref_geo_area_code_col} = {code_col} 
+                JOIN ref_geo.bib_areas_types b ON b.id_type = la.id_type AND type_code = '{area_type_code}'
+                WHERE {code_col} IS NOT NULL
+            )
+                UPDATE {table} as i
+                    SET id_area_attachment = sub.id_area,
+                    gn_the_geom_local = sub.geom,
+                    gn_the_geom_4326 = st_transform(sub.geom, 4326),
+                    gn_the_geom_point = st_centroid(sub.geom)
+            FROM sub WHERE id_area_attachment IS NULL AND gn_the_geom_local IS NULL AND sub.gn_pk = i.gn_pk;
         """.format(
             table=self.table_name,
             ref_geo_area_code_col=ref_geo_area_code_col,
             code_col=code_col,
-            id_area_type=id_area_type,
+            area_type_code=area_type_code,
         )
         execute_query(query)
 
