@@ -29,7 +29,7 @@ export class ContentMappingStepComponent implements OnInit {
   public disabled: boolean = true;
   public disableNextStep = true;
   public n_errors: number;
-  public n_nonMappes: number = -1;
+  public n_aMapper: number = -1;
   public n_mappes: number = -1;
   public showValidateMappingBtn = true;
   public displayMapped = false;
@@ -61,6 +61,7 @@ export class ContentMappingStepComponent implements OnInit {
 
     // fill the form
     if (this.stepData.id_content_mapping) {
+      
       this.contentMappingForm.controls["contentMapping"].setValue(
         this.stepData.id_content_mapping
       );
@@ -94,9 +95,11 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   generateContentForm() {
+    this.n_aMapper = 0;
     this.stepData.contentMappingInfo.forEach(ele => {
       ele["nomenc_values_def"].forEach(nomenc => {
         this.contentTargetForm.addControl(nomenc.id, new FormControl(""));
+        ++this.n_aMapper;
       });
     });
     this.showForm = true;
@@ -129,29 +132,29 @@ export class ContentMappingStepComponent implements OnInit {
     this.contentTargetForm.controls[formControlName].setValue(values);
   }
 
-
   containsEnabled(contentMapping : any) {
     for (let value_def of contentMapping.nomenc_values_def)
-      if (this.contentTargetForm.controls[value_def.id].enabled)
+      if (!this.contentTargetForm.controls[value_def.id].value)
         return true;
     return false;
+  }
+
+  updateEnabled(e) {
+    if (e.target.checked) {
+      this.fillMapping(this.id_mapping);
+    }
   }
 
   onMappingName(): void {
     this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
       id_mapping => {
         if (id_mapping) {
-          console.log('id_mapping');
           this.disabled = false;
           this.fillMapping(id_mapping);
         } else {
-          console.log('pas de id_mapping');
-          this.n_mappes = this.n_nonMappes = -1;
+          this.n_mappes = -1;
           this.getNomencInf();
           this.contentTargetForm.reset();
-          Object.keys(this.contentTargetForm.controls).forEach(key => {
-            this.contentTargetForm.controls[key].enable();
-          });
           for (let contentMapping of this.stepData.contentMappingInfo) {
             contentMapping.isCollapsed = false;
           }
@@ -205,8 +208,7 @@ export class ContentMappingStepComponent implements OnInit {
         // console.log(mappingContents);
         this.contentTargetForm.reset();
         if (mappingContents[0] != "empty") {
-          console.log('pas vide');
-          this.n_mappes = this.n_nonMappes = 0;
+          this.n_mappes = 0;
           for (let content of mappingContents) {
             let arrayVal: any = [];
             // console.log(content);
@@ -225,18 +227,13 @@ export class ContentMappingStepComponent implements OnInit {
             );
             if (formControl) {
               formControl.setValue(arrayVal);
-              if (arrayVal[0]) {
-                formControl.disable();
+              if (arrayVal[0])
                 ++this.n_mappes;
-              } else {
-                formControl.enable();
-                ++this.n_nonMappes;
-              }
             }
           }
         } else {
           this.contentTargetForm.reset();
-          this.n_mappes = this.n_nonMappes = -1;
+          this.n_mappes = -1;
         }
       },
       error => {

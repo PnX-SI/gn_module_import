@@ -29,21 +29,21 @@
                             </button>
                         </div>
                         <div class="col">
-                            <input type="checkbox" [(ngModel)]="displayMapped" [ngModelOptions]="{standalone: true}">
+                            <input type="checkbox" [(ngModel)]="displayMapped" [ngModelOptions]="{standalone: true}" (change)="updateEnabled($event)">
                             Afficher les champs automatiquement associés
                         </div>
                     </div>
                     <div *ngIf="n_mappes != -1">
-                        <div *ngIf="n_nonMappes == 0" class="alert alert-success">
+                        <div *ngIf="n_aMapper ==  n_mappes" class="alert alert-success">
                             L'ensemble des valeurs du fichier a été automatiquement associé aux nomenclatures.
                         </div>
-                        <div *ngIf="n_nonMappes != 0 && n_mappes == 1" class="alert alert-success">
-                            Une seule valeur du fichier a été automatiquement associée aux valeurs des nomenclautres. <br/>
-                            {{n_nonMappes}} restent à associer manuellement.
+                        <div *ngIf="n_aMapper != n_mappes && n_mappes == 1" class="alert alert-success">
+                            Une seule valeur du fichier a été automatiquement associée aux valeurs des nomenclatures. <br/>
+                            {{n_aMapper - n_mappes}} restent à associer manuellement.
                         </div>
-                        <div *ngIf="n_nonMappes != 0 && n_mappes > 1" class="alert alert-success">
+                        <div *ngIf="n_aMapper != n_mappes && n_mappes > 1" class="alert alert-success">
                             {{n_mappes}} champs du fichier ont été automatiquement associés aux champs du modèle d'import. <br/>
-                            {{n_nonMappes}} restent à associer manuellement.
+                            {{n_aMapper - n_mappes}} restent à associer manuellement.
                         </div>
                         <div *ngIf="n_mappes == 0" class="alert alert-danger">
                             Aucune valeur du fichier n'a pu être associée aux valeurs des nomenclatures.
@@ -75,7 +75,7 @@
                     <div [ngbCollapse]="contentMapping.isCollapsed" class="card-body">
 
                         <div *ngFor="let value_def of contentMapping.nomenc_values_def">
-                            <div *ngIf="contentTargetForm.controls[value_def.id].enabled || displayMapped" class="form-group row">
+                            <div *ngIf="!contentTargetForm.controls[value_def.id].value || displayMapped" class="form-group row">
                                 <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
                                 <div class="col-sm-8">
                                     <pnx-multiselect 
