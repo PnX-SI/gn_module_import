@@ -52,13 +52,13 @@ def data_cleaning(
             and "latitude" in selected_columns.keys()
         ):
             synthese_info["longitude"] = {
-                "is_nullable": "NO",
+                "is_nullable": "YES",
                 "column_default": None,
                 "data_type": "real",
                 "character_max_length": None,
             }
             synthese_info["latitude"] = {
-                "is_nullable": "NO",
+                "is_nullable": "YES",
                 "column_default": None,
                 "data_type": "real",
                 "character_max_length": None,

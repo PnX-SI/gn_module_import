@@ -40,7 +40,6 @@ def check_missing(
             for field in synthese_info
             if synthese_info[field]["is_nullable"] == "NO"
         ]
-
         for field in fields:
 
             logger.info(

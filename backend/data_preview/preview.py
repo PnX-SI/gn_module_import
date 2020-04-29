@@ -87,7 +87,10 @@ def set_total_columns(selected_cols, added_cols, import_id, module_name):
     remove non synthese fields from dict 
     and set fixed synthese fields 
     """
-    total_columns = {**selected_cols, **added_cols}
+    total_columns = {
+        **selected_cols,
+        **added_cols,
+    }
 
     # remove non synthese fields from dict :
     sf = get_synthese_fields()
