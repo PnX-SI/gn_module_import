@@ -151,14 +151,15 @@ class GeometrySetter:
         """.format(
             table=self.table_name
         )
-        invalid_geom_rows = execute_query(query)
-        set_user_error(
-            self.id_import,
-            step="FIELD_MAPPING",
-            error_code="INVALID_GEOMETRY",
-            id_rows=list(map(lambda r: r.gn_pk, invalid_geom_rows)),
-            comment="Des géométrie fournies s'auto-intersectent",
-        )
+        invalid_geom_rows = execute_query(query).fetchall()
+        if len(invalid_geom_rows) > 0:
+            set_user_error(
+                self.id_import,
+                step="FIELD_MAPPING",
+                error_code="INVALID_GEOMETRY",
+                id_rows=list(map(lambda r: r.gn_pk, invalid_geom_rows)),
+                comment="Des géométrie fournies s'auto-intersectent",
+            )
 
     def add_geom_column(self):
         """
