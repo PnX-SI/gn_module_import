@@ -31,9 +31,10 @@ class GeometrySetter:
     @checker("Data cleaning : geometries created")
     def set_geometry(self):
         """
-        Add 3 geometry columns and 1 column id_area_attachmet to the temp table and fill them from the "given_geom" col
+        - Add 3 geometry columns and 1 column id_area_attachmet to the temp table and fill them from the "given_geom" col
         calculated in python in the geom_check step
-        Also calculate the attachment geoms
+        - Check if the geom are valid (not self intersected)
+        - calculate the attachment geoms
         """
         try:
 
@@ -61,6 +62,7 @@ class GeometrySetter:
                 source_geom_column="gn_the_geom_4326",
                 target_geom_column="gn_the_geom_point",
             )
+            self.check_geom_validity()
             #  retransform the geom col in text (otherwise dask not working)
             self.set_text()
             # calculate the geom attachement for communes / maille et département
@@ -135,6 +137,28 @@ class GeometrySetter:
                     )
         except Exception:
             raise
+
+    def check_geom_validity(self):
+        """
+        Set an error where geom is not valid
+        """
+        query = """
+        UPDATE {table}
+        SET gn_is_valid = 'False',
+        gn_invalid_reason = 'INVALID_GEOMETRY'
+        WHERE ST_IsValid(gn_the_geom_4326) IS FALSE
+        RETURNING gn_pk;
+        """.format(
+            table=self.table_name
+        )
+        invalid_geom_rows = execute_query(query)
+        set_user_error(
+            self.id_import,
+            step="FIELD_MAPPING",
+            error_code="INVALID_GEOMETRY",
+            id_rows=list(map(lambda r: r.gn_pk, invalid_geom_rows)),
+            comment="Des géométrie fournies s'auto-intersectent",
+        )
 
     def add_geom_column(self):
         """
