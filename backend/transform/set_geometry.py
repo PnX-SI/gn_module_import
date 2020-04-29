@@ -24,16 +24,9 @@ class GeometrySetter:
         self.import_srid = import_object.import_srid
         self.column_names = import_object.column_names
         self.local_srid = local_srid
-        # self.code_commune_col = (
-        #     code_commune_col if code_commune_col != "" else "codecommune"
-        # )
         self.code_commune_col = code_commune_col
         self.code_maille_col = code_maille_col
         self.code_dep_col = code_dep_col
-        # self.code_maille_col = (
-        #     code_maille_col if code_maille_col != "" else "codemaille"
-        # )
-        # self.code_dep_col = code_dep_col if code_dep_col != "" else "codedepartement"
 
     @checker("Data cleaning : geometries created")
     def set_geometry(self):
@@ -234,7 +227,7 @@ class GeometrySetter:
         """
         query = """
             WITH sub as (
-                SELECT id_area, la.geom::text, gn_pk
+                SELECT id_area, la.geom, gn_pk
                 FROM {table} 
                 JOIN ref_geo.l_areas la ON la.{ref_geo_area_code_col} = {code_col} 
                 JOIN ref_geo.bib_areas_types b ON b.id_type = la.id_type AND type_code = '{area_type_code}'
@@ -244,7 +237,7 @@ class GeometrySetter:
                     SET id_area_attachment = sub.id_area,
                     gn_the_geom_local = sub.geom,
                     gn_the_geom_4326 = st_transform(sub.geom, 4326),
-                    gn_the_geom_point = st_centroid(sub.geom)
+                    gn_the_geom_point = st_centroid(st_transform(sub.geom,4326))
             FROM sub WHERE id_area_attachment IS NULL AND gn_the_geom_local IS NULL AND sub.gn_pk = i.gn_pk;
         """.format(
             table=self.table_name,
