@@ -98,6 +98,7 @@ def check_geography(
             line_with_codes = df[mask_with_code].index
         except KeyError:
             pass
+        df["given_geom"] = None
         # index starting at 1 -> so -1
         if len(line_with_codes) > 0:
             line_with_codes = line_with_codes - 1
@@ -186,6 +187,19 @@ def check_geography(
                     col_name_error=selected_columns["WKT"],
                     df_col_name_valid="valid_wkt",
                     id_rows_error=id_rows_errors,
+                )
+        # if no wkt and no x/y
+        else:
+            df["no_geom"] = ~mask_with_code & df["given_geom"].isnull()
+            no_geom_errors = df[df["no_geom"] == True]
+            if len(no_geom_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="NO-GEOM",
+                    col_name_error="Colonnes géometriques",
+                    df_col_name_valid="no_geom",
+                    id_rows_error=no_geom_errors.index.to_list(),
                 )
 
         if (
