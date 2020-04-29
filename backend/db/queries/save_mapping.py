@@ -5,7 +5,6 @@ from ..models import TMappingsFields, TMappingsValues
 
 def save_field_mapping(form_data, id_mapping, select_type):
     try:
-        print(form_data)
         for col in form_data:
 
             my_query = (

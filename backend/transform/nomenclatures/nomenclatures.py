@@ -312,7 +312,6 @@ def set_default_nomenclature_ids(table_name, selected_cols):
             nomenc_values = get_nomenc_values(mnemonique_type)
             ids = [str(nomenc.nomenc_id) for nomenc in nomenc_values]
             set_default_nomenclature_id(table_name, mnemonique_type, v, ids)
-            print(ids)
         DB.session.commit()
     except Exception:
         DB.session.rollback()

@@ -73,8 +73,6 @@ def check_uuid(
                     )
 
                     df["temp"] = df[uuid_col_name].str.lower().duplicated(keep=False)
-                    print("LAAAAAAAAA")
-                    print(df["temp"])
                     df["temp"] = (
                         df["temp"]
                         .where(cond=df[uuid_col_name].notnull(), other=False)

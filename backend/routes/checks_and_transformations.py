@@ -333,8 +333,6 @@ def postMapping(info_role, import_id, id_mapping):
             # with the mapping given, find all the corresponding nomenclatures
             nomenclature_transformer.set_nomenclature_ids()
             results = nomenclature_transformer.check_conditionnal_values()
-            print("LAAAAAAAAAA")
-            print(results)
             logger.info("Find nomenclature with errors :")
             nomenclature_transformer.find_nomenclatures_errors(import_id)
 

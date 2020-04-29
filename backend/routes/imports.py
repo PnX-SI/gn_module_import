@@ -135,9 +135,7 @@ def cancel_import(info_role, import_id):
             .one()[0]
         )
         if is_finished:
-            print("OK")
             name_source = "Import(id=" + import_id + ")"
-            print(name_source)
             id_source = (
                 DB.session.query(TSources.id_source)
                 .filter(TSources.name_source == name_source)
