@@ -7,6 +7,10 @@ from ..load.import_class import ImportDescriptor
 
 
 class GeometrySetter:
+    """
+    Utility class to manage geometry transformation from the import table
+    """
+
     def __init__(
         self,
         import_object: ImportDescriptor,
@@ -20,13 +24,16 @@ class GeometrySetter:
         self.import_srid = import_object.import_srid
         self.column_names = import_object.column_names
         self.local_srid = local_srid
-        self.code_commune_col = (
-            code_commune_col if code_commune_col != "" else "codecommune"
-        )
-        self.code_maille_col = (
-            code_maille_col if code_maille_col != "" else "codemaille"
-        )
-        self.code_dep_col = code_dep_col if code_dep_col != "" else "codedepartement"
+        # self.code_commune_col = (
+        #     code_commune_col if code_commune_col != "" else "codecommune"
+        # )
+        self.code_commune_col = code_commune_col
+        self.code_maille_col = code_maille_col
+        self.code_dep_col = code_dep_col
+        # self.code_maille_col = (
+        #     code_maille_col if code_maille_col != "" else "codemaille"
+        # )
+        # self.code_dep_col = code_dep_col if code_dep_col != "" else "codedepartement"
 
     @checker("Data cleaning : geometries created")
     def set_geometry(self):
@@ -90,54 +97,56 @@ class GeometrySetter:
                     ref_geo_area_code_col="area_name",
                 )
             #  calcul des erreurs
-            errors = self.set_attachment_referential_errors()
-            commune_errors = {"id_rows": [], "code_error": []}
-            maille_errors = {"id_rows": [], "code_error": []}
-            dep_errors = {"id_rows": [], "code_error": []}
-            for er in errors:
-                if er.code_com:
-                    commune_errors["id_rows"].append(er.gn_pk)
-                    commune_errors["code_error"].append(er.code_com)
-                elif er.code_maille:
-                    maille_errors["id_rows"].append(er.gn_pk)
-                    maille_errors["code_error"].append(er.code_maille)
-                elif er.code_dep:
-                    dep_errors["id_rows"].append(er.gn_pk)
-                    dep_errors["code_error"].append(er.code_dep)
+            # si aucun code fournis -> on ne vérifie pas les erreurs sur les codes
+            if self.code_commune_col or self.code_maille_col or self.code_dep_col:
+                errors = self.set_attachment_referential_errors()
+                commune_errors = {"id_rows": [], "code_error": []}
+                maille_errors = {"id_rows": [], "code_error": []}
+                dep_errors = {"id_rows": [], "code_error": []}
+                for er in errors:
+                    if er.code_com:
+                        commune_errors["id_rows"].append(er.gn_pk)
+                        commune_errors["code_error"].append(er.code_com)
+                    elif er.code_maille:
+                        maille_errors["id_rows"].append(er.gn_pk)
+                        maille_errors["code_error"].append(er.code_maille)
+                    elif er.code_dep:
+                        dep_errors["id_rows"].append(er.gn_pk)
+                        dep_errors["code_error"].append(er.code_dep)
 
-            if len(commune_errors["id_rows"]) > 0:
-                set_user_error(
-                    id_import=self.id_import,
-                    step="FIELD_MAPPING",
-                    error_code="INVALID_GEOM_CODE",
-                    col_name=self.code_commune_col,
-                    id_rows=commune_errors["id_rows"],
-                    comment="Les codes communes suivant sont invalides : {}".format(
-                        ", ".join(commune_errors["code_error"])
-                    ),
-                )
-            if len(maille_errors["id_rows"]) > 0:
-                set_user_error(
-                    id_import=self.id_import,
-                    step="FIELD_MAPPING",
-                    error_code="INVALID_GEOM_CODE",
-                    col_name=self.code_maille_col,
-                    id_rows=maille_errors["id_rows"],
-                    comment="Les codes mailles suivant sont invalides : {}".format(
-                        ", ".join(maille_errors["code_error"])
-                    ),
-                )
-            if len(dep_errors["id_rows"]) > 0:
-                set_user_error(
-                    id_import=self.id_import,
-                    step="FIELD_MAPPING",
-                    error_code="INVALID_GEOM_CODE",
-                    col_name=self.code_dep_col,
-                    id_rows=dep_errors["id_rows"],
-                    comment="Les codes départements suivant sont invalides : {}".format(
-                        ", ".join(dep_errors["code_error"])
-                    ),
-                )
+                if len(commune_errors["id_rows"]) > 0:
+                    set_user_error(
+                        id_import=self.id_import,
+                        step="FIELD_MAPPING",
+                        error_code="INVALID_GEOM_CODE",
+                        col_name=self.code_commune_col,
+                        id_rows=commune_errors["id_rows"],
+                        comment="Les codes communes suivant sont invalides : {}".format(
+                            ", ".join(commune_errors["code_error"])
+                        ),
+                    )
+                if len(maille_errors["id_rows"]) > 0:
+                    set_user_error(
+                        id_import=self.id_import,
+                        step="FIELD_MAPPING",
+                        error_code="INVALID_GEOM_CODE",
+                        col_name=self.code_maille_col,
+                        id_rows=maille_errors["id_rows"],
+                        comment="Les codes mailles suivant sont invalides : {}".format(
+                            ", ".join(maille_errors["code_error"])
+                        ),
+                    )
+                if len(dep_errors["id_rows"]) > 0:
+                    set_user_error(
+                        id_import=self.id_import,
+                        step="FIELD_MAPPING",
+                        error_code="INVALID_GEOM_CODE",
+                        col_name=self.code_dep_col,
+                        id_rows=dep_errors["id_rows"],
+                        comment="Les codes départements suivant sont invalides : {}".format(
+                            ", ".join(dep_errors["code_error"])
+                        ),
+                    )
         except Exception:
             raise
 
@@ -277,8 +286,8 @@ class GeometrySetter:
 
         """.format(
             table=self.table_name,
-            code_commune_col=self.code_commune_col,
-            code_maille_col=self.code_maille_col,
-            code_dep_col=self.code_dep_col,
+            code_commune_col=self.code_commune_col or "codecommune",
+            code_maille_col=self.code_maille_col or "coodemaille",
+            code_dep_col=self.code_dep_col or "codedepartement",
         )
         return execute_query(query, commit=True).fetchall()
