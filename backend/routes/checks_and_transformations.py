@@ -456,8 +456,6 @@ def content_mapping(info_role, import_id, id_mapping):
             nomenclature_transformer.set_nomenclature_ids()
             nomenclature_transformer.check_conditionnal_values(import_id)
 
-            nomenclature_transformer.check_conditionnal_values(import_id)
-
             logger.info("Find nomenclature with errors :")
             nomenclature_transformer.find_nomenclatures_errors(import_id)
 

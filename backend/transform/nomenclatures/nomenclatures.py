@@ -17,6 +17,7 @@ from ...db.queries.nomenclatures import (
     get_saved_content_mapping,
     exist_proof_check,
     dee_bluring_check,
+    ref_biblio_check,
 )
 from ...db.queries.user_errors import set_user_error
 
@@ -177,35 +178,54 @@ class NomenclatureTransformer:
 
     def check_conditionnal_values(self, id_import):
         # Proof checker
-        row_with_errors = exist_proof_check(
+        row_with_errors_proof = exist_proof_check(
             self.table_name,
             self.selected_columns.get("id_nomenclature_exist_proof"),
             self.selected_columns.get("digital_proof"),
             self.selected_columns.get("non_digital_proof"),
         )
-        if row_with_errors:
+        if row_with_errors_proof:
             set_user_error(
                 id_import=id_import,
                 step="CONTENT_MAPPING",
                 error_code="INVALID_EXISTING_PROOF_VALUE",
                 col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
-                id_rows=row_with_errors.id_rows,
+                id_rows=row_with_errors_proof.id_rows,
             )
 
         # bluering checker
-        row_with_errors = dee_bluring_check(
+        row_with_errors_blurr = dee_bluring_check(
             self.table_name,
             id_import,
             self.selected_columns.get("id_nomenclature_blurring"),
         )
-        if row_with_errors:
+        if row_with_errors_blurr:
             set_user_error(
                 id_import=id_import,
                 step="CONTENT_MAPPING",
                 error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
                 col_name=self.selected_columns.get("id_nomenclature_blurring"),
-                id_rows=row_with_errors.id_rows,
+                id_rows=row_with_errors_blurr.id_rows,
                 comment="Le champ dEEFloutage doit être remplit si le jeu de données est privé",
+            )
+
+        #  literature checker
+        row_with_errors_bib = ref_biblio_check(
+            self.table_name,
+            field_statut_source=self.selected_columns.get(
+                "id_nomenclature_source_status"
+            ),
+            field_ref_biblio=self.selected_columns.get("reference_biblio"),
+        )
+        if row_with_errors_bib:
+            set_user_error(
+                id_import=id_import,
+                step="CONTENT_MAPPING",
+                error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
+                col_name=self.selected_columns.get("reference_biblio")
+                or self.selected_columns.get("id_nomenclature_source_status"),
+                id_rows=row_with_errors_bib.id_rows,
+                comment="Le champ reference_biblio doit être remplit si le statut source est 'Littérature'",
             )
 
 

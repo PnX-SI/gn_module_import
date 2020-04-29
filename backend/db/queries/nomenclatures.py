@@ -375,3 +375,29 @@ def dee_bluring_check(table_name, id_import, bluring_col):
             return DB.session.execute(query).fetchone()
         else:
             return SimpleNamespace(id_rows="All")
+
+
+def ref_biblio_check(table_name, field_statut_source, field_ref_biblio):
+    """
+    If statut_source = 'Li' the field ref_biblio must be fill
+    """
+    if field_statut_source is None:
+        return None
+    #  case no field ref_biblo: all row with statut_source = 'Li' are in errors
+    query = """
+        SELECT array_agg(gn_pk) as id_rows
+        FROM {schema}.{table}
+        WHERE ref_nomenclatures.get_cd_nomenclature({field_statut_source}::integer) = 'Li' 
+        """.format(
+        schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+        table=table_name,
+        field_statut_source=field_statut_source,
+    )
+    #  case field_ref_biblio is present, check where the fiel is null
+    if field_ref_biblio:
+        query = "{query} AND {field_ref_biblio} IS NULL".format(
+            query=query, field_ref_biblio=field_ref_biblio
+        )
+    print("LAAAAA")
+    print(query)
+    return DB.session.execute(query).fetchone()
