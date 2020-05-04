@@ -109,6 +109,12 @@ def cancel_import(info_role, import_id):
                     ]
                     assert info_role.id_role in actors
                 elif info_role.value_filter == "2":
+                    actors = [
+                        auth[0]
+                        for auth in DB.session.query(CorRoleImport.id_role)
+                        .filter(CorRoleImport.id_import == import_id)
+                        .all()
+                    ]
                     organisms = [
                         org[0]
                         for org in DB.session.query(User.id_organisme)
