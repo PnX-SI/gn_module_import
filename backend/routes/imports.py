@@ -124,12 +124,12 @@ def cancel_import(info_role, import_id):
                     ]
                     assert (
                         info_role.id_role in actors
-                        or info_role.id_organism in organisms
+                        or info_role.id_organisme in organisms
                     )
             except AssertionError:
                 raise InsufficientRightsError(
                     ('User "{}" cannot delete this current import').format(
-                        user.id_role
+                        info_role.id_role
                     ),
                     403,
                 )
