@@ -67,15 +67,14 @@ class GeometrySetter:
             )
             self.check_geom_validity()
             #  check bounding box
-            results_out_of_box = self.check_geoms_fit_bbox().fetchone()
+            results_out_of_box = self.check_geoms_fit_bbox().fetchall()
             if results_out_of_box:
                 set_user_error(
                     id_import=self.id_import,
                     step="FIELD_MAPPING",
                     error_code="GEOMETRY_OUT_OF_BOX",
                     col_name="Colonne géométriques",
-                    id_rows=results_out_of_box.id_rows,
-                    comment="Les géométries fournies sont en dehors de la bounding box de l'instance",
+                    id_rows=list(map(lambda row: row.gn_pk, results_out_of_box)),
                 )
             #  retransform the geom col in text (otherwise dask not working)
             self.set_text()
@@ -331,9 +330,15 @@ class GeometrySetter:
             raise
 
         query = """
-        SELECT array_agg(gn_pk) as id_rows
+        UPDATE {table} as i
+        SET gn_is_valid = 'False',
+        gn_invalid_reason = 'GEOMETRY_OUT_OF_BOX'
+        WHERE gn_pk IN (
+        SELECT gn_pk as id_rows
         FROM {table}
         WHERE NOT gn_the_geom_4326 && st_geogfromtext('{bbox}')
+        )
+        RETURNING gn_pk
         """.format(
             table=self.table_name, bbox=bounding_box_wkt
         )
