@@ -398,6 +398,4 @@ def ref_biblio_check(table_name, field_statut_source, field_ref_biblio):
         query = "{query} AND {field_ref_biblio} IS NULL".format(
             query=query, field_ref_biblio=field_ref_biblio
         )
-    print("LAAAAA")
-    print(query)
     return DB.session.execute(query).fetchone()

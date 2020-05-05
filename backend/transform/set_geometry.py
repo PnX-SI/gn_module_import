@@ -1,3 +1,6 @@
+from flask import current_app
+from shapely.geometry import Polygon
+
 from ..wrappers import checker
 from ..logs import logger
 from ..db.queries.geometries import get_id_area_type
@@ -63,6 +66,17 @@ class GeometrySetter:
                 target_geom_column="gn_the_geom_point",
             )
             self.check_geom_validity()
+            #  check bounding box
+            results_out_of_box = self.check_geoms_fit_bbox().fetchone()
+            if results_out_of_box:
+                set_user_error(
+                    id_import=self.id_import,
+                    step="FIELD_MAPPING",
+                    error_code="GEOMETRY_OUT_OF_BOX",
+                    col_name="Colonne géométriques",
+                    id_rows=results_out_of_box.id_rows,
+                    comment="Les géométries fournies sont en dehors de la bounding box de l'instance",
+                )
             #  retransform the geom col in text (otherwise dask not working)
             self.set_text()
             # calculate the geom attachement for communes / maille et département
@@ -135,6 +149,7 @@ class GeometrySetter:
                             ", ".join(dep_errors["code_error"])
                         ),
                     )
+
         except Exception:
             raise
 
@@ -304,3 +319,22 @@ class GeometrySetter:
             code_dep_col=self.code_dep_col or "codedepartement",
         )
         return execute_query(query, commit=True).fetchall()
+
+    def check_geoms_fit_bbox(self):
+        xmin, ymin, xmax, ymax = current_app.config["IMPORT"]["INSTANCE_BOUNDING_BOX"]
+        try:
+            bounding_box_poly = Polygon(
+                [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax),]
+            )
+            bounding_box_wkt = bounding_box_poly.wkt
+        except Exception:
+            raise
+
+        query = """
+        SELECT array_agg(gn_pk) as id_rows
+        FROM {table}
+        WHERE NOT gn_the_geom_4326 && st_geogfromtext('{bbox}')
+        """.format(
+            table=self.table_name, bbox=bounding_box_wkt
+        )
+        return execute_query(query)

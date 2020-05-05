@@ -1,0 +1,4 @@
+# bounding box des données de l'instance. Utilisé pour lever des warning lorsque les données
+# sont en dehors. Format: [XMIN, YMIN, XMAX, YMAX]
+# par défaut: France métropolitaine incluant la Corse
+INSTANCE_BOUNDING_BOX = [-5.0, 41, 10, 51.15]
