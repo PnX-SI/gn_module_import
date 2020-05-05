@@ -4,6 +4,8 @@ from ..models import TMappingsFields, TMappingsValues
 
 
 def save_field_mapping(form_data, id_mapping, select_type):
+    print("LAAAAA")
+    print(form_data)
     try:
         for col in form_data:
 

@@ -70,13 +70,7 @@ def is_wkt_valid(value):
 
 @checker("Data cleaning : type of values checked")
 def check_types(
-    df,
-    added_cols,
-    selected_columns,
-    synthese_info,
-    missing_values,
-    schema_name,
-    import_id,
+    df, selected_columns, synthese_info, missing_values, schema_name, import_id,
 ):
     try:
 

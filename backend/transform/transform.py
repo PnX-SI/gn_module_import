@@ -38,6 +38,8 @@ def data_cleaning(
 
         # get synthese column info:
         synthese_info = get_synthese_info(selected_columns.keys())
+        print("SYNTHESE INGO")
+        print(synthese_info)
 
         # set is_nullable for cd_nom
         is_cd_nom_req = is_cd_nom_required(schema_name)
@@ -70,29 +72,20 @@ def data_cleaning(
         )
         check_row_duplicates(df, selected_columns, import_id, schema_name)
         check_types(
-            df,
-            added_cols,
-            selected_columns,
-            synthese_info,
-            missing_val,
-            schema_name,
-            import_id,
+            df, selected_columns, synthese_info, missing_val, schema_name, import_id,
         )
         check_cd_nom(
             df, selected_columns, missing_val, cd_nom_list, schema_name, import_id
         )
-        check_dates(
-            df, added_cols, selected_columns, synthese_info, import_id, schema_name
+        check_dates(df, selected_columns, synthese_info, import_id, schema_name)
+        check_uuid(
+            df,
+            selected_columns,
+            synthese_info,
+            is_generate_uuid,
+            import_id,
+            schema_name,
         )
-        # check_uuid(
-        #     df,
-        #     added_cols,
-        #     selected_columns,
-        #     synthese_info,
-        #     is_generate_uuid,
-        #     import_id,
-        #     schema_name,
-        # )
         check_counts(
             df,
             selected_columns,
@@ -118,11 +111,6 @@ def data_cleaning(
             schema_name,
         )
         check_url(df, selected_columns, import_id)
-
-        return {
-            #'user_errors': user_error,
-            "added_cols": added_cols
-        }
 
     except Exception:
         raise

@@ -28,13 +28,7 @@ def fill_nan_uuid(value):
 
 @checker("Data cleaning : uuid values checked")
 def check_uuid(
-    df,
-    added_cols,
-    selected_columns,
-    synthese_info,
-    is_generate_uuid,
-    import_id,
-    schema_name,
+    df, selected_columns, synthese_info, is_generate_uuid, import_id, schema_name,
 ):
 
     try:
@@ -48,6 +42,8 @@ def check_uuid(
             for field in synthese_info
             if synthese_info[field]["data_type"] == "uuid"
         ]
+        print("??????????")
+        print(uuid_cols)
         if len(uuid_cols) > 0:
 
             for col in uuid_cols:
@@ -186,11 +182,10 @@ def check_uuid(
                 logger.info(
                     "no unique_id_sinp column provided: creating uuid for each row"
                 )
-                create_col_name(df, added_cols, "unique_id_sinp", import_id)
-                df[added_cols["unique_id_sinp"]] = ""
-                df[added_cols["unique_id_sinp"]] = df[
-                    added_cols["unique_id_sinp"]
-                ].apply(lambda x: str(uuid4()))
+                df["unique_id_sinp"] = ""
+                df["unique_id_sinp"] = df["unique_id_sinp"].apply(
+                    lambda x: str(uuid4())
+                )
 
     except Exception:
         raise

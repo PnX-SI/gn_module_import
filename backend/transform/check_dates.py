@@ -28,9 +28,7 @@ def check_date_min_inf_date_max(row, selected_columns):
 
 
 @checker("Data cleaning : dates checked")
-def check_dates(
-    df, added_cols, selected_columns, synthese_info, import_id, schema_name
-):
+def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
     try:
 
         logger.info("CHECKING DATES :")
@@ -47,7 +45,6 @@ def check_dates(
         # set date_max (=if data_max not existing, then set equal to date_min)
         if "date_max" not in date_fields:
             logger.info("- date_max not provided : set date_max = date_min")
-            added_cols["date_max"] = selected_columns["date_min"]
             df["date_max"] = df[selected_columns["date_min"]]  # utile?
             synthese_info.update({"date_max": synthese_info["date_min"]})  # utile?
 
@@ -90,6 +87,7 @@ def check_dates(
 
         if "check_dates" in df.columns:
             df = df.drop("check_dates", axis=1)
+        df = df.drop("interval", axis=1)
 
     except Exception:
         raise

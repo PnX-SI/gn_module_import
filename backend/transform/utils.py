@@ -69,3 +69,11 @@ def add_code_columns(form_data, selected_columns, df):
         selected_columns["codedepartement"] = "codedepartement"
         df["codedepartement"] = None
 
+
+def remove_temp_columns(temp_cols: list, df):
+    for col in temp_cols:
+        try:
+            df = df.drop(col, axis=1)
+        except Exception:
+            pass
+    return df

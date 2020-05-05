@@ -43,7 +43,7 @@ from ..upload.upload_errors import *
 
 
 from ..transform.transform import data_cleaning
-from ..transform.utils import add_code_columns
+from ..transform.utils import add_code_columns, remove_temp_columns
 from ..transform.set_geometry import GeometrySetter
 from ..transform.set_altitudes import set_altitudes
 from ..transform.nomenclatures.nomenclatures import NomenclatureTransformer
@@ -211,7 +211,7 @@ def postMapping(info_role, import_id, id_mapping):
             logger.info("* START DATA CLEANING partition %s", i)
             partition = df.get_partition(i)
             partition_df = compute_df(partition)
-            transform_errors = data_cleaning(
+            data_cleaning(
                 partition_df,
                 import_id,
                 selected_columns,
@@ -226,19 +226,23 @@ def postMapping(info_role, import_id, id_mapping):
                 PREFIX,
             )
 
-            added_cols = transform_errors["added_cols"]
-            if "temp" in partition_df.columns:
-                partition_df = partition_df.drop("temp", axis=1)
-            if "temp2" in partition_df.columns:
-                partition_df = partition_df.drop("temp2", axis=1)
-            if "check_dates" in partition_df.columns:
-                partition_df = partition_df.drop("check_dates", axis=1)
-            if "temp_longitude" in partition_df.columns:
-                partition_df = partition_df.drop("temp_longitude", axis=1)
-            if "temp_latitude" in partition_df.columns:
-                partition_df = partition_df.drop("temp_latitude", axis=1)
-            if "geometry" in partition_df.columns:
-                partition_df = partition_df.drop("geometry", axis=1)
+            temp_cols = [
+                "valid_wkt",
+                "one_comm_code",
+                "one_maille_code",
+                "one_dep_code",
+                "line_with_code",
+                "no_geom",
+                "is_multiple_type_code",
+                "line_with_one_code",
+                "no_duplicate",
+                "duplicate",
+                "interval",
+                "temp",
+                "temp2",
+                "check_dates",
+            ]
+            partition_df = remove_temp_columns(temp_cols, partition_df)
 
             logger.info("* END DATA CLEANING partition %s", i)
 
@@ -246,8 +250,6 @@ def postMapping(info_role, import_id, id_mapping):
             logger.info("* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
             load(partition_df, i, IMPORTS_SCHEMA_NAME, temp_table_name, engine)
             logger.info("* END LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
-
-        save_field_mapping(added_cols, id_mapping, select_type="added")
 
         # delete original table
         delete_table(table_names["imports_full_table_name"])
@@ -353,13 +355,9 @@ def postMapping(info_role, import_id, id_mapping):
 
         return (
             {
-                #'user_error_details': error_report,
-                #'n_user_errors': n_invalid_rows,
                 "n_table_rows": n_table_rows,
                 "import_id": import_id,
                 "id_mapping": id_mapping,
-                #'selected_columns': selected_columns,
-                #'added_columns': added_cols,
                 "table_name": table_names["imports_table_name"],
                 "is_running": is_running,
             },
