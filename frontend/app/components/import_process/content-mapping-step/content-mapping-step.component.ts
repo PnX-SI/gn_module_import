@@ -13,6 +13,7 @@ import { ModuleConfig } from "../../../module.config";
   templateUrl: "content-mapping-step.component.html"
 })
 export class ContentMappingStepComponent implements OnInit {
+  public IMPORT_CONFIG = ModuleConfig;
   public isCollapsed = false;
   public userContentMapping;
   public newMapping: boolean = false;
