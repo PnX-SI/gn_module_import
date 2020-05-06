@@ -26,6 +26,13 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 * Séparateur des fichiers CSV importés détectés automatiquement (#119)
 * Documentation de l'utilisation et du fonctionnement du module
 
+**🔮 A venir**
+
+* Simplification des étapes d'import pour les non-administrateurs (#113)
+* Implémentation du CRUVED pour identifier si l'utilisateur peut modifier ou créer un mapping
+* Parallélisation des traitements et des contrôles (#123)
+* Renommage des intitulés (#122)
+
 **🐛 Corrections**
 
 * Refactoring et révision globale des performances du code
