@@ -48,11 +48,9 @@ def check_uuid(
             for field in synthese_info
             if synthese_info[field]["data_type"] == "uuid"
         ]
-
         if len(uuid_cols) > 0:
 
             for col in uuid_cols:
-
                 # localize null values
                 df["temp"] = ""
                 df["temp"] = (
@@ -75,6 +73,8 @@ def check_uuid(
                     )
 
                     df["temp"] = df[uuid_col_name].str.lower().duplicated(keep=False)
+                    print("LAAAAAAAAA")
+                    print(df["temp"])
                     df["temp"] = (
                         df["temp"]
                         .where(cond=df[uuid_col_name].notnull(), other=False)

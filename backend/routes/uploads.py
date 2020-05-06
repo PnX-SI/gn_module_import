@@ -1,6 +1,8 @@
-from flask import request
 import os
 import datetime
+
+from flask import request
+from werkzeug.utils import secure_filename
 
 from utils_flask_sqla.response import json_resp
 from geonature.utils.env import DB
@@ -29,14 +31,16 @@ from ..upload.upload_process import upload
 from ..upload.upload_errors import *
 from ..upload.geojson_to_csv import parse_geojson
 
-from ..goodtables_checks.check_user_file import check_user_file
+from ..file_checks.check_user_file import check_user_file_good_table
 from ..logs import logger
 from ..api_error import GeonatureImportApiError
 from ..wrappers import checker
 from ..blueprint import blueprint
 
+from ..db.queries.user_errors import set_user_error
 
-@blueprint.route("/uploads", methods=["GET", "POST"])
+
+@blueprint.route("/uploads", methods=["POST"])
 @permissions.check_cruved_scope("C", True, module_code="MY_IMPORT")
 @json_resp
 @checker("Total time to post user file and fill metadata")
@@ -78,51 +82,16 @@ def post_user_file(info_role):
 
             logger.info("* START SAVE USER FILE IN UPLOAD DIRECTORY")
 
-            uploaded_file = upload(
-                request, MAX_FILE_SIZE, ALLOWED_EXTENSIONS, DIRECTORY_NAME, MODULE_URL
-            )
-
-            # checks if error in user file or user http request:
-            if uploaded_file["error"] == "no_file":
-                errors.append(no_file)
-            if uploaded_file["error"] == "empty":
-                errors.append(empty)
-            if uploaded_file["error"] == "bad_extension":
-                errors.append(extension_error)
-            if uploaded_file["error"] == "long_name":
-                errors.append(long_name)
-            if uploaded_file["error"] == "max_size":
-                errors.append(max_size)
-            if uploaded_file["error"] == "unknown":
-                errors.append(unkown)
-
-            if uploaded_file["error"] != "":
-                logger.error("Saving user file : %s", errors)
-                return errors, 400
-
-            full_path = uploaded_file["full_path"]
-
-            is_file_saved = uploaded_file["is_uploaded"]
-
-            logger.info("* END SAVE USER FILE IN UPLOAD DIRECTORY")
-
-            # GEOJSON
-
-            if uploaded_file["extension"] == ".geojson":
-                output = ".".join([full_path, "csv"])
-                geometry_col_name = "".join([PREFIX, "geometry"])
-                try:
-                    parse_geojson(full_path, output, geometry_col_name)
-                except Exception:
-                    return (
-                        {"message": "Erreur durant la conversion du geojson en csv"},
-                        500,
-                    )
-                os.remove(full_path)
-                full_path = output
-
             # CREATES CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
-
+            try:
+                file_name = request.files["File"].filename
+                print(file_name)
+                file_name = secure_filename(file_name)
+                temp = file_name.split(".")
+                extension = temp[len(temp) - 1]
+            except Exception:
+                file_name = "Filename error"
+                extension = "Extension error"
             # start t_imports filling and fill cor_role_import
             if metadata["importId"] == "undefined":
                 # if first file uploaded by the user in the current import process :
@@ -130,10 +99,10 @@ def post_user_file(info_role):
                 insert_t_imports = TImports(
                     date_create_import=init_date,
                     date_update_import=init_date,
-                    full_file_name=uploaded_file["file_name"],
+                    full_file_name=file_name,
                     id_dataset=metadata["datasetId"],
                     encoding=metadata["encodage"],
-                    format_source_file=uploaded_file["extension"],
+                    format_source_file=extension,
                     srid=metadata["srid"],
                 )
                 DB.session.add(insert_t_imports)
@@ -159,8 +128,42 @@ def post_user_file(info_role):
 
             # CHECKS USER FILE
 
+            uploaded_file = upload(
+                id_import,
+                request,
+                MAX_FILE_SIZE,
+                ALLOWED_EXTENSIONS,
+                DIRECTORY_NAME,
+                MODULE_URL,
+            )
+
+            # checks if error in user file or user http request:
+            if "error" in uploaded_file:
+                return {"id_import": id_import, "errors": uploaded_file["error"]}, 400
+
+            full_path = uploaded_file["full_path"]
+            is_file_saved = uploaded_file["is_uploaded"]
+            logger.info("* END SAVE USER FILE IN UPLOAD DIRECTORY")
+
+            # GEOJSON
+
+            if uploaded_file["extension"] == ".geojson":
+                output = ".".join([full_path, "csv"])
+                geometry_col_name = "".join([PREFIX, "geometry"])
+                try:
+                    parse_geojson(full_path, output, geometry_col_name)
+                except Exception:
+                    return (
+                        {"message": "Erreur durant la conversion du geojson en csv"},
+                        500,
+                    )
+                os.remove(full_path)
+                full_path = output
+
             logger.info("* START CHECK USER FILE VALIDITY")
-            report = check_user_file(id_import, full_path, N_MAX_ROWS_CHECK)
+            report = check_user_file_good_table(
+                id_import, full_path, metadata["encodage"], N_MAX_ROWS_CHECK
+            )
 
             # reports user file errors:
             if len(report["errors"]) > 0:
@@ -182,7 +185,13 @@ def post_user_file(info_role):
             )
             if len(file_name_cleaner["errors"]) > 0:
                 # if user file name is not valid, an error is returned
-                return file_name_cleaner["errors"], 400
+                set_user_error(
+                    id_import=id_import, step="UPLOAD", error_code="FILE_NAME_ERROR"
+                )
+                return (
+                    {"id_import": id_import, "errors": file_name_cleaner["errors"]},
+                    400,
+                )
 
             table_names = get_table_names(
                 ARCHIVES_SCHEMA_NAME,

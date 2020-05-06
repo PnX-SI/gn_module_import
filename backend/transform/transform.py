@@ -52,13 +52,13 @@ def data_cleaning(
             and "latitude" in selected_columns.keys()
         ):
             synthese_info["longitude"] = {
-                "is_nullable": "NO",
+                "is_nullable": "YES",
                 "column_default": None,
                 "data_type": "real",
                 "character_max_length": None,
             }
             synthese_info["latitude"] = {
-                "is_nullable": "NO",
+                "is_nullable": "YES",
                 "column_default": None,
                 "data_type": "real",
                 "character_max_length": None,
@@ -84,7 +84,15 @@ def data_cleaning(
         check_dates(
             df, added_cols, selected_columns, synthese_info, import_id, schema_name
         )
-        # check_uuid(df, added_cols, selected_columns, synthese_info, is_generate_uuid, import_id, schema_name)
+        # check_uuid(
+        #     df,
+        #     added_cols,
+        #     selected_columns,
+        #     synthese_info,
+        #     is_generate_uuid,
+        #     import_id,
+        #     schema_name,
+        # )
         check_counts(
             df,
             selected_columns,

@@ -197,6 +197,7 @@ def postMapping(info_role, import_id, id_mapping):
             index_col,
             import_id,
         )
+        #HACK: add code_commune, code_maille, code_dep columns
         add_code_columns(data, selected_columns, df)
 
         logger.info("* END EXTRACT FROM DB TABLE TO PYTHON")

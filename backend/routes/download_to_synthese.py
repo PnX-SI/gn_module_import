@@ -46,6 +46,7 @@ def import_data(info_role, import_id):
             "the_geom_4326": "gn_the_geom_4326",
             "the_geom_local": "gn_the_geom_local",
             "the_geom_point": "gn_the_geom_point",
+            "id_area_attachment": "id_area_attachment",
         }
         total_columns = set_total_columns(
             selected_cols, added_cols, import_id, MODULE_CODE

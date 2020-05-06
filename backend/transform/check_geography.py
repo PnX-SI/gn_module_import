@@ -1,6 +1,7 @@
 import geopandas as gpd
 import pandas as pd
 from shapely import wkt, wkb
+from shapely.geometry import Point
 import numpy as np
 
 from ..logs import logger
@@ -12,6 +13,15 @@ from ..utils.utils import create_col_name
 def set_wkb(value):
     try:
         return wkb.dumps(wkt.loads(value)).hex()
+    except Exception:
+        return None
+
+
+def x_y_to_wkb(x, y):
+    try:
+        assert not pd.isna(x)
+        assert not pd.isna(y)
+        return Point(float(x), float(y)).wkb.hex()
     except Exception:
         return None
 
@@ -55,13 +65,11 @@ def manage_erros_and_validity(
     df, import_id, schema_name, code_error, df_temp_col, column_invalid, id_rows_error
 ):
     """
-            High level function to set column which are valid in the dataframe
-            and to write in database the errors
-        """
+        High level function to set column which are valid in the dataframe
+        and to write in database the errors
+    """
     set_is_valid(df, df_temp_col)
     if len(id_rows_error) > 0:
-        print("????????????")
-        print(code_error)
         set_error_and_invalid_reason(
             df=df,
             id_import=import_id,
@@ -81,78 +89,62 @@ def check_geography(
         logger.info("CHECKING GEOGRAPHIC DATA:")
         line_with_codes = []
         try:
-            line_with_codes = df.index[
+            mask_with_code = (
                 (df[selected_columns["codecommune"]].notnull())
                 | (df[selected_columns["codemaille"]].notnull())
                 | (df[selected_columns["codedepartement"]].notnull())
-            ]
+            )
+
+            line_with_codes = df[mask_with_code].index
         except KeyError:
             pass
+        df["given_geom"] = None
         # index starting at 1 -> so -1
         if len(line_with_codes) > 0:
             line_with_codes = line_with_codes - 1
-        if srid == 4326:
-            max_x = 180
-            min_x = -180
-            max_y = 90
-            min_y = -90
-        if srid == 2154:
-            max_x = 1300000
-            min_x = 100000
-            max_y = 7200000
-            min_y = 6000000
         if "latitude" and "longitude" in selected_columns.keys():
-            coordinates = ["longitude", "latitude"]
+            df["given_geom"] = df.apply(
+                lambda row: x_y_to_wkb(
+                    row[selected_columns["longitude"]],
+                    row[selected_columns["latitude"]],
+                ),
+                axis=1,
+            )
+            df["valid_x_y"] = df["given_geom"].notnull()
 
-            for col in coordinates:
-                logger.info("- converting %s in numeric values", selected_columns[col])
-
-                col_name = "_".join(["temp", col])
-                df[col_name] = pd.to_numeric(df[selected_columns[col]], "coerce")
-
-                logger.info(
-                    "- checking consistency of values in %s synthese column (= %s user column):",
-                    col,
-                    selected_columns[col],
+            #  row with not code and no valid wkt
+            df["no_geom"] = ~mask_with_code & ~df["valid_x_y"]
+            no_geom_errors = df[df["no_geom"] == True]
+            if len(no_geom_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="NO-GEOM",
+                    col_name_error="Colonnes géometriques",
+                    df_col_name_valid="no_geom",
+                    id_rows_error=no_geom_errors.index.to_list(),
                 )
 
-                if col == "longitude":
-                    df["invalid_lat_long"] = df[col_name].le(min_x) | df[col_name].ge(
-                        max_x
-                    )
-                if col == "latitude":
-                    df["invalid_lat_long"] = df[col_name].le(min_y) | df[col_name].ge(
-                        max_y
-                    )
-                df["valid_lat_long"] = ~df["invalid_lat_long"]
-                # remove invalid where codecommune/maille or dep are fill
-                df.iloc[line_with_codes, df.columns.get_loc("valid_lat_long")] = True
-                set_is_valid(df, "valid_lat_long")
-                id_rows_errors = df.index[df["valid_lat_long"] == False].to_list()
-
-                # setting eventual inconsistent values to pd.np.nan
-                df[col_name] = df[col_name].where(df["temp"], pd.np.nan)
-
-                logger.info(
-                    "%s inconsistant values detected in %s synthese column (= %s user column)",
-                    len(id_rows_errors),
-                    col,
-                    selected_columns[col],
+            # remove invalid where codecommune/maille or dep are fill
+            df["valid_x_y"] = df.iloc[
+                line_with_codes, df.columns.get_loc("valid_x_y")
+            ] = True
+            set_is_valid(df, "valid_x_y")
+            id_rows_errors = df.index[df["valid_x_y"] == False].to_list()
+            if len(id_rows_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="INVALID_GEOMETRY",
+                    col_name_error=selected_columns["longitude"]
+                    + " "
+                    + selected_columns["latitude"],
+                    df_col_name_valid="valid_x_y",
+                    id_rows_error=id_rows_errors,
                 )
+            df.drop("valid_x_y", axis=1)
 
-                if len(id_rows_errors) > 0:
-                    set_error_and_invalid_reason(
-                        df=df,
-                        id_import=import_id,
-                        error_code="GEOMETRY_OUT_OF_BOX",
-                        col_name_error=selected_columns[col],
-                        df_col_name_valid="valid_lat_long",
-                        id_rows_error=id_rows_errors,
-                    )
-                df.drop("invalid_lat_long", axis=1)
-                df.drop("valid_lat_long", axis=1)
-
-        elif "WKT" in selected_columns.keys():
+        elif "WKT" in selected_columns:
             # create wkt with crs provided by user
             crs = {"init": "epsg:{}".format(srid)}
 
@@ -161,8 +153,23 @@ def check_geography(
 
             df["valid_wkt"] = df["given_geom"].notnull()
 
+            #  row with not code and no valid wkt
+            df["no_geom"] = ~mask_with_code & ~df["valid_wkt"]
+            no_geom_errors = df[df["no_geom"] == True]
+            if len(no_geom_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="NO-GEOM",
+                    col_name_error="Colonnes géometriques",
+                    df_col_name_valid="no_geom",
+                    id_rows_error=no_geom_errors.index.to_list(),
+                )
+
             # remove invalid where codecommune/maille or dep are fill
-            df.iloc[line_with_codes, df.columns.get_loc("valid_wkt")] = True
+            df["valid_wkt"] = df.iloc[
+                line_with_codes, df.columns.get_loc("valid_wkt")
+            ] = True
             set_is_valid(df, "valid_wkt")
             id_rows_errors = df.index[df["valid_wkt"] == False].to_list()
 
@@ -181,7 +188,19 @@ def check_geography(
                     df_col_name_valid="valid_wkt",
                     id_rows_error=id_rows_errors,
                 )
-            df.drop("valid_wkt", axis=1)
+        # if no wkt and no x/y
+        else:
+            df["no_geom"] = ~mask_with_code & df["given_geom"].isnull()
+            no_geom_errors = df[df["no_geom"] == True]
+            if len(no_geom_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="NO-GEOM",
+                    col_name_error="Colonnes géometriques",
+                    df_col_name_valid="no_geom",
+                    id_rows_error=no_geom_errors.index.to_list(),
+                )
 
         if (
             "codemaille" in selected_columns.keys()
@@ -264,6 +283,8 @@ def check_geography(
                 selected_columns["codedepartement"],
                 id_rows_error,
             )
+
             df.drop("one_dep_code", axis=1)
+
     except Exception:
         raise

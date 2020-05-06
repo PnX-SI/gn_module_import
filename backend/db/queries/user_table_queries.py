@@ -230,8 +230,6 @@ def check_row_number(id, loaded_table):
 
 @checker("CSV loaded to DB table")
 def load_csv_to_db(full_path, cur, full_table_name, separator, columns):
-    print("LAAAAAAAAA")
-    print(separator)
     with open(full_path, "rb") as f:
         cmd = """
             COPY {}({}) FROM STDIN WITH (
