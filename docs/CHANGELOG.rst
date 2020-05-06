@@ -16,7 +16,7 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 
   - Ajout d'un tableau d'erreur à la première étape d'upload du fichier
   - Ajout d'un rapport d'erreur consultable à la dernière étape avant intégration des données et depuis la liste des imports
-  - Ajout de contrôles, sur les champ conditionnels et les géométries notamment (validité et bounding box) (#130)
+  - Ajout de contrôles, sur les champs conditionnels et les géométries notamment (validité et bounding box) (#130)
   - Enregistrement et affichage des lignes en erreur
   - Ajout d'une vue ``gn_imports.v_imports_errors`` permettant de lister les erreurs d'un import
   - Ajout du paramètre ``FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE`` pour remplir ou non les nomenclatures en erreur par la valeur par défaut définie dans la BDD
