@@ -9,19 +9,19 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 
 **🚀 Nouveautés**
 
-* Supprimer un import (et les données associées) (#124)
+* Possibilité de supprimer un import (et les données associées) (#124)
 * Ajout de la possibilité de ne pas afficher l'étape "Mapping des contenus" en définissant un mapping par défaut (avec les paramètres ``ALLOW_VALUE_MAPPING`` et ``DEFAULT_MAPPING_ID``) (#100)
 * Import possible des données sans géométrie en utilisant les colonnes ``codecommune``, ``codemaille`` ou ``codedepartement`` et en récupérant ``id_area`` et leur géométrie correspondantes dans la couche des zonages du ``ref_geo`` (#107)
 * Révision et complément des contrôles des données et amélioration des rapports d'erreurs (#114)
 
   - Ajout d'un tableau d'erreur à la première étape d'upload du fichier
   - Ajout d'un rapport d'erreur consultable à la dernière étape avant intégration des données et depuis la liste des imports
-  - Ajout de contrôles, sur les géométries notamment
+  - Ajout de contrôles, sur les champ conditionnels et les géométries notamment (validité et bounding box) (#130)
   - Enregistrement et affichage des lignes en erreur
   - Ajout d'une vue ``gn_imports.v_imports_errors`` permettant de lister les erreurs d'un import
   - Ajout du paramètre ``FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE`` pour remplir ou non les nomenclatures en erreur par la valeur par défaut définie dans la BDD
 * Liste des imports : Ajout d'une recherche libre et du tri des colonnes (#75)
-* Liste des imports : Ajout de la colonne "Auteur" (paramétrable comme les autres colonnes) #92
+* Liste des imports : Ajout des colonnes "Auteur", "Nombre de données" et "Nombre de taxons" (paramétrable comme les autres colonnes) (#92)
 * Liste des imports : Ajout d'un lien vers la fiche du JDD correspondant
 * Séparateur des fichiers CSV importés détectés automatiquement (#119)
 * Documentation de l'utilisation et du fonctionnement du module
@@ -31,6 +31,7 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 * Refactoring et révision globale des performances du code
 * Prévisualisation des données avant intégration : Affichage des labels des nomenclatures et non plus de leurs codes
 * Suppression du message d'erreur quand un champs défini dans un mapping n'est pas présent dans le fichier importé (#108)
+* Correction et amélioration des contrôles de dates (#128)
 
 **Notes de version**
 
