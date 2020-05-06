@@ -43,7 +43,7 @@ Après avoir regroupé les champs dans leurs "blocs" et leur avoir associé un o
 Utilisation du module d'imports
 ===============================
 
-Le module permet de traiter un fichier CSV ou GeoJSON sous toute structure de données, d'établir les correspondances nécessaires entre le format source et le format de la synthèse, et de traduire le vocabulaire source vers les nomenclatures SINP. Il intègre les données transformées dans la synthèse de GeoNature. Il semble préférable de prévoir un serveur disposant à minima de 4 Go de RAM. 
+Le module permet de traiter un fichier CSV ou GeoJSON sous toute structure de données, d'établir les correspondances nécessaires entre le format source et le format de la synthèse, et de traduire le vocabulaire source vers les nomenclatures SINP. Il stocke et archive les données sources et intègre les données transformées dans la synthèse de GeoNature. Il semble préférable de prévoir un serveur disposant à minima de 4 Go de RAM. 
 
 1. Une fois connecté à GeoNature, accédez au module Imports. L'accueil du module affiche une liste des imports en cours ou terminés, selon les droits de l'utilisateur connecté. Vous pouvez alors finir un import en cours, ou bien commencer un nouvel import. 
 
