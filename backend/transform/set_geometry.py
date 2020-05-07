@@ -37,6 +37,7 @@ class GeometrySetter:
         - Add 3 geometry columns and 1 column id_area_attachmet to the temp table and fill them from the "given_geom" col
         calculated in python in the geom_check step
         - Check if the geom are valid (not self intersected)
+        - check if geom fit with the bounding box
         - calculate the attachment geoms
         """
         try:
@@ -66,16 +67,17 @@ class GeometrySetter:
                 target_geom_column="gn_the_geom_point",
             )
             self.check_geom_validity()
-            #  check bounding box
-            results_out_of_box = self.check_geoms_fit_bbox().fetchall()
-            if results_out_of_box:
-                set_user_error(
-                    id_import=self.id_import,
-                    step="FIELD_MAPPING",
-                    error_code="GEOMETRY_OUT_OF_BOX",
-                    col_name="Colonne géométriques",
-                    id_rows=list(map(lambda row: row.gn_pk, results_out_of_box)),
-                )
+            if current_app.config["IMPORT"]["ENABLE_BOUNDING_BOX_CHECK"]:
+                #  check bounding box
+                results_out_of_box = self.check_geoms_fit_bbox().fetchall()
+                if results_out_of_box:
+                    set_user_error(
+                        id_import=self.id_import,
+                        step="FIELD_MAPPING",
+                        error_code="GEOMETRY_OUT_OF_BOX",
+                        col_name="Colonne géométriques",
+                        id_rows=list(map(lambda row: row.gn_pk, results_out_of_box)),
+                    )
             #  retransform the geom col in text (otherwise dask not working)
             self.set_text()
             # calculate the geom attachement for communes / maille et département

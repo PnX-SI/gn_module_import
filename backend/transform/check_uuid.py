@@ -1,4 +1,6 @@
 from uuid import uuid4
+from flask import current_app
+
 import numpy as np
 import pandas as pd
 
@@ -42,8 +44,6 @@ def check_uuid(
             for field in synthese_info
             if synthese_info[field]["data_type"] == "uuid"
         ]
-        print("??????????")
-        print(uuid_cols)
         if len(uuid_cols) > 0:
 
             for col in uuid_cols:
@@ -117,38 +117,38 @@ def check_uuid(
                             )
 
                     # return False if invalid uuid, else (including missing values) return True
-                    uuid_list = get_uuid_list()
-                    df["temp"] = ""
-                    df["temp"] = (
-                        df["temp"]
-                        .where(
-                            cond=df[selected_columns[col]].isin(uuid_list), other=False
+                    if current_app.config["IMPORT"]["ENABLE_SYNTHESE_UUID_CHECK"]:
+                        uuid_list = get_uuid_list()
+                        df["temp"] = ""
+                        df["temp"] = (
+                            df["temp"]
+                            .where(
+                                cond=df[selected_columns[col]].isin(uuid_list),
+                                other=False,
+                            )
+                            .map(fill_map)
+                            .astype("bool")
                         )
-                        .map(fill_map)
-                        .astype("bool")
-                    )
-                    df["temp"] = ~df["temp"]
+                        df["temp"] = ~df["temp"]
 
-                    set_is_valid(df, "temp")
-                    id_rows_errors = df.index[df["temp"] == False].to_list()
+                        set_is_valid(df, "temp")
+                        id_rows_errors = df.index[df["temp"] == False].to_list()
 
-                    logger.info(
-                        "%s uuid value exists already in synthese table (= %s user column)",
-                        len(id_rows_errors),
-                        selected_columns[col],
-                    )
-
-                    if len(id_rows_errors) > 0:
-                        set_error_and_invalid_reason(
-                            df=df,
-                            id_import=import_id,
-                            error_code="EXISTING_UUID",
-                            col_name_error=uuid_col_name,
-                            df_col_name_valid="temp",
-                            id_rows_error=id_rows_errors,
+                        logger.info(
+                            "%s uuid value exists already in synthese table (= %s user column)",
+                            len(id_rows_errors),
+                            selected_columns[col],
                         )
 
-                    df.drop("temp", axis=1)
+                        if len(id_rows_errors) > 0:
+                            set_error_and_invalid_reason(
+                                df=df,
+                                id_import=import_id,
+                                error_code="EXISTING_UUID",
+                                col_name_error=uuid_col_name,
+                                df_col_name_valid="temp",
+                                id_rows_error=id_rows_errors,
+                            )
 
                 # pour les autres colonnes : on envoie un warning sans créer un uuid pour les champs manquants:
                 else:
