@@ -12,7 +12,7 @@ SET default_with_oids = false;
 --INSERTIONS--
 --------------
 
-INSERT INTO gn_imports.t_user_eFormat numériquerrors (error_type,"name",description,error_level) VALUES 
+INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level) VALUES 
 ('Ouverture du fichier','NO_FILE_DETECTED','Aucun fichier détecté.','ERROR')
 ,('Erreur de format','INVALID_INTEGER','Format numérique entier incorrect ou négatif dans une des colonnes de type Entier.','ERROR')
 ,('Erreur de format','INVALID_DATE','Le format de date est incorrect dans une colonne de type Datetime. Le format attendu est YYYY-MM-DD ou DD-MM-YYYY (les heures sont acceptées sous ce format: HH:MM:SS) - Les séparateurs / . : sont également acceptés','ERROR')
@@ -127,7 +127,7 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('validation_comment', 'Commentaire de validation', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 11, TRUE),
 	('id_nomenclature_obs_technique', 'Techniques d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 11, TRUE),
 	('id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE),
-	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE)
+	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE),
 	('reference_biblio', 'Référence bibliographique', '', '', 'character varying(255)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 14, TRUE)
 ;
 
