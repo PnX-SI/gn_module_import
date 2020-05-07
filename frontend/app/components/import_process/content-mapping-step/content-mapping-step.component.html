@@ -28,7 +28,7 @@
                                 Nouveau mapping
                             </button>
                         </div>
-                        <div class="col">
+                        <div class="col" *ngIf='displayCheckBox'>
                             <input type="checkbox" [(ngModel)]="displayMapped" [ngModelOptions]="{standalone: true}" (change)="updateEnabled($event)">
                             Afficher les champs automatiquement associés
                         </div>

@@ -33,6 +33,7 @@ export class ContentMappingStepComponent implements OnInit {
   public n_mappes: number = -1;
   public showValidateMappingBtn = true;
   public displayMapped = false;
+  public displayCheckBox = ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES;
 
   constructor(
     private stepService: StepsService,
@@ -44,6 +45,10 @@ export class ContentMappingStepComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+
+    if (!ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES)
+      this.displayMapped = ModuleConfig.DISPLAY_MAPPED_VALUES;
+    
     this.stepData = this.stepService.getStepData(3);
     this.contentMappingForm = this._fb.group({
       contentMapping: [null],
@@ -140,7 +145,7 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   updateEnabled(e) {
-    if (e.target.checked) {
+    if (e.target.checked && this.id_mapping) {
       this.fillMapping(this.id_mapping);
     }
   }

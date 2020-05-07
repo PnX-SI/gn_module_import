@@ -135,4 +135,6 @@ class GnModuleSchemaConf(Schema):
     ALLOW_VALUE_MAPPING = fields.Boolean(missing=ALLOW_VALUE_MAPPING)
     DEFAULT_MAPPING_ID = fields.Integer(missing=DEFAULT_MAPPING_ID)
     FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(missing=False)
+    DISPLAY_MAPPED_VALUES = fields.Boolean(missing=False)
+    DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(missing=True)
 
