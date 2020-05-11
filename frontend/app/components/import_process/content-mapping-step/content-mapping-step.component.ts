@@ -137,11 +137,13 @@ export class ContentMappingStepComponent implements OnInit {
     this.contentTargetForm.controls[formControlName].setValue(values);
   }
 
+  isEnabled(value_def_id: string) {
+    return (!this.contentTargetForm.controls[value_def_id].value) 
+      || this.contentTargetForm.controls[value_def_id].value.length==0;
+  }
+
   containsEnabled(contentMapping : any) {
-    for (let value_def of contentMapping.nomenc_values_def)
-      if (!this.contentTargetForm.controls[value_def.id].value)
-        return true;
-    return false;
+    return contentMapping.nomenc_values_def.find(value_def => this.isEnabled(value_def.id));
   }
 
   updateEnabled(e) {

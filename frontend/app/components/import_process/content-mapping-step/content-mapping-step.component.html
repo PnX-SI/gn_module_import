@@ -75,7 +75,7 @@
                     <div [ngbCollapse]="contentMapping.isCollapsed" class="card-body">
 
                         <div *ngFor="let value_def of contentMapping.nomenc_values_def">
-                            <div *ngIf="!contentTargetForm.controls[value_def.id].value || displayMapped" class="form-group row">
+                            <div *ngIf="isEnabled(value_def.id) || displayMapped" class="form-group row">
                                 <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
                                 <div class="col-sm-8">
                                     <pnx-multiselect 
