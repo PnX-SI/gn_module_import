@@ -43,7 +43,7 @@
                     <td> {{i.error_type}} </td>
                     <td> {{i.column_error}} </td>
                     <td> {{i.error_description}} <i> <br> {{i.comment}}</i> </td>
-                    <td> <span *ngIf="i?.id_rows.length > 0">{{i?.id_rows.length}} </span>  </td>
+                    <td> <span *ngIf="i?.id_rows && i?.id_rows.length > 0">{{i?.id_rows.length}} </span>  </td>
                     <td> {{i.id_rows}} </td>
                 </tr>
             </tbody>
