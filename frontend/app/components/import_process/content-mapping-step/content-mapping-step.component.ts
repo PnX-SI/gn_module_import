@@ -29,7 +29,12 @@ export class ContentMappingStepComponent implements OnInit {
   public disabled: boolean = true;
   public disableNextStep = true;
   public n_errors: number;
+  public n_warnings: number;
+  public n_aMapper: number = -1;
+  public n_mappes: number = -1;
   public showValidateMappingBtn = true;
+  public displayMapped = false;
+  public displayCheckBox = ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES;
 
   constructor(
     private stepService: StepsService,
@@ -41,6 +46,10 @@ export class ContentMappingStepComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+
+    if (!ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES)
+      this.displayMapped = ModuleConfig.DISPLAY_MAPPED_VALUES;
+    
     this.stepData = this.stepService.getStepData(3);
     this.contentMappingForm = this._fb.group({
       contentMapping: [null],
@@ -58,10 +67,14 @@ export class ContentMappingStepComponent implements OnInit {
 
     // fill the form
     if (this.stepData.id_content_mapping) {
+      
       this.contentMappingForm.controls["contentMapping"].setValue(
         this.stepData.id_content_mapping
       );
       this.fillMapping(this.stepData.id_content_mapping);
+
+    } else {
+      
     }
   }
 
@@ -88,9 +101,11 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   generateContentForm() {
+    this.n_aMapper = 0;
     this.stepData.contentMappingInfo.forEach(ele => {
       ele["nomenc_values_def"].forEach(nomenc => {
         this.contentTargetForm.addControl(nomenc.id, new FormControl(""));
+        ++this.n_aMapper;
       });
     });
     this.showForm = true;
@@ -123,6 +138,21 @@ export class ContentMappingStepComponent implements OnInit {
     this.contentTargetForm.controls[formControlName].setValue(values);
   }
 
+  isEnabled(value_def_id: string) {
+    return (!this.contentTargetForm.controls[value_def_id].value) 
+      || this.contentTargetForm.controls[value_def_id].value.length==0;
+  }
+
+  containsEnabled(contentMapping : any) {
+    return contentMapping.nomenc_values_def.find(value_def => this.isEnabled(value_def.id));
+  }
+
+  updateEnabled(e) {
+    if (e.target.checked && this.id_mapping) {
+      this.fillMapping(this.id_mapping);
+    }
+  }
+
   onMappingName(): void {
     this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
       id_mapping => {
@@ -130,8 +160,12 @@ export class ContentMappingStepComponent implements OnInit {
           this.disabled = false;
           this.fillMapping(id_mapping);
         } else {
+          this.n_mappes = -1;
           this.getNomencInf();
           this.contentTargetForm.reset();
+          for (let contentMapping of this.stepData.contentMappingInfo) {
+            contentMapping.isCollapsed = false;
+          }
           this.disabled = true;
         }
       },
@@ -180,9 +214,9 @@ export class ContentMappingStepComponent implements OnInit {
     this._ds.getMappingContents(id_mapping).subscribe(
       mappingContents => {
         // console.log(mappingContents);
-
         this.contentTargetForm.reset();
         if (mappingContents[0] != "empty") {
+          this.n_mappes = 0;
           for (let content of mappingContents) {
             let arrayVal: any = [];
             // console.log(content);
@@ -201,10 +235,13 @@ export class ContentMappingStepComponent implements OnInit {
             );
             if (formControl) {
               formControl.setValue(arrayVal);
+              if (arrayVal[0])
+                ++this.n_mappes;
             }
           }
         } else {
           this.contentTargetForm.reset();
+          this.n_mappes = -1;
         }
       },
       error => {
@@ -241,7 +278,8 @@ export class ContentMappingStepComponent implements OnInit {
           this.spinner = false;
           this.contentMapRes = res;
           this._ds.getErrorList(this.stepData.importId).subscribe(err => {
-            this.n_errors = err.errors.length;
+            this.n_errors = err.errors.filter(error => error.error_level=='ERROR').length;
+            this.n_warnings = err.errors.filter(error => error.error_level=='WARNING').length;
             if (this.n_errors == 0) {
               this.disableNextStep = false;
               this.showValidateMappingBtn = false;
