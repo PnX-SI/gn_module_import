@@ -29,6 +29,7 @@ export class ContentMappingStepComponent implements OnInit {
   public disabled: boolean = true;
   public disableNextStep = true;
   public n_errors: number;
+  public n_warnings: number;
   public n_aMapper: number = -1;
   public n_mappes: number = -1;
   public showValidateMappingBtn = true;
@@ -277,7 +278,8 @@ export class ContentMappingStepComponent implements OnInit {
           this.spinner = false;
           this.contentMapRes = res;
           this._ds.getErrorList(this.stepData.importId).subscribe(err => {
-            this.n_errors = err.errors.length;
+            this.n_errors = err.errors.filter(error => error.error_level=='ERROR').length;
+            this.n_warnings = err.errors.filter(error => error.error_level=='WARNING').length;
             if (this.n_errors == 0) {
               this.disableNextStep = false;
               this.showValidateMappingBtn = false;
