@@ -15,7 +15,7 @@ SET default_with_oids = false;
 INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level) VALUES 
 ('Ouverture du fichier','NO_FILE_DETECTED','Aucun fichier détecté.','ERROR')
 ,('Erreur de format','INVALID_INTEGER','Format numérique entier incorrect ou négatif dans une des colonnes de type Entier.','ERROR')
-,('Erreur de format','INVALID_DATE','Le format de date est incorrect dans une colonne de type Datetime. Le format attendu est YYYY-MM-DD ou YYYY-MM-DD HH:MM ou YYYY-MM-DD ou HH:MM:SS - Les séparateurs / . : sont également acceptés','ERROR')
+,('Erreur de format','INVALID_DATE','Le format de date est incorrect dans une colonne de type Datetime. Le format attendu est YYYY-MM-DD ou DD-MM-YYYY (les heures sont acceptées sous ce format: HH:MM:SS) - Les séparateurs / . : sont également acceptés','ERROR')
 ,('Erreur de format','INVALID_UUID','L''identifiant permanent doit être un UUID valide, ou sa valeur doit être vide.','ERROR')
 ,('Erreur de format','INVALID_CHAR_LENGTH','Chaîne de caractères trop longue ; la longueur de la chaîne dépasse la longueur maximale autorisée.','ERROR')
 ,('Champ obligatoire','MISSING_VALUE','Valeur manquante dans un champs obligatoire','ERROR')
@@ -25,7 +25,7 @@ INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level)
 ,('inconsistency error','ALTI_MIN_SUP_ALTI_MAX','altitude min > altitude max','ERROR')
 ,('Doublon','DUPLICATE_ENTITY_SOURCE_PK','Deux lignes du fichier ont la même clé primaire d’origine ; les clés primaires du fichier source ne peuvent pas être dupliquées.','ERROR')
 ,('Erreur de format','INVALID_REAL','Le format numérique réel est incorrect ou négatif dans une des colonnes de type REEL.','ERROR')
-,('Géométrie','GEOMETRY_OUT_OF_BOX','Coordonnées géographique en dehors du périmètre géographique de l''instance','ERROR')
+,('Géométrie','GEOMETRY_OUT_OF_BOX','Coordonnées géographiques en dehors du périmètre géographique de l''instance','ERROR')
 ,('Doublon','EXISTING_UUID','L''identifiant SINP fourni existe déjà en base.  Il faut en fournir une autre ou laisser la valeur vide pour une attribution automatique.','ERROR')
 ,('Erreur de référentiel','ID_DIGITISER_NOT_EXISITING','id_digitizer n''existe pas dans la table "t_roles"','ERROR')
 ,('Erreur de référentiel','INVALID_GEOM_CODE','Le code (maille/département/commune) n''existe pas dans le réferentiel géographique actuel','ERROR')
@@ -59,6 +59,7 @@ INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level)
 ,('Incohérence','INVALID_STATUT_SOURCE_VALUE','Référence bibliographique manquante ; si le champ “statutSource” a la valeur “Li” (Littérature), alors une référence bibliographique doit être indiquée.','ERROR')
 ,('Erreur','UNKNOWN_ERROR','','ERROR')
 ,('Ouverture du fichier','EMPTY_FILE','Le fichier fournit est vide','ERROR')
+,('Avertissement de nomenclature','INVALID_NOMENCLATURE_WARNING','(Non bloquant) Code nomenclature erroné et remplacé par sa valeur par défaut ; La valeur du champ n’est pas dans la liste des codes attendus pour ce champ. Pour connaître la liste des codes autorisés, reportez-vous au Standard en cours.','WARNING')
 ;
 
 
@@ -127,7 +128,8 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('validation_comment', 'Commentaire de validation', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 11, TRUE),
 	('id_nomenclature_obs_technique', 'Techniques d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 11, TRUE),
 	('id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE),
-	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE)
+	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE),
+	('reference_biblio', 'Référence bibliographique', '', '', 'character varying(255)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 14, TRUE)
 ;
 
 INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES

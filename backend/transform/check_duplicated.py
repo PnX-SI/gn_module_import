@@ -34,8 +34,8 @@ def check_row_duplicates(df, selected_columns, import_id, schema_name):
                 id_rows_error=id_rows_errors,
             )
 
-        df.drop("duplicate", axis=1)
-        df.drop("no_duplicate", axis=1)
+        df = df.drop("duplicate", axis=1)
+        df = df.drop("no_duplicate", axis=1)
 
     except Exception:
         raise

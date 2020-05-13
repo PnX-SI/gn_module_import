@@ -1,4 +1,5 @@
 import itertools
+from types import SimpleNamespace
 
 from flask import current_app
 from psycopg2.extensions import AsIs, QuotedString
@@ -67,17 +68,13 @@ def get_nomenclature_label_from_id(id_nomenclature):
 
 
 def get_nomenc_user_values(user_nomenc_col, schema_name, table_name):
-    nomenc_user_values = DB.session.execute(
-        """
+    query = """
         SELECT DISTINCT {user_nomenc_col} as user_val
-        FROM {schema_name}.{table_name}
-        WHERE gn_is_valid = 'True';
+        FROM {schema_name}.{table_name};
         """.format(
-            user_nomenc_col=user_nomenc_col,
-            schema_name=schema_name,
-            table_name=table_name,
-        )
-    ).fetchall()
+        user_nomenc_col=user_nomenc_col, schema_name=schema_name, table_name=table_name,
+    )
+    nomenc_user_values = DB.session.execute(query).fetchall()
     return nomenc_user_values
 
 
@@ -296,3 +293,105 @@ def get_saved_content_mapping(id_mapping):
             selected_content[key].append(value)
 
     return selected_content
+
+
+####### conditional check
+
+
+def exist_proof_check(
+    table_name, field_proof, field_digital_proof, field_non_digital_proof
+):
+    """
+    If exist proof = Oui (code 1), digital proof or non_digital_proof must be fill
+    we check if the columns exist to build the query
+    """
+    #  case no proof column, return an empty list -> no error
+    if field_proof is None:
+        return None
+    #  case exist proof = 1 and no other proof col -> raise error on all column where exist_proof = 1
+    query = """
+        SELECT array_agg(gn_pk) as id_rows
+        FROM {schema}.{table}
+        WHERE ref_nomenclatures.get_cd_nomenclature({field_proof}::integer) = '1' 
+        """.format(
+        schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+        table=table_name,
+        field_proof=field_proof,
+    )
+    #  case digital proof is None and non digital proof not exist
+    if field_proof and field_digital_proof and field_non_digital_proof is None:
+        query = "{query} AND {field_digital_proof} IS NULL ".format(
+            query=query, field_digital_proof=field_digital_proof,
+        )
+    #  case non digital proof is None and digital_proof not exist
+    elif field_proof and field_non_digital_proof and field_digital_proof is None:
+        query = "{query} AND {field_non_digital_proof} IS NULL ".format(
+            query=query, field_non_digital_proof=field_non_digital_proof,
+        )
+    #  case both digital and non digital exist and are None
+    elif field_proof and field_digital_proof and field_non_digital_proof:
+        query = "{query} AND {field_digital_proof} IS NULL AND {field_non_digital_proof} IS NULL ".format(
+            query=query,
+            field_non_digital_proof=field_non_digital_proof,
+            field_digital_proof=field_digital_proof,
+        )
+    return DB.session.execute(query).fetchone()
+
+
+def statut_source_check(statut_source_col):
+    pass
+
+
+def dee_bluring_check(table_name, id_import, bluring_col):
+    """
+    If ds_public = private -> bluring must be fill
+    """
+    query_ds_pub = """
+    SELECT ref_nomenclatures.get_cd_nomenclature(id_nomenclature_data_origin) as code
+    FROM gn_meta.t_datasets
+    WHERE id_dataset = (
+        SELECT id_dataset FROM gn_imports.t_imports
+        WHERE id_import = :id_import
+        )
+    """
+    ds_public = DB.session.execute(query_ds_pub, {"id_import": id_import}).fetchone()
+    if ds_public.code != "Pr":
+        return None
+    else:
+        if bluring_col:
+            query = """
+                SELECT array_agg(gn_pk) as id_rows
+                FROM {schema}.{table}
+                WHERE {bluring_col} IS NULL
+            """.format(
+                schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+                table=table_name,
+                bluring_col=bluring_col,
+            )
+            return DB.session.execute(query).fetchone()
+        else:
+            return SimpleNamespace(id_rows="All")
+
+
+def ref_biblio_check(table_name, field_statut_source, field_ref_biblio):
+    """
+    If statut_source = 'Li' the field ref_biblio must be fill
+    """
+    if field_statut_source is None:
+        return None
+    #  case no field ref_biblo: all row with statut_source = 'Li' are in errors
+    query = """
+        SELECT array_agg(gn_pk) as id_rows
+        FROM {schema}.{table}
+        WHERE ref_nomenclatures.get_cd_nomenclature({field_statut_source}::integer) = 'Li' 
+        """.format(
+        schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+        table=table_name,
+        field_statut_source=field_statut_source,
+    )
+    #  case field_ref_biblio is present, check where the fiel is null
+    if field_ref_biblio:
+        query = "{query} AND {field_ref_biblio} IS NULL".format(
+            query=query, field_ref_biblio=field_ref_biblio
+        )
+    return DB.session.execute(query).fetchone()

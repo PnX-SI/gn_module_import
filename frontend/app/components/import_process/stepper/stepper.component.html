@@ -2,7 +2,7 @@
     <ul>
         <li [class.done]="step >= 1" (click)= "onGoToStep(1)">Upload du fichier</li>
         <li [class.done]="step >= 2" (click)= "onGoToStep(2)">Mapping des champs</li>
-        <li *ngIf="IMPORT_CONFIG.ALLOW_VALUE_MAPPING" [class.done]="step >= 3" (click)= "onGoToStep(3)">Mapping des contenus</li>
+        <li *ngIf="IMPORT_CONFIG.ALLOW_VALUE_MAPPING" [class.done]="step >= 3" (click)= "onGoToStep(3)">Correspondance des nomenclatures</li>
         <li [class.done]="step >= 4" (click)= "onGoToStep(4)">Importer les données</li>
     </ul>
 </div>

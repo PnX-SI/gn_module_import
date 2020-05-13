@@ -1,9 +1,50 @@
 <div class=container>
     <stepper [step]=4></stepper>
+
     <div *ngIf="tableReady" class="card">
         <div class="card-header">
             <h5 class="card-title mb-0">
-                Prévisualisation des observations valides prêtes à être importées dans GeoNature
+                Récapitulatif avant import
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row no-gutters">
+                <div class="titre-recap col-12 col-sm-6 col-md-8">
+                    <h4> 
+                        <i class="icone-recap fa fa-map-marker" aria-hidden="true"></i>
+                        Carte
+                    </h4>
+                    <pnx-map height="40vh" searchBar="false">
+                        <pnx-geojson
+                        [geojson]="this.validBbox"
+                        [zoomOnFirstTime]="true"
+                        >
+                        </pnx-geojson>
+                    </pnx-map>
+                </div>
+                    <div class="titre-recap col-6 col-md-4">
+                    <h4>
+                        <i class="icone-recap fa fa-wrench" aria-hidden="true"></i>
+                        Rapports
+                    </h4> 
+                    <div>
+                        <div class="content-report">
+                            <a [routerLink]="['/import/errors', stepData.importId]"> Rapport d'erreurs </a>
+                        </div>
+                        <div class="content-report">
+                            <a [routerLink]="" (click)="_csvExport.onCSV(stepData.importId)"> Données invalides </a>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="tableReady" class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                Prévisualisation des observations valides prêtes à être importées
             </h5>
         </div>
         <div class="card-body">

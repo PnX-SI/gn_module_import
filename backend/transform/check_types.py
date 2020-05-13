@@ -19,15 +19,25 @@ def convert_to_datetime(value):
     if do not succeed must return the unmodifed date
     an error will be raise later if the returned value is not a Timestamp
     """
-    formated_date = re.sub("[/.: ]", "-", value)
-    strftime_format = ["%Y-%m-%d", "%Y-%m-%d-%H-%M", "%Y-%m-%d-%H-%M-%S"]
-    for format in strftime_format:
-        try:
-            date = pd.to_datetime(formated_date, format=format)
-            return date
-        except ValueError:
-            pass
-    return value
+    try:
+        formated_date = re.sub("[/.: ]", "-", value)
+        strftime_format = [
+            "%Y-%m-%d",
+            "%Y-%m-%d-%H-%M",
+            "%Y-%m-%d-%H-%M-%S",
+            "%d-%m-%Y",
+            "%d-%m-%Y-%H-%M",
+            "%d-%m-%Y-%H-%M-%S",
+        ]
+        for _format in strftime_format:
+            try:
+                date = pd.to_datetime(formated_date, format=_format)
+                return date
+            except ValueError:
+                pass
+        return value
+    except Exception:
+        return value
 
 
 def is_datetime(value):
@@ -60,13 +70,7 @@ def is_wkt_valid(value):
 
 @checker("Data cleaning : type of values checked")
 def check_types(
-    df,
-    added_cols,
-    selected_columns,
-    synthese_info,
-    missing_values,
-    schema_name,
-    import_id,
+    df, selected_columns, synthese_info, missing_values, schema_name, import_id,
 ):
     try:
 
@@ -95,27 +99,29 @@ def check_types(
             df["temp"] = df[selected_columns[field]].map(
                 lambda x: type(x) is pd.Timestamp
             )
-            print("LAAAAAAAA")
-            print(df["temp"])
 
             set_is_valid(df, "temp")
-            id_rows_errors = df.index[df["temp"] == False].to_list()
-
+            # id_rows_errors = df.index[df["temp"] == False].to_list()
+            invalid_rows = df[df["temp"] == False]
+            values_error = invalid_rows[selected_columns[field]].to_list()
             logger.info(
                 "%s date type error detected in %s synthese column (= %s user column)",
-                len(id_rows_errors),
+                len(invalid_rows),
                 field,
                 selected_columns[field],
             )
 
-            if len(id_rows_errors) > 0:
+            if len(invalid_rows) > 0:
                 set_error_and_invalid_reason(
                     df=df,
                     id_import=import_id,
                     error_code="INVALID_DATE",
                     col_name_error=selected_columns[field],
                     df_col_name_valid="temp",
-                    id_rows_error=id_rows_errors,
+                    id_rows_error=invalid_rows.index.to_list(),
+                    comment="Les dates suivantes ne sont pas au bon format: {}".format(
+                        ", ".join(map(lambda x: str(x), values_error))
+                    ),
                 )
 
         # UUID TYPE COLUMNS :
@@ -224,6 +230,7 @@ def check_types(
                         col_name_error=selected_columns[col],
                         df_col_name_valid="temp",
                         id_rows_error=id_rows_errors,
+                        comment="Longueur maximale: {}".format(n_char),
                     )
 
         # INTEGER TYPE COLUMNS :
@@ -280,7 +287,6 @@ def check_types(
                         col,
                         selected_columns[col],
                     )
-
                     if len(id_rows_errors) > 0:
                         set_error_and_invalid_reason(
                             df=df,

@@ -5,9 +5,7 @@ from ..models import TMappingsFields, TMappingsValues
 
 def save_field_mapping(form_data, id_mapping, select_type):
     try:
-        print(form_data)
         for col in form_data:
-
             my_query = (
                 DB.session.query(TMappingsFields)
                 .filter(TMappingsFields.id_mapping == id_mapping)
@@ -64,9 +62,8 @@ def save_field_mapping(form_data, id_mapping, select_type):
 
 def save_content_mapping(form_data, id_mapping):
     try:
-        objs = TMappingsValues.query.filter_by(id_mapping=id_mapping).all()
-        for obj in objs:
-            DB.session.delete(obj)
+        objs = TMappingsValues.query.filter_by(id_mapping=id_mapping).delete()
+
         for id_type in form_data:
             for i in range(len(form_data[id_type])):
                 create_mapping_value(
@@ -85,7 +82,7 @@ def create_mapping_value(id_mapping, source_value, id_target_value):
     try:
         new_contents = TMappingsValues(
             id_mapping=id_mapping,
-            source_value=source_value,
+            source_value=source_value["value"],
             id_target_value=id_target_value,
         )
         DB.session.add(new_contents)

@@ -33,7 +33,13 @@ def set_warning_reason(df, source_col_name, message, col_name):
 
 
 def set_error_and_invalid_reason(
-    df, id_import, error_code, col_name_error, df_col_name_valid, id_rows_error
+    df,
+    id_import,
+    error_code,
+    col_name_error,
+    df_col_name_valid,
+    id_rows_error,
+    comment=None,
 ):
     """
     Add errors in gn_import.t_user_errors_list
@@ -46,20 +52,28 @@ def set_error_and_invalid_reason(
         id_error=error_obj.id_error,
         col_name=col_name_error,
         id_rows=id_rows_error,
+        comment=comment,
     )
-    print(id_rows_error)
     message = "{}: {}".format(error_obj.name, col_name_error)
     set_invalid_reason(df=df, source_col_name=df_col_name_valid, message=message)
 
 
-def add_code_columns(form_data, selected_columns, df):
-    if form_data["codecommune"] == "":
+def add_code_columns(selected_columns, df):
+    if "codecommune" not in selected_columns:
         selected_columns["codecommune"] = "codecommune"
         df["codecommune"] = None
-    if form_data["codemaille"] == "":
+    if "codemaille" not in selected_columns:
         selected_columns["codemaille"] = "codemaille"
         df["codemaille"] = None
-    if form_data["codedepartement"] == "":
+    if "codedepartement" not in selected_columns:
         selected_columns["codedepartement"] = "codedepartement"
         df["codedepartement"] = None
 
+
+def remove_temp_columns(temp_cols: list, df):
+    for col in temp_cols:
+        try:
+            df = df.drop(col, axis=1)
+        except Exception:
+            pass
+    return df

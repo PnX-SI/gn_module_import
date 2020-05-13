@@ -284,7 +284,11 @@ def check_geography(
                 id_rows_error,
             )
 
-            df.drop("one_dep_code", axis=1)
+            df = df.drop("one_dep_code", axis=1)
+            df = df.drop("one_maille_code", axis=1)
+            df = df.drop("one_comm_code", axis=1)
+            df = df.drop("is_multiple_type_code", axis=1)
+            df = df.drop("line_with_one_code", axis=1)
 
     except Exception:
         raise

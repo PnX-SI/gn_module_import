@@ -85,7 +85,6 @@ def post_user_file(info_role):
             # CREATES CURRENT IMPORT IN TIMPORTS (SET STEP TO 1 AND DATE/TIME TO CURRENT DATE/TIME)
             try:
                 file_name = request.files["File"].filename
-                print(file_name)
                 file_name = secure_filename(file_name)
                 temp = file_name.split(".")
                 extension = temp[len(temp) - 1]

@@ -116,6 +116,8 @@ DEFAULT_MAPPING_ID = 3
 # you will be notified once this is completed
 MAX_LINE_LIMIT = 10000
 
+INSTANCE_BOUNDING_BOX = [-5.0, 41, 10, 51.15]
+
 
 class GnModuleSchemaConf(Schema):
     LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, missing=DEFAULT_LIST_COLUMN)
@@ -140,3 +142,8 @@ class GnModuleSchemaConf(Schema):
     DEFAULT_MAPPING_ID = fields.Integer(missing=DEFAULT_MAPPING_ID)
     FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(missing=False)
     MAX_LINE_LIMIT = fields.Integer(missing=MAX_LINE_LIMIT)
+    INSTANCE_BOUNDING_BOX = fields.List(fields.Float, missing=INSTANCE_BOUNDING_BOX)
+    ENABLE_BOUNDING_BOX_CHECK = fields.Boolean(missing=True)
+    ENABLE_SYNTHESE_UUID_CHECK = fields.Boolean(missing=True)
+    DISPLAY_MAPPED_VALUES = fields.Boolean(missing=False)
+    DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(missing=True)

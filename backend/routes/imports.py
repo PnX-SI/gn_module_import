@@ -1,6 +1,8 @@
 """
 Routes to manage import (import list, cancel import, import info...)
 """
+from flask import request
+from sqlalchemy.orm import exc as SQLAlchelyExc
 
 from utils_flask_sqla.response import json_resp
 from geonature.utils.env import DB
@@ -55,6 +57,18 @@ def get_import_list(info_role):
             message="INTERNAL SERVER ERROR - affichage de l'historique : contactez l'administrateur du site",
             details=str(e),
         )
+
+
+@blueprint.route("/update_import/<int:id_import>", methods=["POST"])
+@permissions.check_cruved_scope("C", module_code="IMPORT")
+@json_resp
+def update_import(id_import):
+    if not id_import:
+        return None
+    data_post = request.get_json()
+    DB.session.query(TImports).filter(TImports.id_import == id_import).update(data_post)
+    DB.session.commit()
+    return TImports.query.get(id_import).to_dict()
 
 
 @blueprint.route("/<import_id>", methods=["GET"])
@@ -141,9 +155,7 @@ def cancel_import(info_role, import_id):
             .one()[0]
         )
         if is_finished:
-            print("OK")
             name_source = "Import(id=" + import_id + ")"
-            print(name_source)
             id_source = (
                 DB.session.query(TSources.id_source)
                 .filter(TSources.name_source == name_source)

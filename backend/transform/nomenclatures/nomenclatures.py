@@ -15,12 +15,20 @@ from ...db.queries.nomenclatures import (
     get_nomenc_abb_from_name,
     set_default_nomenclature_id,
     get_saved_content_mapping,
+    exist_proof_check,
+    dee_bluring_check,
+    ref_biblio_check,
+    set_default_value,
+    get_mnemo,
+    get_nomenc_values
 )
 from ...db.queries.user_errors import set_user_error
 
 from ...utils.clean_names import clean_string
 from ...wrappers import checker
 from ...logs import logger
+
+from flask import current_app
 
 
 class NomenclatureTransformer:
@@ -49,6 +57,7 @@ class NomenclatureTransformer:
         self.formated_mapping_content = self.__formated_mapping_content(
             selected_columns
         )
+        self.selected_columns = selected_columns
         self.accepted_id_nomencatures = self.__set_accepted_id_nomencatures()
 
     def __set_nomenclature_fields(self, selected_columns):
@@ -134,6 +143,9 @@ class NomenclatureTransformer:
             raise
 
     def find_nomenclatures_errors(self, id_import):
+        """
+        Detect nomenclature which not check with the given value mapping
+        """
         for el in self.accepted_id_nomencatures:
             rows_with_err = find_row_with_nomenclatures_error(
                 self.table_name,
@@ -141,16 +153,38 @@ class NomenclatureTransformer:
                 list(map(lambda id: str(id), el["accepted_id_nomenclature"])),
             )
             for row in rows_with_err:
-                set_user_error(
-                    id_import=id_import,
-                    step="CONTENT_MAPPING",
-                    error_code="INVALID_NOMENCLATURE",
-                    col_name=el["user_col"],
-                    id_rows=row.gn_pk,
-                    comment="La valeur '{}' n'existe pas pour la nomenclature {}".format(
-                        row[1], el["mnemonique_type"]
-                    ),
-                )
+                # ou remplacer par un warning quand la valeur par défaut a été utilisée
+                print("row[1] = " + row[1])
+                print("user_col = " + el["user_col"])
+
+                
+                if current_app.config["IMPORT"][
+                    "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"
+                ]: 
+                    nomenc_values = get_nomenc_values(el["mnemonique_type"])
+                    nomenc_values_ids = [get_mnemo(str(val[0])) for val in nomenc_values]
+                    set_user_error(
+                        id_import=id_import,
+                        step="CONTENT_MAPPING",
+                        error_code="INVALID_NOMENCLATURE_WARNING",
+                        col_name=el["user_col"],
+                        id_rows=row.gn_pk,
+                        comment="La valeur '{}' ne correspond à aucune des valeurs [{}] de la nomenclature {} et a ete remplacée par la valeur par défaut '{}'".format(
+                            row[1], ", ".join(nomenc_values_ids),
+                            el["mnemonique_type"], get_mnemo(set_default_value(el["mnemonique_type"]))
+                        )
+                    )
+                else:
+                    set_user_error(
+                        id_import=id_import,
+                        step="CONTENT_MAPPING",
+                        error_code="INVALID_NOMENCLATURE",
+                        col_name=el["user_col"],
+                        id_rows=row.gn_pk,
+                        comment="La valeur '{}' n'existe pas pour la nomenclature {}".format(
+                            row[1], el["mnemonique_type"]
+                        )
+                    )
 
     @checker("Set nomenclature default ids")
     def set_default_nomenclature_ids(self):
@@ -158,7 +192,7 @@ class NomenclatureTransformer:
             for el in self.accepted_id_nomencatures:
                 set_default_nomenclature_id(
                     table_name=self.table_name,
-                    mnemonique_type=el["mnemonique_type"],
+                    nomenc_abb=el["mnemonique_type"],
                     user_col=el["user_col"],
                     id_types=list(
                         map(lambda id: str(id), el["accepted_id_nomenclature"])
@@ -168,6 +202,58 @@ class NomenclatureTransformer:
         except Exception:
             DB.session.rollback()
             raise
+
+    def check_conditionnal_values(self, id_import):
+        # Proof checker
+        row_with_errors_proof = exist_proof_check(
+            self.table_name,
+            self.selected_columns.get("id_nomenclature_exist_proof"),
+            self.selected_columns.get("digital_proof"),
+            self.selected_columns.get("non_digital_proof"),
+        )
+        if row_with_errors_proof:
+            set_user_error(
+                id_import=id_import,
+                step="CONTENT_MAPPING",
+                error_code="INVALID_EXISTING_PROOF_VALUE",
+                col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
+                id_rows=row_with_errors_proof.id_rows,
+            )
+
+        # bluering checker
+        row_with_errors_blurr = dee_bluring_check(
+            self.table_name,
+            id_import,
+            self.selected_columns.get("id_nomenclature_blurring"),
+        )
+        if row_with_errors_blurr:
+            set_user_error(
+                id_import=id_import,
+                step="CONTENT_MAPPING",
+                error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
+                col_name=self.selected_columns.get("id_nomenclature_blurring"),
+                id_rows=row_with_errors_blurr.id_rows,
+                comment="Le champ dEEFloutage doit être remplit si le jeu de données est privé",
+            )
+
+        #  literature checker
+        row_with_errors_bib = ref_biblio_check(
+            self.table_name,
+            field_statut_source=self.selected_columns.get(
+                "id_nomenclature_source_status"
+            ),
+            field_ref_biblio=self.selected_columns.get("reference_biblio"),
+        )
+        if row_with_errors_bib:
+            set_user_error(
+                id_import=id_import,
+                step="CONTENT_MAPPING",
+                error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
+                col_name=self.selected_columns.get("reference_biblio")
+                or self.selected_columns.get("id_nomenclature_source_status"),
+                id_rows=row_with_errors_bib.id_rows,
+                comment="Le champ reference_biblio doit être remplit si le statut source est 'Littérature'",
+            )
 
 
 @checker("Set nomenclature ids from content mapping form")
@@ -254,7 +340,6 @@ def get_nomenc_info(form_data, schema_name, table_name):
             }
 
             front_info.append(d)
-
         return front_info
 
     except Exception:
@@ -273,7 +358,6 @@ def set_default_nomenclature_ids(table_name, selected_cols):
             nomenc_values = get_nomenc_values(mnemonique_type)
             ids = [str(nomenc.nomenc_id) for nomenc in nomenc_values]
             set_default_nomenclature_id(table_name, mnemonique_type, v, ids)
-            print(ids)
         DB.session.commit()
     except Exception:
         DB.session.rollback()

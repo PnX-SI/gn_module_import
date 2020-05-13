@@ -1,3 +1,6 @@
+from flask import current_app
+from shapely.geometry import Polygon
+
 from ..wrappers import checker
 from ..logs import logger
 from ..db.queries.geometries import get_id_area_type
@@ -31,9 +34,11 @@ class GeometrySetter:
     @checker("Data cleaning : geometries created")
     def set_geometry(self):
         """
-        Add 3 geometry columns and 1 column id_area_attachmet to the temp table and fill them from the "given_geom" col
+        - Add 3 geometry columns and 1 column id_area_attachmet to the temp table and fill them from the "given_geom" col
         calculated in python in the geom_check step
-        Also calculate the attachment geoms
+        - Check if the geom are valid (not self intersected)
+        - check if geom fit with the bounding box
+        - calculate the attachment geoms
         """
         try:
 
@@ -61,6 +66,18 @@ class GeometrySetter:
                 source_geom_column="gn_the_geom_4326",
                 target_geom_column="gn_the_geom_point",
             )
+            self.check_geom_validity()
+            if current_app.config["IMPORT"]["ENABLE_BOUNDING_BOX_CHECK"]:
+                #  check bounding box
+                results_out_of_box = self.check_geoms_fit_bbox().fetchall()
+                if results_out_of_box:
+                    set_user_error(
+                        id_import=self.id_import,
+                        step="FIELD_MAPPING",
+                        error_code="GEOMETRY_OUT_OF_BOX",
+                        col_name="Colonne géométriques",
+                        id_rows=list(map(lambda row: row.gn_pk, results_out_of_box)),
+                    )
             #  retransform the geom col in text (otherwise dask not working)
             self.set_text()
             # calculate the geom attachement for communes / maille et département
@@ -133,8 +150,32 @@ class GeometrySetter:
                             ", ".join(dep_errors["code_error"])
                         ),
                     )
+
         except Exception:
             raise
+
+    def check_geom_validity(self):
+        """
+        Set an error where geom is not valid
+        """
+        query = """
+        UPDATE {table}
+        SET gn_is_valid = 'False',
+        gn_invalid_reason = 'INVALID_GEOMETRY'
+        WHERE ST_IsValid(gn_the_geom_4326) IS FALSE
+        RETURNING gn_pk;
+        """.format(
+            table=self.table_name
+        )
+        invalid_geom_rows = execute_query(query).fetchall()
+        if len(invalid_geom_rows) > 0:
+            set_user_error(
+                self.id_import,
+                step="FIELD_MAPPING",
+                error_code="INVALID_GEOMETRY",
+                id_rows=list(map(lambda r: r.gn_pk, invalid_geom_rows)),
+                comment="Des géométrie fournies s'auto-intersectent",
+            )
 
     def add_geom_column(self):
         """
@@ -279,3 +320,28 @@ class GeometrySetter:
             code_dep_col=self.code_dep_col or "codedepartement",
         )
         return execute_query(query, commit=True).fetchall()
+
+    def check_geoms_fit_bbox(self):
+        xmin, ymin, xmax, ymax = current_app.config["IMPORT"]["INSTANCE_BOUNDING_BOX"]
+        try:
+            bounding_box_poly = Polygon(
+                [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax),]
+            )
+            bounding_box_wkt = bounding_box_poly.wkt
+        except Exception:
+            raise
+
+        query = """
+        UPDATE {table} as i
+        SET gn_is_valid = 'False',
+        gn_invalid_reason = 'GEOMETRY_OUT_OF_BOX'
+        WHERE gn_pk IN (
+        SELECT gn_pk as id_rows
+        FROM {table}
+        WHERE NOT gn_the_geom_4326 && st_geogfromtext('{bbox}')
+        )
+        RETURNING gn_pk
+        """.format(
+            table=self.table_name, bbox=bounding_box_wkt
+        )
+        return execute_query(query)

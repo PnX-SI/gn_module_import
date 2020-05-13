@@ -73,7 +73,6 @@ def upload(
         # check user file extension (changer)
         extension = pathlib.Path(full_path).suffix.lower()
         if extension not in allowed_extensions:
-            print("PASSE LA ???")
             logger.error("Saving user file : extension not allowed")
             set_user_error(
                 id_import=id_import, step="UPLOAD", error_code="FILE_EXTENSION_ERROR",
