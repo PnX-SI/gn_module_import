@@ -112,6 +112,10 @@ ALLOW_VALUE_MAPPING = True
 # If VALUE MAPPING is not allowed, you must specify the DEFAULT_MAPPING_ID
 DEFAULT_MAPPING_ID = 3
 
+#Once the MAX_LINE_LIMIT has been exceeded, error processing will take place in the background,
+# you will be notified once this is completed
+MAX_LINE_LIMIT = 10000
+
 
 class GnModuleSchemaConf(Schema):
     LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, missing=DEFAULT_LIST_COLUMN)
@@ -135,4 +139,4 @@ class GnModuleSchemaConf(Schema):
     ALLOW_VALUE_MAPPING = fields.Boolean(missing=ALLOW_VALUE_MAPPING)
     DEFAULT_MAPPING_ID = fields.Integer(missing=DEFAULT_MAPPING_ID)
     FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(missing=False)
-
+    MAX_LINE_LIMIT = fields.Integer(missing=MAX_LINE_LIMIT)
