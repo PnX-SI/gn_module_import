@@ -59,6 +59,7 @@ INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level)
 ,('Incohérence','INVALID_STATUT_SOURCE_VALUE','Référence bibliographique manquante ; si le champ “statutSource” a la valeur “Li” (Littérature), alors une référence bibliographique doit être indiquée.','ERROR')
 ,('Erreur','UNKNOWN_ERROR','','ERROR')
 ,('Ouverture du fichier','EMPTY_FILE','Le fichier fournit est vide','ERROR')
+,('Avertissement de nomenclature','INVALID_NOMENCLATURE_WARNING','(Non bloquant) Code nomenclature erroné et remplacé par sa valeur par défaut ; La valeur du champ n’est pas dans la liste des codes attendus pour ce champ. Pour connaître la liste des codes autorisés, reportez-vous au Standard en cours.','WARNING')
 ;
 
 

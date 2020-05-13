@@ -23,6 +23,7 @@ export class ImportStepComponent implements OnInit {
   stepData: Step4Data;
   nValidData: number;
   nInvalidData: number;
+  validBbox: any;
   public spinner: boolean = false;
 
   constructor(
@@ -83,6 +84,7 @@ export class ImportStepComponent implements OnInit {
         this.nValidData = res.n_valid_data;
         this.nInvalidData = res.n_invalid_data;
         this.validData = res.valid_data;
+        this.validBbox = res.valid_bbox;
         if (this.validData != "no data") {
           this.columns = [];
           this.rows = [];
@@ -101,6 +103,7 @@ export class ImportStepComponent implements OnInit {
             });
             this.rows.push(obj);
           });
+          console.log(this.rows)
 
           this.tableReady = true;
         }

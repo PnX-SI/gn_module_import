@@ -5,11 +5,11 @@
             <h5 class="card-title mb-0"> Mapping des champs  </h5>
         </div>
         <div class="card-body" *ngIf="formReady">
-            <!-- Choix du mapping -->
+            <!-- Choix de la liste des nomenclatures -->
             <form [formGroup]="fieldMappingForm" class="was-validated">
                 <fieldset>
                     <legend class="px-1">
-                        Choix du mapping
+                        Choix de la liste des nomenclatures
                     </legend>
                     <div *ngIf="userFieldMappings" class="form-group">
                         <select class="form-control form-control-sm" id="mappingSelection"

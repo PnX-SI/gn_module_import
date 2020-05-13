@@ -8,6 +8,7 @@ from ..db.queries.user_table_queries import (
     get_table_name,
     get_n_valid_rows,
     get_n_invalid_rows,
+    get_valid_bbox,
 )
 from ..db.queries.metadata import get_id_field_mapping, get_id_mapping
 from ..db.queries.nomenclatures import get_saved_content_mapping
@@ -61,6 +62,9 @@ def get_valid_data(info_role, import_id):
                 IMPORTS_SCHEMA_NAME, table_name, total_columns, selected_content
             )
 
+            # get valid gejson
+            valid_bbox = get_valid_bbox(IMPORTS_SCHEMA_NAME, table_name)
+
             # get n valid data
             n_valid = get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name)
 
@@ -81,6 +85,7 @@ def get_valid_data(info_role, import_id):
                 "valid_data": valid_data_list,
                 "n_valid_data": n_valid,
                 "n_invalid_data": n_invalid,
+                "valid_bbox": valid_bbox,
             },
             200,
         )

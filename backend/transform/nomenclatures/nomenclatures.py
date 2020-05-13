@@ -18,12 +18,17 @@ from ...db.queries.nomenclatures import (
     exist_proof_check,
     dee_bluring_check,
     ref_biblio_check,
+    set_default_value,
+    get_mnemo,
+    get_nomenc_values
 )
 from ...db.queries.user_errors import set_user_error
 
 from ...utils.clean_names import clean_string
 from ...wrappers import checker
 from ...logs import logger
+
+from flask import current_app
 
 
 class NomenclatureTransformer:
@@ -148,16 +153,38 @@ class NomenclatureTransformer:
                 list(map(lambda id: str(id), el["accepted_id_nomenclature"])),
             )
             for row in rows_with_err:
-                set_user_error(
-                    id_import=id_import,
-                    step="CONTENT_MAPPING",
-                    error_code="INVALID_NOMENCLATURE",
-                    col_name=el["user_col"],
-                    id_rows=row.gn_pk,
-                    comment="La valeur '{}' n'existe pas pour la nomenclature {}".format(
-                        row[1], el["mnemonique_type"]
-                    ),
-                )
+                # ou remplacer par un warning quand la valeur par défaut a été utilisée
+                print("row[1] = " + row[1])
+                print("user_col = " + el["user_col"])
+
+                
+                if current_app.config["IMPORT"][
+                    "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"
+                ]: 
+                    nomenc_values = get_nomenc_values(el["mnemonique_type"])
+                    nomenc_values_ids = [get_mnemo(str(val[0])) for val in nomenc_values]
+                    set_user_error(
+                        id_import=id_import,
+                        step="CONTENT_MAPPING",
+                        error_code="INVALID_NOMENCLATURE_WARNING",
+                        col_name=el["user_col"],
+                        id_rows=row.gn_pk,
+                        comment="La valeur '{}' ne correspond à aucune des valeurs [{}] de la nomenclature {} et a ete remplacée par la valeur par défaut '{}'".format(
+                            row[1], ", ".join(nomenc_values_ids),
+                            el["mnemonique_type"], get_mnemo(set_default_value(el["mnemonique_type"]))
+                        )
+                    )
+                else:
+                    set_user_error(
+                        id_import=id_import,
+                        step="CONTENT_MAPPING",
+                        error_code="INVALID_NOMENCLATURE",
+                        col_name=el["user_col"],
+                        id_rows=row.gn_pk,
+                        comment="La valeur '{}' n'existe pas pour la nomenclature {}".format(
+                            row[1], el["mnemonique_type"]
+                        )
+                    )
 
     @checker("Set nomenclature default ids")
     def set_default_nomenclature_ids(self):
@@ -165,7 +192,7 @@ class NomenclatureTransformer:
             for el in self.accepted_id_nomencatures:
                 set_default_nomenclature_id(
                     table_name=self.table_name,
-                    mnemonique_type=el["mnemonique_type"],
+                    nomenc_abb=el["mnemonique_type"],
                     user_col=el["user_col"],
                     id_types=list(
                         map(lambda id: str(id), el["accepted_id_nomenclature"])
