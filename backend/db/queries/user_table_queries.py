@@ -305,7 +305,7 @@ def get_n_invalid_rows(full_table_name):
     except Exception:
         raise
 
-def get_valid_geojson(schema_name, table_name):
+def get_valid_bbox(schema_name, table_name):
     try:
         geojson = DB.session.execute("""
                 SELECT ST_AsGeojson(ST_Extent(gn_the_geom_4326))
