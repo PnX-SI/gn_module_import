@@ -19,7 +19,7 @@ def get_preview(schema_name, table_name, total_columns, selected_content):
 
     try:
         # get valid data in user table
-        preview = get_valid_user_data(schema_name, table_name, 50)
+        preview = get_valid_user_data(schema_name, table_name, 100)
 
         # get synthese fields
         synthese_fields = get_synthese_fields()
