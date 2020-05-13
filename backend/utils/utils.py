@@ -2,8 +2,6 @@ import os
 
 
 def create_col_name(df, col_dict, key, import_id):
-    print("CREATE COL NAME")
-    print(col_dict)
     try:
         colname = "_".join(["gn", import_id, key])
         if colname not in df.columns:

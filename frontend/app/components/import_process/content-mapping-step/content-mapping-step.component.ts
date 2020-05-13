@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormControl, FormGroup, FormBuilder } from "@angular/forms";
-import { StepsService, Step3Data, Step4Data } from "../steps.service";
+import { StepsService, Step3Data, Step4Data, Step2Data } from "../steps.service";
 import { DataService } from "../../../services/data.service";
 import { ContentMappingService } from "../../../services/mappings/content-mapping.service";
 import { CommonService } from "@geonature_common/service/common.service";
@@ -17,6 +17,7 @@ export class ContentMappingStepComponent implements OnInit {
   public userContentMapping;
   public newMapping: boolean = false;
   public id_mapping;
+  public idFieldMapping: number;
   public columns;
   public spinner: boolean = false;
   contentTargetForm: FormGroup;
@@ -42,6 +43,9 @@ export class ContentMappingStepComponent implements OnInit {
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(3);
+    const step2: Step2Data = this.stepService.getStepData(2);
+    this.idFieldMapping = step2.id_field_mapping;
+
     this.contentMappingForm = this._fb.group({
       contentMapping: [null],
       mappingName: [""]
@@ -66,7 +70,7 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   getNomencInf() {
-    this._ds.getNomencInfo(this.stepData.importId).subscribe(
+    this._ds.getNomencInfo(this.stepData.importId, this.idFieldMapping).subscribe(
       res => {
         this.stepData.contentMappingInfo = res["content_mapping_info"];
         this.generateContentForm();
@@ -88,6 +92,9 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   generateContentForm() {
+    console.log(this.stepData);
+
+    // this._ds.getNomencInfo(this.stepData)
     this.stepData.contentMappingInfo.forEach(ele => {
       ele["nomenc_values_def"].forEach(nomenc => {
         this.contentTargetForm.addControl(nomenc.id, new FormControl(""));
@@ -225,21 +232,20 @@ export class ContentMappingStepComponent implements OnInit {
     this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/2`]);
   }
 
-  onContentMapping(value) {
-    // post content mapping form values and fill t_mapping_values table
+  onDataChecking() {
+    // perform all check on file
     this.id_mapping = this.contentMappingForm.get("contentMapping").value;
     this.spinner = true;
     this._ds
-      .postContentMap(
-        value,
-        this.stepData.table_name,
+      .dataChecker(
         this.stepData.importId,
+        this.idFieldMapping,
         this.id_mapping
       )
       .subscribe(
         res => {
           this.spinner = false;
-          this.contentMapRes = res;
+          //this.contentMapRes = res;
           this._ds.getErrorList(this.stepData.importId).subscribe(err => {
             this.n_errors = err.errors.length;
             if (this.n_errors == 0) {
@@ -247,6 +253,8 @@ export class ContentMappingStepComponent implements OnInit {
               this.showValidateMappingBtn = false;
             }
           })
+          this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
+
         },
         error => {
           this.spinner = false;
@@ -266,14 +274,15 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   goToPreview() {
-    let step4Data: Step4Data = {
-      importId: this.stepData.importId
-    };
-    let step3Data: Step3Data = this.stepData;
-    step3Data.id_content_mapping = this.id_mapping;
-    this.stepService.setStepData(3, step3Data);
-    this.stepService.setStepData(4, step4Data);
-    this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
-
+    this._ds.updateContentMapping(this.id_mapping, this.contentTargetForm.value).subscribe(d => {
+      let step4Data: Step4Data = {
+        importId: this.stepData.importId
+      };
+      let step3Data: Step3Data = this.stepData;
+      step3Data.id_content_mapping = this.id_mapping;
+      this.stepService.setStepData(3, step3Data);
+      this.stepService.setStepData(4, step4Data);
+      this.onDataChecking()
+    })
   }
 }

@@ -92,16 +92,17 @@
 
                     <span *ngIf="n_error_lines == 0  && mappingRes" class="alert alert-success"> Aucune erreur détéctée dans le fichier </span>
 
-                    <button *ngIf="!mappingRes"
+                    <!-- <button *ngIf="!mappingRes"
                         class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                         [disabled]="syntheseForm.invalid" (click)="onDataCleaning(syntheseForm.value, id_mapping)">
                         Valider le mapping
-                    </button>
+                    </button> -->
                     <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        [disabled]="!mappingIsValidate || isFullError" (click)='onNextStep()'>
+                        [disabled]="fieldMappingForm.value.fieldMapping == null || syntheseForm.invalid" (click)='onNextStep()'>
                         Suivant
                         <i class="material-icons"> navigate_next </i>
                     </button>
+                   
                 </div>
             </form>
             <!-- Error list in table -->

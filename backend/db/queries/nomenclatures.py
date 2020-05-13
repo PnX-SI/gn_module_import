@@ -68,17 +68,13 @@ def get_nomenclature_label_from_id(id_nomenclature):
 
 
 def get_nomenc_user_values(user_nomenc_col, schema_name, table_name):
-    nomenc_user_values = DB.session.execute(
-        """
+    query = """
         SELECT DISTINCT {user_nomenc_col} as user_val
-        FROM {schema_name}.{table_name}
-        WHERE gn_is_valid = 'True';
+        FROM {schema_name}.{table_name};
         """.format(
-            user_nomenc_col=user_nomenc_col,
-            schema_name=schema_name,
-            table_name=table_name,
-        )
-    ).fetchall()
+        user_nomenc_col=user_nomenc_col, schema_name=schema_name, table_name=table_name,
+    )
+    nomenc_user_values = DB.session.execute(query).fetchall()
     return nomenc_user_values
 
 
