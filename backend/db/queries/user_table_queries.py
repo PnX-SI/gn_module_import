@@ -308,7 +308,7 @@ def get_n_invalid_rows(full_table_name):
 def get_valid_geojson(schema_name, table_name):
     try:
         geojson = DB.session.execute("""
-                SELECT ST_AsGeojson(ST_Extent(wkt))
+                SELECT ST_AsGeojson(ST_Extent(gn_the_geom_4326))
                 FROM {schema_name}.{table_name}
                 WHERE gn_is_valid = 'True';        
                 """.format(
