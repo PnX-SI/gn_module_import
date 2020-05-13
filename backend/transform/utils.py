@@ -58,14 +58,14 @@ def set_error_and_invalid_reason(
     set_invalid_reason(df=df, source_col_name=df_col_name_valid, message=message)
 
 
-def add_code_columns(form_data, selected_columns, df):
-    if form_data["codecommune"] == "":
+def add_code_columns(selected_columns, df):
+    if "codecommune" not in selected_columns:
         selected_columns["codecommune"] = "codecommune"
         df["codecommune"] = None
-    if form_data["codemaille"] == "":
+    if "codemaille" not in selected_columns:
         selected_columns["codemaille"] = "codemaille"
         df["codemaille"] = None
-    if form_data["codedepartement"] == "":
+    if "codedepartement" not in selected_columns:
         selected_columns["codedepartement"] = "codedepartement"
         df["codedepartement"] = None
 

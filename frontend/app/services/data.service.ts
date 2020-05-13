@@ -20,6 +20,10 @@ export class DataService {
     return this._http.get(`${urlApi}/${id_import}`)
   }
 
+  updateImport(idImport, data) {
+    return this._http.post(`${urlApi}/update_import/${idImport}`, data)
+  }
+
   postUserFile(value, datasetId, importId, isFileChanged, fileName) {
     const urlStatus = `${urlApi}/uploads`;
     let fd = new FormData();
@@ -53,6 +57,14 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/content_mappings/${id_mapping}`);
   }
 
+  updateFieldMapping(id_mapping, data) {
+    return this._http.post(`${urlApi}/update_field_mapping/${id_mapping}`, data)
+  }
+
+  updateContentMapping(id_mapping, data) {
+    return this._http.post(`${urlApi}/update_content_mapping/${id_mapping}`, data)
+  }
+
   postMappingName(value, mappingType) {
     const urlMapping = `${urlApi}/mappingName`;
     let fd = new FormData();
@@ -61,6 +73,17 @@ export class DataService {
     }
     fd.append("mapping_type", mappingType);
     return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
+  }
+
+  /**
+   * Perform all data checking on the table (content et field)
+   * @param idImport 
+   * @param idFieldMapping 
+   * @param idContentMapping 
+   */
+  dataChecker(idImport, idFieldMapping, idContentMapping) {
+    const url = `${urlApi}/data_checker/${idImport}/field_mapping/${idFieldMapping}/content_mapping/${idContentMapping}`;
+    return this._http.post(url, {})
   }
 
   cancelImport(importId: number) {
@@ -85,39 +108,13 @@ export class DataService {
     return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
   }
 
-  postContentMap(value, table_name, import_id, id_mapping) {
+  contentMappingDataChecking(import_id, id_mapping) {
     if (id_mapping == null) {
       id_mapping = 0;
     }
     const contentMappingUrl = `${urlApi}/contentMapping/${import_id}/${id_mapping}`;
-    let fd = new FormData();
-    for (let key of Object.keys(value)) {
-      if (value[key] == null) {
-        fd.append(key, "");
-      } else {
-        if (value[key].length > 1) {
-          for (let val of value[key]) {
-            if (val["value"] == undefined) {
-              fd.append(key, val);
-            } else {
-              fd.append(key, val["value"]);
-            }
-          }
-        } else {
-          if (value[key] != "") {
-            if (value[key][0]["value"] == undefined) {
-              fd.append(key, value[key]);
-            } else {
-              fd.append(key, value[key][0]["value"]);
-            }
-          } else {
-            fd.append(key, "");
-          }
-        }
-      }
-    }
-    fd.append("table_name", table_name);
-    return this._http.post<any>(contentMappingUrl, fd, HttpUploadOptions);
+
+    return this._http.post<any>(contentMappingUrl, {});
   }
 
   postMetaToStep3(import_id, id_mapping, table_name) {
@@ -136,8 +133,8 @@ export class DataService {
     return this._http.put<any>(`${urlApi}/goToStep4/${import_id}/${id_mapping}`, {});
   }
 
-  getNomencInfo(import_id) {
-    return this._http.get<any>(`${urlApi}/getNomencInfo/${import_id}`);
+  getNomencInfo(id_import, id_field_mapping) {
+    return this._http.get<any>(`${urlApi}/getNomencInfo/${id_import}/field_mapping/${id_field_mapping}`);
   }
 
   importData(import_id) {

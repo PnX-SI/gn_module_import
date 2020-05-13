@@ -18,6 +18,12 @@ from ..db.queries.user_table_queries import (
     get_n_invalid_rows,
 )
 
+from ..db.queries.save_mapping import (
+    save_field_mapping,
+    save_content_mapping,
+    get_selected_columns,
+)
+
 from ..db.queries.metadata import get_id_field_mapping
 
 from ..db.queries.nomenclatures import get_content_mapping
@@ -273,10 +279,13 @@ def get_dict_fields(info_role):
         )
 
 
-@blueprint.route("/getNomencInfo/<import_id>", methods=["GET", "POST"])
+@blueprint.route(
+    "/getNomencInfo/<int:id_import>/field_mapping/<int:id_field_mapping>",
+    methods=["GET", "POST"],
+)
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
-def getNomencInfo(info_role, import_id):
+def getNomencInfo(info_role, id_import, id_field_mapping):
     """
         Get all nomenclature info for a mapping
         Use for the value mapping step
@@ -286,15 +295,12 @@ def getNomencInfo(info_role, import_id):
         IMPORTS_SCHEMA_NAME = blueprint.config["IMPORTS_SCHEMA_NAME"]
         ARCHIVES_SCHEMA_NAME = blueprint.config["ARCHIVES_SCHEMA_NAME"]
         table_names = get_table_names(
-            ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id)
+            ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, id_import
         )
         table_name = table_names["imports_table_name"]
 
-        id_mapping = get_id_field_mapping(import_id)
-        selected_columns = get_selected_columns(id_mapping)
-
+        selected_columns = get_selected_columns(id_field_mapping)
         nomenc_info = get_nomenc_info(selected_columns, IMPORTS_SCHEMA_NAME, table_name)
-
         return {"content_mapping_info": nomenc_info}, 200
     except Exception as e:
         logger.error("*** ERROR WHEN GETTING NOMENCLATURE")
@@ -364,3 +370,56 @@ def postMetaToStep3(info_role):
         )
     finally:
         DB.session.close()
+
+
+@blueprint.route("/update_field_mapping/<id_mapping>", methods=["GET", "POST"])
+@permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@json_resp
+def r_save_field_mapping(info_role, id_mapping):
+    """
+        update a field_mapping
+    """
+    try:
+
+        data = request.get_json()
+        # SAVE MAPPING
+        if id_mapping != "undefined":
+            logger.info("save field mapping")
+            save_field_mapping(data, id_mapping, select_type="selected")
+
+            logger.info(" -> field mapping saved")
+            return "Done"
+        else:
+            return (
+                {
+                    "message": "Vous devez créer ou sélectionner un mapping pour le valider"
+                },
+                400,
+            )
+    except Exception:
+        raise GeonatureImportApiError(
+            message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
+            details=str(e),
+        )
+
+
+@blueprint.route("/update_content_mapping/<int:id_mapping>", methods=["GET", "POST"])
+@permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@json_resp
+def r_update_content_mapping(info_role, id_mapping):
+    if id_mapping == 0:
+        return (
+            {"message": "Vous devez d'abord créer ou sélectionner un mapping"},
+            400,
+        )
+    else:
+        logger.info(
+            "Content mapping : transforming user values to id_types in the user table"
+        )
+        form_data = request.get_json()
+        # SAVE MAPPING
+        logger.info("save content mapping")
+        save_content_mapping(form_data, id_mapping)
+        logger.info(" -> content mapping saved")
+
+    return "Done"

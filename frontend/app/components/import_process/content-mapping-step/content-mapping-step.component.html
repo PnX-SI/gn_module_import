@@ -114,18 +114,19 @@
                         Voir le rapport complet
                     </a>
                 </button>
-                <button (click)="onContentMapping(contentTargetForm.value)"
+                <!-- <button (click)="onContentMapping(contentTargetForm.value)"
                         class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                         [disabled]="disabled"
                         *ngIf="showValidateMappingBtn"
                     >
                         Valider le mapping
-                </button>
                 <span *ngIf="n_errors == 0 && n_warnings == 0" class="alert alert-success"> Aucune erreur détéctée dans le fichier </span>
+                </button> -->
+                <span *ngIf="n_errors == 0" class="alert alert-success"> Aucune erreur détéctée dans le fichier </span>
 
                 <button
                     class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                    [disabled]="disableNextStep"
+                    [disabled]="disabled"
                     (click)="goToPreview()"
                 >
                     Suivant

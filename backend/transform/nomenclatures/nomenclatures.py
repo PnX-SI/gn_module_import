@@ -340,7 +340,6 @@ def get_nomenc_info(form_data, schema_name, table_name):
             }
 
             front_info.append(d)
-
         return front_info
 
     except Exception:

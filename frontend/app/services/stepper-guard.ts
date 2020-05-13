@@ -3,7 +3,7 @@ import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from
 
 @Injectable()
 export class StepperGuardService implements CanActivate {
-	constructor(private router: Router) {}
+	constructor(private router: Router) { }
 
 	canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
 		let url: string = state.url.split('?')[0];
@@ -14,8 +14,12 @@ export class StepperGuardService implements CanActivate {
 				if (JSON.parse(localStorage.getItem('step2Data'))) return true;
 				else return false;
 			} else if (url.endsWith('process/step/3')) {
+
 				let step3Data = JSON.parse(localStorage.getItem('step3Data'))
 				let step2Data = JSON.parse(localStorage.getItem('step2Data'))
+				console.log(step3Data);
+				console.log(step2Data);
+
 				if (step3Data && step2Data.mappingIsValidate) {
 					return true;
 				} else return false;
