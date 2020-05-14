@@ -39,6 +39,7 @@ export class FieldsMappingStepComponent implements OnInit {
   public fieldMappingForm: FormGroup;
   public userFieldMappings;
   public newMapping: boolean = false;
+  public updateMapping: boolean = false; 
 
   constructor(
     private _ds: DataService,
@@ -173,6 +174,49 @@ export class FieldsMappingStepComponent implements OnInit {
         }
       );
   }
+
+  canUpdateMapping()
+  {
+    console.log(this.id_mapping);
+    
+    if(!ModuleConfig.ALLOW_MODIFY_DEFAULT_MAPPING &&
+         ModuleConfig.ALLOW_FIELD_MAPPING && 
+         this.id_mapping == this.IMPORT_CONFIG.DEFAULT_FIELD_MAPPING_ID){
+      return true;
+    }
+    return false;
+    
+  }
+
+  updateMappingField(value, id_mapping) {
+    this.spinner = true;
+    this._ds
+      .updateMappingField(
+        value,
+        this.stepData.importId,
+        id_mapping,
+      )
+      .subscribe(
+        res => {
+          this.spinner = false;
+        },
+        error => {
+          this.spinner = false;
+          if (error.statusText === "Unknown Error") {
+            // show error message if no connexion
+            this._commonService.regularToaster(
+              "error",
+              "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+            );
+          } else {
+            // show error message if other server error
+            if (error.status == 400) this.isUserError = true;
+            this._commonService.regularToaster("error", error.error.message);
+          }
+        }
+      );
+  }
+
 
   onNextStep() {
     this._ds.updateFieldMapping(this.id_mapping, this.syntheseForm.value).subscribe(data => {
@@ -410,8 +454,15 @@ export class FieldsMappingStepComponent implements OnInit {
 
   cancelMapping() {
     this.newMapping = false;
+    this.updateMapping = false;
     this.fieldMappingForm.controls["mappingName"].setValue("");
   }
+
+  renameMapping()
+  {
+    this.updateMapping = true;
+  }
+
 
   saveMappingName(value, importId, targetForm) {
     let mappingType = "FIELD";
@@ -419,6 +470,32 @@ export class FieldsMappingStepComponent implements OnInit {
       res => {
         this.stepData.id_field_mapping = res;
         this.newMapping = false;
+        this.getMappingNamesList(mappingType, importId);
+        this.fieldMappingForm.controls["fieldMapping"].setValue(res);
+        this.fieldMappingForm.controls["mappingName"].setValue("");
+        this.enableMapping(targetForm);
+      },
+      error => {
+        if (error.statusText === "Unknown Error") {
+          // show error message if no connexion
+          this._commonService.regularToaster(
+            "error",
+            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+          );
+        } else {
+          console.error(error);
+          this._commonService.regularToaster("error", error.error);
+        }
+      }
+    );
+  }
+
+  updateMappingName(value, importId, targetForm) {
+    let mappingType = "FIELD";
+    this._ds.updateMappingName(value, mappingType, this.id_mapping).subscribe(
+      res => {
+        this.stepData.id_field_mapping = res;
+        this.updateMapping = false;
         this.getMappingNamesList(mappingType, importId);
         this.fieldMappingForm.controls["fieldMapping"].setValue(res);
         this.fieldMappingForm.controls["mappingName"].setValue("");

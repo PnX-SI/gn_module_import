@@ -115,6 +115,10 @@ DEFAULT_MAPPING_ID = 3
 INSTANCE_BOUNDING_BOX = [-5.0, 41, 10, 51.15]
 
 
+ALLOW_MODIFY_DEFAULT_MAPPING = True
+ALLOW_FIELD_MAPPING = True 
+DEFAULT_FIELD_MAPPING_ID = 1
+
 class GnModuleSchemaConf(Schema):
     LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, missing=DEFAULT_LIST_COLUMN)
     UPLOAD_DIRECTORY = fields.String(missing=UPLOAD_DIRECTORY)
@@ -142,3 +146,6 @@ class GnModuleSchemaConf(Schema):
     ENABLE_SYNTHESE_UUID_CHECK = fields.Boolean(missing=True)
     DISPLAY_MAPPED_VALUES = fields.Boolean(missing=False)
     DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(missing=True)
+    ALLOW_MODIFY_DEFAULT_MAPPING = fields.Boolean(missing=ALLOW_MODIFY_DEFAULT_MAPPING)
+    ALLOW_FIELD_MAPPING = fields.Boolean(missing=ALLOW_FIELD_MAPPING)
+    DEFAULT_FIELD_MAPPING_ID = fields.Integer(missing=DEFAULT_FIELD_MAPPING_ID)

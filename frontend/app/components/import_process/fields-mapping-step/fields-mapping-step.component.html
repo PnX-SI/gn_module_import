@@ -19,11 +19,32 @@
                                 {{data.mapping_label}}</option>
                         </select>
                     </div>
-                    <button
-                        class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
-                        (click)="createMapping()">
-                        Nouveau mapping
-                    </button>
+                    <div class="d-flex flex-row justify-content-between mb-3">
+                        <button
+                            class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between"
+                            (click)="createMapping()">
+                            Nouveau mapping
+                        </button>
+                        <button
+                            class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between"
+                            (click)="renameMapping()"
+                            [disabled]="canUpdateMapping() || fieldMappingForm.get('fieldMapping').value === '' || fieldMappingForm.get('fieldMapping').value == null">
+                            Modifier nom mapping
+                        </button>
+                    </div>
+                    <div *ngIf="updateMapping" class="d-flex flex-row justify-content-between form_group" id="updateMap">
+                        <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
+                        <button
+                            class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
+                            (click)="updateMappingName(fieldMappingForm.value, importId, syntheseForm)"
+                            [disabled]="fieldMappingForm.get('mappingName').value === '' || fieldMappingForm.get('mappingName').value == null">
+                            ok
+                        </button>
+                        <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
+                            (click)="cancelMapping()">
+                            annuler
+                        </button>
+                    </div>
                     <div *ngIf="newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
                         <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
                         <button
@@ -93,6 +114,13 @@
                     <span *ngIf="n_error_lines == 0  && mappingRes" class="alert alert-success"> Aucune erreur détéctée dans le fichier </span>
 
                     <!-- <button *ngIf="!mappingRes"
+                    <button
+                        class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
+                        [disabled]="canUpdateMapping()"
+                        (click)="updateMappingField(syntheseForm.value, id_mapping)">
+                        Mettre à jour le mapping
+                    </button>
+                    <button *ngIf="!mappingRes"
                         class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                         [disabled]="syntheseForm.invalid" (click)="onDataCleaning(syntheseForm.value, id_mapping)">
                         Valider le mapping
