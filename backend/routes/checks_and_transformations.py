@@ -23,13 +23,13 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
     """
     Check and transform the data for field and content mapping
     """
-    # try:
-    field_mapping_data_checking(import_id, id_field_mapping)
-    content_mapping_data_checking(import_id, id_content_mapping), id_content_mapping
-    return "Done"
-    # except Exception as e:
-    #     raise GeonatureImportApiError(
-    #         message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
-    #         details=str(e),
-    #     )
+    try:
+        field_mapping_data_checking(import_id, id_field_mapping)
+        content_mapping_data_checking(import_id, id_content_mapping)
+        return "Done"
+    except Exception as e:
+        raise GeonatureImportApiError(
+            message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
+            details=str(e),
+        )
 

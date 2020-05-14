@@ -20,9 +20,10 @@ from ...db.queries.nomenclatures import (
     ref_biblio_check,
     set_default_value,
     get_mnemo,
-    get_nomenc_values
+    get_nomenc_values,
 )
 from ...db.queries.user_errors import set_user_error
+from ...db.queries.utils import execute_query
 
 from ...utils.clean_names import clean_string
 from ...wrappers import checker
@@ -79,11 +80,9 @@ class NomenclatureTransformer:
         """
         formated_mapping_content = []
         raw_mapping_content = get_saved_content_mapping(self.id_mapping)
-
         for id_nomenclature, mapped_values in raw_mapping_content.items():
             mnemonique_type = get_nomenc_abb(id_nomenclature)
             synthese_name = get_synthese_col(mnemonique_type)
-
             if synthese_name in selected_columns:
                 d = {
                     "id_nomenclature": id_nomenclature,
@@ -135,7 +134,7 @@ class NomenclatureTransformer:
                         val,
                         str(element["id_nomenclature"]),
                     )
-                    DB.session.flush()
+                    # DB.session.flush()
 
             DB.session.commit()
         except Exception:
@@ -157,12 +156,13 @@ class NomenclatureTransformer:
                 print("row[1] = " + row[1])
                 print("user_col = " + el["user_col"])
 
-                
                 if current_app.config["IMPORT"][
                     "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"
-                ]: 
+                ]:
                     nomenc_values = get_nomenc_values(el["mnemonique_type"])
-                    nomenc_values_ids = [get_mnemo(str(val[0])) for val in nomenc_values]
+                    nomenc_values_ids = [
+                        get_mnemo(str(val[0])) for val in nomenc_values
+                    ]
                     set_user_error(
                         id_import=id_import,
                         step="CONTENT_MAPPING",
@@ -170,9 +170,11 @@ class NomenclatureTransformer:
                         col_name=el["user_col"],
                         id_rows=row.gn_pk,
                         comment="La valeur '{}' ne correspond à aucune des valeurs [{}] de la nomenclature {} et a ete remplacée par la valeur par défaut '{}'".format(
-                            row[1], ", ".join(nomenc_values_ids),
-                            el["mnemonique_type"], get_mnemo(set_default_value(el["mnemonique_type"]))
-                        )
+                            row[1],
+                            ", ".join(nomenc_values_ids),
+                            el["mnemonique_type"],
+                            get_mnemo(set_default_value(el["mnemonique_type"])),
+                        ),
                     )
                 else:
                     set_user_error(
@@ -183,8 +185,23 @@ class NomenclatureTransformer:
                         id_rows=row.gn_pk,
                         comment="La valeur '{}' n'existe pas pour la nomenclature {}".format(
                             row[1], el["mnemonique_type"]
-                        )
+                        ),
                     )
+                query = """
+                UPDATE {schema}.{table}
+                SET gn_is_valid = 'False',
+                gn_invalid_reason = 'INVALID_NOMENCLATURE'
+                WHERE gn_pk in :id_rows
+                """.format(
+                    schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+                    table=self.table_name,
+                )
+                formated_rows_err = []
+                for r in rows_with_err:
+                    formated_rows_err = formated_rows_err + r.gn_pk
+                execute_query(
+                    query, commit=True, params={"id_rows": tuple(formated_rows_err)}
+                )
 
     @checker("Set nomenclature default ids")
     def set_default_nomenclature_ids(self):
@@ -256,36 +273,36 @@ class NomenclatureTransformer:
             )
 
 
-@checker("Set nomenclature ids from content mapping form")
-def set_nomenclature_ids(table_name, selected_content, selected_cols):
-    try:
-        content_list = []
-        for id_nomenclature, mapped_values in selected_content.items():
-            mnemonique_type = get_nomenc_abb(id_nomenclature)
-            synthese_name = get_synthese_col(mnemonique_type)
-            if synthese_name in selected_cols:
-                d = {
-                    "id_nomenclature": id_nomenclature,
-                    "user_values": mapped_values,
-                    "user_col": selected_cols[synthese_name],
-                }
-                content_list.append(d)
+# @checker("Set nomenclature ids from content mapping form")
+# def set_nomenclature_ids(table_name, selected_content, selected_cols):
+#     try:
+#         content_list = []
+#         for id_nomenclature, mapped_values in selected_content.items():
+#             mnemonique_type = get_nomenc_abb(id_nomenclature)
+#             synthese_name = get_synthese_col(mnemonique_type)
+#             if synthese_name in selected_cols:
+#                 d = {
+#                     "id_nomenclature": id_nomenclature,
+#                     "user_values": mapped_values,
+#                     "user_col": selected_cols[synthese_name],
+#                 }
+#                 content_list.append(d)
 
-        for element in content_list:
-            for val in element["user_values"]:
-                set_nomenclature_id(
-                    table_name,
-                    element["user_col"],
-                    val,
-                    str(element["id_nomenclature"]),
-                )
-                DB.session.flush()
+#         for element in content_list:
+#             for val in element["user_values"]:
+#                 set_nomenclature_id(
+#                     table_name,
+#                     element["user_col"],
+#                     val,
+#                     str(element["id_nomenclature"]),
+#                 )
+#                 DB.session.flush()
 
-        DB.session.commit()
+#         DB.session.commit()
 
-    except Exception:
-        DB.session.rollback()
-        raise
+#     except Exception:
+#         DB.session.rollback()
+#         raise
 
 
 def get_nomenc_info(form_data, schema_name, table_name):

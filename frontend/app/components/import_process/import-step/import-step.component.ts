@@ -32,7 +32,7 @@ export class ImportStepComponent implements OnInit {
     private _router: Router,
     private _ds: DataService,
     private _commonService: CommonService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(4);
@@ -40,11 +40,11 @@ export class ImportStepComponent implements OnInit {
   }
 
   onStepBack() {
-    if(!ModuleConfig.ALLOW_VALUE_MAPPING){
+    if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
       this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/2`]);
-    }else{
+    } else {
       this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
-    }  
+    }
   }
 
   onImport() {
@@ -103,7 +103,6 @@ export class ImportStepComponent implements OnInit {
             });
             this.rows.push(obj);
           });
-          console.log(this.rows)
 
           this.tableReady = true;
         }

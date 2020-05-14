@@ -291,7 +291,6 @@ def get_saved_content_mapping(id_mapping):
     for content in mapping_contents:
         for key, value in content.items():
             selected_content[key].append(value)
-
     return selected_content
 
 
@@ -312,7 +311,7 @@ def exist_proof_check(
     query = """
         SELECT array_agg(gn_pk) as id_rows
         FROM {schema}.{table}
-        WHERE ref_nomenclatures.get_cd_nomenclature({field_proof}::integer) = '1' 
+        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature({field_proof}::integer) = '1' 
         """.format(
         schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table=table_name,
@@ -362,7 +361,7 @@ def dee_bluring_check(table_name, id_import, bluring_col):
             query = """
                 SELECT array_agg(gn_pk) as id_rows
                 FROM {schema}.{table}
-                WHERE {bluring_col} IS NULL
+                WHERE gn_is_valid != 'False' AND {bluring_col} IS NULL
             """.format(
                 schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
                 table=table_name,
@@ -383,7 +382,7 @@ def ref_biblio_check(table_name, field_statut_source, field_ref_biblio):
     query = """
         SELECT array_agg(gn_pk) as id_rows
         FROM {schema}.{table}
-        WHERE ref_nomenclatures.get_cd_nomenclature({field_statut_source}::integer) = 'Li' 
+        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature({field_statut_source}::integer) = 'Li' 
         """.format(
         schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table=table_name,
