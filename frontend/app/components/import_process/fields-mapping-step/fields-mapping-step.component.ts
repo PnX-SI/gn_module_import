@@ -56,6 +56,10 @@ export class FieldsMappingStepComponent implements OnInit {
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(2);
+    if (this.IMPORT_CONFIG.ALLOW_FIELD_MAPPING && !this.stepData.id_field_mapping) {      
+      this.stepData.id_field_mapping = this.IMPORT_CONFIG.DEFAULT_FIELD_MAPPING_ID;
+    }
+      
     this.fieldMappingForm = this._fb.group({
       fieldMapping: [null],
       mappingName: [""]

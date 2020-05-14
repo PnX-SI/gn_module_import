@@ -109,10 +109,14 @@ INVALID_CSV_NAME = "invalid"
 
 ALLOW_VALUE_MAPPING = True
 
+
 # If VALUE MAPPING is not allowed, you must specify the DEFAULT_MAPPING_ID
 DEFAULT_MAPPING_ID = 3
 
 INSTANCE_BOUNDING_BOX = [-5.0, 41, 10, 51.15]
+
+ALLOW_FIELD_MAPPING = True 
+DEFAULT_FIELD_MAPPING_ID = 3
 
 
 ALLOW_MODIFY_DEFAULT_MAPPING = True
@@ -155,4 +159,5 @@ class GnModuleSchemaConf(Schema):
     DEFAULT_FIELD_MAPPING_ID = fields.Integer(missing=DEFAULT_FIELD_MAPPING_ID)
     DISPLAY_MAPPED_FIELD = fields.Boolean(missing=False)
     DISPLAY_CHECK_BOX_MAPPED_FIELD = fields.Boolean(missing=True)
+
 
