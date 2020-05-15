@@ -101,11 +101,9 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   generateContentForm() {
-    this.n_aMapper = 0;
     this.stepData.contentMappingInfo.forEach(ele => {
       ele["nomenc_values_def"].forEach(nomenc => {
         this.contentTargetForm.addControl(nomenc.id, new FormControl(""));
-        ++this.n_aMapper;
       });
     });
     this.showForm = true;
@@ -114,8 +112,12 @@ export class ContentMappingStepComponent implements OnInit {
   onSelectChange(selectedVal, group, formControlName) {
     this.stepData.contentMappingInfo.map(ele => {
       if (ele.nomenc_abbr === group.nomenc_abbr) {
+        /*if (ele.nomenc_abbr == 'NAT_OBJ_GEO') {
+          console.log(ele.user_values.values);
+          console.log(selectedVal);
+        }*/
         ele.user_values.values = ele.user_values.values.filter(value => {
-          return value.id != selectedVal.id;
+          return !((value.value == selectedVal.value));
         });
       }
     });
@@ -139,16 +141,19 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   isEnabled(value_def_id: string) {
-    return (!this.contentTargetForm.controls[value_def_id].value) 
-      || this.contentTargetForm.controls[value_def_id].value.length==0;
+    return true;
+    /*(!this.contentTargetForm.controls[value_def_id].value)
+      || this.contentTargetForm.controls[value_def_id].value.length == 0;*/
   }
 
-  containsEnabled(contentMapping : any) {
-    return contentMapping.nomenc_values_def.find(value_def => this.isEnabled(value_def.id));
+  containsEnabled(contentMapping: any) {
+    //return contentMapping.nomenc_values_def.find(value_def => this.isEnabled(value_def.id));
+    return contentMapping.user_values.values.filter(val => val.value).length > 0;
   }
 
   updateEnabled(e) {
     if (e.target.checked && this.id_mapping) {
+      this.disabled = false;
       this.fillMapping(this.id_mapping);
     }
   }
@@ -192,17 +197,6 @@ export class ContentMappingStepComponent implements OnInit {
           this.nomencName = contentMapping.nomenc_abbr;
         }
       });
-      // find id in nomenc
-      // if (contentMapping.nomenc_abbr == this.nomencName) {
-      //   contentMapping.user_values.values.map(value => {
-      //     if (value.value == userValue) {
-      //       this.idInfo = value.id;
-      //       // contentMapping.user_values.values = contentMapping.user_values.values.filter(
-      //       //   obj => obj.id !== value.id
-      //       // );
-      //     }
-      //   });
-      // }
     });
     // console.log(this.idInfo);
 
@@ -242,6 +236,12 @@ export class ContentMappingStepComponent implements OnInit {
         } else {
           this.contentTargetForm.reset();
           this.n_mappes = -1;
+        }
+        this.n_aMapper = this.n_mappes;
+        for (let contentMapping of this.stepData.contentMappingInfo) {
+          this.n_aMapper += contentMapping.user_values.values.filter(val => val.value).length;
+          if (contentMapping.user_values.values.filter(val => val.value).length > 0)
+            console.log(contentMapping.user_values);
         }
       },
       error => {
