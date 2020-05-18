@@ -157,7 +157,3 @@ INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
 -----------------
 ---PERMISSIONS---
 -----------------
-
-INSERT INTO gn_permissions.t_objects
-(code_object, description_object)
-VALUES('MAPPING', 'Représente l''object mapping du module d''import');
