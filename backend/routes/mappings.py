@@ -31,7 +31,6 @@ from ..db.queries.nomenclatures import get_content_mapping
 from ..db.queries.save_mapping import get_selected_columns
 
 from ..utils.clean_names import *
-from ..utils.utils import get_pk_name
 
 from ..upload.upload_errors import *
 
@@ -43,14 +42,13 @@ from ..api_error import GeonatureImportApiError
 from ..blueprint import blueprint
 
 
-@blueprint.route("/mappings/<mapping_type>/<import_id>", methods=["GET"])
+@blueprint.route("/mappings/<mapping_type>", methods=["GET"])
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
-def get_mappings(info_role, mapping_type, import_id):
+def get_mappings(info_role, mapping_type):
     """
         Load mapping names in frontend (select)
     """
-
     try:
         results = (
             DB.session.query(TMappings)
@@ -61,34 +59,14 @@ def get_mappings(info_role, mapping_type, import_id):
 
         mappings = []
 
-        if len(results) > 0:
-            for row in results:
-                d = {"id_mapping": row.id_mapping, "mapping_label": row.mapping_label}
-                mappings.append(d)
-        else:
-            mappings.append("empty")
+        for row in results:
+            d = {"id_mapping": row.id_mapping, "mapping_label": row.mapping_label}
+            mappings.append(d)
 
-        logger.debug("List of mappings %s", mappings)
-
-        # get column names
-        col_names = "undefined import_id"
-        if import_id not in ["undefined", "null"]:
-            ARCHIVES_SCHEMA_NAME = blueprint.config["ARCHIVES_SCHEMA_NAME"]
-            IMPORTS_SCHEMA_NAME = blueprint.config["IMPORTS_SCHEMA_NAME"]
-            table_names = get_table_names(
-                ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id)
-            )
-            col_names = get_table_info(
-                table_names["imports_table_name"], info="column_name"
-            )
-            col_names.remove("gn_is_valid")
-            col_names.remove("gn_invalid_reason")
-            col_names.remove(get_pk_name(blueprint.config["PREFIX"]))
-
-        return {"mappings": mappings, "column_names": col_names}, 200
+        return mappings
     except Exception as e:
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR - get_mappings() error : contactez l'administrateur du site",
+            message="INTERNAL SERVER ERROR - get_mapping_fields() error : contactez l'administrateur du site",
             details=str(e),
         )
 
