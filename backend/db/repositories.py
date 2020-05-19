@@ -49,7 +49,7 @@ class TMappingsRepository:
                 .distinct()
                 .all()
             )
-        return users_mapping
+        return [m.id_mapping for m in users_mapping]
 
     def user_is_allowed_to(self, level, id_mapping, user_mappings):
         if level == "0" or level not in ("1", "2", "3"):
@@ -57,6 +57,8 @@ class TMappingsRepository:
         if level == "3":
             return True
         if level in ("1", "2"):
+            print(id_mapping)
+            print(user_mappings)
             return id_mapping in user_mappings
 
     def get_mapping_cruved(self, user_cruved, id_mapping, user_mappings):
@@ -70,7 +72,6 @@ class TMappingsRepository:
         Get all mappings
         """
         users_mapping = self.get_user_mapping(info_role)
-        print(users_mapping)
         q = DB.session.query(TMappings)
         if mapping_type:
             q = q.filter(TMappings.mapping_type == mapping_type.upper())

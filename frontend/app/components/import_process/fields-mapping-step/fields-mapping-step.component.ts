@@ -38,10 +38,11 @@ export class FieldsMappingStepComponent implements OnInit {
   mappingRes: any;
   bibRes: any;
   stepData: Step2Data;
-  public fieldMappingForm: FormGroup;
   public userFieldMappings;
   public test: Array<any>;
   public newMapping: boolean = false;
+  public fieldMapping = new FormControl()
+  public newMappingForm = new FormControl()
 
   constructor(
     private _ds: DataService,
@@ -59,18 +60,17 @@ export class FieldsMappingStepComponent implements OnInit {
 
     // load columns mapping to field mapping
     this.getColumnsImport(this.stepData.importId)
-    this.fieldMappingForm = this._fb.group({
-      fieldMapping: [null],
-      mappingName: [""]
-    });
     this.syntheseForm = this._fb.group({});
 
     // subscribe to mapping change
 
-    this.fieldMappingForm.get("fieldMapping").valueChanges
+    this.fieldMapping.valueChanges
+      .filter(value => value !== null)
       .subscribe(
-        id_mapping => {
-          this.onMappingChange(id_mapping);
+        mapping => {
+          console.log(mapping);
+
+          this.onMappingChange(mapping.id_mapping);
         },
       );
 
@@ -182,8 +182,9 @@ export class FieldsMappingStepComponent implements OnInit {
       );
   }
 
-  onNextStep() {
-    this._ds.updateFieldMapping(this.id_mapping, this.syntheseForm.value).subscribe(data => {
+  createOrUpdateMapping() {
+    const mappingData = Object.assign({}, this.syntheseForm.value)
+    this._ds.createOrUpdateFieldMapping(mappingData, this.id_mapping).subscribe(data => {
       // update t_imports (set information about autogenerate values)
       this.spinner = true;
       const importFormData = {
@@ -194,22 +195,6 @@ export class FieldsMappingStepComponent implements OnInit {
         console.log("Done");
 
       })
-      let step3data: Step3Data = {
-        //table_name: this.step3Response.table_name,
-        importId: this.stepData.importId
-      };
-      this.stepService.setStepData(3, step3data);
-      let step2data: Step2Data = {
-        importId: this.stepData.importId,
-        srid: this.stepData.srid,
-        id_field_mapping: this.id_mapping,
-        mappingRes: this.mappingRes,
-        mappingIsValidate: true
-      };
-
-
-
-      this.stepService.setStepData(2, step2data);
 
       if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
         // this.stepService.setStepData(4, step4Data);
@@ -233,6 +218,65 @@ export class FieldsMappingStepComponent implements OnInit {
         this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
       }
     })
+  }
+
+  onNextStep() {
+    let step3data: Step3Data = {
+      //table_name: this.step3Response.table_name,
+      importId: this.stepData.importId
+    };
+    this.stepService.setStepData(3, step3data);
+    let step2data: Step2Data = {
+      importId: this.stepData.importId,
+      srid: this.stepData.srid,
+      id_field_mapping: this.id_mapping,
+      mappingRes: this.mappingRes,
+      mappingIsValidate: true,
+      cruvedMapping: this.fieldMapping.value.cruved
+    };
+    this.stepService.setStepData(2, step2data);
+
+    // if the mapping has changed and the user has right to update it
+    console.log('passe la ?');
+
+    // if the form has changed
+    if (!this.syntheseForm.pristine) {
+      console.log('passe icit ?');
+
+      // if the user has right to modify it
+      if (this.fieldMapping.value.cruved.U) {
+        if (window.confirm("Attention, le mapping a été modifié, voulez-vous sauvegarder ces modifications")) {
+
+        } else {
+          // create a temporary mapping
+          const mapping_value = {
+            'mappingName': 'mapping_temporaire_' + Date.now(),
+            'temporary': true
+          }
+          this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
+            console.log(id_mapping);
+
+          })
+
+        }
+        // the form has changed but the user do not has rights
+      } else {
+        const mapping_value = {
+          'mappingName': 'mapping_temporaire_' + Date.now(),
+          'temporary': true
+        }
+        this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
+          console.log(id_mapping);
+          this.id_mapping = id_mapping;
+          this.createOrUpdateMapping()
+
+        })
+      }
+      // the form not change do not create temp mapping
+    } else {
+
+    }
+
   }
 
   onFormMappingChange() {
@@ -280,7 +324,7 @@ export class FieldsMappingStepComponent implements OnInit {
       });
 
       if (this.stepData.id_field_mapping) {
-        this.fieldMappingForm.controls["fieldMapping"].setValue(
+        this.fieldMapping.setValue(
           this.stepData.id_field_mapping
         );
         this.fillMapping(this.stepData.id_field_mapping, this.columns);
@@ -367,13 +411,13 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   createMapping() {
-    this.fieldMappingForm.reset();
+    this.fieldMapping.reset();
     this.newMapping = true;
   }
 
   cancelMapping() {
     this.newMapping = false;
-    this.fieldMappingForm.controls["mappingName"].setValue("");
+    this.fieldMapping.reset();
   }
 
   saveMappingName(value, targetForm) {
@@ -383,8 +427,7 @@ export class FieldsMappingStepComponent implements OnInit {
         this.stepData.id_field_mapping = res;
         this.newMapping = false;
         this.getMappingNamesList(mappingType);
-        this.fieldMappingForm.controls["fieldMapping"].setValue(res);
-        this.fieldMappingForm.controls["mappingName"].setValue("");
+        //this.fieldMappingForm.controls["fieldMapping"].setValue(res);
         this.enableMapping(targetForm);
       },
       error => {

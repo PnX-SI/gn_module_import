@@ -44,7 +44,7 @@ from ..blueprint import blueprint
 
 
 @blueprint.route("/mappings/<mapping_type>", methods=["GET"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT", object_code="MAPPING")
+@permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="MAPPING")
 @json_resp
 def get_mappings(info_role, mapping_type):
     """
@@ -112,7 +112,7 @@ def get_mapping_fields(info_role, id_mapping):
 
 
 @blueprint.route("/content_mappings/<id_mapping>", methods=["GET"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@permissions.check_cruved_scope("R", True, module_code="IMPORT")
 @json_resp
 def get_mapping_contents(info_role, id_mapping):
     """
@@ -130,14 +130,17 @@ def get_mapping_contents(info_role, id_mapping):
         )
 
 
-@blueprint.route("/mappingName", methods=["GET", "POST"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@blueprint.route("/mapping", methods=["POST"])
+@permissions.check_cruved_scope("C", True, module_code="IMPORT", object_code="MAPPING")
 @json_resp
 def postMappingName(info_role):
+    """
+    Post a new mapping (value or content)
+    """
     try:
         logger.info("Posting mapping field name")
 
-        data = request.form.to_dict()
+        data = request.get_json()
 
         if data["mappingName"] == "" or data["mappingName"] == "null":
             return "Vous devez donner un nom au mapping", 400
@@ -154,22 +157,25 @@ def postMappingName(info_role):
             mapping_label=data["mappingName"],
             mapping_type=data["mapping_type"],
             active=True,
+            temporary=data.get("temporary", None),
         )
 
         DB.session.add(new_name)
         DB.session.flush()
 
         # fill CorRoleMapping
-
         id_mapping = (
             DB.session.query(TMappings.id_mapping)
             .filter(TMappings.mapping_label == data["mappingName"])
             .one()[0]
         )
 
-        new_map_role = CorRoleMapping(id_role=info_role.id_role, id_mapping=id_mapping)
+        if not data.get("temporary", None):
+            new_map_role = CorRoleMapping(
+                id_role=info_role.id_role, id_mapping=id_mapping
+            )
 
-        DB.session.add(new_map_role)
+            DB.session.add(new_map_role)
         DB.session.commit()
 
         logger.info("-> Mapping field name posted")
@@ -341,12 +347,12 @@ def postMetaToStep3(info_role):
         DB.session.close()
 
 
-@blueprint.route("/update_field_mapping/<id_mapping>", methods=["GET", "POST"])
+@blueprint.route("/create_or_update_field_mapping/<int:id_mapping>", methods=["POST"])
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def r_save_field_mapping(info_role, id_mapping):
     """
-        update a field_mapping
+        Create or update a field_mapping
     """
     try:
 
@@ -365,7 +371,7 @@ def r_save_field_mapping(info_role, id_mapping):
                 },
                 400,
             )
-    except Exception:
+    except Exception as e:
         raise GeonatureImportApiError(
             message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
             details=str(e),
@@ -376,6 +382,9 @@ def r_save_field_mapping(info_role, id_mapping):
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def r_update_content_mapping(info_role, id_mapping):
+    """
+    Update a content mapping (table TMappingsValues)
+    """
     if id_mapping == 0:
         return (
             {"message": "Vous devez d'abord créer ou sélectionner un mapping"},

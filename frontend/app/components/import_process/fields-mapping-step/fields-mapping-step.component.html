@@ -5,19 +5,21 @@
             <h5 class="card-title mb-0"> Mapping des champs  </h5>
         </div>
         <div class="card-body" *ngIf="formReady">
+                
             <!-- Choix de la liste des nomenclatures -->
-            <form [formGroup]="fieldMappingForm" class="was-validated">
+            <form class="was-validated">
                 <fieldset>
                     <div *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.R != '0'">
                         <legend class="px-1">
                             Choix du modèle d'imports
                         </legend>
                             <select class="form-control form-control-sm" id="mappingSelection"
-                                formControlName="fieldMapping">
+                                [formControl]="fieldMapping">
                                 <option [ngValue]="null"> - </option>
-                                <option *ngFor="let data of userFieldMappings" [value]="data.id_mapping">
+                                <option *ngFor="let data of userFieldMappings" [ngValue]="data">
                                     {{data.mapping_label}}</option>
                             </select>
+                            {{fieldMapping.value |json}}
                     </div>
 
                     <button
@@ -27,11 +29,11 @@
                         Nouveau mapping
                     </button>
                     <div *ngIf="newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
-                        <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
+                        <input type="text" class="form-control mr-2" value="Inconnu" [formControl]="newMappingForm">
                         <button
                             class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
-                            (click)="saveMappingName(fieldMappingForm.value, importId, syntheseForm)"
-                            [disabled]="fieldMappingForm.get('mappingName').value === '' || fieldMappingForm.get('mappingName').value == null">
+                            (click)="saveMappingName(fieldMapping.value.id_mapping, importId, syntheseForm)"
+                            [disabled]="fieldMapping.value == null">
                             ok
                         </button>
                         <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
@@ -100,7 +102,7 @@
                         Valider le mapping
                     </button> -->
                     <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        [disabled]="fieldMappingForm.value.fieldMapping == null || syntheseForm.invalid" (click)='onNextStep()'>
+                        [disabled]="fieldMapping.value == null || syntheseForm.invalid" (click)='onNextStep()'>
                         Suivant
                         <i class="material-icons"> navigate_next </i>
                     </button>

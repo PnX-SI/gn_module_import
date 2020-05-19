@@ -57,8 +57,8 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/content_mappings/${id_mapping}`);
   }
 
-  updateFieldMapping(id_mapping, data) {
-    return this._http.post(`${urlApi}/update_field_mapping/${id_mapping}`, data)
+  createOrUpdateFieldMapping(data, id_mapping) {
+    return this._http.post(`${urlApi}/create_or_update_field_mapping/${id_mapping}`, data)
   }
 
   updateContentMapping(id_mapping, data) {
@@ -66,13 +66,9 @@ export class DataService {
   }
 
   postMappingName(value, mappingType) {
-    const urlMapping = `${urlApi}/mappingName`;
-    let fd = new FormData();
-    for (let key of Object.keys(value)) {
-      fd.append(key, value[key]);
-    }
-    fd.append("mapping_type", mappingType);
-    return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
+    const urlMapping = `${urlApi}/mapping`;
+    value["mapping_type"] = mappingType;
+    return this._http.post<any>(urlMapping, value, HttpUploadOptions);
   }
 
   /**

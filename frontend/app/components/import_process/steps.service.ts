@@ -26,6 +26,7 @@ export interface Step2Data {
 	id_field_mapping?: any;
 	mappingIsValidate?: boolean;
 	mappingRes?: any;
+	cruvedMapping?: any;
 }
 
 export interface Step3Data {
