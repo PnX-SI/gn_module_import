@@ -5,6 +5,7 @@ import { StepsService, Step3Data, Step4Data, Step2Data } from "../steps.service"
 import { DataService } from "../../../services/data.service";
 import { ContentMappingService } from "../../../services/mappings/content-mapping.service";
 import { CommonService } from "@geonature_common/service/common.service";
+import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
 import { ModuleConfig } from "../../../module.config";
 
 @Component({
@@ -43,7 +44,8 @@ export class ContentMappingStepComponent implements OnInit {
     private _ds: DataService,
     private _cm: ContentMappingService,
     private _commonService: CommonService,
-    private _router: Router
+    private _router: Router,
+    public cruvedStore: CruvedStoreService
   ) { }
 
   ngOnInit() {

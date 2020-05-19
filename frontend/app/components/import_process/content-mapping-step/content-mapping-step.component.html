@@ -9,20 +9,24 @@
         <!-- Choix de la liste des nomenclatures -->
         <form [formGroup]="contentMappingForm" class="was-validated">
                 <fieldset>
-                    <legend class="px-1">
-                        Choix de la liste des nomenclatures
-                    </legend>
-                    <div *ngIf="_cm.userContentMappings" class="form-group">
-                        <select class="form-control form-control-sm" id="contentMappingSelection"
-                            formControlName="contentMapping">
-                            <option [ngValue]="null">-</option>
-                            <option *ngFor="let data of _cm.userContentMappings" [value]="data.id_mapping">
-                                {{data.mapping_label}}</option>
-                        </select>
+                    <div *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.R != '0'">
+                        <legend class="px-1">
+                                Choix du modèle d'imports
+                        </legend>
+                        <div class="form-group">
+                            <select class="form-control form-control-sm" id="contentMappingSelection"
+                                formControlName="contentMapping">
+                                <option [ngValue]="null">-</option>
+                                <option *ngFor="let data of _cm.userContentMappings" [value]="data.id_mapping">
+                                    {{data.mapping_label}}</option>
+                            </select>
+                        </div>
                     </div>
+
                     <div class="row">
                         <div class="col">
-                            <button
+                            <button             
+                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
                                 class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
                                 (click)="_cm.createMapping(contentMappingForm)">
                                 Nouveau mapping
