@@ -43,9 +43,9 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/datasets`);
   }
 
-  getMappings(mapping_type, import_id) {
+  getMappings(mapping_type) {
     return this._http.get<any>(
-      `${urlApi}/mappings/${mapping_type}/${import_id}`
+      `${urlApi}/mappings/${mapping_type}`
     );
   }
 
@@ -88,6 +88,14 @@ export class DataService {
 
   cancelImport(importId: number) {
     return this._http.get<any>(`${urlApi}/cancel_import/${importId}`);
+  }
+
+  /**
+   * Return all the column of the file of an import
+   * @param idImport : integer
+   */
+  getColumnsImport(idImport) {
+    return this._http.get<any>(`${urlApi}/columns_import/${idImport}`);
   }
 
   getSynColumnNames() {

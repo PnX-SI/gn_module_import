@@ -12,11 +12,11 @@ export class ContentMappingService {
   constructor(
     private _ds: DataService,
     private _commonService: CommonService
-  ) {}
+  ) { }
 
   getMappingNamesList(mapping_type, importId) {
     // get list of existing content mapping in the select
-    this._ds.getMappings(mapping_type, importId).subscribe(
+    this._ds.getMappings(mapping_type).subscribe(
       result => {
         this.userContentMappings = result["mappings"];
       },

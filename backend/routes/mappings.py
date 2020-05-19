@@ -10,6 +10,7 @@ from ..db.models import (
     CorRoleMapping,
     TMappingsFields,
 )
+from ..db.repositories import TMappingsRepository
 
 from ..db.queries.user_table_queries import (
     get_table_info,
@@ -43,27 +44,17 @@ from ..blueprint import blueprint
 
 
 @blueprint.route("/mappings/<mapping_type>", methods=["GET"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@permissions.check_cruved_scope("C", True, module_code="IMPORT", object_code="MAPPING")
 @json_resp
 def get_mappings(info_role, mapping_type):
     """
         Load mapping names in frontend (select)
     """
     try:
-        results = (
-            DB.session.query(TMappings)
-            .filter(CorRoleMapping.id_role == info_role.id_role)
-            .filter(TMappings.mapping_type == mapping_type.upper())
-            .all()
+        mapping_repo = TMappingsRepository()
+        return mapping_repo.get_all(
+            info_role=info_role, with_cruved=True, mapping_type=mapping_type
         )
-
-        mappings = []
-
-        for row in results:
-            d = {"id_mapping": row.id_mapping, "mapping_label": row.mapping_label}
-            mappings.append(d)
-
-        return mappings
     except Exception as e:
         raise GeonatureImportApiError(
             message="INTERNAL SERVER ERROR - get_mapping_fields() error : contactez l'administrateur du site",

@@ -8,18 +8,20 @@
             <!-- Choix de la liste des nomenclatures -->
             <form [formGroup]="fieldMappingForm" class="was-validated">
                 <fieldset>
-                    <legend class="px-1">
-                        Choix de la liste des nomenclatures
-                    </legend>
-                    <div *ngIf="userFieldMappings" class="form-group">
-                        <select class="form-control form-control-sm" id="mappingSelection"
-                            formControlName="fieldMapping">
-                            <option [value]=""></option>
-                            <option *ngFor="let data of userFieldMappings" [value]="data.id_mapping">
-                                {{data.mapping_label}}</option>
-                        </select>
+                    <div *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.R != '0'">
+                        <legend class="px-1">
+                            Choix de la liste des modèle d'imports
+                        </legend>
+                            <select class="form-control form-control-sm" id="mappingSelection"
+                                formControlName="fieldMapping">
+                                <option [ngValue]="null"> - </option>
+                                <option *ngFor="let data of userFieldMappings" [value]="data.id_mapping">
+                                    {{data.mapping_label}}</option>
+                            </select>
                     </div>
+
                     <button
+                        *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
                         class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
                         (click)="createMapping()">
                         Nouveau mapping

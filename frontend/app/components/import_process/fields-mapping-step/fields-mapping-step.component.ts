@@ -3,6 +3,8 @@ import { Router } from "@angular/router";
 import { DataService } from "../../../services/data.service";
 import { FieldMappingService } from "../../../services/mappings/field-mapping.service";
 import { CommonService } from "@geonature_common/service/common.service";
+import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
+
 import { ModuleConfig } from "../../../module.config";
 import {
   FormControl,
@@ -38,6 +40,7 @@ export class FieldsMappingStepComponent implements OnInit {
   stepData: Step2Data;
   public fieldMappingForm: FormGroup;
   public userFieldMappings;
+  public test: Array<any>;
   public newMapping: boolean = false;
 
   constructor(
@@ -46,11 +49,16 @@ export class FieldsMappingStepComponent implements OnInit {
     private _commonService: CommonService,
     private _fb: FormBuilder,
     private stepService: StepsService,
-    private _router: Router
+    private _router: Router,
+    public cruvedStore: CruvedStoreService
   ) { }
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(2);
+    this.getMappingNamesList("field");
+
+    // load columns mapping to field mapping
+    this.getColumnsImport(this.stepData.importId)
     this.fieldMappingForm = this._fb.group({
       fieldMapping: [null],
       mappingName: [""]
@@ -59,11 +67,12 @@ export class FieldsMappingStepComponent implements OnInit {
 
     // subscribe to mapping change
 
-    this.fieldMappingForm.get("fieldMapping").valueChanges.subscribe(
-      id_mapping => {
-        this.onMappingChange(id_mapping);
-      },
-    );
+    this.fieldMappingForm.get("fieldMapping").valueChanges
+      .subscribe(
+        id_mapping => {
+          this.onMappingChange(id_mapping);
+        },
+      );
 
     if (this.stepData.mappingRes) {
       this.mappingRes = this.stepData.mappingRes;
@@ -121,7 +130,6 @@ export class FieldsMappingStepComponent implements OnInit {
             }
           }
         }
-        this.getMappingNamesList("field", this.stepData.importId);
         this._fm.geoFormValidator(this.syntheseForm);
       },
       error => {
@@ -262,27 +270,30 @@ export class FieldsMappingStepComponent implements OnInit {
     }
   }
 
-  getMappingNamesList(mapping_type, importId) {
-    this._ds.getMappings(mapping_type, importId).subscribe(
-      result => {
-        this.userFieldMappings = result["mappings"];
-        if (result["column_names"] != "undefined import_id") {
-          this.columns = result["column_names"].map(col => {
-            return {
-              id: col,
-              selected: false
-            };
-          });
-        }
+  getColumnsImport(idImport) {
+    this._ds.getColumnsImport(idImport).subscribe(columns => {
+      this.columns = columns.map(col => {
+        return {
+          id: col,
+          selected: false
+        };
+      });
 
-        if (this.stepData.id_field_mapping) {
-          this.fieldMappingForm.controls["fieldMapping"].setValue(
-            this.stepData.id_field_mapping
-          );
-          this.fillMapping(this.stepData.id_field_mapping, this.columns);
-        } else {
-          this.formReady = true;
-        }
+      if (this.stepData.id_field_mapping) {
+        this.fieldMappingForm.controls["fieldMapping"].setValue(
+          this.stepData.id_field_mapping
+        );
+        this.fillMapping(this.stepData.id_field_mapping, this.columns);
+      } else {
+        this.formReady = true;
+      }
+    })
+  }
+
+  getMappingNamesList(mapping_type) {
+    this._ds.getMappings(mapping_type).subscribe(
+      result => {
+        this.userFieldMappings = result
       },
       error => {
         console.error(error);
@@ -365,13 +376,13 @@ export class FieldsMappingStepComponent implements OnInit {
     this.fieldMappingForm.controls["mappingName"].setValue("");
   }
 
-  saveMappingName(value, importId, targetForm) {
+  saveMappingName(value, targetForm) {
     let mappingType = "FIELD";
     this._ds.postMappingName(value, mappingType).subscribe(
       res => {
         this.stepData.id_field_mapping = res;
         this.newMapping = false;
-        this.getMappingNamesList(mappingType, importId);
+        this.getMappingNamesList(mappingType);
         this.fieldMappingForm.controls["fieldMapping"].setValue(res);
         this.fieldMappingForm.controls["mappingName"].setValue("");
         this.enableMapping(targetForm);
