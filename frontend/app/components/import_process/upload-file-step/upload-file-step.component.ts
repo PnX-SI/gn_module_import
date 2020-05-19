@@ -38,7 +38,6 @@ export class UploadFileStepComponent implements OnInit {
       file: [null, Validators.required],
       encodage: [null, Validators.required],
       srid: [null, Validators.required],
-      separator: [null, Validators.required]
     });
   }
 
@@ -57,27 +56,14 @@ export class UploadFileStepComponent implements OnInit {
         file: this.fileName,
         encodage: this.dataForm.encoding,
         srid: this.dataForm.srid,
-        separator: this.dataForm.separator
       });
       this.formListener();
     }
-    // disable 'separator' form control if geojson file provided :
-    if (this.fileName) {
-      this.disableSeparatorIfGeojson();
-    }
+
 
     this.isUserErrors = false;
     this.uploadFileErrors = null;
     this.isFileChanged = false;
-  }
-
-  disableSeparatorIfGeojson() {
-    let extension = this.fileName.split(".").pop();
-    if (extension === "geojson") {
-      this.uploadForm.controls["separator"].disable();
-    } else {
-      this.uploadForm.controls["separator"].enable();
-    }
   }
 
   isDisable() {
@@ -99,7 +85,6 @@ export class UploadFileStepComponent implements OnInit {
     } else {
       this.fileName = event.target.files[0].name;
     }
-    this.disableSeparatorIfGeojson();
     this.isFileChanged = true;
   }
 
@@ -120,6 +105,7 @@ export class UploadFileStepComponent implements OnInit {
       this.uploadFileErrors = null;
       this.isUserErrors = false;
       this.spinner = true;
+
       if (!this.skip) {
         this._ds
           .postUserFile(
@@ -144,7 +130,6 @@ export class UploadFileStepComponent implements OnInit {
                 formData: {
                   fileName: res["fileName"],
                   srid: formValues.srid,
-                  separator: formValues.separator,
                   encoding: formValues.encodage
                 }
               };
@@ -165,7 +150,8 @@ export class UploadFileStepComponent implements OnInit {
               } else {
                 if (error.status == 400) {
                   this.isUserErrors = true;
-                  this.uploadFileErrors = error.error;
+                  this.uploadFileErrors = error.error.errors;
+                  this.importId = error.error.id_import
                 } else {
                   this._commonService.regularToaster(
                     "error",

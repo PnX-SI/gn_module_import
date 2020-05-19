@@ -1,0 +1,22 @@
+
+<div class="modal-header">
+  <h4 class="modal-title pull-left">Suppression</h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="c()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <p>
+    Supprimer cet import associé au JDD "{{row.dataset_name}}" et commencé le {{row.date_create_import}}?
+  </p>
+  <p *ngIf="row.is_finished">
+    Attention : cela supprimera aussi les données importées.
+  </p>
+  <button type="button" (click)="c()" class="btn btn-secondary">Annuler</button>
+
+  <button type="button" 
+    (click)="deleteImport(modalDelete)"
+    class="btn btn-danger">Supprimer</button>
+</div>
+
+

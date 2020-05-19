@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormControl, FormGroup, FormBuilder } from "@angular/forms";
-import { StepsService, Step3Data, Step4Data } from "../steps.service";
+import { StepsService, Step3Data, Step4Data, Step2Data } from "../steps.service";
 import { DataService } from "../../../services/data.service";
 import { ContentMappingService } from "../../../services/mappings/content-mapping.service";
 import { CommonService } from "@geonature_common/service/common.service";
@@ -17,6 +17,7 @@ export class ContentMappingStepComponent implements OnInit {
   public userContentMapping;
   public newMapping: boolean = false;
   public id_mapping;
+  public idFieldMapping: number;
   public columns;
   public spinner: boolean = false;
   contentTargetForm: FormGroup;
@@ -27,6 +28,14 @@ export class ContentMappingStepComponent implements OnInit {
   public nomencName;
   public idInfo;
   public disabled: boolean = true;
+  public disableNextStep = true;
+  public n_errors: number;
+  public n_warnings: number;
+  public n_aMapper: number = -1;
+  public n_mappes: number = -1;
+  public showValidateMappingBtn = true;
+  public displayMapped = false;
+  public displayCheckBox = ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES;
 
   constructor(
     private stepService: StepsService,
@@ -35,10 +44,16 @@ export class ContentMappingStepComponent implements OnInit {
     private _cm: ContentMappingService,
     private _commonService: CommonService,
     private _router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
+
+    if (!ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES)
+      this.displayMapped = ModuleConfig.DISPLAY_MAPPED_VALUES;
+
     this.stepData = this.stepService.getStepData(3);
+    const step2: Step2Data = this.stepService.getStepData(2);
+    this.idFieldMapping = step2.id_field_mapping;
 
     this.contentMappingForm = this._fb.group({
       contentMapping: [null],
@@ -56,15 +71,19 @@ export class ContentMappingStepComponent implements OnInit {
 
     // fill the form
     if (this.stepData.id_content_mapping) {
+
       this.contentMappingForm.controls["contentMapping"].setValue(
         this.stepData.id_content_mapping
       );
       this.fillMapping(this.stepData.id_content_mapping);
+
+    } else {
+
     }
   }
 
   getNomencInf() {
-    this._ds.getNomencInfo(this.stepData.importId).subscribe(
+    this._ds.getNomencInfo(this.stepData.importId, this.idFieldMapping).subscribe(
       res => {
         this.stepData.contentMappingInfo = res["content_mapping_info"];
         this.generateContentForm();
@@ -86,9 +105,11 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   generateContentForm() {
+    this.n_aMapper = 0;
     this.stepData.contentMappingInfo.forEach(ele => {
       ele["nomenc_values_def"].forEach(nomenc => {
         this.contentTargetForm.addControl(nomenc.id, new FormControl(""));
+        ++this.n_aMapper;
       });
     });
     this.showForm = true;
@@ -121,6 +142,21 @@ export class ContentMappingStepComponent implements OnInit {
     this.contentTargetForm.controls[formControlName].setValue(values);
   }
 
+  isEnabled(value_def_id: string) {
+    return (!this.contentTargetForm.controls[value_def_id].value)
+      || this.contentTargetForm.controls[value_def_id].value.length == 0;
+  }
+
+  containsEnabled(contentMapping: any) {
+    return contentMapping.nomenc_values_def.find(value_def => this.isEnabled(value_def.id));
+  }
+
+  updateEnabled(e) {
+    if (e.target.checked && this.id_mapping) {
+      this.fillMapping(this.id_mapping);
+    }
+  }
+
   onMappingName(): void {
     this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
       id_mapping => {
@@ -128,8 +164,12 @@ export class ContentMappingStepComponent implements OnInit {
           this.disabled = false;
           this.fillMapping(id_mapping);
         } else {
+          this.n_mappes = -1;
           this.getNomencInf();
           this.contentTargetForm.reset();
+          for (let contentMapping of this.stepData.contentMappingInfo) {
+            contentMapping.isCollapsed = false;
+          }
           this.disabled = true;
         }
       },
@@ -168,7 +208,7 @@ export class ContentMappingStepComponent implements OnInit {
       //   });
       // }
     });
-    console.log(this.idInfo);
+    // console.log(this.idInfo);
 
     return this.idInfo;
   }
@@ -177,10 +217,10 @@ export class ContentMappingStepComponent implements OnInit {
     this.id_mapping = id_mapping;
     this._ds.getMappingContents(id_mapping).subscribe(
       mappingContents => {
-        console.log(mappingContents);
-
+        // console.log(mappingContents);
         this.contentTargetForm.reset();
         if (mappingContents[0] != "empty") {
+          this.n_mappes = 0;
           for (let content of mappingContents) {
             let arrayVal: any = [];
             // console.log(content);
@@ -199,18 +239,13 @@ export class ContentMappingStepComponent implements OnInit {
             );
             if (formControl) {
               formControl.setValue(arrayVal);
-            } else {
-              console.log("PAS BOOON");
-              console.log(content[0]["id_target_value"]);
-
-              //formControl.setValue(arrayVal);
+              if (arrayVal[0])
+                ++this.n_mappes;
             }
-            // this.contentTargetForm
-            //   .get(String(content[0]["id_target_value"]))
-            //   .setValue(arrayVal);
           }
         } else {
           this.contentTargetForm.reset();
+          this.n_mappes = -1;
         }
       },
       error => {
@@ -231,30 +266,30 @@ export class ContentMappingStepComponent implements OnInit {
     this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/2`]);
   }
 
-  onContentMapping(value) {
-    // post content mapping form values and fill t_mapping_values table
+  onDataChecking() {
+    // perform all check on file
     this.id_mapping = this.contentMappingForm.get("contentMapping").value;
     this.spinner = true;
     this._ds
-      .postContentMap(
-        value,
-        this.stepData.table_name,
+      .dataChecker(
         this.stepData.importId,
+        this.idFieldMapping,
         this.id_mapping
       )
       .subscribe(
         res => {
-          this.contentMapRes = res;
-          let step4Data: Step4Data = {
-            importId: this.stepData.importId
-          };
-          let step3Data: Step3Data = this.stepData;
-          step3Data.id_content_mapping = this.id_mapping;
-          this.stepService.setStepData(3, step3Data);
-          this.stepService.setStepData(4, step4Data);
-
-          this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
           this.spinner = false;
+          //this.contentMapRes = res;
+          this._ds.getErrorList(this.stepData.importId).subscribe(err => {
+            this.n_errors = err.errors.filter(error => error.error_level == 'ERROR').length;
+            this.n_warnings = err.errors.filter(error => error.error_level == 'WARNING').length;
+            if (this.n_errors == 0) {
+              this.disableNextStep = false;
+              this.showValidateMappingBtn = false;
+            }
+          })
+          this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
+
         },
         error => {
           this.spinner = false;
@@ -271,5 +306,18 @@ export class ContentMappingStepComponent implements OnInit {
           }
         }
       );
+  }
+
+  goToPreview() {
+    this._ds.updateContentMapping(this.id_mapping, this.contentTargetForm.value).subscribe(d => {
+      let step4Data: Step4Data = {
+        importId: this.stepData.importId
+      };
+      let step3Data: Step3Data = this.stepData;
+      step3Data.id_content_mapping = this.id_mapping;
+      this.stepService.setStepData(3, step3Data);
+      this.stepService.setStepData(4, step4Data);
+      this.onDataChecking()
+    })
   }
 }

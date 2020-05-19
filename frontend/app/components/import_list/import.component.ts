@@ -1,8 +1,11 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewEncapsulation } from "@angular/core";
 import { Router } from "@angular/router";
+import { FormControl } from "@angular/forms";
 import { CommonService } from "@geonature_common/service/common.service";
+import { CruvedStoreService } from '@geonature_common/../services/cruved-store.service';
 import { DataService } from "../../services/data.service";
 import { ModuleConfig } from "../../module.config";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import {
   Step2Data,
   Step1Data,
@@ -14,32 +17,68 @@ import { CsvExportService } from "../../services/csv-export.service";
 @Component({
   selector: "pnx-import",
   styleUrls: ["import.component.scss"],
-  templateUrl: "import.component.html"
+  templateUrl: "import.component.html",
+  encapsulation: ViewEncapsulation.None
 })
 export class ImportComponent implements OnInit {
   public deletedStep1;
   public history;
+  public filteredHistory;
   public empty: boolean = false;
   public config = ModuleConfig;
   historyId: any;
   n_invalid: any;
   csvDownloadResp: any;
+  public deleteOne: any;
+
+  public search = new FormControl()
+
 
   constructor(
+    public _cruvedStore: CruvedStoreService,
     private _ds: DataService,
     private _csvExport: CsvExportService,
     private _router: Router,
-    private _commonService: CommonService
-  ) {}
+    private _commonService: CommonService,
+    private modal: NgbModal
+  ) { }
 
   ngOnInit() {
     this.onImportList();
+    this.search.valueChanges.subscribe(value => {
+      this.updateFilter(value);
+    });
+  }
+
+  updateFilter(val: any) {
+    const value = val.toString().toLowerCase().trim();
+
+    // listes des colonnes selon lesquelles filtrer
+    const cols = this.config.LIST_COLUMNS_FRONTEND.filter(item => {
+      return item['filter'];
+    });
+
+    // Un resultat est retenu si au moins une colonne contient le mot-cle
+    this.filteredHistory = this.history.filter(item => {
+      for (let i = 0; i < cols.length; i++) {
+        if (
+          (item[cols[i]['prop']] && item[cols[i]['prop']]
+            .toString()
+            .toLowerCase()
+            .indexOf(value) !== -1) ||
+          !value
+        ) {
+          return true;
+        }
+      }
+    });
   }
 
   private onImportList() {
     this._ds.getImportList().subscribe(
       res => {
         this.history = res.history;
+        this.filteredHistory = this.history;
         this.empty = res.empty;
       },
       error => {
@@ -59,9 +98,6 @@ export class ImportComponent implements OnInit {
 
   onFinishImport(row) {
     localStorage.setItem("startPorcess", JSON.stringify(true));
-    let separator = ModuleConfig.SEPARATOR.find(
-      separator => separator.db_code === row.separator
-    );
     let dataStep1: Step1Data = {
       importId: row.id_import,
       datasetId: row.id_dataset,
@@ -69,7 +105,6 @@ export class ImportComponent implements OnInit {
         fileName: row.full_file_name,
         encoding: row.encoding,
         srid: row.srid,
-        separator: separator.code /// separator to convert
       }
     };
     localStorage.setItem("step1Data", JSON.stringify(dataStep1));
@@ -116,4 +151,16 @@ export class ImportComponent implements OnInit {
       `${ModuleConfig.MODULE_URL}/process/step/${row.step}`
     ]);
   }
+
+  onViewDataset(row) {
+    this._router.navigate([
+      `metadata/dataset_detail/${row.id_dataset}`
+    ]);
+  }
+
+  openDeleteModal(row, modalDelete) {
+    this.deleteOne = row;
+    this.modal.open(modalDelete);
+  }
+
 }

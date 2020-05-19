@@ -23,6 +23,7 @@ export class ImportStepComponent implements OnInit {
   stepData: Step4Data;
   nValidData: number;
   nInvalidData: number;
+  validBbox: any;
   public spinner: boolean = false;
 
   constructor(
@@ -31,7 +32,7 @@ export class ImportStepComponent implements OnInit {
     private _router: Router,
     private _ds: DataService,
     private _commonService: CommonService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(4);
@@ -39,7 +40,11 @@ export class ImportStepComponent implements OnInit {
   }
 
   onStepBack() {
-    this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
+    if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
+      this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/2`]);
+    } else {
+      this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
+    }
   }
 
   onImport() {
@@ -79,6 +84,7 @@ export class ImportStepComponent implements OnInit {
         this.nValidData = res.n_valid_data;
         this.nInvalidData = res.n_invalid_data;
         this.validData = res.valid_data;
+        this.validBbox = res.valid_bbox;
         if (this.validData != "no data") {
           this.columns = [];
           this.rows = [];

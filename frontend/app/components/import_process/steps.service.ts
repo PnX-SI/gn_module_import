@@ -30,7 +30,7 @@ export interface Step2Data {
 
 export interface Step3Data {
 	importId?: number;
-	table_name?: any;
+	// table_name?: any;
 	contentMappingInfo?: any;
 	id_content_mapping?: number;
 }
@@ -41,7 +41,7 @@ export interface Step4Data {
 
 @Injectable()
 export class StepsService {
-	constructor() {}
+	constructor() { }
 
 
 	getStepData(step: 1 | 2 | 3 | 4): Step1Data | Step2Data | Step3Data | Step4Data {

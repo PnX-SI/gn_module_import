@@ -37,15 +37,6 @@
                     </select>
                     <div class="invalid-feedback">Sélectionnez un SRID</div>
                 </div>
-                <!-- separator field -->
-                <div class="form-group">
-                    <label>Séparateur de votre fichier :</label>
-                    <select class="custom-select mr-sm-2" id="separator" formControlName="separator" required>
-                        <option *ngFor="let separator of importConfig.SEPARATOR" [value]="separator.code">
-                            {{separator.name}}</option>
-                    </select>
-                    <div class="invalid-feedback">Sélectionnez un séparateur</div>
-                </div>
             </form>
             <!-- Navigation buttons -->
             <div class="navigate-btn">
@@ -58,23 +49,13 @@
             </div>
             <!-- Error list in table -->
             <div id="errorList" *ngIf="uploadFileErrors">
-                <div> Attention, erreurs detectées dans le fichier uploadé : </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="Code"> Code </th>
-                            <th class="Message"> Message </th>
-                            <th class="MessageData"> Message Data </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let error of uploadFileErrors">
-                            <td> {{error.code}} </td>
-                            <td> {{error.message}} </td>
-                            <td> {{error.message_data}} </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div> Attention, erreurs detectées dans le fichier soumis </div>
+                <button class="btn btn-warning box-shadow">
+                    <a  target="_blank" [routerLink]="['/import/errors', importId]"> 
+
+                        Voir le rapport complet
+                    </a>
+                </button>
             </div>
         </div>
     </div>

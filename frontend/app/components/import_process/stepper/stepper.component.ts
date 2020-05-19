@@ -10,8 +10,9 @@ import { ModuleConfig } from '../../../module.config';
 
 export class stepperComponent implements OnInit, OnChanges {
 
-    @Input() step: any;
-    
+	@Input() step: any;
+	public IMPORT_CONFIG = ModuleConfig;
+
 	constructor(private _router: Router) {}
 
 
