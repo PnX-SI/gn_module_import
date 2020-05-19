@@ -18,7 +18,7 @@ export class ContentMappingService {
     // get list of existing content mapping in the select
     this._ds.getMappings(mapping_type).subscribe(
       result => {
-        this.userContentMappings = result["mappings"];
+        this.userContentMappings = result
       },
       error => {
         console.log(error);

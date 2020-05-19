@@ -160,12 +160,13 @@ export class ContentMappingStepComponent implements OnInit {
   onMappingName(): void {
     this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
       id_mapping => {
+        console.log(id_mapping);
+
         if (id_mapping) {
           this.disabled = false;
           this.fillMapping(id_mapping);
         } else {
           this.n_mappes = -1;
-          this.getNomencInf();
           this.contentTargetForm.reset();
           for (let contentMapping of this.stepData.contentMappingInfo) {
             contentMapping.isCollapsed = false;

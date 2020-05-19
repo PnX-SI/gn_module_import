@@ -15,7 +15,7 @@
                     <div *ngIf="_cm.userContentMappings" class="form-group">
                         <select class="form-control form-control-sm" id="contentMappingSelection"
                             formControlName="contentMapping">
-                            <option [value]=""></option>
+                            <option [ngValue]="null">-</option>
                             <option *ngFor="let data of _cm.userContentMappings" [value]="data.id_mapping">
                                 {{data.mapping_label}}</option>
                         </select>
