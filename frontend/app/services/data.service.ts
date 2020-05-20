@@ -68,7 +68,7 @@ export class DataService {
   postMappingName(value, mappingType) {
     const urlMapping = `${urlApi}/mapping`;
     value["mapping_type"] = mappingType;
-    return this._http.post<any>(urlMapping, value, HttpUploadOptions);
+    return this._http.post<any>(urlMapping, value);
   }
 
   /**

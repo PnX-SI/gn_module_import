@@ -72,7 +72,7 @@ class TMappingsRepository:
         Get all mappings
         """
         users_mapping = self.get_user_mapping(info_role)
-        q = DB.session.query(TMappings)
+        q = DB.session.query(TMappings).filter(TMappings.temporary == False)
         if mapping_type:
             q = q.filter(TMappings.mapping_type == mapping_type.upper())
         if info_role.value_filter in ("1", "2"):

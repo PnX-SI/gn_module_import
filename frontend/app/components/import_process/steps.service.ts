@@ -34,6 +34,8 @@ export interface Step3Data {
 	// table_name?: any;
 	contentMappingInfo?: any;
 	id_content_mapping?: number;
+	cruvedMapping?: any;
+
 }
 
 export interface Step4Data {

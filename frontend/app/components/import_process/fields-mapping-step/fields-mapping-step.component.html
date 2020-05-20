@@ -13,13 +13,16 @@
                         <legend class="px-1">
                             Choix du modèle d'imports
                         </legend>
-                            <select class="form-control form-control-sm" id="mappingSelection"
-                                [formControl]="fieldMapping">
+                            <select 
+                                class="form-control form-control-sm" 
+                                id="mappingSelection"
+                                [formControl]="fieldMapping"
+                                [compareWith]="compareFn"
+                            >
                                 <option [ngValue]="null"> - </option>
                                 <option *ngFor="let data of userFieldMappings" [ngValue]="data">
                                     {{data.mapping_label}}</option>
                             </select>
-                            {{fieldMapping.value |json}}
                     </div>
 
                     <button

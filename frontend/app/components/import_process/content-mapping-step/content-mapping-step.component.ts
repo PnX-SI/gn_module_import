@@ -22,7 +22,6 @@ export class ContentMappingStepComponent implements OnInit {
   public columns;
   public spinner: boolean = false;
   contentTargetForm: FormGroup;
-  public contentMappingForm: FormGroup;
   showForm: boolean = false;
   contentMapRes: any;
   stepData: Step3Data;
@@ -37,6 +36,8 @@ export class ContentMappingStepComponent implements OnInit {
   public showValidateMappingBtn = true;
   public displayMapped = false;
   public displayCheckBox = ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES;
+  public mappingListForm = new FormControl();
+  public newMappingNameForm = new FormControl()
 
   constructor(
     private stepService: StepsService,
@@ -56,26 +57,25 @@ export class ContentMappingStepComponent implements OnInit {
     this.stepData = this.stepService.getStepData(3);
     const step2: Step2Data = this.stepService.getStepData(2);
     this.idFieldMapping = step2.id_field_mapping;
-
-    this.contentMappingForm = this._fb.group({
-      contentMapping: [null],
-      mappingName: [""]
-    });
     this.contentTargetForm = this._fb.group({});
 
     // show list of user mappings
-    this._cm.getMappingNamesList("content", this.stepData.importId);
+    this._cm.getMappingNamesList();
 
     this.getNomencInf();
 
-    // listen to change on contentMappingForm select
+    // listen to change on mappingListForm select
     this.onMappingName();
+
 
     // fill the form
     if (this.stepData.id_content_mapping) {
-
-      this.contentMappingForm.controls["contentMapping"].setValue(
-        this.stepData.id_content_mapping
+      const formValue = {
+        "id_mapping": this.stepData.id_content_mapping,
+        "cruved": this.stepData.cruvedMapping
+      }
+      this.mappingListForm.setValue(
+        formValue
       );
       this.fillMapping(this.stepData.id_content_mapping);
 
@@ -101,6 +101,35 @@ export class ContentMappingStepComponent implements OnInit {
           // show error message if other server error
           console.log(error);
           this._commonService.regularToaster("error", error.error.message);
+        }
+      }
+    );
+  }
+
+  saveMappingName(value) {
+    // save new mapping in bib_mapping
+    // then select the mapping name in the select
+    let mappingType = "CONTENT";
+    const mappingForm = {
+      'mappingName': this.newMappingNameForm.value
+    }
+    this._ds.postMappingName(mappingForm, mappingType).subscribe(
+      id_mapping => {
+        this._cm.newMapping = false;
+        this._cm.getMappingNamesList(id_mapping, this.mappingListForm);
+        this.newMappingNameForm.reset();
+        //this.enableMapping(targetForm);
+      },
+      error => {
+        if (error.statusText === "Unknown Error") {
+          // show error message if no connexion
+          this._commonService.regularToaster(
+            "error",
+            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+          );
+        } else {
+          console.log(error);
+          this._commonService.regularToaster("error", error.error);
         }
       }
     );
@@ -160,13 +189,11 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   onMappingName(): void {
-    this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
-      id_mapping => {
-        console.log(id_mapping);
-
-        if (id_mapping) {
+    this.mappingListForm.valueChanges.subscribe(
+      mapping => {
+        if (mapping && mapping.id_mapping) {
           this.disabled = false;
-          this.fillMapping(id_mapping);
+          this.fillMapping(mapping.id_mapping);
         } else {
           this.n_mappes = -1;
           this.contentTargetForm.reset();
@@ -250,6 +277,8 @@ export class ContentMappingStepComponent implements OnInit {
           this.contentTargetForm.reset();
           this.n_mappes = -1;
         }
+        // at the end set the formgroup as pristine
+        this.contentTargetForm.markAsPristine();
       },
       error => {
         if (error.statusText === "Unknown Error") {
@@ -271,7 +300,7 @@ export class ContentMappingStepComponent implements OnInit {
 
   onDataChecking() {
     // perform all check on file
-    this.id_mapping = this.contentMappingForm.get("contentMapping").value;
+    this.id_mapping = this.mappingListForm.value.id_mapping;
     this.spinner = true;
     this._ds
       .dataChecker(
@@ -311,7 +340,7 @@ export class ContentMappingStepComponent implements OnInit {
       );
   }
 
-  goToPreview() {
+  createOrUpdateMapping() {
     this._ds.updateContentMapping(this.id_mapping, this.contentTargetForm.value).subscribe(d => {
       let step4Data: Step4Data = {
         importId: this.stepData.importId
@@ -322,5 +351,45 @@ export class ContentMappingStepComponent implements OnInit {
       this.stepService.setStepData(4, step4Data);
       this.onDataChecking()
     })
+  }
+
+  goToPreview() {
+    // if the form has not be changed
+    console.log(this.contentTargetForm);
+    console.log(this.contentTargetForm.pristine);
+
+    if (this.contentTargetForm.pristine) {
+      this.createOrUpdateMapping()
+    } else {
+      // if the form mapping has been changed
+      if (this.mappingListForm.value.cruved.U) {
+        if (window.confirm("Attention, le mapping a été modifié, voulez-vous sauvegarder ces modifications")) {
+          this.createOrUpdateMapping()
+        }
+        else {
+          // the user don't want to save the mapping -> temporary mapping
+          const mapping_value = {
+            'mappingName': 'mapping_temporaire_' + Date.now(),
+            'temporary': true
+          }
+          this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
+            this.id_mapping = id_mapping;
+            this.createOrUpdateMapping()
+          })
+        }
+
+      } else {
+        // the user don't has right to update the mapping -> temporary mapping
+        const mapping_value = {
+          'mappingName': 'mapping_temporaire_' + Date.now(),
+          'temporary': true
+        }
+        this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
+          this.id_mapping = id_mapping;
+          this.createOrUpdateMapping()
+        })
+      }
+    }
+
   }
 }

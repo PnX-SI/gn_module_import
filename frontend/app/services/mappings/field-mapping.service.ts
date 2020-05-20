@@ -54,30 +54,7 @@ export class FieldMappingService {
     this.fieldMappingForm.controls["mappingName"].setValue("");
   }
 
-  saveMappingName(value, importId, targetForm) {
-    let mappingType = "FIELD";
-    this._ds.postMappingName(value, mappingType).subscribe(
-      res => {
-        this.newMapping = false;
-        this.getMappingNamesList(mappingType);
-        this.fieldMappingForm.controls["fieldMapping"].setValue(res);
-        this.fieldMappingForm.controls["mappingName"].setValue("");
-        this.enableMapping(targetForm);
-      },
-      error => {
-        if (error.statusText === "Unknown Error") {
-          // show error message if no connexion
-          this._commonService.regularToaster(
-            "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-          );
-        } else {
-          console.error(error);
-          this._commonService.regularToaster("error", error.error);
-        }
-      }
-    );
-  }
+
 
   onMappingName(mappingForm, targetFormName): void {
     mappingForm.get("fieldMapping").valueChanges.subscribe(

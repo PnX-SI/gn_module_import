@@ -170,12 +170,9 @@ def postMappingName(info_role):
             .one()[0]
         )
 
-        if not data.get("temporary", None):
-            new_map_role = CorRoleMapping(
-                id_role=info_role.id_role, id_mapping=id_mapping
-            )
+        new_map_role = CorRoleMapping(id_role=info_role.id_role, id_mapping=id_mapping)
 
-            DB.session.add(new_map_role)
+        DB.session.add(new_map_role)
         DB.session.commit()
 
         logger.info("-> Mapping field name posted")

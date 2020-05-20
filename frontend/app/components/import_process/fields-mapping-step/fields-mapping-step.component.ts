@@ -68,8 +68,6 @@ export class FieldsMappingStepComponent implements OnInit {
       .filter(value => value !== null)
       .subscribe(
         mapping => {
-          console.log(mapping);
-
           this.onMappingChange(mapping.id_mapping);
         },
       );
@@ -106,6 +104,8 @@ export class FieldsMappingStepComponent implements OnInit {
       }
     );
   }
+
+
 
   generateSyntheseForm() {
     this._ds.getBibFields().subscribe(
@@ -237,16 +237,13 @@ export class FieldsMappingStepComponent implements OnInit {
     this.stepService.setStepData(2, step2data);
 
     // if the mapping has changed and the user has right to update it
-    console.log('passe la ?');
 
     // if the form has changed
     if (!this.syntheseForm.pristine) {
-      console.log('passe icit ?');
-
       // if the user has right to modify it
       if (this.fieldMapping.value.cruved.U) {
         if (window.confirm("Attention, le mapping a été modifié, voulez-vous sauvegarder ces modifications")) {
-
+          this.createOrUpdateMapping()
         } else {
           // create a temporary mapping
           const mapping_value = {
@@ -254,10 +251,9 @@ export class FieldsMappingStepComponent implements OnInit {
             'temporary': true
           }
           this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
-            console.log(id_mapping);
-
+            this.id_mapping = id_mapping;
+            this.createOrUpdateMapping()
           })
-
         }
         // the form has changed but the user do not has rights
       } else {
@@ -266,14 +262,13 @@ export class FieldsMappingStepComponent implements OnInit {
           'temporary': true
         }
         this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
-          console.log(id_mapping);
           this.id_mapping = id_mapping;
           this.createOrUpdateMapping()
-
         })
       }
       // the form not change do not create temp mapping
     } else {
+      this.createOrUpdateMapping()
 
     }
 
@@ -314,6 +309,10 @@ export class FieldsMappingStepComponent implements OnInit {
     }
   }
 
+  compareFn(c1: any, c2: any): boolean {
+    return c1 && c2 ? c1.id_mapping === c2.id_mapping : c1 === c2;
+  }
+
   getColumnsImport(idImport) {
     this._ds.getColumnsImport(idImport).subscribe(columns => {
       this.columns = columns.map(col => {
@@ -324,9 +323,11 @@ export class FieldsMappingStepComponent implements OnInit {
       });
 
       if (this.stepData.id_field_mapping) {
-        this.fieldMapping.setValue(
-          this.stepData.id_field_mapping
-        );
+        const formValue = {
+          'id_mapping': this.stepData.id_field_mapping,
+          'cruved': this.stepData.cruvedMapping
+        }
+        this.fieldMapping.setValue(formValue);
         this.fillMapping(this.stepData.id_field_mapping, this.columns);
       } else {
         this.formReady = true;
