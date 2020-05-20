@@ -24,6 +24,10 @@ export class DataService {
     return this._http.post(`${urlApi}/update_import/${idImport}`, data)
   }
 
+  deleteMapping(idMapping) {
+    return this._http.delete(`${urlApi}/mapping/${idMapping}`)
+  }
+
   postUserFile(value, datasetId, importId, isFileChanged, fileName) {
     const urlStatus = `${urlApi}/uploads`;
     let fd = new FormData();

@@ -248,7 +248,6 @@ def get_import_columns_name(id_import):
     IMPORTS_SCHEMA_NAME = blueprint.config["IMPORTS_SCHEMA_NAME"]
     table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, id_import)
     col_names = get_table_info(table_names["imports_table_name"], info="column_name")
-    print(col_names)
     col_names.remove("gn_is_valid")
     col_names.remove("gn_invalid_reason")
     col_names.remove(get_pk_name(blueprint.config["PREFIX"]))

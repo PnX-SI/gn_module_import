@@ -355,8 +355,6 @@ export class ContentMappingStepComponent implements OnInit {
 
   goToPreview() {
     // if the form has not be changed
-    console.log(this.contentTargetForm);
-    console.log(this.contentTargetForm.pristine);
 
     if (this.contentTargetForm.pristine) {
       this.createOrUpdateMapping()

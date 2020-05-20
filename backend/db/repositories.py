@@ -57,8 +57,6 @@ class TMappingsRepository:
         if level == "3":
             return True
         if level in ("1", "2"):
-            print(id_mapping)
-            print(user_mappings)
             return id_mapping in user_mappings
 
     def get_mapping_cruved(self, user_cruved, id_mapping, user_mappings):

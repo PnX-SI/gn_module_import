@@ -3,12 +3,15 @@ from flask import Blueprint, request, jsonify, send_file, current_app
 from utils_flask_sqla.response import json_resp
 from geonature.utils.env import DB
 from geonature.core.gn_permissions import decorators as permissions
+from pypnusershub.db.tools import InsufficientRightsError
+
 
 from ..db.models import (
     TImports,
     TMappings,
     CorRoleMapping,
     TMappingsFields,
+    TMappingsValues,
 )
 from ..db.repositories import TMappingsRepository
 
@@ -128,6 +131,49 @@ def get_mapping_contents(info_role, id_mapping):
             message="INTERNAL SERVER ERROR - get_mapping_contents() error : contactez l'administrateur du site",
             details=str(e),
         )
+
+
+@blueprint.route("/mapping/<int:id_mapping>", methods=["DELETE"])
+@permissions.check_cruved_scope("R", True, module_code="IMPORT")
+@json_resp
+def delete_mapping(info_role, id_mapping):
+    """
+    Delete a mappping
+    In order to delete temporary mapping (which are automaticaly created) we don't check 'Delete' rights
+    on 'mapping' object.
+    Any user which is user of a mapping can delete it with this route
+    """
+    data = (
+        DB.session.query(CorRoleMapping.id_mapping)
+        .filter(CorRoleMapping.id_role == info_role.id_role)
+        .all()
+    )
+    users_mappings = [d.id_mapping for d in data]
+    if id_mapping not in users_mappings:
+        raise InsufficientRightsError(
+            ('User "{}" cannot delete this mapping').format(info_role.id_role),
+        )
+    else:
+        mapping = DB.session.query(TMappings).get(id_mapping)
+
+        # delete from dependant table
+        table_to_delete = (
+            TMappingsFields if mapping.mapping_type == "FIELD" else TMappingsValues
+        )
+        DB.session.query(table_to_delete).filter(
+            getattr(table_to_delete, "id_mapping") == mapping.id_mapping
+        ).delete()
+
+        DB.session.query(CorRoleMapping).filter(
+            CorRoleMapping.id_mapping == id_mapping
+        ).delete()
+        DB.session.commit()
+
+        #  delete the mapping itself
+        DB.session.delete(mapping)
+        DB.session.commit()
+
+    return mapping.as_dict()
 
 
 @blueprint.route("/mapping", methods=["POST"])

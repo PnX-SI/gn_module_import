@@ -183,6 +183,21 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   createOrUpdateMapping() {
+    let step3data: Step3Data = {
+      //table_name: this.step3Response.table_name,
+      importId: this.stepData.importId
+    };
+    this.stepService.setStepData(3, step3data);
+    let step2data: Step2Data = {
+      importId: this.stepData.importId,
+      srid: this.stepData.srid,
+      id_field_mapping: this.id_mapping,
+      mappingRes: this.mappingRes,
+      mappingIsValidate: true,
+      cruvedMapping: this.fieldMapping.value.cruved
+    };
+    this.stepService.setStepData(2, step2data);
+
     const mappingData = Object.assign({}, this.syntheseForm.value)
     this._ds.createOrUpdateFieldMapping(mappingData, this.id_mapping).subscribe(data => {
       // update t_imports (set information about autogenerate values)
@@ -210,10 +225,8 @@ export class FieldsMappingStepComponent implements OnInit {
           error => {
             this.spinner = false;
             this._commonService.regularToaster("error", error.error.message);
-
           }
         )
-
       } else {
         this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
       }
@@ -221,20 +234,6 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   onNextStep() {
-    let step3data: Step3Data = {
-      //table_name: this.step3Response.table_name,
-      importId: this.stepData.importId
-    };
-    this.stepService.setStepData(3, step3data);
-    let step2data: Step2Data = {
-      importId: this.stepData.importId,
-      srid: this.stepData.srid,
-      id_field_mapping: this.id_mapping,
-      mappingRes: this.mappingRes,
-      mappingIsValidate: true,
-      cruvedMapping: this.fieldMapping.value.cruved
-    };
-    this.stepService.setStepData(2, step2data);
 
     // if the mapping has changed and the user has right to update it
 
@@ -250,7 +249,7 @@ export class FieldsMappingStepComponent implements OnInit {
             'mappingName': 'mapping_temporaire_' + Date.now(),
             'temporary': true
           }
-          this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
+          this._ds.postMappingName(mapping_value, 'FIELD').subscribe(id_mapping => {
             this.id_mapping = id_mapping;
             this.createOrUpdateMapping()
           })
@@ -261,7 +260,7 @@ export class FieldsMappingStepComponent implements OnInit {
           'mappingName': 'mapping_temporaire_' + Date.now(),
           'temporary': true
         }
-        this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
+        this._ds.postMappingName(mapping_value, 'FIELD').subscribe(id_mapping => {
           this.id_mapping = id_mapping;
           this.createOrUpdateMapping()
         })
