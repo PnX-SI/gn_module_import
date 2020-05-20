@@ -164,7 +164,7 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   onMappingChange(id_mapping) {
-    this._ds.getNomencInfo(this.stepData.importId).subscribe(
+    this._ds.getNomencInfo(this.stepData.importId, this.idFieldMapping).subscribe(
       res => {
 
         this.stepData.contentMappingInfo = res["content_mapping_info"];
