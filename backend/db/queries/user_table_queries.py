@@ -1,3 +1,5 @@
+from ...logs import logger
+
 from geonature.utils.env import DB
 from psycopg2.extensions import AsIs, QuotedString
 from ..models import TImports
@@ -305,19 +307,24 @@ def get_n_invalid_rows(full_table_name):
     except Exception:
         raise
 
+
 def get_valid_bbox(schema_name, table_name):
+    geojson = DB.session.execute(
+        """
+            SELECT ST_AsGeojson(ST_Extent(gn_the_geom_4326))
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid = 'True';        
+            """.format(
+            schema_name=schema_name, table_name=table_name,
+        )
+    ).first()[0]
     try:
-        geojson = DB.session.execute("""
-                SELECT ST_AsGeojson(ST_Extent(gn_the_geom_4326))
-                FROM {schema_name}.{table_name}
-                WHERE gn_is_valid = 'True';        
-                """.format(
-                    schema_name = schema_name,
-                    table_name = table_name,
-                )).first()[0]
         return json.loads(geojson)
-    except Exception:
-        raise
+    except Exception as e:
+        logger.error(e)
+        logger.error("Error while calculate bbox")
+        return None
+
 
 def get_n_valid_rows(schema_name, table_name):
     try:

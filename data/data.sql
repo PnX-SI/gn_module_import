@@ -153,3 +153,7 @@ INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
     ('TECHNIQUE_OBS',	'id_nomenclature_obs_technique'),
     ('STATUT_VALID',	'id_nomenclature_valid_status'),
     ('METH_DETERMIN',	'id_nomenclature_determination_method');
+
+-----------------
+---PERMISSIONS---
+-----------------

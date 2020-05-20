@@ -17,8 +17,6 @@ export class StepperGuardService implements CanActivate {
 
 				let step3Data = JSON.parse(localStorage.getItem('step3Data'))
 				let step2Data = JSON.parse(localStorage.getItem('step2Data'))
-				console.log(step3Data);
-				console.log(step2Data);
 
 				if (step3Data && step2Data.mappingIsValidate) {
 					return true;

@@ -409,42 +409,42 @@ def field_mapping_data_checking(import_id, id_mapping):
             {TImports.id_field_mapping: int(id_mapping)}
         )
 
-        ############### IF field mapping skipped
+        # ############### IF field mapping skipped
 
-        if not current_app.config["IMPORT"]["ALLOW_VALUE_MAPPING"]:
-            logger.info("update t_imports from step 2 to step 4")
-            ### CONTENT MAPPING ###
-            # get content mapping data
-            id_mapping_value = current_app.config["IMPORT"]["DEFAULT_MAPPING_ID"]
-            #  check if the default mapping exist
-            value_mapping = TMappings.query.get(id_mapping_value)
-            if not value_mapping:
-                return (
-                    {
-                        "message": "Content Mapping: le mapping n'existe pas - contacter l'administrateur"
-                    },
-                    400,
-                )
+        # if not current_app.config["IMPORT"]["ALLOW_VALUE_MAPPING"]:
+        #     logger.info("update t_imports from step 2 to step 4")
+        #     ### CONTENT MAPPING ###
+        #     # get content mapping data
+        #     id_mapping_value = current_app.config["IMPORT"]["DEFAULT_MAPPING_ID"]
+        #     #  check if the default mapping exist
+        #     value_mapping = TMappings.query.get(id_mapping_value)
+        #     if not value_mapping:
+        #         return (
+        #             {
+        #                 "message": "Content Mapping: le mapping n'existe pas - contacter l'administrateur"
+        #             },
+        #             400,
+        #         )
 
-            # build nomenclature_transformer service
-            nomenclature_transformer = NomenclatureTransformer(
-                id_mapping_value, selected_columns, table_names["imports_table_name"]
-            )
-            # with the mapping given, find all the corresponding nomenclatures
-            nomenclature_transformer.set_nomenclature_ids()
-            results = nomenclature_transformer.check_conditionnal_values()
-            logger.info("Find nomenclature with errors :")
-            nomenclature_transformer.find_nomenclatures_errors(import_id)
+        #     # build nomenclature_transformer service
+        #     nomenclature_transformer = NomenclatureTransformer(
+        #         id_mapping_value, selected_columns, table_names["imports_table_name"]
+        #     )
+        #     # with the mapping given, find all the corresponding nomenclatures
+        #     nomenclature_transformer.set_nomenclature_ids()
+        #     results = nomenclature_transformer.check_conditionnal_values()
+        #     logger.info("Find nomenclature with errors :")
+        #     nomenclature_transformer.find_nomenclatures_errors(import_id)
 
-            if current_app.config["IMPORT"][
-                "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"
-            ]:
-                nomenclature_transformer.set_default_nomenclature_ids()
+        #     if current_app.config["IMPORT"][
+        #         "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"
+        #     ]:
+        #         nomenclature_transformer.set_default_nomenclature_ids()
 
-            # update t_import
-            DB.session.query(TImports).filter(TImports.id_import == import_id).update(
-                {TImports.id_content_mapping: id_mapping_value, TImports.step: 4}
-            )
+        #     # update t_import
+        #     DB.session.query(TImports).filter(TImports.id_import == import_id).update(
+        #         {TImports.id_content_mapping: id_mapping_value, TImports.step: 4}
+        #     )
 
         DB.session.commit()
         DB.session.close()
@@ -529,10 +529,11 @@ def content_mapping_data_checking(import_id, id_mapping):
 
         # with the mapping given, find all the corresponding nomenclatures
         nomenclature_transformer.set_nomenclature_ids()
-        nomenclature_transformer.check_conditionnal_values(import_id)
 
         logger.info("Find nomenclature with errors :")
         nomenclature_transformer.find_nomenclatures_errors(import_id)
+
+        nomenclature_transformer.check_conditionnal_values(import_id)
 
         if current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]:
             nomenclature_transformer.set_default_nomenclature_ids()
