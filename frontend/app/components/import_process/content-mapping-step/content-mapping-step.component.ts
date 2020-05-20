@@ -73,9 +73,10 @@ export class ContentMappingStepComponent implements OnInit {
       );
       this.fillMapping(this.stepData.id_content_mapping);
 
-    } else {
-      
     }
+
+    this.onMappingChange(this.id_mapping);
+
   }
 
   getNomencInf() {
@@ -152,27 +153,31 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   updateEnabled(e) {
-    if (e.target.checked && this.id_mapping) {
-      this.disabled = false;
-      this.fillMapping(this.id_mapping);
-    }
+    this.onMappingChange(this.id_mapping);
   }
 
-  onMappingName(): void {
-    this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
-      id_mapping => {
+  onMappingChange(id_mapping) {
+    this._ds.getNomencInfo(this.stepData.importId).subscribe(
+      res => {
+
+        this.stepData.contentMappingInfo = res["content_mapping_info"];
+        this.generateContentForm();
         if (id_mapping) {
           this.disabled = false;
           this.fillMapping(id_mapping);
         } else {
           this.n_mappes = -1;
-          this.getNomencInf();
-          this.contentTargetForm.reset();
-          for (let contentMapping of this.stepData.contentMappingInfo) {
-            contentMapping.isCollapsed = false;
-          }
           this.disabled = true;
         }
+
+      }
+    );
+  }
+
+  onMappingName(): void {
+    this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
+      id_mapping => {
+        //this.onMappingChange(id_mapping);
       },
       error => {
         if (error.statusText === "Unknown Error") {
@@ -229,17 +234,17 @@ export class ContentMappingStepComponent implements OnInit {
             );
             if (formControl) {
               formControl.setValue(arrayVal);
-              if (arrayVal[0])
-                ++this.n_mappes;
+              ++this.n_mappes;
             }
           }
         } else {
           this.contentTargetForm.reset();
           this.n_mappes = -1;
         }
-        this.n_aMapper = this.n_mappes;
+        this.n_aMapper = 0;
         for (let contentMapping of this.stepData.contentMappingInfo) {
           this.n_aMapper += contentMapping.user_values.values.filter(val => val.value).length;
+          this.n_mappes -= contentMapping.user_values.values.filter(val => val.value).length;
           if (contentMapping.user_values.values.filter(val => val.value).length > 0)
             console.log(contentMapping.user_values);
         }
