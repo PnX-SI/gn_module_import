@@ -16,7 +16,6 @@
                         <div class="form-group">
                             <select class="form-control form-control-sm" id="contentMappingSelection"
                                 [formControl]="mappingListForm">
-                                <option [ngValue]="null">-</option>
                                 <option *ngFor="let data of _cm.userContentMappings" [ngValue]="data">
                                     {{data.mapping_label}}</option>
                             </select>
