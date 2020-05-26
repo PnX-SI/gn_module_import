@@ -65,11 +65,12 @@ def save_content_mapping(form_data, id_mapping):
         objs = TMappingsValues.query.filter_by(id_mapping=id_mapping).delete()
 
         for id_type in form_data:
-            for i in range(len(form_data[id_type])):
-                create_mapping_value(
-                    int(id_mapping), form_data[id_type][i], int(id_type)
-                )
-                DB.session.flush()
+            if form_data[id_type]:
+                for i in range(len(form_data[id_type])):
+                    create_mapping_value(
+                        int(id_mapping), form_data[id_type][i], int(id_type)
+                    )
+                    DB.session.flush()
         DB.session.commit()
     except Exception:
         DB.session.rollback()
