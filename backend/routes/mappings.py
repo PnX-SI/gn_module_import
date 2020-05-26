@@ -464,7 +464,7 @@ def r_update_content_mapping(info_role, id_mapping):
         logger.info(
             "Content mapping : transforming user values to id_types in the user table"
         )
-        form_data = request.get_json()
+        form_data = request.get_json(force = True)
         # SAVE MAPPING
         logger.info("save content mapping")
         save_content_mapping(form_data, id_mapping)
