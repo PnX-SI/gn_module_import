@@ -364,3 +364,56 @@ def postMetaToStep3(info_role):
         )
     finally:
         DB.session.close()
+
+
+@blueprint.route("/update_field_mapping/<id_mapping>", methods=["GET", "POST"])
+@permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@json_resp
+def r_save_field_mapping(info_role, id_mapping):
+    """
+        update a field_mapping
+    """
+    try:
+
+        data = request.get_json()
+        # SAVE MAPPING
+        if id_mapping != "undefined":
+            logger.info("save field mapping")
+            save_field_mapping(data, id_mapping, select_type="selected")
+
+            logger.info(" -> field mapping saved")
+            return "Done"
+        else:
+            return (
+                {
+                    "message": "Vous devez créer ou sélectionner un mapping pour le valider"
+                },
+                400,
+            )
+    except Exception:
+        raise GeonatureImportApiError(
+            message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
+            details=str(e),
+        )
+
+
+@blueprint.route("/update_content_mapping/<int:id_mapping>", methods=["GET", "POST"])
+@permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@json_resp
+def r_update_content_mapping(info_role, id_mapping):
+    if id_mapping == 0:
+        return (
+            {"message": "Vous devez d'abord créer ou sélectionner un mapping"},
+            400,
+        )
+    else:
+        logger.info(
+            "Content mapping : transforming user values to id_types in the user table"
+        )
+        form_data = request.get_json(force = True)
+        # SAVE MAPPING
+        logger.info("save content mapping")
+        save_content_mapping(form_data, id_mapping)
+        logger.info(" -> content mapping saved")
+
+    return "Done"
