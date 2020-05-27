@@ -35,7 +35,6 @@ export class ContentMappingStepComponent implements OnInit {
   public n_aMapper: number = -1;
   public n_mappes: number = -1;
   public showValidateMappingBtn = true;
-  public displayMapped = false;
   public displayCheckBox = ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES;
   public mappingListForm = new FormControl();
   public newMappingNameForm = new FormControl()
@@ -44,7 +43,7 @@ export class ContentMappingStepComponent implements OnInit {
     private stepService: StepsService,
     private _fb: FormBuilder,
     private _ds: DataService,
-    private _cm: ContentMappingService,
+    public _cm: ContentMappingService,
     private _commonService: CommonService,
     private _router: Router,
     public cruvedStore: CruvedStoreService
@@ -52,8 +51,7 @@ export class ContentMappingStepComponent implements OnInit {
 
   ngOnInit() {
 
-    if (!ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES)
-      this.displayMapped = ModuleConfig.DISPLAY_MAPPED_VALUES;
+
 
     this.stepData = this.stepService.getStepData(3);
     const step2: Step2Data = this.stepService.getStepData(2);
@@ -187,9 +185,10 @@ export class ContentMappingStepComponent implements OnInit {
     return contentMapping.user_values.values.filter(val => val.value).length > 0;
   }
 
-  // updateEnabled(e) {
-  //   this.onMappingChange(this.id_mapping);
-  // }
+  updateEnabled(e) {
+    // this.onMappingChange(this.id_mapping);
+    this._cm.displayMapped = !this._cm.displayMapped;
+  }
 
   onMappingName(): void {
     this.mappingListForm.valueChanges.subscribe(
@@ -305,18 +304,17 @@ export class ContentMappingStepComponent implements OnInit {
         // at the end set the formgroup as pristine
         this.contentTargetForm.markAsPristine();
       },
-      error => {
-        if (error.statusText === "Unknown Error") {
-          // show error message if no connexion
-          this._commonService.regularToaster(
-            "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-          );
-        } else {
-          this._commonService.regularToaster("error", error.error.message);
-        }
+    ), error => {
+      if (error.statusText === "Unknown Error") {
+        // show error message if no connexion
+        this._commonService.regularToaster(
+          "error",
+          "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+        );
+      } else {
+        this._commonService.regularToaster("error", error.error.message);
       }
-    );
+    }
   }
 
   onStepBack() {

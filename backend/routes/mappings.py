@@ -132,51 +132,50 @@ def get_mapping_contents(info_role, id_mapping):
             details=str(e),
         )
 
-@blueprint.route('/updateMappingName', methods=['GET', 'POST'])
-@permissions.check_cruved_scope('C', True, module_code="IMPORT")
+
+@blueprint.route("/updateMappingName", methods=["GET", "POST"])
+@permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def updateMappingName(info_role):
     try:
-        logger.info('Update mapping field name')
+        logger.info("Update mapping field name")
 
         data = request.form.to_dict()
 
-        if data['mappingName'] == '' or data['mappingName'] == 'null':
-            return 'Vous devez donner un nom au mapping', 400
+        if data["mappingName"] == "" or data["mappingName"] == "null":
+            return "Vous devez donner un nom au mapping", 400
 
         # check if name already exists
-        names_request = DB.session \
-            .query(TMappings) \
-            .all()
+        names_request = DB.session.query(TMappings).all()
         names = [name.mapping_label for name in names_request]
 
-        if data['mappingName'] in names:
-            return 'Ce nom de mapping existe déjà', 400
-        
-        DB.session.query(TMappings) \
-                .filter(TMappings.id_mapping == data['mapping_id']) \
-                .update({
-                    TMappings.mapping_label: data['mappingName']
-                })
-    
+        if data["mappingName"] in names:
+            return "Ce nom de modèle existe déjà", 400
+
+        DB.session.query(TMappings).filter(
+            TMappings.id_mapping == data["mapping_id"]
+        ).update({TMappings.mapping_label: data["mappingName"]})
+
         DB.session.commit()
 
-        id_mapping = DB.session.query(TMappings.id_mapping) \
-            .filter(TMappings.mapping_label == data['mappingName']) \
+        id_mapping = (
+            DB.session.query(TMappings.id_mapping)
+            .filter(TMappings.mapping_label == data["mappingName"])
             .one()[0]
+        )
 
-
-        logger.info('-> Mapping field name updated')
+        logger.info("-> Mapping field name updated")
 
         return id_mapping, 200
 
     except Exception as e:
-        logger.error('*** ERROR WHEN POSTING MAPPING FIELD NAME')
+        logger.error("*** ERROR WHEN POSTING MAPPING FIELD NAME")
         logger.exception(e)
         DB.session.rollback()
         raise GeonatureImportApiError(
-            message='INTERNAL SERVER ERROR - posting mapping field name : contactez l\'administrateur du site',
-            details=str(e))
+            message="INTERNAL SERVER ERROR - posting mapping field name : contactez l'administrateur du site",
+            details=str(e),
+        )
     finally:
         DB.session.close()
 
@@ -237,14 +236,14 @@ def postMappingName(info_role):
         data = request.get_json()
 
         if data["mappingName"] == "" or data["mappingName"] == "null":
-            return "Vous devez donner un nom au mapping", 400
+            return "Vous devez donner un nom au modèle", 400
 
         # check if name already exists
         names_request = DB.session.query(TMappings).all()
         names = [name.mapping_label for name in names_request]
 
         if data["mappingName"] in names:
-            return "Ce nom de mapping existe déjà", 400
+            return "Ce nom de modèle existe déjà", 400
 
         # fill BibMapping
         new_name = TMappings(
@@ -485,7 +484,7 @@ def r_update_content_mapping(info_role, id_mapping):
         logger.info(
             "Content mapping : transforming user values to id_types in the user table"
         )
-        form_data = request.get_json(force = True)
+        form_data = request.get_json(force=True)
         # SAVE MAPPING
         logger.info("save content mapping")
         save_content_mapping(form_data, id_mapping)

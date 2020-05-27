@@ -415,7 +415,7 @@ def field_mapping_data_checking(import_id, id_mapping):
         #     logger.info("update t_imports from step 2 to step 4")
         #     ### CONTENT MAPPING ###
         #     # get content mapping data
-        #     id_mapping_value = current_app.config["IMPORT"]["DEFAULT_MAPPING_ID"]
+        #     id_mapping_value = current_app.config["IMPORT"]["DEFAULT_VALUE_MAPPING_ID"]
         #     #  check if the default mapping exist
         #     value_mapping = TMappings.query.get(id_mapping_value)
         #     if not value_mapping:

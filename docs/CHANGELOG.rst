@@ -10,7 +10,7 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 **🚀 Nouveautés**
 
 * Possibilité de supprimer un import (et les données associées) (#124)
-* Ajout de la possibilité de ne pas afficher l'étape "Mapping des contenus" en définissant un mapping par défaut (avec les paramètres ``ALLOW_VALUE_MAPPING`` et ``DEFAULT_MAPPING_ID``) (#100)
+* Ajout de la possibilité de ne pas afficher l'étape "Mapping des contenus" en définissant un mapping par défaut (avec les paramètres ``ALLOW_VALUE_MAPPING`` et ``DEFAULT_VALUE_MAPPING_ID``) (#100)
 * Import possible des données sans géométrie en utilisant les colonnes ``codecommune``, ``codemaille`` ou ``codedepartement`` et en récupérant ``id_area`` et leur géométrie correspondantes dans la couche des zonages du ``ref_geo`` (#107)
 * Révision et complément des contrôles des données et amélioration des rapports d'erreurs (#114)
 

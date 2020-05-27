@@ -274,7 +274,7 @@ export class FieldsMappingStepComponent implements OnInit {
 
       if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
         // this.stepService.setStepData(4, step4Data);
-        this._ds.dataChecker(this.stepData.importId, this.id_mapping, ModuleConfig.DEFAULT_MAPPING_ID).subscribe(d => {
+        this._ds.dataChecker(this.stepData.importId, this.id_mapping, ModuleConfig.DEFAULT_VALUE_MAPPING_ID).subscribe(d => {
           this.spinner = false;
           let step4Data: Step4Data = {
             importId: this.stepData.importId

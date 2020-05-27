@@ -28,11 +28,11 @@
                                 *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
                                 class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
                                 (click)="_cm.createMapping(newMappingNameForm)">
-                                Nouveau mapping
+                                Nouveau modèle d'import
                             </button>
                         </div>
                         <div class="col" *ngIf='displayCheckBox'>
-                            <input type="checkbox" [(ngModel)]="displayMapped" [ngModelOptions]="{standalone: true}" (change)="updateEnabled($event)">
+                            <input type="checkbox" [(ngModel)]="_cm.displayMapped" [ngModelOptions]="{standalone: true}">
                             Afficher les champs automatiquement associés
                         </div>
                     </div>
@@ -69,15 +69,15 @@
 
         <form [formGroup]="contentTargetForm" *ngIf="showForm">
             <div *ngFor="let contentMapping of stepData.contentMappingInfo">
-                <div *ngIf="containsEnabled(contentMapping) || displayMapped" class="card field-card">
+                <div *ngIf="(containsEnabled(contentMapping) || _cm.displayMapped) && !_cm.newMapping " class="card field-card">
                     <div class="field-header" (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed">
                         <div class="card-title mb-0">{{contentMapping.nomenc_name}}</div>
                         <i *ngIf="contentMapping.isCollapsed" class="material-icons">keyboard_arrow_down</i>
                         <i *ngIf="!contentMapping.isCollapsed" class="material-icons">keyboard_arrow_up</i>
                     </div>
                     <div [ngbCollapse]="contentMapping.isCollapsed" class="card-body">
-                        <div *ngIf="contentMapping.user_values.values.length > 0" class="alert alert-warning">
-                            <b> Attention: </b> aucune correspondance n'a été trouvé pour les items suivants:
+                        <div *ngIf="contentMapping.user_values.values.length > 0 && mappingListForm.value != null" class="alert alert-warning">
+                            <b> Attention: </b> des valeurs du fichiers n'ont trouvé aucune correspondance dans le modèle selectionné:
                             <ul>
                                 <li *ngFor="let item of contentMapping.user_values.values">
                                     {{item.value}}
@@ -85,7 +85,7 @@
                             </ul>
                         </div>
                         <div *ngFor="let value_def of contentMapping.nomenc_values_def">
-                            <div *ngIf="isEnabled(value_def.id) || displayMapped" class="form-group row">
+                            <div *ngIf="isEnabled(value_def.id) || _cm.displayMapped" class="form-group row">
                                 <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
                                 <div class="col-sm-8">
                                     <pnx-multiselect 

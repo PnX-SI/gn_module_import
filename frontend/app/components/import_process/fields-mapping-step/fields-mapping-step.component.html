@@ -31,13 +31,14 @@
                                 *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
                                 class="btn btn-secondary btn-sm mb-3"
                                 (click)="createMapping()">
-                                Nouveau mapping
+                                Nouveau modèle d'import
                             </button>
                             <button
-                                class="btn btn-secondary btn-sm mb-3"
+                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.U != '0' && fieldMappingForm?.value?.cruved.U"
+                                class="btn btn-secondary btn-sm mb-3 ml-1"
                                 (click)="renameMapping()"
                                 [disabled]="canUpdateMapping() || fieldMappingForm.value === '' || fieldMappingForm.value == null">
-                                Modifier nom mapping
+                                Modifier le nom du modèle d'import
                             </button>
                         </div>
 
@@ -79,29 +80,18 @@
                             L'ensemble des champs du fichier ont été automatiquement associés aux champs du modèle d'import.
                         </div>
                         <div *ngIf="this.mappedColCount == 1" class="alert alert-success" role="alert" style="text-align: center;">
-                            1 seul champ du fichier a pu être automatiquement associés aux champs du modèle d'import.<br>
+                            1 seul champ du fichier a pu être automatiquement associé aux champs du modèle d'import.<br>
                             {{this.unmappedColCount}} restent à associer manuellement.   
                         </div>
                         <div *ngIf="this.unmappedColCount > 0 && this.mappedColCount > 1" class="alert alert-success" role="alert" style="text-align: center;">
-                            {{this.mappedColCount}} Champs du fichier ont été automatiquement associés aux champs du modèle d'import.<br>
+                            {{this.mappedColCount}} champs du fichier ont été automatiquement associés aux champs du modèle d'import.<br>
                             {{this.unmappedColCount}} restent à associer manuellement.
                         </div>
                         <div *ngIf="this.unmappedColCount == 0" class="alert alert-danger" role="alert" style="text-align: center;">
                             Aucun champ du fichier n'a pu être associé aux champs du modèle d'import.
                         </div>
                     </div>
-                    <!-- <div *ngIf="!(fieldMappingForm.get('fieldMapping').value === '' || fieldMappingForm.get('fieldMapping').value == null)" 
-                        [className]="(fieldMappingForm.get('fieldMapping').value === '' || fieldMappingForm.get('fieldMapping').value == null)? 
-                                'alert alert-danger': 'alert alert-success'" role="alert" style="text-align: center;">
-                        {{this.mappedColCount}} Champs du fichier ont été automatiquement associés aux champs du modèle d'import.<br>
-                        {{this.unmappedColCount}} restent à associer manuellement.
-                    </div> -->
                 </fieldset>
-                
-                
-                
-                
-                   
             </form>
             <form [formGroup]="syntheseForm">
                 <div *ngFor="let theme of bibRes">
@@ -148,29 +138,6 @@
                         <i class="material-icons"> navigate_before </i>
                         Précédent
                     </button>
-                    <button 
-                        class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
-                        *ngIf="n_error_lines > 0  && mappingRes"
-                    >
-                            <a  target="_blank" [routerLink]="['/import/errors', stepData.importId]"> 
-                                    {{n_error_lines}} erreurs détéctée(s) - Voir le rapport complet
-                            </a>
-                    </button>
-
-                    <span *ngIf="n_error_lines == 0  && mappingRes" class="alert alert-success"> Aucune erreur détéctée dans le fichier </span>
-
-                    <!-- <button *ngIf="!mappingRes"
-                    <button
-                        class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        [disabled]="canUpdateMapping()"
-                        (click)="updateMappingField(syntheseForm.value, id_mapping)">
-                        Mettre à jour le mapping
-                    </button>
-                    <button *ngIf="!mappingRes"
-                        class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        [disabled]="syntheseForm.invalid" (click)="onDataCleaning(syntheseForm.value, id_mapping)">
-                        Valider le mapping
-                    </button> -->
                     <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                         [disabled]="fieldMappingForm.value == null || syntheseForm.invalid" (click)='onNextStep()'>
                         Suivant
