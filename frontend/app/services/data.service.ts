@@ -85,15 +85,13 @@ export class DataService {
     const url = `${urlApi}/data_checker/${idImport}/field_mapping/${idFieldMapping}/content_mapping/${idContentMapping}`;
     return this._http.post(url, {})
   }
-  
+
   updateMappingName(value, mappingType, idMapping) {
     const urlMapping = `${urlApi}/updateMappingName`;
     let fd = new FormData();
-    for (let key of Object.keys(value)) {
-      fd.append(key, value[key]);
-    }
     fd.append("mapping_id", idMapping);
     fd.append("mapping_type", mappingType);
+    fd.append('mappingName', value)
     return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
   }
 

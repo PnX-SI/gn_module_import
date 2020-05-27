@@ -16,10 +16,10 @@
                             <select 
                                 class="form-control form-control-sm" 
                                 id="mappingSelection"
-                                [formControl]="fieldMapping"
+                                [formControl]="fieldMappingForm"
                                 [compareWith]="compareFn"
+                                [disableControl]="userFieldMappings.length == 1"
                             >
-                                <option [ngValue]="null"> - </option>
                                 <option *ngFor="let data of userFieldMappings" [ngValue]="data">
                                     {{data.mapping_label}}</option>
                             </select>
@@ -36,7 +36,7 @@
                             <button
                                 class="btn btn-secondary btn-sm mb-3"
                                 (click)="renameMapping()"
-                                [disabled]="canUpdateMapping() || fieldMapping.value === '' || fieldMapping.value == null">
+                                [disabled]="canUpdateMapping() || fieldMappingForm.value === '' || fieldMappingForm.value == null">
                                 Modifier nom mapping
                             </button>
                         </div>
@@ -50,8 +50,8 @@
                         <input type="text" class="form-control mr-2" value="Inconnu" [formControl]="newMappingForm">
                         <button
                             class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
-                            (click)="saveMappingName(fieldMapping.value.id_mapping, importId, syntheseForm)"
-                            [disabled]="fieldMapping.value == null">
+                            (click)="saveMappingName(newMappingForm.value, syntheseForm)"
+                            [disabled]="newMappingForm.value == null">
                             ok
                         </button>
                         <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
@@ -60,7 +60,21 @@
                         </button>
                     </div>
 
-                    <div *ngIf="!fieldMapping.value === '' || fieldMapping.value == null">
+                    <div *ngIf="updateMapping" class="d-flex flex-row justify-content-between form_group" id="updateMap">
+                            <input type="text" class="form-control mr-2" value="Inconnu" [formControl]="newMappingForm">
+                            <button
+                                class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
+                                (click)="updateMappingName(newMappingForm.value)"
+                                [disabled]="newMappingForm.value == null">
+                                ok
+                            </button>
+                            <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
+                                (click)="cancelMapping()">
+                                annuler
+                            </button>
+                    </div>
+
+                    <div *ngIf="fieldMappingForm.value != null">
                         <div *ngIf="this.unmappedColCount == 0" class="alert alert-success" role="alert" style="text-align: center;">
                             L'ensemble des champs du fichier ont été automatiquement associés aux champs du modèle d'import.
                         </div>
@@ -158,7 +172,7 @@
                         Valider le mapping
                     </button> -->
                     <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        [disabled]="fieldMapping.value == null || syntheseForm.invalid" (click)='onNextStep()'>
+                        [disabled]="fieldMappingForm.value == null || syntheseForm.invalid" (click)='onNextStep()'>
                         Suivant
                         <i class="material-icons"> navigate_next </i>
                     </button>
