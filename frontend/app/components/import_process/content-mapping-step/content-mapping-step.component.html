@@ -73,7 +73,14 @@
                         <i *ngIf="!contentMapping.isCollapsed" class="material-icons">keyboard_arrow_up</i>
                     </div>
                     <div [ngbCollapse]="contentMapping.isCollapsed" class="card-body">
-
+                        <div *ngIf="contentMapping.user_values.values.length > 0" class="alert alert-warning">
+                            <b> Attention: </b> aucune correspondance n'a été trouvé pour les items suivants:
+                            <ul>
+                                <li *ngFor="let item of contentMapping.user_values.values">
+                                    {{item.value}}
+                                </li>
+                            </ul>
+                        </div>
                         <div *ngFor="let value_def of contentMapping.nomenc_values_def">
                             <div *ngIf="isEnabled(value_def.id) || displayMapped" class="form-group row">
                                 <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
