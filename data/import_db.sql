@@ -89,7 +89,8 @@ CREATE TABLE t_mappings(
     id_mapping serial NOT NULL,
     mapping_label character varying(255) NOT NULL,
     mapping_type character varying(10) NOT NULL,
-    active boolean NOT NULL
+    active boolean NOT NULL,
+    temporary boolean NOT NULL DEFAULT false
 );
 
 

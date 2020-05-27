@@ -7,24 +7,28 @@
         <div class="card-body">
 
         <!-- Choix de la liste des nomenclatures -->
-        <form [formGroup]="contentMappingForm" class="was-validated">
+        <form class="was-validated">
                 <fieldset>
-                    <legend class="px-1">
-                        Choix de la liste des nomenclatures
-                    </legend>
-                    <div *ngIf="_cm.userContentMappings" class="form-group">
-                        <select class="form-control form-control-sm" id="contentMappingSelection"
-                            formControlName="contentMapping" #t (change)="onMappingChange(t.value)" >
-                            <option [value]=""></option>
-                            <option *ngFor="let data of _cm.userContentMappings" [value]="data.id_mapping">
-                                {{data.mapping_label}}</option>
-                        </select>
+                    <div *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.R != '0'">
+                        <legend class="px-1">
+                                Choix du modèle d'imports
+                        </legend>
+                        <div class="form-group">
+                            <select class="form-control form-control-sm" id="contentMappingSelection"
+                                [formControl]="mappingListForm">
+                                <option [ngValue]="null">-</option>
+                                <option *ngFor="let data of _cm.userContentMappings" [ngValue]="data">
+                                    {{data.mapping_label}}</option>
+                            </select>
+                        </div>
                     </div>
+
                     <div class="row">
                         <div class="col">
-                            <button
+                            <button             
+                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
                                 class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
-                                (click)="_cm.createMapping(contentMappingForm)">
+                                (click)="_cm.createMapping(newMappingNameForm)">
                                 Nouveau mapping
                             </button>
                         </div>
@@ -50,9 +54,9 @@
                         </div>
                     </div>
                     <div *ngIf="_cm.newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
-                        <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
+                        <input type="text" class="form-control mr-2" value="Inconnu" [formControl]="newMappingNameForm">
                         <button class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
-                            (click)="_cm.saveMappingName(contentMappingForm.value, importId, contentMappingForm)">
+                            (click)="saveMappingName()">
                             ok
                         </button>
                         <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"

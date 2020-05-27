@@ -3,13 +3,17 @@ from flask import Blueprint, request, jsonify, send_file, current_app
 from utils_flask_sqla.response import json_resp
 from geonature.utils.env import DB
 from geonature.core.gn_permissions import decorators as permissions
+from pypnusershub.db.tools import InsufficientRightsError
+
 
 from ..db.models import (
     TImports,
     TMappings,
     CorRoleMapping,
     TMappingsFields,
+    TMappingsValues,
 )
+from ..db.repositories import TMappingsRepository
 
 from ..db.queries.user_table_queries import (
     get_table_info,
@@ -31,7 +35,6 @@ from ..db.queries.nomenclatures import get_content_mapping
 from ..db.queries.save_mapping import get_selected_columns
 
 from ..utils.clean_names import *
-from ..utils.utils import get_pk_name
 
 from ..upload.upload_errors import *
 
@@ -43,52 +46,21 @@ from ..api_error import GeonatureImportApiError
 from ..blueprint import blueprint
 
 
-@blueprint.route("/mappings/<mapping_type>/<import_id>", methods=["GET"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@blueprint.route("/mappings/<mapping_type>", methods=["GET"])
+@permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="MAPPING")
 @json_resp
-def get_mappings(info_role, mapping_type, import_id):
+def get_mappings(info_role, mapping_type):
     """
         Load mapping names in frontend (select)
     """
-
     try:
-        results = (
-            DB.session.query(TMappings)
-            .filter(CorRoleMapping.id_role == info_role.id_role)
-            .filter(TMappings.mapping_type == mapping_type.upper())
-            .all()
+        mapping_repo = TMappingsRepository()
+        return mapping_repo.get_all(
+            info_role=info_role, with_cruved=True, mapping_type=mapping_type
         )
-
-        mappings = []
-
-        if len(results) > 0:
-            for row in results:
-                d = {"id_mapping": row.id_mapping, "mapping_label": row.mapping_label}
-                mappings.append(d)
-        else:
-            mappings.append("empty")
-
-        logger.debug("List of mappings %s", mappings)
-
-        # get column names
-        col_names = "undefined import_id"
-        if import_id not in ["undefined", "null"]:
-            ARCHIVES_SCHEMA_NAME = blueprint.config["ARCHIVES_SCHEMA_NAME"]
-            IMPORTS_SCHEMA_NAME = blueprint.config["IMPORTS_SCHEMA_NAME"]
-            table_names = get_table_names(
-                ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id)
-            )
-            col_names = get_table_info(
-                table_names["imports_table_name"], info="column_name"
-            )
-            col_names.remove("gn_is_valid")
-            col_names.remove("gn_invalid_reason")
-            col_names.remove(get_pk_name(blueprint.config["PREFIX"]))
-
-        return {"mappings": mappings, "column_names": col_names}, 200
     except Exception as e:
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR - get_mappings() error : contactez l'administrateur du site",
+            message="INTERNAL SERVER ERROR - get_mapping_fields() error : contactez l'administrateur du site",
             details=str(e),
         )
 
@@ -143,7 +115,7 @@ def get_mapping_fields(info_role, id_mapping):
 
 
 @blueprint.route("/content_mappings/<id_mapping>", methods=["GET"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@permissions.check_cruved_scope("R", True, module_code="IMPORT")
 @json_resp
 def get_mapping_contents(info_role, id_mapping):
     """
@@ -209,14 +181,60 @@ def updateMappingName(info_role):
         DB.session.close()
 
 
-@blueprint.route("/mappingName", methods=["GET", "POST"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@blueprint.route("/mapping/<int:id_mapping>", methods=["DELETE"])
+@permissions.check_cruved_scope("R", True, module_code="IMPORT")
+@json_resp
+def delete_mapping(info_role, id_mapping):
+    """
+    Delete a mappping
+    In order to delete temporary mapping (which are automaticaly created) we don't check 'Delete' rights
+    on 'mapping' object.
+    Any user which is user of a mapping can delete it with this route
+    """
+    data = (
+        DB.session.query(CorRoleMapping.id_mapping)
+        .filter(CorRoleMapping.id_role == info_role.id_role)
+        .all()
+    )
+    users_mappings = [d.id_mapping for d in data]
+    if id_mapping not in users_mappings:
+        raise InsufficientRightsError(
+            ('User "{}" cannot delete this mapping').format(info_role.id_role),
+        )
+    else:
+        mapping = DB.session.query(TMappings).get(id_mapping)
+
+        # delete from dependant table
+        table_to_delete = (
+            TMappingsFields if mapping.mapping_type == "FIELD" else TMappingsValues
+        )
+        DB.session.query(table_to_delete).filter(
+            getattr(table_to_delete, "id_mapping") == mapping.id_mapping
+        ).delete()
+
+        DB.session.query(CorRoleMapping).filter(
+            CorRoleMapping.id_mapping == id_mapping
+        ).delete()
+        DB.session.commit()
+
+        #  delete the mapping itself
+        DB.session.delete(mapping)
+        DB.session.commit()
+
+    return mapping.as_dict()
+
+
+@blueprint.route("/mapping", methods=["POST"])
+@permissions.check_cruved_scope("C", True, module_code="IMPORT", object_code="MAPPING")
 @json_resp
 def postMappingName(info_role):
+    """
+    Post a new mapping (value or content)
+    """
     try:
         logger.info("Posting mapping field name")
 
-        data = request.form.to_dict()
+        data = request.get_json()
 
         if data["mappingName"] == "" or data["mappingName"] == "null":
             return "Vous devez donner un nom au mapping", 400
@@ -233,13 +251,13 @@ def postMappingName(info_role):
             mapping_label=data["mappingName"],
             mapping_type=data["mapping_type"],
             active=True,
+            temporary=data.get("temporary", None),
         )
 
         DB.session.add(new_name)
         DB.session.flush()
 
         # fill CorRoleMapping
-
         id_mapping = (
             DB.session.query(TMappings.id_mapping)
             .filter(TMappings.mapping_label == data["mappingName"])
@@ -420,12 +438,12 @@ def postMetaToStep3(info_role):
         DB.session.close()
 
 
-@blueprint.route("/update_field_mapping/<id_mapping>", methods=["GET", "POST"])
+@blueprint.route("/create_or_update_field_mapping/<int:id_mapping>", methods=["POST"])
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def r_save_field_mapping(info_role, id_mapping):
     """
-        update a field_mapping
+        Create or update a field_mapping
     """
     try:
 
@@ -444,7 +462,7 @@ def r_save_field_mapping(info_role, id_mapping):
                 },
                 400,
             )
-    except Exception:
+    except Exception as e:
         raise GeonatureImportApiError(
             message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
             details=str(e),
@@ -455,6 +473,9 @@ def r_save_field_mapping(info_role, id_mapping):
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def r_update_content_mapping(info_role, id_mapping):
+    """
+    Update a content mapping (table TMappingsValues)
+    """
     if id_mapping == 0:
         return (
             {"message": "Vous devez d'abord créer ou sélectionner un mapping"},

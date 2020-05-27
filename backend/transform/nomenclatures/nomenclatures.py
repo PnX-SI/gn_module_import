@@ -153,8 +153,6 @@ class NomenclatureTransformer:
             )
             for row in rows_with_err:
                 # ou remplacer par un warning quand la valeur par défaut a été utilisée
-                print("row[1] = " + row[1])
-                print("user_col = " + el["user_col"])
 
                 if current_app.config["IMPORT"][
                     "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"
@@ -336,19 +334,14 @@ class NomenclatureTransformer:
 
 def get_nomenc_info(form_data, schema_name, table_name):
     try:
-
         logger.info("get nomenclature info")
 
         # get list of user-selected synthese column names dealing with SINP nomenclatures
         selected_SINP_nomenc = get_nomenc_abbs(form_data)
-
         front_info = []
-
         for nomenc in selected_SINP_nomenc:
-
             # get nomenclature name and id
             nomenc_info = get_nomenc_details(nomenc)
-
             # get nomenclature values
             nomenc_values = get_nomenc_values(nomenc)
 

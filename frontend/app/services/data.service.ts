@@ -24,6 +24,10 @@ export class DataService {
     return this._http.post(`${urlApi}/update_import/${idImport}`, data)
   }
 
+  deleteMapping(idMapping) {
+    return this._http.delete(`${urlApi}/mapping/${idMapping}`)
+  }
+
   postUserFile(value, datasetId, importId, isFileChanged, fileName) {
     const urlStatus = `${urlApi}/uploads`;
     let fd = new FormData();
@@ -43,9 +47,9 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/datasets`);
   }
 
-  getMappings(mapping_type, import_id) {
+  getMappings(mapping_type) {
     return this._http.get<any>(
-      `${urlApi}/mappings/${mapping_type}/${import_id}`
+      `${urlApi}/mappings/${mapping_type}`
     );
   }
 
@@ -57,8 +61,8 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/content_mappings/${id_mapping}`);
   }
 
-  updateFieldMapping(id_mapping, data) {
-    return this._http.post(`${urlApi}/update_field_mapping/${id_mapping}`, data)
+  createOrUpdateFieldMapping(data, id_mapping) {
+    return this._http.post(`${urlApi}/create_or_update_field_mapping/${id_mapping}`, data)
   }
 
   updateContentMapping(id_mapping, data) {
@@ -66,13 +70,9 @@ export class DataService {
   }
 
   postMappingName(value, mappingType) {
-    const urlMapping = `${urlApi}/mappingName`;
-    let fd = new FormData();
-    for (let key of Object.keys(value)) {
-      fd.append(key, value[key]);
-    }
-    fd.append("mapping_type", mappingType);
-    return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
+    const urlMapping = `${urlApi}/mapping`;
+    value["mapping_type"] = mappingType;
+    return this._http.post<any>(urlMapping, value);
   }
 
   /**
@@ -99,6 +99,14 @@ export class DataService {
 
   cancelImport(importId: number) {
     return this._http.get<any>(`${urlApi}/cancel_import/${importId}`);
+  }
+
+  /**
+   * Return all the column of the file of an import
+   * @param idImport : integer
+   */
+  getColumnsImport(idImport) {
+    return this._http.get<any>(`${urlApi}/columns_import/${idImport}`);
   }
 
   getSynColumnNames() {

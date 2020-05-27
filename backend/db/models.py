@@ -152,6 +152,7 @@ class TMappings(DB.Model):
     mapping_label = DB.Column(DB.Unicode, nullable=False)
     mapping_type = DB.Column(DB.Unicode, nullable=False)
     active = DB.Column(DB.Boolean, nullable=False)
+    temporary = DB.Column(DB.Boolean, nullable=False, default=False)
 
 
 @serializable

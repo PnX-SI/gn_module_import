@@ -1,6 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
-import { StepsService, Step4Data } from "../steps.service";
+import { StepsService, Step4Data, Step2Data, Step3Data } from "../steps.service";
 import { DataService } from "../../../services/data.service";
 import { CsvExportService } from "../../../services/csv-export.service";
 import { CommonService } from "@geonature_common/service/common.service";
@@ -52,7 +52,15 @@ export class ImportStepComponent implements OnInit {
     this._ds.importData(this.stepData.importId).subscribe(
       res => {
         this.spinner = false;
-        this.importDataRes = res;
+        const step2: Step2Data = this.stepService.getStepData(2);
+        const step3: Step3Data = this.stepService.getStepData(3);
+
+        if (step2.id_field_mapping) {
+          this._ds.deleteMapping(step2.id_field_mapping).subscribe();
+        }
+        if (step3.id_content_mapping) {
+          this._ds.deleteMapping(step3.id_content_mapping).subscribe();
+        }
         this.stepService.resetStepoer();
         this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
       },
