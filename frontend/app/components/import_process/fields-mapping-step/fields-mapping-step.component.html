@@ -160,3 +160,23 @@
     <mat-spinner class="upload-spinner" [color]="color" [diameter]="150" [strokeWidth]="12">
     </mat-spinner>
 </div>
+
+
+<button (click)="open()" > click</button>
+
+<ng-template #modalConfirm let-modal>
+
+        <div class="modal-header">
+                <h4 class="modal-title" id="modal-basic-title">Enregistrement du modèle</h4>
+                <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                    Attention, le modèle a été modifié, voulez-vous sauvegarder ces modifications
+              </div>
+              <div class="modal-footer">
+                    <button type="button" class="btn btn-warning" (click)="saveMappingUpdate(false); modal.close()">Ne pas enregistrer </button>
+                    <button type="button" class="btn btn-success" (click)="saveMappingUpdate(true); modal.close()">Enregistrer les modifications du modèle d'import</button>
+              </div>
+</ng-template>

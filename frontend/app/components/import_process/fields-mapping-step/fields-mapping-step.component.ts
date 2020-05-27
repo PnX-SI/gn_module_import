@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 import { Router } from "@angular/router";
 import { DataService } from "../../../services/data.service";
 import { FieldMappingService } from "../../../services/mappings/field-mapping.service";
@@ -14,7 +14,9 @@ import {
 } from "@angular/forms";
 import { StepsService, Step2Data, Step3Data, Step4Data } from "../steps.service";
 import { forkJoin } from "rxjs/observable/forkJoin";
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
+import { ModalUpdateMappingComponent } from "../modal-update-mapping/modal-update-mapping.component"
 @Component({
   selector: "fields-mapping-step",
   styleUrls: ["fields-mapping-step.component.scss"],
@@ -48,6 +50,7 @@ export class FieldsMappingStepComponent implements OnInit {
   public mappedColCount: number;
   public unmappedColCount: number;
   public mappedList = [];
+  @ViewChild('modalConfirm') modalConfirm: any;
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
@@ -55,6 +58,7 @@ export class FieldsMappingStepComponent implements OnInit {
     private _fb: FormBuilder,
     private stepService: StepsService,
     private _router: Router,
+    private _modalService: NgbModal,
     public cruvedStore: CruvedStoreService
   ) { }
 
@@ -104,6 +108,7 @@ export class FieldsMappingStepComponent implements OnInit {
     }
     this.generateSyntheseForm();
   }
+
 
   getValidationErrors(n_table_rows, importId) {
     let getErrorList = this._ds.getErrorList(importId);
@@ -294,24 +299,34 @@ export class FieldsMappingStepComponent implements OnInit {
     })
   }
 
+  // On close modal: ask if save the mapping or not
+  saveMappingUpdate(saveBoolean) {
+    if (!saveBoolean) {
+      this.createOrUpdateMapping()
+    } else {
+      // create a temporary mapping
+      const mapping_value = {
+        'mappingName': 'mapping_temporaire_' + Date.now(),
+        'temporary': true
+      }
+      this._ds.postMappingName(mapping_value, 'FIELD').subscribe(id_mapping => {
+        this.id_mapping = id_mapping;
+        this.createOrUpdateMapping()
+      })
+    }
+  }
+
+  openModalConfirm() {
+    this._modalService.open(this.modalConfirm)
+
+  }
+
   onNextStep() {
     // if the form has changed
     if (!this.syntheseForm.pristine) {
       // if the user has right to modify it
       if (this.fieldMappingForm.value.cruved.U) {
-        if (window.confirm("Attention, le mapping a été modifié, voulez-vous sauvegarder ces modifications")) {
-          this.createOrUpdateMapping()
-        } else {
-          // create a temporary mapping
-          const mapping_value = {
-            'mappingName': 'mapping_temporaire_' + Date.now(),
-            'temporary': true
-          }
-          this._ds.postMappingName(mapping_value, 'FIELD').subscribe(id_mapping => {
-            this.id_mapping = id_mapping;
-            this.createOrUpdateMapping()
-          })
-        }
+        this.openModalConfirm();
         // the form has changed but the user do not has rights
       } else {
         const mapping_value = {
@@ -325,8 +340,7 @@ export class FieldsMappingStepComponent implements OnInit {
       }
       // the form not change do not create temp mapping
     } else {
-      this.createOrUpdateMapping()
-
+      this.createOrUpdateMapping();
     }
 
   }
