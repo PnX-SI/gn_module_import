@@ -13,6 +13,7 @@ import { ModuleConfig } from "../../../module.config";
   templateUrl: "content-mapping-step.component.html"
 })
 export class ContentMappingStepComponent implements OnInit {
+  public IMPORT_CONFIG = ModuleConfig;
   public isCollapsed = false;
   public userContentMapping;
   public newMapping: boolean = false;
@@ -71,15 +72,16 @@ export class ContentMappingStepComponent implements OnInit {
 
     // fill the form
     if (this.stepData.id_content_mapping) {
-
+      
       this.contentMappingForm.controls["contentMapping"].setValue(
         this.stepData.id_content_mapping
       );
       this.fillMapping(this.stepData.id_content_mapping);
 
-    } else {
-
     }
+
+    this.onMappingChange(this.id_mapping);
+
   }
 
   getNomencInf() {
@@ -118,8 +120,12 @@ export class ContentMappingStepComponent implements OnInit {
   onSelectChange(selectedVal, group, formControlName) {
     this.stepData.contentMappingInfo.map(ele => {
       if (ele.nomenc_abbr === group.nomenc_abbr) {
+        /*if (ele.nomenc_abbr == 'NAT_OBJ_GEO') {
+          console.log(ele.user_values.values);
+          console.log(selectedVal);
+        }*/
         ele.user_values.values = ele.user_values.values.filter(value => {
-          return value.id != selectedVal.id;
+          return !((value.value == selectedVal.value));
         });
       }
     });
@@ -143,35 +149,42 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   isEnabled(value_def_id: string) {
-    return (!this.contentTargetForm.controls[value_def_id].value)
-      || this.contentTargetForm.controls[value_def_id].value.length == 0;
+    return true;
+    /*(!this.contentTargetForm.controls[value_def_id].value)
+      || this.contentTargetForm.controls[value_def_id].value.length == 0;*/
   }
 
   containsEnabled(contentMapping: any) {
-    return contentMapping.nomenc_values_def.find(value_def => this.isEnabled(value_def.id));
+    //return contentMapping.nomenc_values_def.find(value_def => this.isEnabled(value_def.id));
+    return contentMapping.user_values.values.filter(val => val.value).length > 0;
   }
 
   updateEnabled(e) {
-    if (e.target.checked && this.id_mapping) {
-      this.fillMapping(this.id_mapping);
-    }
+    this.onMappingChange(this.id_mapping);
   }
 
-  onMappingName(): void {
-    this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
-      id_mapping => {
+  onMappingChange(id_mapping) {
+    this._ds.getNomencInfo(this.stepData.importId, this.idFieldMapping).subscribe(
+      res => {
+
+        this.stepData.contentMappingInfo = res["content_mapping_info"];
+        this.generateContentForm();
         if (id_mapping) {
           this.disabled = false;
           this.fillMapping(id_mapping);
         } else {
           this.n_mappes = -1;
-          this.getNomencInf();
-          this.contentTargetForm.reset();
-          for (let contentMapping of this.stepData.contentMappingInfo) {
-            contentMapping.isCollapsed = false;
-          }
           this.disabled = true;
         }
+
+      }
+    );
+  }
+
+  onMappingName(): void {
+    this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
+      id_mapping => {
+        //this.onMappingChange(id_mapping);
       },
       error => {
         if (error.statusText === "Unknown Error") {
@@ -196,17 +209,6 @@ export class ContentMappingStepComponent implements OnInit {
           this.nomencName = contentMapping.nomenc_abbr;
         }
       });
-      // find id in nomenc
-      // if (contentMapping.nomenc_abbr == this.nomencName) {
-      //   contentMapping.user_values.values.map(value => {
-      //     if (value.value == userValue) {
-      //       this.idInfo = value.id;
-      //       // contentMapping.user_values.values = contentMapping.user_values.values.filter(
-      //       //   obj => obj.id !== value.id
-      //       // );
-      //     }
-      //   });
-      // }
     });
     // console.log(this.idInfo);
 
@@ -239,13 +241,19 @@ export class ContentMappingStepComponent implements OnInit {
             );
             if (formControl) {
               formControl.setValue(arrayVal);
-              if (arrayVal[0])
-                ++this.n_mappes;
+              ++this.n_mappes;
             }
           }
         } else {
           this.contentTargetForm.reset();
           this.n_mappes = -1;
+        }
+        this.n_aMapper = 0;
+        for (let contentMapping of this.stepData.contentMappingInfo) {
+          this.n_aMapper += contentMapping.user_values.values.filter(val => val.value).length;
+          this.n_mappes -= contentMapping.user_values.values.filter(val => val.value).length;
+          if (contentMapping.user_values.values.filter(val => val.value).length > 0)
+            console.log(contentMapping.user_values);
         }
       },
       error => {
@@ -281,8 +289,8 @@ export class ContentMappingStepComponent implements OnInit {
           this.spinner = false;
           //this.contentMapRes = res;
           this._ds.getErrorList(this.stepData.importId).subscribe(err => {
-            this.n_errors = err.errors.filter(error => error.error_level == 'ERROR').length;
-            this.n_warnings = err.errors.filter(error => error.error_level == 'WARNING').length;
+            this.n_errors = err.errors.filter(error => error.error_level=='ERROR').length;
+            this.n_warnings = err.errors.filter(error => error.error_level=='WARNING').length;
             if (this.n_errors == 0) {
               this.disableNextStep = false;
               this.showValidateMappingBtn = false;

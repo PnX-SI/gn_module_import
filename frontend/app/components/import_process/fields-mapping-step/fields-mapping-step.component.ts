@@ -20,6 +20,7 @@ import { forkJoin } from "rxjs/observable/forkJoin";
 })
 export class FieldsMappingStepComponent implements OnInit {
   public spinner: boolean = false;
+  public displayAllValues: boolean = false;
   public IMPORT_CONFIG = ModuleConfig;
   public syntheseForm: FormGroup;
   public n_error_lines;
@@ -39,7 +40,11 @@ export class FieldsMappingStepComponent implements OnInit {
   public fieldMappingForm: FormGroup;
   public userFieldMappings;
   public newMapping: boolean = false;
+  public updateMapping: boolean = false; 
 
+  public mappedColCount: number;
+  public unmappedColCount: number;
+  public mappedList= [];
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
@@ -51,6 +56,10 @@ export class FieldsMappingStepComponent implements OnInit {
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(2);
+    if (this.IMPORT_CONFIG.ALLOW_FIELD_MAPPING && !this.stepData.id_field_mapping) {      
+      this.stepData.id_field_mapping = this.IMPORT_CONFIG.DEFAULT_FIELD_MAPPING_ID;
+    }
+      
     this.fieldMappingForm = this._fb.group({
       fieldMapping: [null],
       mappingName: [""]
@@ -173,6 +182,49 @@ export class FieldsMappingStepComponent implements OnInit {
         }
       );
   }
+
+  canUpdateMapping()
+  {
+    console.log(this.id_mapping);
+    
+    if(!ModuleConfig.ALLOW_MODIFY_DEFAULT_MAPPING &&
+         ModuleConfig.ALLOW_FIELD_MAPPING && 
+         this.id_mapping == this.IMPORT_CONFIG.DEFAULT_FIELD_MAPPING_ID){
+      return true;
+    }
+    return false;
+    
+  }
+
+  updateMappingField(value, id_mapping) {
+    this.spinner = true;
+    this._ds
+      .updateMappingField(
+        value,
+        this.stepData.importId,
+        id_mapping,
+      )
+      .subscribe(
+        res => {
+          this.spinner = false;
+        },
+        error => {
+          this.spinner = false;
+          if (error.statusText === "Unknown Error") {
+            // show error message if no connexion
+            this._commonService.regularToaster(
+              "error",
+              "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+            );
+          } else {
+            // show error message if other server error
+            if (error.status == 400) this.isUserError = true;
+            this._commonService.regularToaster("error", error.error.message);
+          }
+        }
+      );
+  }
+
 
   onNextStep() {
     this._ds.updateFieldMapping(this.id_mapping, this.syntheseForm.value).subscribe(data => {
@@ -300,7 +352,7 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   onMappingChange(id_mapping): void {
-
+    console.log(id_mapping)
     this.id_mapping = id_mapping;
     if (this.id_mapping && id_mapping != "") {
       this.fillMapping(this.id_mapping, this.columns);
@@ -322,14 +374,17 @@ export class FieldsMappingStepComponent implements OnInit {
     const columnsArray: Array<string> = this.columns.map(col => col.id);
     this._ds.getMappingFields(this.id_mapping).subscribe(
       mappingFields => {
+        this.mappedList = [];
         this.enableMapping(this.syntheseForm);
         if (mappingFields[0] != "empty") {
-
+        
           for (let field of mappingFields) {
             if (columnsArray.includes(field['source_field'])) {
               this.syntheseForm
                 .get(field["target_field"])
                 .setValue(field["source_field"]);
+                this.mappedList.push(field["target_field"])
+                console.log("IF------>"+field["target_field"])
             }
           }
           this.shadeSelectedColumns(this.syntheseForm);
@@ -338,6 +393,7 @@ export class FieldsMappingStepComponent implements OnInit {
           this.fillEmptyMapping(this.syntheseForm);
         }
         this.onFormMappingChange();
+        this.count(this.syntheseForm);
         this.formReady = true;
       },
       error => {
@@ -362,8 +418,15 @@ export class FieldsMappingStepComponent implements OnInit {
 
   cancelMapping() {
     this.newMapping = false;
+    this.updateMapping = false;
     this.fieldMappingForm.controls["mappingName"].setValue("");
   }
+
+  renameMapping()
+  {
+    this.updateMapping = true;
+  }
+
 
   saveMappingName(value, importId, targetForm) {
     let mappingType = "FIELD";
@@ -371,6 +434,32 @@ export class FieldsMappingStepComponent implements OnInit {
       res => {
         this.stepData.id_field_mapping = res;
         this.newMapping = false;
+        this.getMappingNamesList(mappingType, importId);
+        this.fieldMappingForm.controls["fieldMapping"].setValue(res);
+        this.fieldMappingForm.controls["mappingName"].setValue("");
+        this.enableMapping(targetForm);
+      },
+      error => {
+        if (error.statusText === "Unknown Error") {
+          // show error message if no connexion
+          this._commonService.regularToaster(
+            "error",
+            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+          );
+        } else {
+          console.error(error);
+          this._commonService.regularToaster("error", error.error);
+        }
+      }
+    );
+  }
+
+  updateMappingName(value, importId, targetForm) {
+    let mappingType = "FIELD";
+    this._ds.updateMappingName(value, mappingType, this.id_mapping).subscribe(
+      res => {
+        this.stepData.id_field_mapping = res;
+        this.updateMapping = false;
         this.getMappingNamesList(mappingType, importId);
         this.fieldMappingForm.controls["fieldMapping"].setValue(res);
         this.fieldMappingForm.controls["mappingName"].setValue("");
@@ -408,9 +497,43 @@ export class FieldsMappingStepComponent implements OnInit {
     this.stepData.importId
   }
 
+  count(targetForm) {
+    this.mappedColCount = 0;
+    this.unmappedColCount = 0;
+    for (const field in targetForm.controls) { 
+      let colValue = targetForm.get(field).value;
+      if(colValue !="WKT" && field != "autogenerated"){
+        if( colValue == null || colValue == ''){
+          this.unmappedColCount = this.unmappedColCount + 1
+        }else{
+          this.mappedColCount = this.mappedColCount + 1;
+        }
+      }
+  }
+  console.log(this.unmappedColCount)
+
+  }
+
+  checkCondition(name_field){
+    if(this.IMPORT_CONFIG.DISPLAY_CHECK_BOX_MAPPED_FIELD){
+      if(!this.displayAllValues){
+        return !this.mappedList.includes(name_field);
+      }
+      return true;
+    }
+
+    if(this.IMPORT_CONFIG.DISPLAY_MAPPED_FIELD)
+    {
+      return !this.mappedList.includes(name_field);
+    }else{
+      return true;
+    }
+  }
 
 
   onSelect(id_mapping, targetForm) {
+    // console.log(targetForm.value)
+    this.count(targetForm);
     this.id_mapping = id_mapping;
     this.shadeSelectedColumns(targetForm);
     this._fm.geoFormValidator(targetForm);

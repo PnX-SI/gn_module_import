@@ -109,11 +109,23 @@ INVALID_CSV_NAME = "invalid"
 
 ALLOW_VALUE_MAPPING = True
 
+
 # If VALUE MAPPING is not allowed, you must specify the DEFAULT_MAPPING_ID
 DEFAULT_MAPPING_ID = 3
 
 INSTANCE_BOUNDING_BOX = [-5.0, 41, 10, 51.15]
 
+ALLOW_FIELD_MAPPING = True 
+DEFAULT_FIELD_MAPPING_ID = 3
+
+
+ALLOW_MODIFY_DEFAULT_MAPPING = True
+ALLOW_FIELD_MAPPING = True 
+DEFAULT_FIELD_MAPPING_ID = 1
+# Parameter to define if the mapped fields are displayed or not. 
+DISPLAY_MAPPED_FIELD = False
+# Parameter to define if the checkbox allowing to change display mode is displayed or not.
+DISPLAY_CHECK_BOX_MAPPED_FIELD = True
 
 class GnModuleSchemaConf(Schema):
     LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, missing=DEFAULT_LIST_COLUMN)
@@ -137,8 +149,17 @@ class GnModuleSchemaConf(Schema):
     ALLOW_VALUE_MAPPING = fields.Boolean(missing=ALLOW_VALUE_MAPPING)
     DEFAULT_MAPPING_ID = fields.Integer(missing=DEFAULT_MAPPING_ID)
     FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(missing=False)
+    DISPLAY_MAPPED_VALUES = fields.Boolean(missing=False)
+    DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(missing=True)
     INSTANCE_BOUNDING_BOX = fields.List(fields.Float, missing=INSTANCE_BOUNDING_BOX)
     ENABLE_BOUNDING_BOX_CHECK = fields.Boolean(missing=True)
     ENABLE_SYNTHESE_UUID_CHECK = fields.Boolean(missing=True)
     DISPLAY_MAPPED_VALUES = fields.Boolean(missing=False)
     DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(missing=True)
+    ALLOW_MODIFY_DEFAULT_MAPPING = fields.Boolean(missing=ALLOW_MODIFY_DEFAULT_MAPPING)
+    ALLOW_FIELD_MAPPING = fields.Boolean(missing=ALLOW_FIELD_MAPPING)
+    DEFAULT_FIELD_MAPPING_ID = fields.Integer(missing=DEFAULT_FIELD_MAPPING_ID)
+    DISPLAY_MAPPED_FIELD = fields.Boolean(missing=False)
+    DISPLAY_CHECK_BOX_MAPPED_FIELD = fields.Boolean(missing=True)
+
+

@@ -2,14 +2,14 @@
     <stepper [step]=2></stepper>
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title mb-0"> Mapping des champs  </h5>
+            <h5 class="card-title mb-0">  Correspondance des champs avec le modèle </h5>
         </div>
         <div class="card-body" *ngIf="formReady">
             <!-- Choix de la liste des nomenclatures -->
             <form [formGroup]="fieldMappingForm" class="was-validated">
                 <fieldset>
                     <legend class="px-1">
-                        Choix de la liste des nomenclatures
+                        Choix du modèle d'import
                     </legend>
                     <div *ngIf="userFieldMappings" class="form-group">
                         <select class="form-control form-control-sm" id="mappingSelection"
@@ -19,11 +19,39 @@
                                 {{data.mapping_label}}</option>
                         </select>
                     </div>
-                    <button
-                        class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between mb-3"
-                        (click)="createMapping()">
-                        Nouveau mapping
-                    </button>
+                    <div class="d-flex flex-row justify-content-between mb-3"> 
+                        <div class="d-flex justify-content-center align-content-between">
+                        <button
+                            class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between"
+                            (click)="createMapping()">
+                            Nouveau mapping
+                        </button>
+                        <button
+                            class="btn btn-secondary btn-sm box-shadow d-flex justify-content-center align-content-between"
+                            (click)="renameMapping()"
+                            [disabled]="canUpdateMapping() || fieldMappingForm.get('fieldMapping').value === '' || fieldMappingForm.get('fieldMapping').value == null">
+                            Modifier nom mapping
+                        </button>
+                    </div>
+                        <div *ngIf="this.IMPORT_CONFIG.DISPLAY_CHECK_BOX_MAPPED_FIELD" class="form-check">
+                            <input type="checkbox" [(ngModel)]="displayAllValues" [ngModelOptions]="{standalone: true}">
+                            Afficher les champs automatiquement associés
+                        </div>
+                        
+                    </div>
+                    <div *ngIf="updateMapping" class="d-flex flex-row justify-content-between form_group" id="updateMap">
+                        <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
+                        <button
+                            class="btn btn-success box-shadow d-flex justify-content-center align-content-between mr-2"
+                            (click)="updateMappingName(fieldMappingForm.value, importId, syntheseForm)"
+                            [disabled]="fieldMappingForm.get('mappingName').value === '' || fieldMappingForm.get('mappingName').value == null">
+                            ok
+                        </button>
+                        <button class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
+                            (click)="cancelMapping()">
+                            annuler
+                        </button>
+                    </div>
                     <div *ngIf="newMapping" class="d-flex flex-row justify-content-between form_group" id="newMap">
                         <input type="text" class="form-control mr-2" value="Inconnu" formControlName="mappingName">
                         <button
@@ -37,7 +65,35 @@
                             annuler
                         </button>
                     </div>
+
+                    <div *ngIf="!(fieldMappingForm.get('fieldMapping').value === '' || fieldMappingForm.get('fieldMapping').value == null)">
+                        <div *ngIf="this.unmappedColCount == 0" class="alert alert-success" role="alert" style="text-align: center;">
+                            L'ensemble des champs du fichier ont été automatiquement associés aux champs du modèle d'import.
+                        </div>
+                        <div *ngIf="this.mappedColCount == 1" class="alert alert-success" role="alert" style="text-align: center;">
+                            1 seul champ du fichier a pu être automatiquement associés aux champs du modèle d'import.<br>
+                            {{this.unmappedColCount}} restent à associer manuellement.   
+                        </div>
+                        <div *ngIf="this.unmappedColCount > 0 && this.mappedColCount > 1" class="alert alert-success" role="alert" style="text-align: center;">
+                            {{this.mappedColCount}} Champs du fichier ont été automatiquement associés aux champs du modèle d'import.<br>
+                            {{this.unmappedColCount}} restent à associer manuellement.
+                        </div>
+                        <div *ngIf="this.unmappedColCount == 0" class="alert alert-danger" role="alert" style="text-align: center;">
+                            Aucun champ du fichier n'a pu être associé aux champs du modèle d'import.
+                        </div>
+                    </div>
+                    <!-- <div *ngIf="!(fieldMappingForm.get('fieldMapping').value === '' || fieldMappingForm.get('fieldMapping').value == null)" 
+                        [className]="(fieldMappingForm.get('fieldMapping').value === '' || fieldMappingForm.get('fieldMapping').value == null)? 
+                                'alert alert-danger': 'alert alert-success'" role="alert" style="text-align: center;">
+                        {{this.mappedColCount}} Champs du fichier ont été automatiquement associés aux champs du modèle d'import.<br>
+                        {{this.unmappedColCount}} restent à associer manuellement.
+                    </div> -->
                 </fieldset>
+                
+                
+                
+                
+                   
             </form>
             <form [formGroup]="syntheseForm">
                 <div *ngFor="let theme of bibRes">
@@ -46,31 +102,34 @@
                             {{theme.theme_name}}
                         </legend>
                         <div class="row m-0">
-                            <div class="col-6" *ngFor="let field of theme.fields">
-                                <div *ngIf="!field.autogenerated" class="form-group">
-                                    <small>{{field.fr_label}} :</small>
-                                    <select class="form-control form-control-sm" id="{{field.name_field}}"
-                                        placeholder="Open this select menu" formControlName="{{field.name_field}}"
-                                        (change)="onSelect(id_mapping, syntheseForm)">
-                                        <option [value]=""></option>
-                                        <option *ngFor="let column of columns" [class.isSelected]="column.selected"
-                                            [value]="column.id">
-                                            {{column.id}}
-                                        </option>
-                                    </select>
+                            <div *ngIf="displayAllValues; else elseBlock"></div>
+                            <ng-container *ngFor="let field of theme.fields">
+                                <div class="col-6"*ngIf="checkCondition(field.name_field)">
+                                    <div *ngIf="!field.autogenerated" class="form-group">
+                                        <small>{{field.fr_label}} :</small>
+                                        <select class="form-control form-control-sm" id="{{field.name_field}}"
+                                            placeholder="Open this select menu" formControlName="{{field.name_field}}"
+                                            (change)="onSelect(id_mapping, syntheseForm)">
+                                            <option [value]=""></option>
+                                            <option *ngFor="let column of columns" [class.isSelected]="column.selected"
+                                                [value]="column.id">
+                                                {{column.id}}
+                                            </option>
+                                        </select>
 
-                                    <div *ngIf="field.required"
-                                        [class.d-block]="syntheseForm.controls[field.name_field].hasError('required')"
-                                        class="invalid-feedback">Sélectionnez
-                                        {{field.name_field}}</div>
-                                    <div *ngIf="field.name_field=='WKT'">
-                                        <small>*si pas de WKT, indiquez longitude et latitude</small></div>
+                                        <div *ngIf="field.required"
+                                            [class.d-block]="syntheseForm.controls[field.name_field].hasError('required')"
+                                            class="invalid-feedback">Sélectionnez
+                                            {{field.name_field}}</div>
+                                        <div *ngIf="field.name_field=='WKT'">
+                                            <small>*si pas de WKT, indiquez longitude et latitude</small></div>
+                                    </div>
+                                    <div *ngIf="field.autogenerated" class="form-group">
+                                        <label for="auto_check"> <small>{{field.fr_label}} :</small> </label>
+                                        <input type="checkbox" id="auto_check" formControlName="{{field.name_field}}">
+                                    </div>
                                 </div>
-                                <div *ngIf="field.autogenerated" class="form-group">
-                                    <label for="auto_check"> <small>{{field.fr_label}} :</small> </label>
-                                    <input type="checkbox" id="auto_check" formControlName="{{field.name_field}}">
-                                </div>
-                            </div>
+                            </ng-container>
                         </div>
                     </fieldset>
                 </div>
@@ -93,6 +152,13 @@
                     <span *ngIf="n_error_lines == 0  && mappingRes" class="alert alert-success"> Aucune erreur détéctée dans le fichier </span>
 
                     <!-- <button *ngIf="!mappingRes"
+                    <button
+                        class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
+                        [disabled]="canUpdateMapping()"
+                        (click)="updateMappingField(syntheseForm.value, id_mapping)">
+                        Mettre à jour le mapping
+                    </button>
+                    <button *ngIf="!mappingRes"
                         class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                         [disabled]="syntheseForm.invalid" (click)="onDataCleaning(syntheseForm.value, id_mapping)">
                         Valider le mapping

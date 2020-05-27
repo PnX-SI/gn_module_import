@@ -203,6 +203,35 @@ class NomenclatureTransformer:
                     query, commit=True, params={"id_rows": tuple(formated_rows_err)}
                 )
 
+                
+                if current_app.config["IMPORT"][
+                    "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"
+                ]: 
+                    nomenc_values = get_nomenc_values(el["mnemonique_type"])
+                    nomenc_values_ids = [get_mnemo(str(val[0])) for val in nomenc_values]
+                    set_user_error(
+                        id_import=id_import,
+                        step="CONTENT_MAPPING",
+                        error_code="INVALID_NOMENCLATURE_WARNING",
+                        col_name=el["user_col"],
+                        id_rows=row.gn_pk,
+                        comment="La valeur '{}' ne correspond à aucune des valeurs [{}] de la nomenclature {} et a ete remplacée par la valeur par défaut '{}'".format(
+                            row[1], ", ".join(nomenc_values_ids),
+                            el["mnemonique_type"], get_mnemo(set_default_value(el["mnemonique_type"]))
+                        )
+                    )
+                else:
+                    set_user_error(
+                        id_import=id_import,
+                        step="CONTENT_MAPPING",
+                        error_code="INVALID_NOMENCLATURE",
+                        col_name=el["user_col"],
+                        id_rows=row.gn_pk,
+                        comment="La valeur '{}' n'existe pas pour la nomenclature {}".format(
+                            row[1], el["mnemonique_type"]
+                        )
+                    )
+
     @checker("Set nomenclature default ids")
     def set_default_nomenclature_ids(self):
         try:
