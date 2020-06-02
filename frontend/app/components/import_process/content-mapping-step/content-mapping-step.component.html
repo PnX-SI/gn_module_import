@@ -66,10 +66,9 @@
                 </fieldset>
             </form>
 
-
         <form [formGroup]="contentTargetForm" *ngIf="showForm">
             <div *ngFor="let contentMapping of stepData.contentMappingInfo">
-                <div *ngIf="(containsEnabled(contentMapping) || _cm.displayMapped) && !_cm.newMapping " class="card field-card">
+                <div [hidden]="(!containsEnabled(contentMapping) && !_cm.displayMapped)" class="card field-card">
                     <div class="field-header" (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed">
                         <div class="card-title mb-0">{{contentMapping.nomenc_name}}</div>
                         <i *ngIf="contentMapping.isCollapsed" class="material-icons">keyboard_arrow_down</i>
