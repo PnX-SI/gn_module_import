@@ -334,7 +334,7 @@ def exist_proof_check(
             field_non_digital_proof=field_non_digital_proof,
             field_digital_proof=field_digital_proof,
         )
-    return DB.session.execute(query).fetchone()
+    return DB.session.execute(query).first()
 
 
 def statut_source_check(statut_source_col):
