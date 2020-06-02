@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormControl, FormGroup, FormBuilder } from "@angular/forms";
 import { StepsService, Step3Data, Step4Data, Step2Data } from "../steps.service";
@@ -7,6 +7,7 @@ import { ContentMappingService } from "../../../services/mappings/content-mappin
 import { CommonService } from "@geonature_common/service/common.service";
 import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
 import { ModuleConfig } from "../../../module.config";
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: "content-mapping-step",
@@ -37,7 +38,9 @@ export class ContentMappingStepComponent implements OnInit {
   public showValidateMappingBtn = true;
   public displayCheckBox = ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES;
   public mappingListForm = new FormControl();
-  public newMappingNameForm = new FormControl()
+  public newMappingNameForm = new FormControl();
+
+  @ViewChild('modalConfirm') modalConfirm: any;
 
   constructor(
     private stepService: StepsService,
@@ -46,6 +49,7 @@ export class ContentMappingStepComponent implements OnInit {
     public _cm: ContentMappingService,
     private _commonService: CommonService,
     private _router: Router,
+    private _modalService: NgbModal,
     public cruvedStore: CruvedStoreService
   ) { }
 
@@ -376,30 +380,34 @@ export class ContentMappingStepComponent implements OnInit {
     })
   }
 
+  // On close modal: ask if save the mapping or not
+  saveMappingUpdate(saveBoolean) {
+    if (saveBoolean) {
+      this.createOrUpdateMapping()
+    } else {
+      // create a temporary mapping
+      const mapping_value = {
+        'mappingName': 'mapping_temporaire_' + Date.now(),
+        'temporary': true
+      }
+      this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
+        this.id_mapping = id_mapping;
+        this.createOrUpdateMapping()
+      })
+    }
+  }
+
   goToPreview() {
     // if the form has not be changed
 
     if (this.contentTargetForm.pristine) {
       this.createOrUpdateMapping()
     } else {
-      // if the form mapping has been changed
+      // if the form mapping has been changed and the user has right to update it
       if (this.mappingListForm.value.cruved.U) {
-        if (window.confirm("Attention, le mapping a été modifié, voulez-vous sauvegarder ces modifications")) {
-          this.createOrUpdateMapping()
-        }
-        else {
-          // the user don't want to save the mapping -> temporary mapping
-          const mapping_value = {
-            'mappingName': 'mapping_temporaire_' + Date.now(),
-            'temporary': true
-          }
-          this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
-            this.id_mapping = id_mapping;
-            this.createOrUpdateMapping()
-          })
-        }
-
-      } else {
+        this._modalService.open(this.modalConfirm);
+      }
+      else {
         // the user don't has right to update the mapping -> temporary mapping
         const mapping_value = {
           'mappingName': 'mapping_temporaire_' + Date.now(),

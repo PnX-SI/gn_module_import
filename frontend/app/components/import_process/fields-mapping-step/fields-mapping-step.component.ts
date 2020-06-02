@@ -16,7 +16,6 @@ import { StepsService, Step2Data, Step3Data, Step4Data } from "../steps.service"
 import { forkJoin } from "rxjs/observable/forkJoin";
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
-import { ModalUpdateMappingComponent } from "../modal-update-mapping/modal-update-mapping.component"
 @Component({
   selector: "fields-mapping-step",
   styleUrls: ["fields-mapping-step.component.scss"],
@@ -301,7 +300,7 @@ export class FieldsMappingStepComponent implements OnInit {
 
   // On close modal: ask if save the mapping or not
   saveMappingUpdate(saveBoolean) {
-    if (!saveBoolean) {
+    if (saveBoolean) {
       this.createOrUpdateMapping()
     } else {
       // create a temporary mapping
