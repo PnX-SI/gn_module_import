@@ -13,6 +13,7 @@ import { DataService } from '../../services/data.service'
 export class ImportErrorsComponent implements OnInit, OnDestroy {
     private sub: any;
     public import: any;
+    public formatedErrors: string;
     constructor(private _dataService: DataService, private _activedRoute: ActivatedRoute) { }
 
     ngOnInit() {
@@ -23,6 +24,8 @@ export class ImportErrorsComponent implements OnInit, OnDestroy {
                 params["id_import"]
             ).subscribe(data => {
                 this.import = data;
+                console.log(this.import);
+
             })
 
         })
