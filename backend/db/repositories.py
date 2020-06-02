@@ -23,14 +23,13 @@ class TMappingsRepository:
 
     def get_user_mapping(self, info_role):
         users_mapping = None
+
+        q = DB.session.query(CorRoleMapping.id_mapping)
+
         if info_role.value_filter == "1" or (
             info_role.value_filter == "2" and info_role.id_organisme is None
         ):
-            users_mapping = (
-                DB.session.query(CorRoleMapping.id_mapping)
-                .filter(CorRoleMapping.id_role == info_role.id_role)
-                .all()
-            )
+            q = q.filter(CorRoleMapping.id_role == info_role.id_role)
         elif info_role.value_filter == "2":
             #  get id_role of the organism of the user
             subq_orga = (
@@ -38,18 +37,13 @@ class TMappingsRepository:
                 .filter(User.id_organisme == info_role.id_organisme)
                 .subquery()
             )
-            users_mapping = (
-                DB.session.query(CorRoleMapping.id_mapping)
-                .filter(
-                    or_(
-                        CorRoleMapping.id_role == info_role.id_role,
-                        CorRoleMapping.id_role.in_(subq_orga),
-                    )
+            q = q.filter(
+                or_(
+                    CorRoleMapping.id_role == info_role.id_role,
+                    CorRoleMapping.id_role.in_(subq_orga),
                 )
-                .distinct()
-                .all()
             )
-        return [m.id_mapping for m in users_mapping]
+        return [m.id_mapping for m in q.distinct().all()]
 
     def user_is_allowed_to(self, level, id_mapping, user_mappings):
         if level == "0" or level not in ("1", "2", "3"):

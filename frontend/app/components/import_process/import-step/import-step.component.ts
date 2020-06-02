@@ -55,10 +55,10 @@ export class ImportStepComponent implements OnInit {
         const step2: Step2Data = this.stepService.getStepData(2);
         const step3: Step3Data = this.stepService.getStepData(3);
 
-        if (step2.id_field_mapping) {
+        if (step2.id_field_mapping && step2.temporaryMapping) {
           this._ds.deleteMapping(step2.id_field_mapping).subscribe();
         }
-        if (step3.id_content_mapping) {
+        if (step3.id_content_mapping && step3.temporaryMapping) {
           this._ds.deleteMapping(step3.id_content_mapping).subscribe();
         }
         this.stepService.resetStepoer();

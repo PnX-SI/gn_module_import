@@ -367,23 +367,24 @@ export class ContentMappingStepComponent implements OnInit {
       );
   }
 
-  createOrUpdateMapping() {
+  createOrUpdateMapping(temporary) {
     this._ds.updateContentMapping(this.id_mapping, this.contentTargetForm.value).subscribe(d => {
       let step4Data: Step4Data = {
         importId: this.stepData.importId
       };
       let step3Data: Step3Data = this.stepData;
       step3Data.id_content_mapping = this.id_mapping;
+      step3Data.temporaryMapping = temporary;
       this.stepService.setStepData(3, step3Data);
       this.stepService.setStepData(4, step4Data);
-      this.onDataChecking()
+      this.onDataChecking();
     })
   }
 
   // On close modal: ask if save the mapping or not
   saveMappingUpdate(saveBoolean) {
     if (saveBoolean) {
-      this.createOrUpdateMapping()
+      this.createOrUpdateMapping(true)
     } else {
       // create a temporary mapping
       const mapping_value = {
@@ -392,7 +393,7 @@ export class ContentMappingStepComponent implements OnInit {
       }
       this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
         this.id_mapping = id_mapping;
-        this.createOrUpdateMapping()
+        this.createOrUpdateMapping(false)
       })
     }
   }
@@ -401,7 +402,7 @@ export class ContentMappingStepComponent implements OnInit {
     // if the form has not be changed
 
     if (this.contentTargetForm.pristine) {
-      this.createOrUpdateMapping()
+      this.createOrUpdateMapping(false)
     } else {
       // if the form mapping has been changed and the user has right to update it
       if (this.mappingListForm.value.cruved.U) {
@@ -415,7 +416,7 @@ export class ContentMappingStepComponent implements OnInit {
         }
         this._ds.postMappingName(mapping_value, 'CONTENT').subscribe(id_mapping => {
           this.id_mapping = id_mapping;
-          this.createOrUpdateMapping()
+          this.createOrUpdateMapping(true)
         })
       }
     }

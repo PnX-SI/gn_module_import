@@ -53,16 +53,16 @@ def get_mappings(info_role, mapping_type):
     """
         Load mapping names in frontend (select)
     """
-    try:
-        mapping_repo = TMappingsRepository()
-        return mapping_repo.get_all(
-            info_role=info_role, with_cruved=True, mapping_type=mapping_type
-        )
-    except Exception as e:
-        raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR - get_mapping_fields() error : contactez l'administrateur du site",
-            details=str(e),
-        )
+    # try:
+    mapping_repo = TMappingsRepository()
+    return mapping_repo.get_all(
+        info_role=info_role, with_cruved=True, mapping_type=mapping_type
+    )
+    # except Exception as e:
+    #     raise GeonatureImportApiError(
+    #         message="INTERNAL SERVER ERROR - get_mapping_fields() error : contactez l'administrateur du site",
+    #         details=str(e),
+    #     )
 
 
 @blueprint.route("/field_mappings/<id_mapping>", methods=["GET"])

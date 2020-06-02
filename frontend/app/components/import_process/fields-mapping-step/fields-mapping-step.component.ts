@@ -247,7 +247,7 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
 
-  createOrUpdateMapping() {
+  createOrUpdateMapping(temporary) {
     let step3data: Step3Data = {
       //table_name: this.step3Response.table_name,
       importId: this.stepData.importId
@@ -259,6 +259,7 @@ export class FieldsMappingStepComponent implements OnInit {
       id_field_mapping: this.id_mapping,
       mappingRes: this.mappingRes,
       mappingIsValidate: true,
+      temporaryMapping: temporary,
       cruvedMapping: this.fieldMappingForm.value.cruved
     };
     this.stepService.setStepData(2, step2data);
@@ -301,7 +302,7 @@ export class FieldsMappingStepComponent implements OnInit {
   // On close modal: ask if save the mapping or not
   saveMappingUpdate(saveBoolean) {
     if (saveBoolean) {
-      this.createOrUpdateMapping()
+      this.createOrUpdateMapping(false)
     } else {
       // create a temporary mapping
       const mapping_value = {
@@ -310,7 +311,7 @@ export class FieldsMappingStepComponent implements OnInit {
       }
       this._ds.postMappingName(mapping_value, 'FIELD').subscribe(id_mapping => {
         this.id_mapping = id_mapping;
-        this.createOrUpdateMapping()
+        this.createOrUpdateMapping(true)
       })
     }
   }
@@ -334,12 +335,12 @@ export class FieldsMappingStepComponent implements OnInit {
         }
         this._ds.postMappingName(mapping_value, 'FIELD').subscribe(id_mapping => {
           this.id_mapping = id_mapping;
-          this.createOrUpdateMapping()
+          this.createOrUpdateMapping(true)
         })
       }
       // the form not change do not create temp mapping
     } else {
-      this.createOrUpdateMapping();
+      this.createOrUpdateMapping(false);
     }
 
   }
