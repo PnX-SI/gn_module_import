@@ -347,7 +347,7 @@ export class ContentMappingStepComponent implements OnInit {
               this.showValidateMappingBtn = false;
             }
           })
-          this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
+          this._router.navigate([ModuleConfig.MODULE_URL + (res=='Done' ? '/process/step/4' : '')]);
 
         },
         error => {

@@ -82,6 +82,7 @@ class TImports(DB.Model):
         foreign_keys=[CorRoleImport.id_import, CorRoleImport.id_role,],
     )
     is_finished = DB.Column(DB.Boolean, nullable=False, default=False)
+    processing = DB.Column(DB.Boolean, nullable=False, default=False)
     errors = DB.relationship(
         "VUserImportsErrors", lazy="joined", order_by="VUserImportsErrors.error_type"
     )
