@@ -82,6 +82,7 @@ export class DataService {
    * @param idContentMapping 
    */
   dataChecker(idImport, idFieldMapping, idContentMapping) {
+    console.log ('va appeler dataChecker');
     const url = `${urlApi}/data_checker/${idImport}/field_mapping/${idFieldMapping}/content_mapping/${idContentMapping}`;
     return this._http.post(url, {})
   }
