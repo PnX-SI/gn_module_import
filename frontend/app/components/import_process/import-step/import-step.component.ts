@@ -37,6 +37,13 @@ export class ImportStepComponent implements OnInit {
   ngOnInit() {
     this.stepData = this.stepService.getStepData(4);
     this.getValidData();
+    // this._ds.sendEmail(this.stepData.importId).subscribe(
+    //   res => {
+       
+    //   },
+    //   error => {
+    //   }
+    // );
   }
 
   onStepBack() {

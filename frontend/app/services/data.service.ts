@@ -186,4 +186,8 @@ export class DataService {
   getErrorList(importId) {
     return this._http.get<any>(`${urlApi}/get_error_list/${importId}`);
   }
+
+  sendEmail(import_id){
+    return this._http.get<any>(`${urlApi}/sendemail`);
+  }
 }
