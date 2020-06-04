@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { Component, OnInit, ViewChild, ViewEncapsulation } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormControl, FormGroup, FormBuilder } from "@angular/forms";
 import {
@@ -17,7 +17,8 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 @Component({
   selector: "content-mapping-step",
   styleUrls: ["content-mapping-step.component.scss"],
-  templateUrl: "content-mapping-step.component.html"
+  templateUrl: "content-mapping-step.component.html",
+  encapsulation: ViewEncapsulation.None
 })
 export class ContentMappingStepComponent implements OnInit {
   public IMPORT_CONFIG = ModuleConfig;

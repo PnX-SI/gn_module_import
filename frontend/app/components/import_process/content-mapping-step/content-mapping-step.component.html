@@ -18,8 +18,12 @@
                                 id="contentMappingSelection"
                                 [compareWith]="compareFn"
                                 [formControl]="mappingListForm">
+                                <option [ngValue]="null">
+                                    -
+                                </option>
                                 <option *ngFor="let data of _cm.userContentMappings" [ngValue]="data">
-                                    {{data.mapping_label}}</option>
+                                    {{data.mapping_label}}
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -72,7 +76,10 @@
             <div *ngFor="let contentMapping of stepData.contentMappingInfo">
                 <div [hidden]="(!containsEnabled(contentMapping) && !_cm.displayMapped)" class="card field-card">
                     <div class="field-header" (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed">
-                        <div class="card-title mb-0">{{contentMapping.nomenc_name}}</div>
+                        <div class="card-title mb-0">
+                            {{contentMapping.nomenc_name}} 
+                            <i matTooltip="{{contentMapping.nomenc_def}} |  Valeur par défaut: {{contentMapping.nomenc_default_value}}" matTooltipClass="custom-tooltip" class="fa fa-info-circle" aria-hidden="true"></i>
+                        </div>
                         <i *ngIf="contentMapping.isCollapsed" class="material-icons">keyboard_arrow_down</i>
                         <i *ngIf="!contentMapping.isCollapsed" class="material-icons">keyboard_arrow_up</i>
                     </div>

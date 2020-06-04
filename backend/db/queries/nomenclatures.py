@@ -16,15 +16,18 @@ def get_nomenc_details(nomenclature_abb):
     try:
         query = """
             SELECT 
-              label_default as name,
-              id_type as id
+              label_default AS name,
+              id_type AS id,
+              definition_default,
+              ref_nomenclatures.get_nomenclature_label(
+                gn_synthese.get_default_nomenclature_value(:nomenc)
+              )  AS label_default_nomenclature
             FROM ref_nomenclatures.bib_nomenclatures_types
             WHERE mnemonique = :nomenc;
         """
-        nomenc_details = DB.session.execute(
+        return DB.session.execute(
             text(query), {"nomenc": nomenclature_abb}
         ).fetchone()
-        return nomenc_details
     except Exception:
         raise
 
