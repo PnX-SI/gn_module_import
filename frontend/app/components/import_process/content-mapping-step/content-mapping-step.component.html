@@ -5,7 +5,6 @@
             <h5 class="card-title mb-0"> Correspondance des nomenclatures </h5>
         </div>
         <div class="card-body">
-
         <!-- Choix de la liste des nomenclatures -->
         <form class="was-validated">
                 <fieldset>
@@ -14,7 +13,10 @@
                                 Choix du modèle d'imports
                         </legend>
                         <div class="form-group">
-                            <select class="form-control form-control-sm" id="contentMappingSelection"
+                            <select 
+                                class="form-control form-control-sm" 
+                                id="contentMappingSelection"
+                                [compareWith]="compareFn"
                                 [formControl]="mappingListForm">
                                 <option *ngFor="let data of _cm.userContentMappings" [ngValue]="data">
                                     {{data.mapping_label}}</option>
