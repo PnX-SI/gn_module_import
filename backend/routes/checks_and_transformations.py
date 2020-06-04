@@ -1,4 +1,4 @@
-from flask import Flask, request, current_app
+from flask import Flask, request, current_app, copy_current_request_context
 
 from utils_flask_sqla.response import json_resp
 from geonature.utils.env import DB
@@ -17,6 +17,7 @@ from ..send_mail import(
     import_send_mail
 )
 
+import threading
 import redis
 from rq import Queue, Connection, Worker
 import time
@@ -35,15 +36,15 @@ broker_url = 'redis://localhost:6379/0'
 r = redis.Redis(host='localhost', port='6379')
 q = Queue('test',connection=r)
 app = Flask(__name__)
-celery = Celery(app.name, broker=broker_url)
+# Celery configuration
+app.config['SECRET_KEY'] = 'top-secret!'
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+app.config['broker_transport_options'] = {'visibility_timeout': 10}
 
-@celery.task(bind=True)
-def data_checker_task(self, import_id, id_field_mapping, id_content_mapping):
-    print('OK1')
-    field_mapping_data_checking(import_id, id_field_mapping)
-    print('OK2')
-    content_mapping_data_checking(import_id, id_content_mapping)
-    return "Done"
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+
+#@celery.task(bind=True)
 
 @celery.task
 def add(x, y):
@@ -69,10 +70,43 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
     print('source_count :')
     print(DB.session.query(TImports.source_count).filter(TImports.id_import == import_id).one())
 
-    if (DB.session.query(TImports.source_count).filter(TImports.id_import == import_id).one()[0] > 1000):
+    if (DB.session.query(TImports.source_count).filter(TImports.id_import == import_id).one()[0] > 10):
+
         DB.session.query(TImports).filter(TImports.id_import == import_id).update({'processing' : True})
         DB.session.commit()
-        data_checker_task.delay(import_id, id_field_mapping, id_content_mapping)
+
+        print('Flask(__name__)')
+        print(Flask(__name__))
+
+        #data_checker_task.delay(import_id, id_field_mapping, id_content_mapping)
+
+        @copy_current_request_context
+        def data_checker_task(import_id, id_field_mapping, id_content_mapping):
+            print('OK1')
+            field_mapping_data_checking(import_id, id_field_mapping)
+            print('OK2')
+            content_mapping_data_checking(import_id, id_content_mapping)
+            time.sleep(5)
+            DB.session.query(TImports).filter(TImports.id_import == import_id).update({'processing' : False})
+            DB.session.commit()
+
+            import_send_mail(
+                mail_to="mail_to",
+                file_name="TEST"
+            )
+            return "Done"
+
+        a = threading.Thread(
+            name="data_checker_task",
+            target=data_checker_task,
+            kwargs={
+                "import_id": import_id,
+                "id_field_mapping": id_field_mapping,
+                "id_content_mapping": id_content_mapping
+            }
+        )
+        a.start()
+
         return "Processing"
     else:
         field_mapping_data_checking(import_id, id_field_mapping)
