@@ -28,16 +28,14 @@ export class ContentMappingStepComponent implements OnInit {
   public idFieldMapping: number;
   public columns;
   public spinner: boolean = false;
-  contentTargetForm: FormGroup;
-  showForm: boolean = false;
-  contentMapRes: any;
-  stepData: Step3Data;
+  public contentTargetForm: FormGroup;
+  public showForm: boolean = false;
+  public contentMapRes: any;
+  public stepData: Step3Data;
   public nomencName;
   public idInfo;
   public disabled: boolean = true;
   public disableNextStep = true;
-  public n_errors: number;
-  public n_warnings: number;
   public n_aMapper: number = -1;
   public n_mappes: number = -1;
   public showValidateMappingBtn = true;
@@ -342,19 +340,6 @@ export class ContentMappingStepComponent implements OnInit {
       .subscribe(
         res => {
           this.spinner = false;
-          //this.contentMapRes = res;
-          this._ds.getErrorList(this.stepData.importId).subscribe(err => {
-            this.n_errors = err.errors.filter(
-              error => error.error_level == "ERROR"
-            ).length;
-            this.n_warnings = err.errors.filter(
-              error => error.error_level == "WARNING"
-            ).length;
-            if (this.n_errors == 0) {
-              this.disableNextStep = false;
-              this.showValidateMappingBtn = false;
-            }
-          });
           this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
         },
         error => {

@@ -115,26 +115,6 @@
                     <i class="material-icons"> navigate_before </i>
                     Précédent
                 </button>
-                <button 
-                    class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
-                    *ngIf="(n_errors > 0 || n_warnings > 0) && contentMapRes"
-                >
-                    <a target="_blank" [routerLink]="['/import/errors', stepData.importId]">
-                        <span *ngIf="n_errors > 0">{{n_errors}} erreur(s) détectée(s) - </span>
-                        <span *ngIf="n_warnings > 0">{{n_warnings}} lignes avec avertissement - </span>
-                        Voir le rapport complet
-                    </a>
-                </button>
-                <!-- <button (click)="onContentMapping(contentTargetForm.value)"
-                        class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        [disabled]="disabled"
-                        *ngIf="showValidateMappingBtn"
-                    >
-                        Valider le mapping
-                <span *ngIf="n_errors == 0 && n_warnings == 0" class="alert alert-success"> Aucune erreur détéctée dans le fichier </span>
-                </button> -->
-                <span *ngIf="n_errors == 0" class="alert alert-success"> Aucune erreur détéctée dans le fichier </span>
-
                 <button
                     class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                     [disabled]="disabled"
