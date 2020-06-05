@@ -113,6 +113,9 @@ ALLOW_VALUE_MAPPING = True
 # If VALUE MAPPING is not allowed, you must specify the DEFAULT_VALUE_MAPPING_ID
 DEFAULT_VALUE_MAPPING_ID = 3
 
+#Once the MAX_LINE_LIMIT has been exceeded, error processing will take place in the background,
+# you will be notified once this is completed
+MAX_LINE_LIMIT = 10000
 
 INSTANCE_BOUNDING_BOX = [-5.0, 41, 10, 51.15]
 
@@ -152,6 +155,7 @@ class GnModuleSchemaConf(Schema):
     FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(missing=False)
     DISPLAY_MAPPED_VALUES = fields.Boolean(missing=False)
     DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(missing=True)
+    MAX_LINE_LIMIT = fields.Integer(missing=MAX_LINE_LIMIT)
     INSTANCE_BOUNDING_BOX = fields.List(fields.Float, missing=INSTANCE_BOUNDING_BOX)
     ENABLE_BOUNDING_BOX_CHECK = fields.Boolean(missing=True)
     ENABLE_SYNTHESE_UUID_CHECK = fields.Boolean(missing=True)

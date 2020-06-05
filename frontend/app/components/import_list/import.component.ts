@@ -31,6 +31,7 @@ export class ImportComponent implements OnInit {
   n_invalid: any;
   csvDownloadResp: any;
   public deleteOne: any;
+  public interval: any;
 
   public search = new FormControl()
 
@@ -45,10 +46,22 @@ export class ImportComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+
     this.onImportList();
+
+    clearInterval(this.interval)
+    this.interval = setInterval(() => { 
+      this.onImportList(); 
+    }, 15000);
+
     this.search.valueChanges.subscribe(value => {
       this.updateFilter(value);
     });
+  }
+
+  ngOnDestroy() {
+    this._ds.getImportList().subscribe().unsubscribe();
+    clearInterval(this.interval)
   }
 
   updateFilter(val: any) {
@@ -76,6 +89,7 @@ export class ImportComponent implements OnInit {
   }
 
   private onImportList() {
+
     this._ds.getImportList().subscribe(
       res => {
         this.history = res.history;
