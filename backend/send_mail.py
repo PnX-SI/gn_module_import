@@ -26,7 +26,7 @@ def import_send_mail(mail_to, file_name):
 
     """
     send_mail(
-        recipients=["aboubaker.oudghiri@gmail.com"],
+        recipients=["vollmerflorent@gmail.com"],
         subject="[GeoNature] Import  réalisé",
         msg_html=msg
     )
