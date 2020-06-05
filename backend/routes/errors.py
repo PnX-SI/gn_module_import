@@ -78,7 +78,7 @@ def get_csv(info_role, import_id):
         full_path = os.path.join(uploads_directory, full_file_name)
 
         delimiter = get_delimiter(IMPORTS_SCHEMA_NAME, import_id)
-        SEPARATOR_MAPPING = {"colon": ";", "tab": "\t", "space": " "}
+        SEPARATOR_MAPPING = {"colon": ";", "tab": "\t", "space": " ", "comma" : ","}
 
         # save csv in upload directory
         conn = DB.engine.raw_connection()
