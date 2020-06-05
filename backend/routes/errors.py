@@ -65,7 +65,6 @@ def get_csv(info_role, import_id):
         MODULE_URL = blueprint.config["MODULE_URL"]
         PREFIX = blueprint.config["PREFIX"]
         INVALID_CSV_NAME = blueprint.config["INVALID_CSV_NAME"]
-        SEPARATOR = blueprint.config["SEPARATOR"]
 
         uploads_directory = get_upload_dir_path(MODULE_URL, DIRECTORY_NAME)
         table_names = get_table_names(
@@ -78,7 +77,7 @@ def get_csv(info_role, import_id):
         full_file_name = ".".join([file_name, "csv"])
         full_path = os.path.join(uploads_directory, full_file_name)
 
-        delimiter = get_delimiter(IMPORTS_SCHEMA_NAME, import_id, SEPARATOR)
+        delimiter = get_delimiter(IMPORTS_SCHEMA_NAME, import_id)
         SEPARATOR_MAPPING = {"colon": ";", "tab": "\t", "space": " "}
 
         # save csv in upload directory
