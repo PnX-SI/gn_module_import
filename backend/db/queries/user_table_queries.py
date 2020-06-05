@@ -439,7 +439,7 @@ def get_required(schema_name, table_name):
         raise
 
 
-def get_delimiter(schema_name, import_id, separator):
+def get_delimiter(schema_name, import_id):
     try:
         delimiter = DB.session.execute(
             """
@@ -450,7 +450,7 @@ def get_delimiter(schema_name, import_id, separator):
                 schema_name=schema_name, import_id=int(import_id)
             )
         ).fetchone()[0]
-        return delimiter.separator
+        return delimiter
 
     except Exception:
         raise

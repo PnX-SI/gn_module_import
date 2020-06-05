@@ -12,7 +12,7 @@
                 <div class="titre-recap col-12 col-sm-6 col-md-8">
                     <h4> 
                         <i class="icone-recap fa fa-map-marker" aria-hidden="true"></i>
-                        Carte
+                        Zone géographique
                     </h4>
                     <pnx-map height="40vh" searchBar="false">
                         <pnx-geojson
@@ -32,7 +32,7 @@
                             <a target="_blank" [routerLink]="['/import/errors', stepData.importId]"> Rapport d'erreurs </a>
                         </div>
                         <div class="content-report">
-                            <a [routerLink]="" (click)="_csvExport.onCSV(stepData.importId)"> Données invalides </a>
+                            <a [routerLink]="" (click)="_csvExport.onCSV(stepData.importId)"> Exporter vos {{nInvalidData}} observations invalides </a>
                         </div>
                     </div>
                     
@@ -63,11 +63,6 @@
                         class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between">
                         <i class="material-icons"> navigate_before </i>
                         Précédent
-                    </button>
-                    <button *ngIf="nInvalidData > 0" class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
-                        (click)="_csvExport.onCSV(stepData.importId)">
-                        <i class="material-icons"> done </i>
-                        Exporter vos {{nInvalidData}} observations invalides
                     </button>
                     <button *ngIf="nValidData > 0" class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                         (click)="onImport()">
