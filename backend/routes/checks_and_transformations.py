@@ -82,6 +82,10 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
 
         @copy_current_request_context
         def data_checker_task(import_id, id_field_mapping, id_content_mapping):
+            
+
+            imp = DB.session.query(TImports).filter(TImports.id_import == import_id).first()
+            
             print('OK1')
             field_mapping_data_checking(import_id, id_field_mapping)
             print('OK2')
@@ -90,10 +94,12 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
             DB.session.query(TImports).filter(TImports.id_import == import_id).update({'processing' : False})
             DB.session.commit()
 
-            import_send_mail(
-                mail_to="mail_to",
-                file_name="TEST"
-            )
+            for aut in imp.author:
+                import_send_mail(
+                    mail_to=aut.email,
+                    file_name=imp.full_file_name
+                )
+
             return "Done"
 
         a = threading.Thread(
