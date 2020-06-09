@@ -18,13 +18,14 @@ def import_send_mail(mail_to, file_name):
         :query str file_name: Name of imported file
     """
 
-    msg = f"""
+    msg = """
         Bonjour,
         <p>
-            Votre fichier {file_name} a bien été importé !
+            Votre fichier {} a bien été importé !
         </p>
 
-    """
+    """.format(file_name)
+    
     send_mail(
         recipients=[mail_to],
         subject="[GeoNature] Import  réalisé",

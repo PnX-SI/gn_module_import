@@ -75,7 +75,7 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
         with Connection(redis.Redis(host='localhost', port='6379')):
             q = Queue()
             job = q.enqueue(data_checker_task, import_data)
-            print(f"Task ({job.id}) added to queue at {job.enqueued_at}")
+            print("Task ({}) added to queue at {}".format(job.id, job.enqueued_at))
             # lancer geonature launch_redis_worker avec le venv pour que les taches soit traitees
 
         return "Processing"
@@ -108,6 +108,6 @@ def sendMail(info_role):
     # worker = Worker([q], connection=r, name='foo')
     # worker.work()
     job = q.enqueue(send_async_email, email_data)
-    print(f"Task ({job.id}) added to queue at {job.enqueued_at}")
+    printf("Task ({}) added to queue at {}".format(job.id, job.enqueued_at))
 
     return "DONE"
