@@ -25,6 +25,8 @@ export class ImportStepComponent implements OnInit {
   nInvalidData: number;
   validBbox: any;
   public spinner: boolean = false;
+  displayErrors: boolean = false;
+  displayWarnings: boolean = false;
 
   constructor(
     private stepService: StepsService,
@@ -37,6 +39,14 @@ export class ImportStepComponent implements OnInit {
   ngOnInit() {
     this.stepData = this.stepService.getStepData(4);
     this.getValidData();
+    this._ds.getErrorList(this.stepData.importId).subscribe(
+      errorList => {
+        if (errorList.errors.filter(error => error.error_level == 'ERROR').length > 0)
+          this.displayErrors = true;
+        if (errorList.errors.filter(error => error.error_level == 'WARNING').length > 0)
+          this.displayWarnings = true;
+      }
+    );
     // this._ds.sendEmail(this.stepData.importId).subscribe(
     //   res => {
        

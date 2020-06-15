@@ -76,7 +76,7 @@ def update_import(id_import):
     return TImports.query.get(id_import).to_dict()
 
 
-@blueprint.route("/<import_id>", methods=["GET"])
+@blueprint.route("/<int:import_id>", methods=["GET"])
 @permissions.check_cruved_scope("R", module_code="IMPORT")
 @json_resp
 def get_one_import(import_id):

@@ -28,10 +28,10 @@
                         Rapports
                     </h4> 
                     <div>
-                        <div class="content-report">
+                        <div *ngIf="displayErrors" class="content-report">
                             <a target="_blank" [routerLink]="['/import/errors', stepData.importId]"> Rapport d'erreurs </a>
                         </div>
-                        <div class="content-report">
+                        <div *ngIf="displayWarnings" class="content-report">
                             <a [routerLink]="" (click)="_csvExport.onCSV(stepData.importId)"> Données invalides </a>
                         </div>
                     </div>
