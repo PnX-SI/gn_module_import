@@ -35,12 +35,14 @@ export class ContentMappingStepComponent implements OnInit {
   public n_warnings: number;
   public n_aMapper: number = -1;
   public n_mappes: number = -1;
+  public nbLignes: string = "X";
   public showValidateMappingBtn = true;
   public displayCheckBox = ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES;
   public mappingListForm = new FormControl();
   public newMappingNameForm = new FormControl();
 
   @ViewChild('modalConfirm') modalConfirm: any;
+  @ViewChild('modalRedir') modalRedir: any;
 
   constructor(
     private stepService: StepsService,
@@ -347,7 +349,12 @@ export class ContentMappingStepComponent implements OnInit {
               this.showValidateMappingBtn = false;
             }
           })
-          this._router.navigate([ModuleConfig.MODULE_URL + (res=='Done' ? '/process/step/4' : '')]);
+          if (res == 'Done')
+            this._router.navigate([ModuleConfig.MODULE_URL + '/process/step/4']);
+          else if (res.startsWith("Processing ")){
+            this.nbLignes = (res+"").split(" ", 2)[1];
+            this._modalService.open(this.modalRedir);
+          }
 
         },
         error => {
@@ -365,6 +372,10 @@ export class ContentMappingStepComponent implements OnInit {
           }
         }
       );
+  }
+
+  onRedirect() {
+    this._router.navigate([ModuleConfig.MODULE_URL]);
   }
 
   createOrUpdateMapping(temporary) {

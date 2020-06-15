@@ -60,9 +60,9 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
     """
 
     print('source_count :')
-    print(DB.session.query(TImports.source_count).filter(TImports.id_import == import_id).one())
+    nbLignes = DB.session.query(TImports.source_count).filter(TImports.id_import == import_id).one()[0]
 
-    if (DB.session.query(TImports.source_count).filter(TImports.id_import == import_id).one()[0] > 10):
+    if (nbLignes > 10):
 
         DB.session.query(TImports).filter(TImports.id_import == import_id).update({'processing' : True})
         DB.session.commit()
@@ -78,7 +78,7 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
             print("Task ({}) added to queue at {}".format(job.id, job.enqueued_at))
             # lancer geonature launch_redis_worker avec le venv pour que les taches soit traitees
 
-        return "Processing"
+        return "Processing " + str(nbLignes)
     else:
         field_mapping_data_checking(import_id, id_field_mapping)
         content_mapping_data_checking(import_id, id_content_mapping)
