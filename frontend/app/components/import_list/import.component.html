@@ -24,6 +24,7 @@
                     [rowHeight]="40" 
                     [limit]="15" 
                     [selectionType]='single'
+                    [sorts]="[{prop: 'id_import', dir: 'desc'}]"
                 >
                     <ngx-datatable-column *ngFor="let col of config.LIST_COLUMNS_FRONTEND" name="{{col.name}}"
                         [prop]="col.prop" [maxWidth]="col.max_width">
