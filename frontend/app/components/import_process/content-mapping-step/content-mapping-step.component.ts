@@ -351,7 +351,7 @@ export class ContentMappingStepComponent implements OnInit {
           })
           if (res == 'Done')
             this._router.navigate([ModuleConfig.MODULE_URL + '/process/step/4']);
-          else if (res.startsWith("Processing ")){
+          else if ((res+'').startsWith("Processing ")){
             this.nbLignes = (res+"").split(" ", 2)[1];
             this._modalService.open(this.modalRedir);
           }
