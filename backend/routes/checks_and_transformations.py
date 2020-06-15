@@ -33,6 +33,10 @@ def data_checker_task(import_data):
     id_field_mapping =  import_data['id_field_mapping']
     id_content_mapping =  import_data['id_content_mapping']
 
+    return concurrent_data_check(import_id, id_field_mapping, id_content_mapping)
+    
+
+def concurrent_data_check(import_id, id_field_mapping, id_content_mapping):
     imp = DB.session.query(TImports).filter(TImports.id_import == import_id).first()
 
     field_mapping_data_checking(import_id, id_field_mapping)
@@ -72,11 +76,24 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
             "id_field_mapping": id_field_mapping,
             "id_content_mapping": id_content_mapping
         }
-        with Connection(redis.Redis(host='localhost', port='6379')):
-            q = Queue()
-            job = q.enqueue(data_checker_task, import_data)
-            print("Task ({}) added to queue at {}".format(job.id, job.enqueued_at))
+
+        # with Connection(redis.Redis(host='localhost', port='6379')):
+            # q = Queue()
+            # job = q.enqueue(data_checker_task, import_data)
+            # print("Task ({}) added to queue at {}".format(job.id, job.enqueued_at))
             # lancer geonature launch_redis_worker avec le venv pour que les taches soit traitees
+
+        @copy_current_request_context
+        def data_checker_task(import_id, id_field_mapping, id_content_mapping):
+            return concurrent_data_check(import_id, id_field_mapping, id_content_mapping)
+
+        a = threading.Thread(
+            name="data_checker_task",
+            target=data_checker_task,
+            kwargs=import_data
+        )
+        a.start()
+        
 
         return "Processing " + str(nbLignes)
     else:
