@@ -28,7 +28,7 @@
                         Rapports
                     </h4> 
                     <div>
-                        <div class="content-report">
+                        <div *ngIf="displayErrors" class="content-report">
                             <a target="_blank" [routerLink]="['/import/errors', stepData.importId]"> Rapport d'erreurs </a>
                         </div>
                         <div class="content-report">
