@@ -12,9 +12,14 @@ import {
   FormBuilder,
   Validators
 } from "@angular/forms";
-import { StepsService, Step2Data, Step3Data, Step4Data } from "../steps.service";
+import {
+  StepsService,
+  Step2Data,
+  Step3Data,
+  Step4Data
+} from "../steps.service";
 import { forkJoin } from "rxjs/observable/forkJoin";
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
   selector: "fields-mapping-step",
@@ -26,7 +31,6 @@ export class FieldsMappingStepComponent implements OnInit {
   public displayAllValues: boolean = false;
   public IMPORT_CONFIG = ModuleConfig;
   public syntheseForm: FormGroup;
-  public n_error_lines;
   public isErrorButtonClicked: boolean = false;
   public dataCleaningErrors;
   public isFullError: boolean = true;
@@ -44,12 +48,12 @@ export class FieldsMappingStepComponent implements OnInit {
   public test: Array<any>;
   public newMapping: boolean = false;
   public updateMapping: boolean = false;
-  public fieldMappingForm = new FormControl()
-  public newMappingForm = new FormControl()
+  public fieldMappingForm = new FormControl();
+  public newMappingForm = new FormControl();
   public mappedColCount: number;
   public unmappedColCount: number;
   public mappedList = [];
-  @ViewChild('modalConfirm') modalConfirm: any;
+  @ViewChild("modalConfirm") modalConfirm: any;
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
@@ -59,78 +63,51 @@ export class FieldsMappingStepComponent implements OnInit {
     private _router: Router,
     private _modalService: NgbModal,
     public cruvedStore: CruvedStoreService
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(2);
     // get all columns of the import and the mapping
-    forkJoin([this._ds.getColumnsImport(this.stepData.importId), this._ds.getMappings('field')])
-      .subscribe(data => {
+    forkJoin([
+      this._ds.getColumnsImport(this.stepData.importId),
+      this._ds.getMappings("field")
+    ]).subscribe(
+      data => {
         this.setColumnsImport(data[0]);
         this.userFieldMappings = data[1];
 
         // subscribe to mapping change
         this.fieldMappingForm.valueChanges
           .filter(value => value !== null && value !== undefined)
-          .subscribe(
-            mapping => {
-              this.onMappingChange(mapping.id_mapping);
-            },
-          );
+          .subscribe(mapping => {
+            this.onMappingChange(mapping.id_mapping);
+          });
         if (this.userFieldMappings.length == 1) {
-          this.fieldMappingForm.setValue(this.userFieldMappings[0])
+          this.fieldMappingForm.setValue(this.userFieldMappings[0]);
         }
-
-      },
-        error => {
-          console.error(error);
-          if (error.statusText === "Unknown Error") {
-            // show error message if no connexion
-            this._commonService.regularToaster(
-              "error",
-              "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-            );
-          } else {
-            this._commonService.regularToaster("error", error.error);
-          }
-        })
-
-    this.syntheseForm = this._fb.group({});
-    if (this.stepData.mappingRes) {
-      this.mappingRes = this.stepData.mappingRes;
-      this.table_name = this.mappingRes["table_name"];
-      this.getValidationErrors(
-        this.mappingRes["n_table_rows"],
-        this.stepData.importId
-      );
-      this.mappingIsValidate = true;
-    }
-    this.generateSyntheseForm();
-  }
-
-
-  getValidationErrors(n_table_rows, importId) {
-    let getErrorList = this._ds.getErrorList(importId);
-    let getRowErrorCount = this._ds.checkInvalid(importId);
-    forkJoin([getErrorList, getRowErrorCount]).subscribe(
-      ([errorList, errorCount]) => {
-        this.dataCleaningErrors = errorList.errors;
-        this.n_error_lines = errorList.errors.length;
-        this.isFullErrorCheck(n_table_rows, this.n_error_lines);
       },
       error => {
-        if (error.status === 500) {
+        console.error(error);
+        if (error.statusText === "Unknown Error") {
           // show error message if no connexion
           this._commonService.regularToaster(
             "error",
             "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
           );
+        } else {
+          this._commonService.regularToaster("error", error.error);
         }
       }
     );
+
+    this.syntheseForm = this._fb.group({});
+    if (this.stepData.mappingRes) {
+      this.mappingRes = this.stepData.mappingRes;
+      this.table_name = this.mappingRes["table_name"];
+      this.mappingIsValidate = true;
+    }
+    this.generateSyntheseForm();
   }
-
-
 
   generateSyntheseForm() {
     this._ds.getBibFields().subscribe(
@@ -173,58 +150,21 @@ export class FieldsMappingStepComponent implements OnInit {
     );
   }
 
-  onDataCleaning(value, id_mapping) {
-    this.spinner = true;
-    this._ds
-      .postMapping(
-        value,
-        this.stepData.importId,
-        id_mapping,
-        this.stepData.srid
-      )
-      .subscribe(
-        res => {
-          this.mappingRes = res;
-          this.spinner = false;
-          this.getValidationErrors(res["n_table_rows"], this.stepData.importId);
-          this.table_name = this.mappingRes["table_name"];
-          this.mappingIsValidate = true;
-        },
-        error => {
-          this.spinner = false;
-          if (error.statusText === "Unknown Error") {
-            // show error message if no connexion
-            this._commonService.regularToaster(
-              "error",
-              "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-            );
-          } else {
-            // show error message if other server error
-            if (error.status == 400) this.isUserError = true;
-            this._commonService.regularToaster("error", error.error.message);
-          }
-        }
-      );
-  }
-
   canUpdateMapping() {
-    if (!ModuleConfig.ALLOW_MODIFY_DEFAULT_MAPPING &&
+    if (
+      !ModuleConfig.ALLOW_MODIFY_DEFAULT_MAPPING &&
       ModuleConfig.ALLOW_FIELD_MAPPING &&
-      this.id_mapping == this.IMPORT_CONFIG.DEFAULT_FIELD_MAPPING_ID) {
+      this.id_mapping == this.IMPORT_CONFIG.DEFAULT_FIELD_MAPPING_ID
+    ) {
       return true;
     }
     return false;
-
   }
 
   updateMappingField(value, id_mapping) {
     this.spinner = true;
     this._ds
-      .updateMappingField(
-        value,
-        this.stepData.importId,
-        id_mapping,
-      )
+      .updateMappingField(value, this.stepData.importId, id_mapping)
       .subscribe(
         res => {
           this.spinner = false;
@@ -245,7 +185,6 @@ export class FieldsMappingStepComponent implements OnInit {
         }
       );
   }
-
 
   createOrUpdateMapping(temporary) {
     let step3data: Step3Data = {
@@ -264,61 +203,76 @@ export class FieldsMappingStepComponent implements OnInit {
     };
     this.stepService.setStepData(2, step2data);
 
-    const mappingData = Object.assign({}, this.syntheseForm.value)
-    this._ds.createOrUpdateFieldMapping(mappingData, this.id_mapping).subscribe(data => {
-      // update t_imports (set information about autogenerate values)
-      this.spinner = true;
-      const importFormData = {
-        'uuid_autogenerated': this.syntheseForm.value.unique_id_sinp_generate || false,
-        'altitude_autogenerated': this.syntheseForm.value.altitudes_generate || false
-      }
-      this._ds.updateImport(this.stepData.importId, importFormData).subscribe(d => {
-        console.log("Done");
+    const mappingData = Object.assign({}, this.syntheseForm.value);
+    this._ds
+      .createOrUpdateFieldMapping(mappingData, this.id_mapping)
+      .subscribe(data => {
+        // update t_imports (set information about autogenerate values)
+        this.spinner = true;
+        const importFormData = {
+          uuid_autogenerated:
+            this.syntheseForm.value.unique_id_sinp_generate || false,
+          altitude_autogenerated:
+            this.syntheseForm.value.altitudes_generate || false
+        };
+        this._ds
+          .updateImport(this.stepData.importId, importFormData)
+          .subscribe(d => {
+            console.log("Done");
+          });
 
-      })
-
-      if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
-        // this.stepService.setStepData(4, step4Data);
-        this._ds.dataChecker(this.stepData.importId, this.id_mapping, ModuleConfig.DEFAULT_VALUE_MAPPING_ID).subscribe(d => {
-          this.spinner = false;
-          let step4Data: Step4Data = {
-            importId: this.stepData.importId
-          };
-          this.stepService.setStepData(4, step4Data);
-          this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/4`]);
-
-        },
-          error => {
-            this.spinner = false;
-            this._commonService.regularToaster("error", error.error.message);
-          }
-        )
-      } else {
-        this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
-      }
-    })
+        if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
+          // this.stepService.setStepData(4, step4Data);
+          this._ds
+            .dataChecker(
+              this.stepData.importId,
+              this.id_mapping,
+              ModuleConfig.DEFAULT_VALUE_MAPPING_ID
+            )
+            .subscribe(
+              d => {
+                this.spinner = false;
+                let step4Data: Step4Data = {
+                  importId: this.stepData.importId
+                };
+                this.stepService.setStepData(4, step4Data);
+                this._router.navigate([
+                  `${ModuleConfig.MODULE_URL}/process/step/4`
+                ]);
+              },
+              error => {
+                this.spinner = false;
+                this._commonService.regularToaster(
+                  "error",
+                  error.error.message
+                );
+              }
+            );
+        } else {
+          this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
+        }
+      });
   }
 
   // On close modal: ask if save the mapping or not
   saveMappingUpdate(saveBoolean) {
     if (saveBoolean) {
-      this.createOrUpdateMapping(false)
+      this.createOrUpdateMapping(false);
     } else {
       // create a temporary mapping
       const mapping_value = {
-        'mappingName': 'mapping_temporaire_' + Date.now(),
-        'temporary': true
-      }
-      this._ds.postMappingName(mapping_value, 'FIELD').subscribe(id_mapping => {
+        mappingName: "mapping_temporaire_" + Date.now(),
+        temporary: true
+      };
+      this._ds.postMappingName(mapping_value, "FIELD").subscribe(id_mapping => {
         this.id_mapping = id_mapping;
-        this.createOrUpdateMapping(true)
-      })
+        this.createOrUpdateMapping(true);
+      });
     }
   }
 
   openModalConfirm() {
-    this._modalService.open(this.modalConfirm)
-
+    this._modalService.open(this.modalConfirm);
   }
 
   onNextStep() {
@@ -330,29 +284,28 @@ export class FieldsMappingStepComponent implements OnInit {
         // the form has changed but the user do not has rights
       } else {
         const mapping_value = {
-          'mappingName': 'mapping_temporaire_' + Date.now(),
-          'temporary': true
-        }
-        this._ds.postMappingName(mapping_value, 'FIELD').subscribe(id_mapping => {
-          this.id_mapping = id_mapping;
-          this.createOrUpdateMapping(true)
-        })
+          mappingName: "mapping_temporaire_" + Date.now(),
+          temporary: true
+        };
+        this._ds
+          .postMappingName(mapping_value, "FIELD")
+          .subscribe(id_mapping => {
+            this.id_mapping = id_mapping;
+            this.createOrUpdateMapping(true);
+          });
       }
       // the form not change do not create temp mapping
     } else {
       this.createOrUpdateMapping(false);
     }
-
   }
 
   onFormMappingChange() {
     this.syntheseForm.valueChanges.subscribe(() => {
-
       if (this.mappingIsValidate) {
         this.mappingRes = null;
         this.mappingIsValidate = false;
         this.table_name = null;
-        this.n_error_lines = null;
         let step2data = this.stepData;
         step2data.mappingIsValidate = false;
         this.stepService.setStepData(2, step2data);
@@ -394,9 +347,9 @@ export class FieldsMappingStepComponent implements OnInit {
 
     if (this.stepData.id_field_mapping) {
       const formValue = {
-        'id_mapping': this.stepData.id_field_mapping,
-        'cruved': this.stepData.cruvedMapping
-      }
+        id_mapping: this.stepData.id_field_mapping,
+        cruved: this.stepData.cruvedMapping
+      };
       this.fieldMappingForm.setValue(formValue);
       this.fillMapping(this.stepData.id_field_mapping, this.columns);
     } else {
@@ -409,7 +362,7 @@ export class FieldsMappingStepComponent implements OnInit {
       result => {
         this.userFieldMappings = result;
         if (result.length == 1) {
-          this.fieldMappingForm.setValue(result[0])
+          this.fieldMappingForm.setValue(result[0]);
         }
       },
       error => {
@@ -428,7 +381,7 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   onMappingChange(id_mapping): void {
-    console.log(id_mapping)
+    console.log(id_mapping);
     this.id_mapping = id_mapping;
     if (this.id_mapping && id_mapping != "") {
       this.fillMapping(this.id_mapping, this.columns);
@@ -453,14 +406,12 @@ export class FieldsMappingStepComponent implements OnInit {
         this.mappedList = [];
         this.enableMapping(this.syntheseForm);
         if (mappingFields[0] != "empty") {
-
           for (let field of mappingFields) {
-            if (columnsArray.includes(field['source_field'])) {
+            if (columnsArray.includes(field["source_field"])) {
               this.syntheseForm
                 .get(field["target_field"])
                 .setValue(field["source_field"]);
-              this.mappedList.push(field["target_field"])
-              console.log("IF------>" + field["target_field"])
+              this.mappedList.push(field["target_field"]);
             }
           }
           this.shadeSelectedColumns(this.syntheseForm);
@@ -489,7 +440,7 @@ export class FieldsMappingStepComponent implements OnInit {
 
   createMapping() {
     this.fieldMappingForm.reset();
-    this.newMappingForm.reset()
+    this.newMappingForm.reset();
     this.newMapping = true;
     this.displayAllValues = true;
   }
@@ -501,27 +452,26 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   renameMapping() {
-    this.newMappingForm.setValue(this.fieldMappingForm.value.mapping_label)
+    this.newMappingForm.setValue(this.fieldMappingForm.value.mapping_label);
     this.updateMapping = true;
   }
-
 
   saveMappingName(mappingName, targetForm) {
     let mappingType = "FIELD";
     const value = {};
-    value['mappingName'] = mappingName;
+    value["mappingName"] = mappingName;
     this._ds.postMappingName(value, mappingType).subscribe(
       new_id_mapping => {
         this.stepData.id_field_mapping = new_id_mapping;
         this.newMapping = false;
-        this.newMappingForm.reset()
-        this._ds.getMappings("FIELD").subscribe(
-          result => {
-            this.userFieldMappings = result;
-            const newMapping = this.userFieldMappings.find(el => el.id_mapping == new_id_mapping)
-            this.fieldMappingForm.setValue(newMapping);
-
-          })
+        this.newMappingForm.reset();
+        this._ds.getMappings("FIELD").subscribe(result => {
+          this.userFieldMappings = result;
+          const newMapping = this.userFieldMappings.find(
+            el => el.id_mapping == new_id_mapping
+          );
+          this.fieldMappingForm.setValue(newMapping);
+        });
 
         this.enableMapping(targetForm);
       },
@@ -581,7 +531,7 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   openErrorDetail() {
-    this.stepData.importId
+    this.stepData.importId;
   }
 
   count(targetForm) {
@@ -590,15 +540,14 @@ export class FieldsMappingStepComponent implements OnInit {
     for (const field in targetForm.controls) {
       let colValue = targetForm.get(field).value;
       if (colValue != "WKT" && field != "autogenerated") {
-        if (colValue == null || colValue == '') {
-          this.unmappedColCount = this.unmappedColCount + 1
+        if (colValue == null || colValue == "") {
+          this.unmappedColCount = this.unmappedColCount + 1;
         } else {
           this.mappedColCount = this.mappedColCount + 1;
         }
       }
     }
-    console.log(this.unmappedColCount)
-
+    console.log(this.unmappedColCount);
   }
 
   checkCondition(name_field) {
@@ -615,7 +564,6 @@ export class FieldsMappingStepComponent implements OnInit {
       return true;
     }
   }
-
 
   onSelect(id_mapping, targetForm) {
     // console.log(targetForm.value)

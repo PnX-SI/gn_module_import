@@ -203,19 +203,6 @@ def delete_mapping(info_role, id_mapping):
     else:
         mapping = DB.session.query(TMappings).get(id_mapping)
 
-        # delete from dependant table
-        table_to_delete = (
-            TMappingsFields if mapping.mapping_type == "FIELD" else TMappingsValues
-        )
-        DB.session.query(table_to_delete).filter(
-            getattr(table_to_delete, "id_mapping") == mapping.id_mapping
-        ).delete()
-
-        DB.session.query(CorRoleMapping).filter(
-            CorRoleMapping.id_mapping == id_mapping
-        ).delete()
-        DB.session.commit()
-
         #  delete the mapping itself
         DB.session.delete(mapping)
         DB.session.commit()
@@ -263,7 +250,8 @@ def postMappingName(info_role):
             .one()[0]
         )
 
-        new_map_role = CorRoleMapping(id_role=info_role.id_role, id_mapping=id_mapping)
+        new_map_role = CorRoleMapping(
+            id_role=info_role.id_role, id_mapping=id_mapping)
 
         DB.session.add(new_map_role)
         DB.session.commit()
@@ -336,7 +324,8 @@ def get_dict_fields(info_role):
         return data_theme, 200
 
     except Exception as e:
-        logger.error("*** SERVER ERROR WHEN GETTING DICT_FIELDS AND DICT_THEMES")
+        logger.error(
+            "*** SERVER ERROR WHEN GETTING DICT_FIELDS AND DICT_THEMES")
         logger.exception(e)
         raise GeonatureImportApiError(
             message="INTERNAL SERVER ERROR when getting dict_fields and dict_themes",
@@ -365,7 +354,8 @@ def getNomencInfo(info_role, id_import, id_field_mapping):
         table_name = table_names["imports_table_name"]
 
         selected_columns = get_selected_columns(id_field_mapping)
-        nomenc_info = get_nomenc_info(selected_columns, IMPORTS_SCHEMA_NAME, table_name)
+        nomenc_info = get_nomenc_info(
+            selected_columns, IMPORTS_SCHEMA_NAME, table_name)
         return {"content_mapping_info": nomenc_info}, 200
     except Exception as e:
         logger.error("*** ERROR WHEN GETTING NOMENCLATURE")
@@ -388,7 +378,7 @@ def postMetaToStep3(info_role):
 
         data = request.form.to_dict()
 
-        ### CHECK VALIDITY
+        # CHECK VALIDITY
 
         ARCHIVES_SCHEMA_NAME = blueprint.config["ARCHIVES_SCHEMA_NAME"]
         IMPORTS_SCHEMA_NAME = blueprint.config["IMPORTS_SCHEMA_NAME"]

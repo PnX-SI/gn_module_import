@@ -54,7 +54,8 @@ class NomenclatureTransformer:
         """
         self.table_name = table_name
         self.id_mapping = id_mapping
-        self.nomenclature_fields = self.__set_nomenclature_fields(selected_columns)
+        self.nomenclature_fields = self.__set_nomenclature_fields(
+            selected_columns)
         self.formated_mapping_content = self.__formated_mapping_content(
             selected_columns
         )
@@ -171,7 +172,8 @@ class NomenclatureTransformer:
                             row[1],
                             ", ".join(nomenc_values_ids),
                             el["mnemonique_type"],
-                            get_mnemo(set_default_value(el["mnemonique_type"])),
+                            get_mnemo(set_default_value(
+                                el["mnemonique_type"])),
                         ),
                     )
                 else:
@@ -231,7 +233,8 @@ class NomenclatureTransformer:
                 id_import=id_import,
                 step="CONTENT_MAPPING",
                 error_code="INVALID_EXISTING_PROOF_VALUE",
-                col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
+                col_name=self.selected_columns.get(
+                    "id_nomenclature_exist_proof"),
                 id_rows=row_with_errors_proof.id_rows,
             )
 
@@ -304,13 +307,14 @@ def get_nomenc_info(form_data, schema_name, table_name):
             for index, val in enumerate(nomenc_user_values):
                 user_val_dict = {"id": index, "value": val.user_val}
                 user_values_list.append(user_val_dict)
-
             d = {
                 "nomenc_abbr": nomenc,
                 "nomenc_id": nomenc_info.id,
                 "nomenc_name": nomenc_info.name,
                 "nomenc_synthese_name": user_nomenc_col,
                 "nomenc_values_def": val_def_list,
+                "nomenc_default_value": nomenc_info.label_default_nomenclature,
+                "nomenc_def": nomenc_info.definition_default,
                 "user_values": {
                     "column_name": form_data[user_nomenc_col],
                     "values": user_values_list,

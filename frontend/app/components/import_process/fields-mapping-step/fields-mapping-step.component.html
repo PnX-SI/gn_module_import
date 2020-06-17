@@ -20,6 +20,7 @@
                                 [compareWith]="compareFn"
                                 [disableControl]="userFieldMappings.length == 1"
                             >
+                                <option [ngValue]="null"> - </option>
                                 <option *ngFor="let data of userFieldMappings" [ngValue]="data">
                                     {{data.mapping_label}}</option>
                             </select>
@@ -146,7 +147,6 @@
                    
                 </div>
             </form>
-            <!-- Error list in table -->
 
 
         </div>
