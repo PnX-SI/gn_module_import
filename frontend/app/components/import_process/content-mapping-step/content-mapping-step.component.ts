@@ -37,6 +37,8 @@ export class ContentMappingStepComponent implements OnInit {
   public idInfo;
   public disabled: boolean = true;
   public disableNextStep = true;
+  public n_errors: number;
+  public n_warnings: number;
   public n_aMapper: number = -1;
   public n_mappes: number = -1;
   public nbLignes: string = "X";
