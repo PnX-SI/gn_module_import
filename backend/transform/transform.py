@@ -129,7 +129,8 @@ def data_cleaning(
         check_cd_nom(
             df, selected_columns, missing_val, cd_nom_list, schema_name, import_id
         )
-        check_dates(df, selected_columns, synthese_info, import_id, schema_name)
+        check_dates(df, selected_columns, synthese_info,
+                    import_id, schema_name)
         check_uuid(
             df,
             selected_columns,
@@ -150,7 +151,8 @@ def data_cleaning(
         check_entity_source(
             df, added_cols, selected_columns, synthese_info, import_id, schema_name
         )
-        check_id_digitizer(df, selected_columns, synthese_info, import_id, schema_name)
+        check_id_digitizer(df, selected_columns,
+                           synthese_info, import_id, schema_name)
         check_geography(
             df, import_id, added_cols, selected_columns, srid, local_srid, schema_name
         )
@@ -198,7 +200,8 @@ def field_mapping_data_checking(import_id, id_mapping):
         is_temp_table_name = True
 
         engine = DB.engine
-        column_names = get_table_info(table_names["imports_table_name"], "column_name")
+        column_names = get_table_info(
+            table_names["imports_table_name"], "column_name")
         local_srid = get_local_srid()
 
         # get import_obj
@@ -339,15 +342,18 @@ def field_mapping_data_checking(import_id, id_mapping):
                 "temp",
                 "temp2",
                 "check_dates",
+                "interval"
             ]
             partition_df = remove_temp_columns(temp_cols, partition_df)
 
             logger.info("* END DATA CLEANING partition %s", i)
 
             # LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
-            logger.info("* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
+            logger.info(
+                "* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
             load(partition_df, i, IMPORTS_SCHEMA_NAME, temp_table_name, engine)
-            logger.info("* END LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
+            logger.info(
+                "* END LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
 
         # delete original table
         delete_table(table_names["imports_full_table_name"])
@@ -370,9 +376,11 @@ def field_mapping_data_checking(import_id, id_mapping):
         geometry_setter = GeometrySetter(
             importObject,
             local_srid=local_srid,
-            code_commune_col=selected_columns.get("codecommune", "codecommune"),
+            code_commune_col=selected_columns.get(
+                "codecommune", "codecommune"),
             code_maille_col=selected_columns.get("codemaille", "codemaille"),
-            code_dep_col=selected_columns.get("codedepartement", "codedepartement"),
+            code_dep_col=selected_columns.get(
+                "codedepartement", "codedepartement"),
         )
         geometry_setter.set_geometry()
 
@@ -398,7 +406,8 @@ def field_mapping_data_checking(import_id, id_mapping):
             )
 
         # calculate number of invalid lines
-        n_invalid_rows = get_n_invalid_rows(table_names["imports_full_table_name"])
+        n_invalid_rows = get_n_invalid_rows(
+            table_names["imports_full_table_name"])
 
         # check total number of lines
         n_table_rows = get_row_number(table_names["imports_full_table_name"])
@@ -408,43 +417,6 @@ def field_mapping_data_checking(import_id, id_mapping):
         DB.session.query(TImports).filter(TImports.id_import == int(import_id)).update(
             {TImports.id_field_mapping: int(id_mapping)}
         )
-
-        # ############### IF field mapping skipped
-
-        # if not current_app.config["IMPORT"]["ALLOW_VALUE_MAPPING"]:
-        #     logger.info("update t_imports from step 2 to step 4")
-        #     ### CONTENT MAPPING ###
-        #     # get content mapping data
-        #     id_mapping_value = current_app.config["IMPORT"]["DEFAULT_VALUE_MAPPING_ID"]
-        #     #  check if the default mapping exist
-        #     value_mapping = TMappings.query.get(id_mapping_value)
-        #     if not value_mapping:
-        #         return (
-        #             {
-        #                 "message": "Content Mapping: le mapping n'existe pas - contacter l'administrateur"
-        #             },
-        #             400,
-        #         )
-
-        #     # build nomenclature_transformer service
-        #     nomenclature_transformer = NomenclatureTransformer(
-        #         id_mapping_value, selected_columns, table_names["imports_table_name"]
-        #     )
-        #     # with the mapping given, find all the corresponding nomenclatures
-        #     nomenclature_transformer.set_nomenclature_ids()
-        #     results = nomenclature_transformer.check_conditionnal_values()
-        #     logger.info("Find nomenclature with errors :")
-        #     nomenclature_transformer.find_nomenclatures_errors(import_id)
-
-        #     if current_app.config["IMPORT"][
-        #         "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"
-        #     ]:
-        #         nomenclature_transformer.set_default_nomenclature_ids()
-
-        #     # update t_import
-        #     DB.session.query(TImports).filter(TImports.id_import == import_id).update(
-        #         {TImports.id_content_mapping: id_mapping_value, TImports.step: 4}
-        #     )
 
         DB.session.commit()
         DB.session.close()
@@ -478,7 +450,8 @@ def field_mapping_data_checking(import_id, id_mapping):
             DB.session.close()
 
         if is_table_names:
-            n_loaded_rows = get_n_loaded_rows(table_names["imports_full_table_name"])
+            n_loaded_rows = get_n_loaded_rows(
+                table_names["imports_full_table_name"])
 
         if is_table_names:
             if n_loaded_rows == 0:
@@ -555,7 +528,8 @@ def content_mapping_data_checking(import_id, id_mapping):
     except Exception as e:
         DB.session.rollback()
         DB.session.close()
-        logger.error("*** SERVER ERROR DURING CONTENT MAPPING (user values to id_types")
+        logger.error(
+            "*** SERVER ERROR DURING CONTENT MAPPING (user values to id_types")
         logger.exception(e)
         raise GeonatureImportApiError(
             message="INTERNAL SERVER ERROR during content mapping (user values to id_types",

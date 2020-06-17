@@ -63,7 +63,9 @@ def get_table_info(table_name, info="all"):
             """
             SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
             FROM INFORMATION_SCHEMA.COLUMNS\
-            WHERE table_name = {};""".format(
+            WHERE table_name = {}
+            ORDER BY column_name ASC
+            ;""".format(
                 QuotedString(table_name)
             )
         )
@@ -132,13 +134,15 @@ def delete_tables(id_import, archives_schema, imports_schema):
                         DB.session.execute(
                             """
                             DROP TABLE IF EXISTS {}""".format(
-                                get_full_table_name(archives_schema, table_name)
+                                get_full_table_name(
+                                    archives_schema, table_name)
                             )
                         )
                         DB.session.execute(
                             """
                             DROP TABLE IF EXISTS {}""".format(
-                                get_full_table_name(imports_schema, imports_table_name)
+                                get_full_table_name(
+                                    imports_schema, imports_table_name)
                             )
                         )
                 except ValueError:
@@ -454,4 +458,3 @@ def get_delimiter(schema_name, import_id):
 
     except Exception:
         raise
-

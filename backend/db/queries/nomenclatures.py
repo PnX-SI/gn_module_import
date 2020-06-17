@@ -16,15 +16,18 @@ def get_nomenc_details(nomenclature_abb):
     try:
         query = """
             SELECT 
-              label_default as name,
-              id_type as id
+              label_default AS name,
+              id_type AS id,
+              definition_default,
+              ref_nomenclatures.get_nomenclature_label(
+                gn_synthese.get_default_nomenclature_value(:nomenc)
+              )  AS label_default_nomenclature
             FROM ref_nomenclatures.bib_nomenclatures_types
             WHERE mnemonique = :nomenc;
         """
-        nomenc_details = DB.session.execute(
+        return DB.session.execute(
             text(query), {"nomenc": nomenclature_abb}
         ).fetchone()
-        return nomenc_details
     except Exception:
         raise
 
@@ -52,6 +55,7 @@ def get_nomenc_values(nommenclature_abb):
         FROM ref_nomenclatures.bib_nomenclatures_types AS bib
         JOIN ref_nomenclatures.t_nomenclatures AS nom ON nom.id_type = bib.id_type
         WHERE bib.mnemonique = :nomenc
+        ORDER BY nomenc_values ASC
         """
     return DB.session.execute(text(query), {"nomenc": nommenclature_abb}).fetchall()
 
@@ -102,7 +106,8 @@ def get_synthese_col(abb):
         LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.mnemonique = CSN.mnemonique
         WHERE BNT.mnemonique = :abb;
     """
-    nomenc_synthese_name = DB.session.execute(text(query), {"abb": abb}).fetchone()
+    nomenc_synthese_name = DB.session.execute(
+        text(query), {"abb": abb}).fetchone()
     return nomenc_synthese_name.synthese_name
 
 
@@ -199,7 +204,8 @@ def get_nomenc_abb_from_name(synthese_name):
 
 def set_default_value(abb):
     default_value = DB.session.execute(
-        text("SELECT gn_synthese.get_default_nomenclature_value(:abb)"), {"abb": abb},
+        text("SELECT gn_synthese.get_default_nomenclature_value(:abb)"), {
+            "abb": abb},
     ).fetchone()[0]
     if default_value is None:
         default_value = "NULL"
@@ -224,7 +230,8 @@ def set_default_nomenclature_id(table_name, nomenc_abb, user_col, id_types):
         user_col=user_col,
     )
     DB.session.execute(
-        text(query), {"default_value": default_value, "id_types": tuple(id_types)}
+        text(query), {"default_value": default_value,
+                      "id_types": tuple(id_types)}
     )
 
 
@@ -294,7 +301,7 @@ def get_saved_content_mapping(id_mapping):
     return selected_content
 
 
-####### conditional check
+#  conditional check
 
 
 def exist_proof_check(
@@ -353,7 +360,8 @@ def dee_bluring_check(table_name, id_import, bluring_col):
         WHERE id_import = :id_import
         )
     """
-    ds_public = DB.session.execute(query_ds_pub, {"id_import": id_import}).fetchone()
+    ds_public = DB.session.execute(
+        query_ds_pub, {"id_import": id_import}).fetchone()
     if ds_public.code != "Pr":
         return None
     else:
