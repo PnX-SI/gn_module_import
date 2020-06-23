@@ -29,10 +29,10 @@
                     </h4> 
                     <div>
                         <div *ngIf="displayErrors" class="content-report">
-                            <a target="_blank" [routerLink]="['/import/errors', stepData.importId]"> Rapport d'erreurs </a>
+                            <a target="_blank" [routerLink]="['/import/errors', idImport]"> Rapport d'erreurs </a>
                         </div>
                         <div class="content-report">
-                            <a [routerLink]="" (click)="_csvExport.onCSV(stepData.importId)"> Exporter vos {{nInvalidData}} observations invalides </a>
+                            <a [routerLink]="" (click)="_csvExport.onCSV(idImport)"> Exporter vos {{nInvalidData}} observations invalides </a>
                         </div>
                     </div>
                     
@@ -72,7 +72,7 @@
                 </div>
         </div>
         <footer>
-            <footer-stepper importId={{stepData.importId}}></footer-stepper>
+            <footer-stepper importId={{idImport}}></footer-stepper>
         </footer>
     </div>
 </div>

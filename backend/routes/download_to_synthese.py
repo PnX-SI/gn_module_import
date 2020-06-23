@@ -4,7 +4,7 @@ from utils_flask_sqla.response import json_resp
 from geonature.utils.env import DB
 from geonature.core.gn_permissions import decorators as permissions
 
-from ..db.models import TImports
+from ..db.models import TImports, TMappings
 
 from ..db.queries.save_mapping import get_selected_columns
 from ..db.queries.load_to_synthese import insert_into_t_sources, check_id_source
@@ -67,10 +67,12 @@ def import_data(info_role, import_id):
             )
 
         # insert into t_sources
-        insert_into_t_sources(IMPORTS_SCHEMA_NAME, table_name, import_id, total_columns)
+        insert_into_t_sources(IMPORTS_SCHEMA_NAME,
+                              table_name, import_id, total_columns)
 
         # insert into synthese
-        load_data_to_synthese(IMPORTS_SCHEMA_NAME, table_name, total_columns, import_id)
+        load_data_to_synthese(IMPORTS_SCHEMA_NAME,
+                              table_name, total_columns, import_id)
 
         logger.info("-> Data imported in gn_synthese.synthese table")
 
@@ -84,37 +86,35 @@ def import_data(info_role, import_id):
             total_columns["date_min"],
             total_columns["date_max"],
         )
-
-        DB.session.query(TImports).filter(TImports.id_import == int(import_id)).update(
-            {
-                TImports.import_count: get_n_valid_rows(
-                    IMPORTS_SCHEMA_NAME, table_name
-                ),
-                TImports.taxa_count: get_n_taxa(
-                    IMPORTS_SCHEMA_NAME, table_name, total_columns["cd_nom"]
-                ),
-                TImports.date_min_data: date_ext["date_min"],
-                TImports.date_max_data: date_ext["date_max"],
-                TImports.date_end_import: datetime.datetime.now(),
-                TImports.is_finished: True,
-            }
+        import_obj = DB.session.query(TImports).filter(
+            TImports.id_import == int(import_id)).first()
+        import_obj.import_count = get_n_valid_rows(
+            IMPORTS_SCHEMA_NAME, table_name
         )
+        import_obj.taxa_count = get_n_taxa(
+            IMPORTS_SCHEMA_NAME, table_name, total_columns["cd_nom"]
+        )
+        import_obj.date_min = date_ext["date_min"]
+        import_obj.date_max = date_ext["date_max"]
+        import_obj.date_end_import = datetime.datetime.now()
+        import_obj.is_finished = True
 
         logger.info("-> t_imports updated on final step")
 
         DB.session.commit()
 
-        return (
-            {
-                "status": "imported successfully"
-                #'total_columns': total_columns
-            },
-            200,
-        )
+        mappings = DB.session.query(TMappings).filter(TMappings.id_mapping.in_(
+            [TImports.id_content_mapping, TImports.id_field_mapping]
+        )).all()
+        import_as_dict = import_obj.as_dict()
+        import_as_dict['mappings'] = [m.as_dict() for m in mappings]
+
+        return import_as_dict
 
     except Exception as e:
         DB.session.rollback()
-        logger.error("*** SERVER ERROR WHEN IMPORTING DATA IN GN_SYNTHESE.SYNTHESE")
+        logger.error(
+            "*** SERVER ERROR WHEN IMPORTING DATA IN GN_SYNTHESE.SYNTHESE")
         logger.exception(e)
         raise GeonatureImportApiError(
             message="INTERNAL SERVER ERROR when importing data in gn_synthese.synthese",
