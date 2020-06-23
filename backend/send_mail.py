@@ -6,7 +6,7 @@ from flask import url_for, current_app
 from geonature.utils.utilsmails import send_mail
 
 
-def import_send_mail(mail_to, file_name):
+def import_send_mail(mail_to, file_name, id_import):
     """
         Send email after export is done
 
@@ -21,14 +21,19 @@ def import_send_mail(mail_to, file_name):
     msg = """
         Bonjour,
         <p>
-            Votre fichier {} a bien été importé !
+            Les contôles du fichier {file_name} sont terminés !
         </p>
+        <p>  Cliquez sur ce <a target="_blank" href="{link}"> lien </a>  
+        pour finir l'import </p>
+    """.format(
+        file_name=file_name,
+        link=current_app.config['URL_APPLICATION'] +
+        "/#/import/process/step/4/id_import/"+str(id_import)
+    )
 
-    """.format(file_name)
-    
     send_mail(
         recipients=[mail_to],
-        subject="[GeoNature] Import  réalisé",
+        subject="[GeoNature] Import réalisé",
         msg_html=msg
     )
 
