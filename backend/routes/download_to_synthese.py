@@ -24,11 +24,58 @@ from ..load.into_synthese.import_data import load_data_to_synthese
 
 from ..blueprint import blueprint
 
+from flask import copy_current_request_context
+
+from ..send_mail import import_send_mail
+
+import threading
+
 
 @blueprint.route("/importData/<import_id>", methods=["GET", "POST"])
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def import_data(info_role, import_id):
+
+    print('source_count :')
+    nbLignes = DB.session.query(TImports.source_count).filter(TImports.id_import == import_id).one()[0]
+
+
+    if (nbLignes > 10):
+
+
+        DB.session.query(TImports).filter(TImports.id_import == import_id).update({'processing' : True})
+        DB.session.commit()
+
+        import_data = {
+            "import_id": import_id
+        }
+
+        @copy_current_request_context
+        def data_import_task(import_id):
+            res = concurrent_data_import(import_id)
+            imp = DB.session.query(TImports).filter(TImports.id_import == import_id).first()
+            for aut in imp.author:
+                import_send_mail(
+                    mail_to=aut.email,
+                    file_name=imp.full_file_name,
+                    step="import"
+                )
+            return res
+
+        a = threading.Thread(
+            name="data_import_task",
+            target=data_import_task,
+            kwargs=import_data
+        )
+        a.start()
+
+        return "Processing " + str(nbLignes)
+
+    else:
+        return concurrent_data_import(import_id)
+
+def concurrent_data_import(import_id):
+
     """"Import data in synthese"""
     try:
 

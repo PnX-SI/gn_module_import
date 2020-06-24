@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 import { Router } from "@angular/router";
 import { StepsService, Step4Data, Step2Data, Step3Data } from "../steps.service";
 import { DataService } from "../../../services/data.service";
@@ -6,6 +6,7 @@ import { CsvExportService } from "../../../services/csv-export.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../../module.config";
 import * as _ from "lodash";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
   selector: "import-step",
@@ -27,12 +28,16 @@ export class ImportStepComponent implements OnInit {
   public spinner: boolean = false;
   displayErrors: boolean = false;
   displayWarnings: boolean = false;
+  public nbLignes: string = "X";
+
+  @ViewChild('modalRedir') modalRedir: any;
 
   constructor(
     private stepService: StepsService,
     private _csvExport: CsvExportService,
     private _router: Router,
     private _ds: DataService,
+    private _modalService: NgbModal,
     private _commonService: CommonService
   ) { }
 
@@ -79,7 +84,11 @@ export class ImportStepComponent implements OnInit {
           this._ds.deleteMapping(step3.id_content_mapping).subscribe();
         }
         this.stepService.resetStepoer();
-        this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
+        if ((res+'').startsWith("Processing ")){
+          this.nbLignes = (res+"").split(" ", 2)[1];
+          this._modalService.open(this.modalRedir);
+        } else
+          this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
       },
       error => {
         this.spinner = false;
@@ -98,6 +107,10 @@ export class ImportStepComponent implements OnInit {
         }
       }
     );
+  }
+
+  onRedirect() {
+    this._router.navigate([ModuleConfig.MODULE_URL]);
   }
 
   getValidData() {
