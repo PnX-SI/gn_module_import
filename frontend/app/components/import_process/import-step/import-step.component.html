@@ -80,3 +80,18 @@
     <mat-spinner class="upload-spinner" [color]="color" [diameter]="150" [strokeWidth]="12">
     </mat-spinner>
 </div>
+
+<ng-template #modalRedir let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">Enregistrement du modèle</h4>
+            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                <span aria-hidden="true">&times;</span>
+            </button>
+    </div>
+    <div class="modal-body">
+        Le fichier importé contient {{nbLignes}} lignes, un mail de notification vous sera envoyé à la fin de son traitement.
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-warning" (click)="onRedirect(); modal.close()"> OK </button>
+    </div>
+</ng-template>

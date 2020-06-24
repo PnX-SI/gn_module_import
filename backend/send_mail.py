@@ -6,29 +6,26 @@ from flask import url_for, current_app
 from geonature.utils.utilsmails import send_mail
 
 
-def import_send_mail(mail_to, file_name):
+def import_send_mail(mail_to, file_name, step):
     """
         Send email after export is done
 
         .. :quickref: Send email after import is done
-
-
-        :query User role: User who runs the import
-        :query {} import: Import definition
+        :query mail_to: User who runs the import
         :query str file_name: Name of imported file
     """
 
     msg = """
         Bonjour,
         <p>
-            Votre fichier {} a bien été importé !
+            Votre fichier {} a bien été {} !
         </p>
 
-    """.format(file_name)
+    """.format(file_name, "importé" if (step == "import") else "vérifié")
     
     send_mail(
         recipients=[mail_to],
-        subject="[GeoNature] Import  réalisé",
+        subject="[GeoNature] Import réalisé" if (step == "import") else "[GeoNature] Fichier vérifié",
         msg_html=msg
     )
 
