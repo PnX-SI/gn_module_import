@@ -31,8 +31,11 @@
                         <div *ngIf="displayErrors" class="content-report">
                             <a target="_blank" [routerLink]="['/import/errors', stepData.importId]"> Rapport d'erreurs </a>
                         </div>
-                        <div class="content-report">
+                        <div *ngIf="nInvalidData > 0" class="content-report">
                             <a [routerLink]="" (click)="_csvExport.onCSV(stepData.importId)"> Exporter vos {{nInvalidData}} observations invalides </a>
+                        </div>
+                        <div *ngIf="nInvalidData==0 && !displayErrors" class="content-report">
+                            Aucune erreur à afficher
                         </div>
                     </div>
                     
