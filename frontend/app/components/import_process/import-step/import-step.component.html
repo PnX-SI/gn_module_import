@@ -1,52 +1,48 @@
 <div class=container>
     <stepper [step]=4></stepper>
 
-    <div *ngIf="tableReady" class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">
+    <div *ngIf="tableReady" >
+            <h3 class="title mb-0">
                 Récapitulatif avant import
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="row no-gutters">
-                <div class="titre-recap col-12 col-sm-6 col-md-8">
-                    <h4> 
-                        <i class="icone-recap fa fa-map-marker" aria-hidden="true"></i>
-                        Zone géographique
-                    </h4>
-                    <pnx-map height="40vh" searchBar="false">
-                        <pnx-geojson
-                        [geojson]="this.validBbox"
-                        [zoomOnFirstTime]="true"
-                        >
-                        </pnx-geojson>
-                    </pnx-map>
-                </div>
-                    <div class="titre-recap col-6 col-md-4">
-                    <h4>
-                        <i class="icone-recap fa fa-wrench" aria-hidden="true"></i>
-                        Rapports
-                    </h4> 
-                    <div>
-                        <div *ngIf="displayErrors" class="content-report">
-                            <a target="_blank" [routerLink]="['/import/errors', idImport]"> Rapport d'erreurs </a>
-                        </div>
-                        <div *ngIf="nInvalidData > 0" class="content-report">
-                            <a [routerLink]="" (click)="_csvExport.onCSV(stepData.importId)"> Exporter vos {{nInvalidData}} observations invalides </a>
-                        </div>
-                        <div *ngIf="nInvalidData==0 && !displayErrors" class="content-report">
-                            Aucune erreur à afficher
-                        </div>
+            </h3>
+            <div class="card card-margin">
+                <h4 class="card-header">
+                    <i class="icone-recap fa fa-wrench" aria-hidden="true"></i>
+                    Rapports
+                </h4> 
+                <div>
+                    <div *ngIf="displayErrors" class="content-report card-body">
+                        <a target="_blank" [routerLink]="['/import/errors', idImport]"> Rapport d'erreurs </a>
                     </div>
-                    
+                    <div *ngIf="nInvalidData > 0" class="content-report">
+                        <a [routerLink]="" (click)="_csvExport.onCSV(stepData.importId)"> Exporter vos {{nInvalidData}} observations invalides </a>
+                    </div>
+                    <div *ngIf="nInvalidData==0 && !displayErrors" class="content-report">
+                        Aucune erreur à afficher
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <div class="card card-margin">
+                <h4 class="card-header"> 
+                    <i class="icone-recap fa fa-map-marker" aria-hidden="true"></i>
+                    Zone géographique
+                </h4>
+                <pnx-map height="40vh" searchBar="false">
+                    <pnx-geojson
+                    [geojson]="this.validBbox"
+                    [zoomOnFirstTime]="true"
+                    >
+                    </pnx-geojson>
+                </pnx-map>
+            </div>
+
     </div>
 
     <div *ngIf="tableReady" class="card">
         <div class="card-header">
             <h5 class="card-title mb-0">
+                <i class="icone-recap fa fa-list-alt" aria-hidden="true"></i>
                 Prévisualisation des observations valides prêtes à être importées
             </h5>
         </div>
@@ -86,7 +82,7 @@
 
 <ng-template #modalRedir let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Import des données en cours</h4>
+        <h4 class="modal-title" id="modal-basic-title">Import des données en cours...</h4>
             <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
                 <span aria-hidden="true">&times;</span>
             </button>
