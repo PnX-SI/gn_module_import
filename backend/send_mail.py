@@ -6,34 +6,45 @@ from flask import url_for, current_app
 from geonature.utils.utilsmails import send_mail
 
 
-def import_send_mail(mail_to, file_name, id_import):
+def import_send_mail(mail_to, file_name, step, id_import):
     """
         Send email after export is done
 
-        .. :quickref: Send email after import is done
+        .. :quickref: Imports
 
-
-        :query User role: User who runs the import
-        :query {} import: Import definition
-        :query str file_name: Name of imported file
+        Send email after import is done
+        :param mail_to: User who runs the import
+        :param step: step of the processe: 'import' | 'check'
     """
-
-    msg = """
+    if step == 'check':
+        msg = """
         Bonjour,
         <p>
-            Les contôles du fichier {file_name} sont terminés !
+            Les vérifications sur le fichier {file_name} sont terminés.
         </p>
         <p>  Cliquez sur ce <a target="_blank" href="{link}"> lien </a>  
-        pour finir l'import </p>
-    """.format(
-        file_name=file_name,
-        link=current_app.config['URL_APPLICATION'] +
-        "/#/import/process/step/4/id_import/"+str(id_import)
-    )
+        pour terminer l'import dans la synthese</p>
+
+        """.format(
+            file_name=file_name,
+            link=current_app.config['URL_APPLICATION'] +
+            "/#/import/process/step/4/id_import/"+str(id_import)
+
+        )
+    else:
+        msg = """
+        Bonjour,
+        <p>
+            L'import du fichier {file_name} dans la synthese est terminé.
+        </p>
+        """.format(
+            file_name=file_name
+        )
 
     send_mail(
         recipients=[mail_to],
-        subject="[GeoNature] Import réalisé",
+        subject="[GeoNature] Import réalisé" if (
+            step == "import") else "[GeoNature] Contrôles terminés",
         msg_html=msg
     )
 
@@ -61,7 +72,7 @@ def import_send_mail_error(role, export, error):
             Votre import <i>{}</i> n'a pas fonctionné correctement.
         </p>
 
-    """.format(label, error)
+    """.format(error)
     send_mail(
         recipients=[role.email],
         subject="[GeoNature][ERREUR] Import {}".format(label),

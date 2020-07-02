@@ -24,11 +24,70 @@ from ..load.into_synthese.import_data import load_data_to_synthese
 
 from ..blueprint import blueprint
 
+from flask import copy_current_request_context
+
+from ..send_mail import import_send_mail
+
+import threading
+
 
 @blueprint.route("/importData/<import_id>", methods=["GET", "POST"])
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def import_data(info_role, import_id):
+    """
+    Run import data in synthese
+    The route must return an import object with its mapping (use in frontend)
+    """
+
+    print('source_count :')
+    nbLignes = DB.session.query(TImports.source_count).filter(
+        TImports.id_import == import_id).one()[0]
+
+    if (nbLignes > 10):
+
+        DB.session.query(TImports).filter(TImports.id_import ==
+                                          import_id).update({'processing': True})
+        DB.session.commit()
+
+        import_data = {
+            "import_id": import_id
+        }
+
+        @copy_current_request_context
+        def data_import_task(import_id):
+            res = concurrent_data_import(import_id)
+            imp = DB.session.query(TImports).filter(
+                TImports.id_import == import_id).first()
+            for aut in imp.author:
+                import_send_mail(
+                    mail_to=aut.email,
+                    file_name=imp.full_file_name,
+                    step="import",
+                    id_import=import_id
+                )
+            return res
+
+        a = threading.Thread(
+            name="data_import_task",
+            target=data_import_task,
+            kwargs=import_data
+        )
+        a.start()
+
+        import_obj = TImports.query.get(import_id)
+        mappings = DB.session.query(TMappings).filter(TMappings.id_mapping.in_(
+            [import_obj.id_content_mapping, import_obj.id_field_mapping]
+        )).all()
+        import_as_dict = import_obj.as_dict()
+        import_as_dict['mappings'] = [m.as_dict() for m in mappings]
+
+        return import_as_dict
+    else:
+        return concurrent_data_import(import_id)
+
+
+def concurrent_data_import(import_id):
     """"Import data in synthese"""
     try:
 
@@ -104,7 +163,7 @@ def import_data(info_role, import_id):
         DB.session.commit()
 
         mappings = DB.session.query(TMappings).filter(TMappings.id_mapping.in_(
-            [TImports.id_content_mapping, TImports.id_field_mapping]
+            [import_obj.id_content_mapping, import_obj.id_field_mapping]
         )).all()
         import_as_dict = import_obj.as_dict()
         import_as_dict['mappings'] = [m.as_dict() for m in mappings]

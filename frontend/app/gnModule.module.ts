@@ -50,7 +50,6 @@ const routes: Routes = [
   {
     path: "process/step/4/id_import/:id_import",
     component: ImportStepComponent
-    //canActivate: [StepperGuardService]
   }
 ];
 

@@ -31,8 +31,11 @@
                         <div *ngIf="displayErrors" class="content-report">
                             <a target="_blank" [routerLink]="['/import/errors', idImport]"> Rapport d'erreurs </a>
                         </div>
-                        <div class="content-report">
-                            <a [routerLink]="" (click)="_csvExport.onCSV(idImport)"> Exporter vos {{nInvalidData}} observations invalides </a>
+                        <div *ngIf="nInvalidData > 0" class="content-report">
+                            <a [routerLink]="" (click)="_csvExport.onCSV(stepData.importId)"> Exporter vos {{nInvalidData}} observations invalides </a>
+                        </div>
+                        <div *ngIf="nInvalidData==0 && !displayErrors" class="content-report">
+                            Aucune erreur à afficher
                         </div>
                     </div>
                     
@@ -80,3 +83,18 @@
     <mat-spinner class="upload-spinner" [color]="color" [diameter]="150" [strokeWidth]="12">
     </mat-spinner>
 </div>
+
+<ng-template #modalRedir let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">Import des données en cours</h4>
+            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                <span aria-hidden="true">&times;</span>
+            </button>
+    </div>
+    <div class="modal-body">
+        L'import des fichier dans la synthèse est en cours... Un mail de notification vous sera envoyé à la fin du traitement.
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-warning" (click)="onRedirect(); modal.close()"> OK </button>
+    </div>
+</ng-template>

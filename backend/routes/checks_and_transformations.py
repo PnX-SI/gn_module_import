@@ -13,9 +13,7 @@ from ..api_error import GeonatureImportApiError
 
 from ..blueprint import blueprint
 
-from ..send_mail import(
-    import_send_mail
-)
+from ..send_mail import import_send_mail
 
 import threading
 # import redis
@@ -45,12 +43,12 @@ def concurrent_data_check(import_id, id_field_mapping, id_content_mapping):
     DB.session.query(TImports).filter(TImports.id_import ==
                                       import_id).update({'processing': False})
     DB.session.commit()
-    print(imp)
     for aut in imp.author:
         import_send_mail(
             mail_to=aut.email,
             file_name=imp.full_file_name,
-            id_import=imp.id_import
+            id_import=imp.id_import,
+            step="import"
         )
     return "Done"
 
@@ -88,7 +86,18 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
 
         @copy_current_request_context
         def data_checker_task(import_id, id_field_mapping, id_content_mapping):
-            return concurrent_data_check(import_id, id_field_mapping, id_content_mapping)
+            res = concurrent_data_check(
+                import_id, id_field_mapping, id_content_mapping)
+            imp = DB.session.query(TImports).filter(
+                TImports.id_import == import_id).first()
+            for aut in imp.author:
+                import_send_mail(
+                    id_import=import_id,
+                    mail_to=aut.email,
+                    file_name=imp.full_file_name,
+                    step="check"
+                )
+            return res
 
         a = threading.Thread(
             name="data_checker_task",
