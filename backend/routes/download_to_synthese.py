@@ -1,4 +1,7 @@
 import datetime
+import threading
+
+from flask import copy_current_request_context, current_app
 
 from utils_flask_sqla.response import json_resp
 from geonature.utils.env import DB
@@ -24,11 +27,7 @@ from ..load.into_synthese.import_data import load_data_to_synthese
 
 from ..blueprint import blueprint
 
-from flask import copy_current_request_context
-
 from ..send_mail import import_send_mail
-
-import threading
 
 
 @blueprint.route("/importData/<import_id>", methods=["GET", "POST"])
@@ -40,11 +39,10 @@ def import_data(info_role, import_id):
     The route must return an import object with its mapping (use in frontend)
     """
 
-    print('source_count :')
     nbLignes = DB.session.query(TImports.source_count).filter(
         TImports.id_import == import_id).one()[0]
 
-    if (nbLignes > 10):
+    if (nbLignes > current_app.config['IMPORT']['MAX_LINE_LIMIT']):
 
         DB.session.query(TImports).filter(TImports.id_import ==
                                           import_id).update({'processing': True})

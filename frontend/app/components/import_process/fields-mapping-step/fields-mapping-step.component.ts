@@ -53,7 +53,9 @@ export class FieldsMappingStepComponent implements OnInit {
   public mappedColCount: number;
   public unmappedColCount: number;
   public mappedList = [];
+  public nbLignes: number;
   @ViewChild("modalConfirm") modalConfirm: any;
+  @ViewChild("modalRedir") modalRedir: any;
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
@@ -186,6 +188,10 @@ export class FieldsMappingStepComponent implements OnInit {
       );
   }
 
+  onRedirect() {
+    this._router.navigate([ModuleConfig.MODULE_URL]);
+  }
+
   createOrUpdateMapping(temporary) {
     let step3data: Step3Data = {
       //table_name: this.step3Response.table_name,
@@ -230,15 +236,23 @@ export class FieldsMappingStepComponent implements OnInit {
               ModuleConfig.DEFAULT_VALUE_MAPPING_ID
             )
             .subscribe(
-              d => {
+              import_obj => {
                 this.spinner = false;
                 let step4Data: Step4Data = {
                   importId: this.stepData.importId
                 };
-                this.stepService.setStepData(4, step4Data);
-                this._router.navigate([
-                  `${ModuleConfig.MODULE_URL}/process/step/4`
-                ]);
+                if (import_obj.source_count < ModuleConfig.MAX_LINE_LIMIT) {
+                  this.stepService.setStepData(4, step4Data);
+                  this._router.navigate([
+                    `${ModuleConfig.MODULE_URL}/process/step/4`
+                  ]);
+                  this._router.navigate([
+                    ModuleConfig.MODULE_URL + "/process/step/4"
+                  ]);
+                } else {
+                  this.nbLignes = import_obj.source_count;
+                  this._modalService.open(this.modalRedir);
+                }
               },
               error => {
                 this.spinner = false;

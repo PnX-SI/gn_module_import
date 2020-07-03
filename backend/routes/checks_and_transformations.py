@@ -63,13 +63,11 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
     """
     Check and transform the data for field and content mapping
     """
-    nbLignes = DB.session.query(TImports.source_count).filter(
-        TImports.id_import == import_id).one()[0]
+    import_obj = DB.session.query(TImports).get(import_id)
+    import_as_dict = import_obj.as_dict()
+    if (import_obj.source_count > current_app.config['IMPORT']['MAX_LINE_LIMIT']):
 
-    if (nbLignes > 10):
-
-        DB.session.query(TImports).filter(TImports.id_import ==
-                                          import_id).update({'processing': True})
+        import_obj.processing = True
         DB.session.commit()
 
         import_data = {
@@ -106,11 +104,11 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
         )
         a.start()
 
-        return "Processing " + str(nbLignes)
+        return import_as_dict
     else:
         field_mapping_data_checking(import_id, id_field_mapping)
         content_mapping_data_checking(import_id, id_content_mapping)
-        return "Done"
+        return import_as_dict
 
 
 # @celery.task
