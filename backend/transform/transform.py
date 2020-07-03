@@ -174,6 +174,7 @@ def field_mapping_data_checking(import_id, id_mapping):
     """
     High level function to perform all field mapping check and transformation
     """
+    print('ENTER HEREEEEEEEEEEEEEE ################################""')
     # try:
     import pdb
     is_running = True

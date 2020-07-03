@@ -17,7 +17,6 @@ def extract(table_name, schema_name, column_names, index_col, id):
     empty_df = pd.DataFrame(columns=column_names, dtype="object")
     empty_df[index_col] = pd.to_numeric(
         empty_df[index_col], errors="coerce")
-    logger.info('LAAAAA')
 
     # get number of cores to set npartitions:
     ncores = psutil.cpu_count(logical=False)

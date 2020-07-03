@@ -42,14 +42,14 @@ def import_send_mail(mail_to, file_name, step, id_import):
         )
 
     send_mail(
-        recipients=[mail_to],
+        recipients=mail_to,
         subject="[GeoNature] Import réalisé" if (
             step == "import") else "[GeoNature] Contrôles terminés",
         msg_html=msg
     )
 
 
-def import_send_mail_error(role, export, error):
+def import_send_mail_error(mail_to, file_name, error):
     """
         Send email after export is failed
 
@@ -61,20 +61,16 @@ def import_send_mail_error(role, export, error):
         :query str error: Detail of the exception raised
 
     """
-
-    label = ""
-    if export:
-        label = export['label']
-
     msg = """
         Bonjour,
         <p>
-            Votre import <i>{}</i> n'a pas fonctionné correctement.
+            Votre import <i>{file_name}</i> n'a pas fonctionné correctement.
         </p>
+        <p> {error} </p>
 
-    """.format(error)
+    """.format(file_name=file_name, error=error)
     send_mail(
-        recipients=[role.email],
-        subject="[GeoNature][ERREUR] Import {}".format(label),
+        recipients=mail_to,
+        subject="[GeoNature][ERREUR] Import {}".format(file_name),
         msg_html=msg
     )

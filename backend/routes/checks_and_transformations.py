@@ -12,8 +12,10 @@ from ..transform.transform import (
 from ..api_error import GeonatureImportApiError
 
 from ..blueprint import blueprint
+from ..wrappers import checker
 
-from ..send_mail import import_send_mail
+
+from ..send_mail import import_send_mail, import_send_mail_error
 
 import threading
 # import redis
@@ -34,23 +36,29 @@ import time
 #     return concurrent_data_check(import_id, id_field_mapping, id_content_mapping)
 
 
-def concurrent_data_check(import_id, id_field_mapping, id_content_mapping):
-    imp = DB.session.query(TImports).filter(
-        TImports.id_import == import_id).first()
-
-    field_mapping_data_checking(import_id, id_field_mapping)
-    content_mapping_data_checking(import_id, id_content_mapping)
-    DB.session.query(TImports).filter(TImports.id_import ==
-                                      import_id).update({'processing': False})
-    DB.session.commit()
-    for aut in imp.author:
+def run_control(import_dict):
+    recipients = list((map(lambda a: a['email'], import_dict['author'])))
+    try:
+        field_mapping_data_checking(
+            import_dict['id_import'], import_dict['id_field_mapping'])
+        content_mapping_data_checking(
+            import_dict['id_import'], import_dict['id_content_mapping'])
         import_send_mail(
-            mail_to=aut.email,
-            file_name=imp.full_file_name,
-            id_import=imp.id_import,
-            step="import"
+            id_import=import_dict['id_import'],
+            mail_to=recipients,
+            file_name=import_dict['full_file_name'],
+            step="check"
         )
-    return "Done"
+        #
+        return 'Done'
+    except Exception as e:
+
+        import_send_mail_error(
+            mail_to=recipients,
+            file_name=import_dict['full_file_name'],
+            error=e
+        )
+        return 'Error', 500
 
 
 @blueprint.route(
@@ -64,9 +72,8 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
     Check and transform the data for field and content mapping
     """
     import_obj = DB.session.query(TImports).get(import_id)
-    import_as_dict = import_obj.as_dict()
+    import_as_dict = import_obj.as_dict(True)
     if (import_obj.source_count > current_app.config['IMPORT']['MAX_LINE_LIMIT']):
-
         import_obj.processing = True
         DB.session.commit()
 
@@ -84,18 +91,8 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
 
         @copy_current_request_context
         def data_checker_task(import_id, id_field_mapping, id_content_mapping):
-            res = concurrent_data_check(
-                import_id, id_field_mapping, id_content_mapping)
-            imp = DB.session.query(TImports).filter(
-                TImports.id_import == import_id).first()
-            for aut in imp.author:
-                import_send_mail(
-                    id_import=import_id,
-                    mail_to=aut.email,
-                    file_name=imp.full_file_name,
-                    step="check"
-                )
-            return res
+            field_mapping_data_checking(import_id, id_field_mapping)
+            return run_control(import_as_dict)
 
         a = threading.Thread(
             name="data_checker_task",
@@ -106,8 +103,10 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
 
         return import_as_dict
     else:
-        field_mapping_data_checking(import_id, id_field_mapping)
-        content_mapping_data_checking(import_id, id_content_mapping)
+        field_mapping_data_checking(
+            import_as_dict['id_import'], import_as_dict['id_field_mapping'])
+        content_mapping_data_checking(
+            import_as_dict['id_import'], import_as_dict['id_content_mapping'])
         return import_as_dict
 
 

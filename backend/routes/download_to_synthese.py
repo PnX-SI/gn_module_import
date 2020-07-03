@@ -27,7 +27,7 @@ from ..load.into_synthese.import_data import load_data_to_synthese
 
 from ..blueprint import blueprint
 
-from ..send_mail import import_send_mail
+from ..send_mail import import_send_mail, import_send_mail_error
 
 
 @blueprint.route("/importData/<import_id>", methods=["GET", "POST"])
@@ -38,14 +38,13 @@ def import_data(info_role, import_id):
     Run import data in synthese
     The route must return an import object with its mapping (use in frontend)
     """
+    import_obj = DB.session.query(TImports).get(import_id)
+    import_as_dict = import_obj.as_dict(True)
 
-    nbLignes = DB.session.query(TImports.source_count).filter(
-        TImports.id_import == import_id).one()[0]
+    if (import_obj.source_count > current_app.config['IMPORT']['MAX_LINE_LIMIT']):
 
-    if (nbLignes > current_app.config['IMPORT']['MAX_LINE_LIMIT']):
+        import_obj.processing = True
 
-        DB.session.query(TImports).filter(TImports.id_import ==
-                                          import_id).update({'processing': True})
         DB.session.commit()
 
         import_data = {
@@ -54,17 +53,29 @@ def import_data(info_role, import_id):
 
         @copy_current_request_context
         def data_import_task(import_id):
-            res = concurrent_data_import(import_id)
-            imp = DB.session.query(TImports).filter(
-                TImports.id_import == import_id).first()
-            for aut in imp.author:
+            print('LAAAAAAAA')
+            print(import_as_dict)
+            recipients = list(
+                (map(lambda a: a['email'], import_as_dict['author']))
+            )
+            try:
+                print('YAHOOOOOO')
+                res = import_in_synthese(import_id)
+                print('YAHOO DONEEEEE')
                 import_send_mail(
-                    mail_to=aut.email,
-                    file_name=imp.full_file_name,
-                    step="import",
-                    id_import=import_id
+                    id_import=import_as_dict['id_import'],
+                    mail_to=recipients,
+                    file_name=import_as_dict['full_file_name'],
+                    step="import"
                 )
-            return res
+                return res
+            except Exception as e:
+                import_send_mail_error(
+                    mail_to=recipients,
+                    file_name=import_as_dict['full_file_name'],
+                    error=e
+                )
+                return 'Error', 500
 
         a = threading.Thread(
             name="data_import_task",
@@ -82,10 +93,10 @@ def import_data(info_role, import_id):
 
         return import_as_dict
     else:
-        return concurrent_data_import(import_id)
+        return import_in_synthese(import_id)
 
 
-def concurrent_data_import(import_id):
+def import_in_synthese(import_id):
     """"Import data in synthese"""
     try:
 
@@ -122,11 +133,12 @@ def concurrent_data_import(import_id):
                 },
                 400,
             )
-
+        logger.info('INSERT IN t_sources')
         # insert into t_sources
         insert_into_t_sources(IMPORTS_SCHEMA_NAME,
                               table_name, import_id, total_columns)
 
+        logger.info('#### Start insert in Synthese')
         # insert into synthese
         load_data_to_synthese(IMPORTS_SCHEMA_NAME,
                               table_name, total_columns, import_id)
