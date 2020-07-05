@@ -1,10 +1,13 @@
 import datetime
+import threading
+
+from flask import copy_current_request_context, current_app
 
 from utils_flask_sqla.response import json_resp
 from geonature.utils.env import DB
 from geonature.core.gn_permissions import decorators as permissions
 
-from ..db.models import TImports
+from ..db.models import TImports, TMappings
 
 from ..db.queries.save_mapping import get_selected_columns
 from ..db.queries.load_to_synthese import insert_into_t_sources, check_id_source
@@ -24,11 +27,76 @@ from ..load.into_synthese.import_data import load_data_to_synthese
 
 from ..blueprint import blueprint
 
+from ..send_mail import import_send_mail, import_send_mail_error
+
 
 @blueprint.route("/importData/<import_id>", methods=["GET", "POST"])
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def import_data(info_role, import_id):
+    """
+    Run import data in synthese
+    The route must return an import object with its mapping (use in frontend)
+    """
+    import_obj = DB.session.query(TImports).get(import_id)
+    import_as_dict = import_obj.as_dict(True)
+
+    if (import_obj.source_count > current_app.config['IMPORT']['MAX_LINE_LIMIT']):
+
+        import_obj.processing = True
+
+        DB.session.commit()
+
+        import_data = {
+            "import_id": import_id
+        }
+
+        @copy_current_request_context
+        def data_import_task(import_id):
+            print('LAAAAAAAA')
+            print(import_as_dict)
+            recipients = list(
+                (map(lambda a: a['email'], import_as_dict['author']))
+            )
+            try:
+                print('YAHOOOOOO')
+                res = import_in_synthese(import_id)
+                print('YAHOO DONEEEEE')
+                import_send_mail(
+                    id_import=import_as_dict['id_import'],
+                    mail_to=recipients,
+                    file_name=import_as_dict['full_file_name'],
+                    step="import"
+                )
+                return res
+            except Exception as e:
+                import_send_mail_error(
+                    mail_to=recipients,
+                    file_name=import_as_dict['full_file_name'],
+                    error=e
+                )
+                return 'Error', 500
+
+        a = threading.Thread(
+            name="data_import_task",
+            target=data_import_task,
+            kwargs=import_data
+        )
+        a.start()
+
+        import_obj = TImports.query.get(import_id)
+        mappings = DB.session.query(TMappings).filter(TMappings.id_mapping.in_(
+            [import_obj.id_content_mapping, import_obj.id_field_mapping]
+        )).all()
+        import_as_dict = import_obj.as_dict()
+        import_as_dict['mappings'] = [m.as_dict() for m in mappings]
+
+        return import_as_dict
+    else:
+        return import_in_synthese(import_id)
+
+
+def import_in_synthese(import_id):
     """"Import data in synthese"""
     try:
 
@@ -65,12 +133,15 @@ def import_data(info_role, import_id):
                 },
                 400,
             )
-
+        logger.info('INSERT IN t_sources')
         # insert into t_sources
-        insert_into_t_sources(IMPORTS_SCHEMA_NAME, table_name, import_id, total_columns)
+        insert_into_t_sources(IMPORTS_SCHEMA_NAME,
+                              table_name, import_id, total_columns)
 
+        logger.info('#### Start insert in Synthese')
         # insert into synthese
-        load_data_to_synthese(IMPORTS_SCHEMA_NAME, table_name, total_columns, import_id)
+        load_data_to_synthese(IMPORTS_SCHEMA_NAME,
+                              table_name, total_columns, import_id)
 
         logger.info("-> Data imported in gn_synthese.synthese table")
 
@@ -84,37 +155,35 @@ def import_data(info_role, import_id):
             total_columns["date_min"],
             total_columns["date_max"],
         )
-
-        DB.session.query(TImports).filter(TImports.id_import == int(import_id)).update(
-            {
-                TImports.import_count: get_n_valid_rows(
-                    IMPORTS_SCHEMA_NAME, table_name
-                ),
-                TImports.taxa_count: get_n_taxa(
-                    IMPORTS_SCHEMA_NAME, table_name, total_columns["cd_nom"]
-                ),
-                TImports.date_min_data: date_ext["date_min"],
-                TImports.date_max_data: date_ext["date_max"],
-                TImports.date_end_import: datetime.datetime.now(),
-                TImports.is_finished: True,
-            }
+        import_obj = DB.session.query(TImports).filter(
+            TImports.id_import == int(import_id)).first()
+        import_obj.import_count = get_n_valid_rows(
+            IMPORTS_SCHEMA_NAME, table_name
         )
+        import_obj.taxa_count = get_n_taxa(
+            IMPORTS_SCHEMA_NAME, table_name, total_columns["cd_nom"]
+        )
+        import_obj.date_min = date_ext["date_min"]
+        import_obj.date_max = date_ext["date_max"]
+        import_obj.date_end_import = datetime.datetime.now()
+        import_obj.is_finished = True
 
         logger.info("-> t_imports updated on final step")
 
         DB.session.commit()
 
-        return (
-            {
-                "status": "imported successfully"
-                #'total_columns': total_columns
-            },
-            200,
-        )
+        mappings = DB.session.query(TMappings).filter(TMappings.id_mapping.in_(
+            [import_obj.id_content_mapping, import_obj.id_field_mapping]
+        )).all()
+        import_as_dict = import_obj.as_dict()
+        import_as_dict['mappings'] = [m.as_dict() for m in mappings]
+
+        return import_as_dict
 
     except Exception as e:
         DB.session.rollback()
-        logger.error("*** SERVER ERROR WHEN IMPORTING DATA IN GN_SYNTHESE.SYNTHESE")
+        logger.error(
+            "*** SERVER ERROR WHEN IMPORTING DATA IN GN_SYNTHESE.SYNTHESE")
         logger.exception(e)
         raise GeonatureImportApiError(
             message="INTERNAL SERVER ERROR when importing data in gn_synthese.synthese",

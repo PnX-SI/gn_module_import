@@ -5,7 +5,6 @@
             <h5 class="card-title mb-0"> Correspondance des nomenclatures </h5>
         </div>
         <div class="card-body">
-
         <!-- Choix de la liste des nomenclatures -->
         <form class="was-validated">
                 <fieldset>
@@ -14,10 +13,17 @@
                                 Choix du modèle d'imports
                         </legend>
                         <div class="form-group">
-                            <select class="form-control form-control-sm" id="contentMappingSelection"
+                            <select 
+                                class="form-control form-control-sm" 
+                                id="contentMappingSelection"
+                                [compareWith]="compareFn"
                                 [formControl]="mappingListForm">
+                                <option [ngValue]="null">
+                                    -
+                                </option>
                                 <option *ngFor="let data of _cm.userContentMappings" [ngValue]="data">
-                                    {{data.mapping_label}}</option>
+                                    {{data.mapping_label}}
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -70,7 +76,10 @@
             <div *ngFor="let contentMapping of stepData.contentMappingInfo">
                 <div [hidden]="(!containsEnabled(contentMapping) && !_cm.displayMapped)" class="card field-card">
                     <div class="field-header" (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed">
-                        <div class="card-title mb-0">{{contentMapping.nomenc_name}}</div>
+                        <div class="card-title mb-0">
+                            {{contentMapping.nomenc_name}} 
+                            <i matTooltip="{{contentMapping.nomenc_def}} |  Valeur par défaut: {{contentMapping.nomenc_default_value}}" matTooltipClass="custom-tooltip" class="fa fa-info-circle" aria-hidden="true"></i>
+                        </div>
                         <i *ngIf="contentMapping.isCollapsed" class="material-icons">keyboard_arrow_down</i>
                         <i *ngIf="!contentMapping.isCollapsed" class="material-icons">keyboard_arrow_up</i>
                     </div>
@@ -113,26 +122,6 @@
                     <i class="material-icons"> navigate_before </i>
                     Précédent
                 </button>
-                <button 
-                    class="btn btn-warning box-shadow d-flex justify-content-center align-content-between"
-                    *ngIf="(n_errors > 0 || n_warnings > 0) && contentMapRes"
-                >
-                    <a target="_blank" [routerLink]="['/import/errors', stepData.importId]">
-                        <span *ngIf="n_errors > 0">{{n_errors}} erreur(s) détectée(s) - </span>
-                        <span *ngIf="n_warnings > 0">{{n_warnings}} lignes avec avertissement - </span>
-                        Voir le rapport complet
-                    </a>
-                </button>
-                <!-- <button (click)="onContentMapping(contentTargetForm.value)"
-                        class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        [disabled]="disabled"
-                        *ngIf="showValidateMappingBtn"
-                    >
-                        Valider le mapping
-                <span *ngIf="n_errors == 0 && n_warnings == 0" class="alert alert-success"> Aucune erreur détéctée dans le fichier </span>
-                </button> -->
-                <span *ngIf="n_errors == 0" class="alert alert-success"> Aucune erreur détéctée dans le fichier </span>
-
                 <button
                     class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
                     [disabled]="disabled"
@@ -169,4 +158,20 @@
                 <button type="button" class="btn btn-warning" (click)="saveMappingUpdate(false); modal.close()">Ne pas enregistrer </button>
                 <button type="button" class="btn btn-success" (click)="saveMappingUpdate(true); modal.close()">Enregistrer les modifications du modèle d'import</button>
           </div>
+</ng-template>
+
+<ng-template #modalRedir let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">Contrôle du fichier en cours...</h4>
+            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                <span aria-hidden="true">&times;</span>
+            </button>
+    </div>
+    <div class="modal-body">
+        Les contrôles sur votre fichier de {{nbLignes}} lignes ont bien été lancés ...
+        Un mail de notification vous sera envoyé à la fin du traitement.
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-warning" (click)="onRedirect(); modal.close()"> OK </button>
+    </div>
 </ng-template>

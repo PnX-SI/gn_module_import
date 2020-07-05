@@ -20,7 +20,8 @@ def is_negative_date(value):
 
 def check_date_min_inf_date_max(row, selected_columns):
     """set true in check_dates if date_min <= date_max"""
-    interval = row[selected_columns["date_max"]] - row[selected_columns["date_min"]]
+    interval = row[selected_columns["date_max"]] - \
+        row[selected_columns["date_min"]]
     if interval.total_seconds() >= 0:
         row["check_dates"] = True
     else:
@@ -40,13 +41,14 @@ def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
             if synthese_info[field]["data_type"] == "timestamp without time zone"
         ]
 
-        ## date_min and date_max :
+        # date_min and date_max :
 
         # set date_max (=if data_max not existing, then set equal to date_min)
         if "date_max" not in date_fields:
             logger.info("- date_max not provided : set date_max = date_min")
             df["date_max"] = df[selected_columns["date_min"]]  # utile?
-            synthese_info.update({"date_max": synthese_info["date_min"]})  # utile?
+            synthese_info.update(
+                {"date_max": synthese_info["date_min"]})  # utile?
 
         # check date min <= date max
         if "date_min" in date_fields and "date_max" in date_fields:
@@ -60,7 +62,8 @@ def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
             df["temp"] = ""
             try:
                 df["interval"] = (
-                    df[selected_columns["date_max"]] - df[selected_columns["date_min"]]
+                    df[selected_columns["date_max"]] -
+                    df[selected_columns["date_min"]]
                 )
             except Exception:
                 logger.error("Error on date")
@@ -84,10 +87,6 @@ def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
                     df_col_name_valid="temp",
                     id_rows_error=id_rows_errors,
                 )
-
-        if "check_dates" in df.columns:
-            df = df.drop("check_dates", axis=1)
-        df = df.drop("interval", axis=1)
 
     except Exception:
         raise
