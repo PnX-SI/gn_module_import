@@ -39,7 +39,6 @@ def insert_into_synthese(
             ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_meta_dates_change_synthese;
             ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_insert_cor_area_synthese;
             ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_update_cor_area_taxon_update_cd_nom;
-            ALTER TABLE gn_synthese.cor_area_synthese DISABLE TRIGGER tri_maj_cor_area_taxon;
 
             INSERT INTO gn_synthese.synthese ({into_part})
             SELECT {select_part}
@@ -49,7 +48,6 @@ def insert_into_synthese(
             ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_meta_dates_change_synthese;
             ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_insert_cor_area_synthese;
             ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_update_cor_area_taxon_update_cd_nom;
-            ALTER TABLE gn_synthese.cor_area_synthese ENABLE TRIGGER tri_maj_cor_area_taxon;
             COMMIT;            
             
             """.format(
@@ -68,6 +66,8 @@ def insert_into_synthese(
             -- restore trigger
             -- cor_area_synthese
             BEGIN;
+            ALTER TABLE gn_synthese.cor_area_synthese DISABLE TRIGGER tri_maj_cor_area_taxon;
+
             INSERT INTO gn_synthese.cor_area_synthese
             SELECT
             s.id_synthese,
@@ -76,6 +76,8 @@ def insert_into_synthese(
             JOIN gn_synthese.synthese s ON public.st_intersects(s.the_geom_local, a.geom)
             WHERE a.enable = true AND s.id_source = {id_source}
             ;
+            ALTER TABLE gn_synthese.cor_area_synthese ENABLE TRIGGER tri_maj_cor_area_taxon;
+
             COMMIT;
 
             BEGIN;
