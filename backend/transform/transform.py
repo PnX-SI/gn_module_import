@@ -129,8 +129,7 @@ def data_cleaning(
         check_cd_nom(
             df, selected_columns, missing_val, cd_nom_list, schema_name, import_id
         )
-        check_dates(df, selected_columns, synthese_info,
-                    import_id, schema_name)
+        check_dates(df, selected_columns, synthese_info, import_id, schema_name)
         check_uuid(
             df,
             selected_columns,
@@ -151,8 +150,7 @@ def data_cleaning(
         check_entity_source(
             df, added_cols, selected_columns, synthese_info, import_id, schema_name
         )
-        check_id_digitizer(df, selected_columns,
-                           synthese_info, import_id, schema_name)
+        check_id_digitizer(df, selected_columns, synthese_info, import_id, schema_name)
         check_geography(
             df, import_id, added_cols, selected_columns, srid, local_srid, schema_name
         )
@@ -177,6 +175,7 @@ def field_mapping_data_checking(import_id, id_mapping):
     print('ENTER HEREEEEEEEEEEEEEE ################################""')
     # try:
     import pdb
+
     is_running = True
     is_temp_table_name = False
     is_table_names = False
@@ -202,8 +201,7 @@ def field_mapping_data_checking(import_id, id_mapping):
     is_temp_table_name = True
 
     engine = DB.engine
-    column_names = get_table_info(
-        table_names["imports_table_name"], "column_name")
+    column_names = get_table_info(table_names["imports_table_name"], "column_name")
     local_srid = get_local_srid()
 
     # get import_obj
@@ -234,9 +232,7 @@ def field_mapping_data_checking(import_id, id_mapping):
         import_srid=import_obj_dict["srid"],
     )
 
-    logger.debug(
-        "selected columns in correspondance mapping = %s", selected_columns
-    )
+    logger.debug("selected columns in correspondance mapping = %s", selected_columns)
     # check if column names provided in the field form exists in the user table
     for key, value in selected_columns.items():
         if key not in ["unique_id_sinp_generate", "altitudes_generate"]:
@@ -267,9 +263,7 @@ def field_mapping_data_checking(import_id, id_mapping):
             required_cols.remove("codecommune")
             required_cols.remove("codemaille")
             required_cols.remove("codedepartement")
-        if (
-            "codecommune" or "codemaille" or "codedepartement"
-        ) in selected_columns_tab:
+        if ("codecommune" or "codemaille" or "codedepartement") in selected_columns_tab:
             required_cols.remove("WKT")
             required_cols.remove("longitude")
             required_cols.remove("latitude")
@@ -344,18 +338,16 @@ def field_mapping_data_checking(import_id, id_mapping):
             "temp",
             "temp2",
             "check_dates",
-            "interval"
+            "interval",
         ]
         partition_df = remove_temp_columns(temp_cols, partition_df)
 
         logger.info("* END DATA CLEANING partition %s", i)
 
         # LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
-        logger.info(
-            "* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
+        logger.info("* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
         load(partition_df, i, IMPORTS_SCHEMA_NAME, temp_table_name, engine)
-        logger.info(
-            "* END LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
+        logger.info("* END LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
 
     # delete original table
     delete_table(table_names["imports_full_table_name"])
@@ -366,9 +358,7 @@ def field_mapping_data_checking(import_id, id_mapping):
     )
 
     # set primary key
-    set_primary_key(
-        IMPORTS_SCHEMA_NAME, table_names["imports_table_name"], index_col
-    )
+    set_primary_key(IMPORTS_SCHEMA_NAME, table_names["imports_table_name"], index_col)
 
     # alter primary key type into integer
     alter_column_type(
@@ -378,11 +368,9 @@ def field_mapping_data_checking(import_id, id_mapping):
     geometry_setter = GeometrySetter(
         importObject,
         local_srid=local_srid,
-        code_commune_col=selected_columns.get(
-            "codecommune", "codecommune"),
+        code_commune_col=selected_columns.get("codecommune", "codecommune"),
         code_maille_col=selected_columns.get("codemaille", "codemaille"),
-        code_dep_col=selected_columns.get(
-            "codedepartement", "codedepartement"),
+        code_dep_col=selected_columns.get("codedepartement", "codedepartement"),
     )
     geometry_setter.set_geometry()
 
@@ -394,9 +382,7 @@ def field_mapping_data_checking(import_id, id_mapping):
     DB.session.close()
 
     # check if df is fully loaded in postgresql table :
-    is_nrows_ok = check_row_number(
-        import_id, table_names["imports_full_table_name"]
-    )
+    is_nrows_ok = check_row_number(import_id, table_names["imports_full_table_name"])
     if not is_nrows_ok:
         logger.error("missing rows because of loading server error")
         raise GeonatureImportApiError(
@@ -408,8 +394,7 @@ def field_mapping_data_checking(import_id, id_mapping):
         )
 
     # calculate number of invalid lines
-    n_invalid_rows = get_n_invalid_rows(
-        table_names["imports_full_table_name"])
+    n_invalid_rows = get_n_invalid_rows(table_names["imports_full_table_name"])
 
     # check total number of lines
     n_table_rows = get_row_number(table_names["imports_full_table_name"])
@@ -530,8 +515,7 @@ def content_mapping_data_checking(import_id, id_mapping):
     except Exception as e:
         DB.session.rollback()
         DB.session.close()
-        logger.error(
-            "*** SERVER ERROR DURING CONTENT MAPPING (user values to id_types")
+        logger.error("*** SERVER ERROR DURING CONTENT MAPPING (user values to id_types")
         logger.exception(e)
         raise GeonatureImportApiError(
             message="INTERNAL SERVER ERROR during content mapping (user values to id_types",

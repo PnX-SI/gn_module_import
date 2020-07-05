@@ -82,9 +82,8 @@ export class DataService {
    * @param idContentMapping 
    */
   dataChecker(idImport, idFieldMapping, idContentMapping) {
-    console.log ('va appeler dataChecker');
     const url = `${urlApi}/data_checker/${idImport}/field_mapping/${idFieldMapping}/content_mapping/${idContentMapping}`;
-    return this._http.post(url, {})
+    return this._http.post<any>(url, {})
   }
 
   updateMappingName(value, mappingType, idMapping) {
@@ -188,7 +187,7 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/get_error_list/${importId}`);
   }
 
-  sendEmail(import_id){
+  sendEmail(import_id) {
     return this._http.get<any>(`${urlApi}/sendemail`);
   }
 }

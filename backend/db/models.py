@@ -26,8 +26,7 @@ class VUserImportsErrors(DB.Model):
     __tablename__ = "v_imports_errors"
     __table_args__ = {"schema": "gn_imports"}
     id_user_error = DB.Column(DB.Integer, primary_key=True)
-    id_import = DB.Column(DB.Integer, ForeignKey(
-        "gn_imports.t_imports.id_import"))
+    id_import = DB.Column(DB.Integer, ForeignKey("gn_imports.t_imports.id_import"))
     error_type = DB.Column(DB.Unicode)
     error_name = DB.Column(DB.Unicode)
     error_level = DB.Column(DB.Unicode)
@@ -80,7 +79,7 @@ class TImports(DB.Model):
         secondary=CorRoleImport.__table__,
         primaryjoin=(CorRoleImport.id_import == id_import),
         secondaryjoin=(CorRoleImport.id_role == User.id_role),
-        foreign_keys=[CorRoleImport.id_import, CorRoleImport.id_role, ],
+        foreign_keys=[CorRoleImport.id_import, CorRoleImport.id_role,],
     )
     is_finished = DB.Column(DB.Boolean, nullable=False, default=False)
     processing = DB.Column(DB.Boolean, nullable=False, default=False)
@@ -126,8 +125,7 @@ class TMappingsFields(DB.Model):
     __tablename__ = "t_mappings_fields"
     __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
-    id_match_fields = DB.Column(
-        DB.Integer, primary_key=True, autoincrement=True)
+    id_match_fields = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
     source_field = DB.Column(DB.Unicode, nullable=False)
     target_field = DB.Column(DB.Unicode, nullable=False)
@@ -140,8 +138,7 @@ class TMappingsValues(DB.Model):
     __tablename__ = "t_mappings_values"
     __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
-    id_match_values = DB.Column(
-        DB.Integer, primary_key=True, autoincrement=True)
+    id_match_values = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
     source_value = DB.Column(DB.Unicode, nullable=False)
     id_target_value = DB.Column(DB.Integer, nullable=False)
@@ -176,6 +173,7 @@ class BibFields(DB.Model):
     nomenclature = DB.Column(DB.Boolean, nullable=False)
     id_theme = DB.Column(DB.Integer, nullable=False)
     order_field = DB.Column(DB.Integer, nullable=False)
+    comment = DB.Column(DB.Unicode)
 
 
 @serializable
@@ -228,8 +226,7 @@ def generate_user_table_class(
 
     if schema_type == "gn_imports":
         user_table.update({"gn_is_valid": DB.Column(DB.Text, nullable=True)})
-        user_table.update(
-            {"gn_invalid_reason": DB.Column(DB.Text, nullable=True)})
+        user_table.update({"gn_invalid_reason": DB.Column(DB.Text, nullable=True)})
 
     user_table.update({pk_name: DB.Column(DB.Integer, autoincrement=True)})
     for column in user_columns:
