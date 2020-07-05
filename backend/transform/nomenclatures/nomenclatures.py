@@ -54,8 +54,7 @@ class NomenclatureTransformer:
         """
         self.table_name = table_name
         self.id_mapping = id_mapping
-        self.nomenclature_fields = self.__set_nomenclature_fields(
-            selected_columns)
+        self.nomenclature_fields = self.__set_nomenclature_fields(selected_columns)
         self.formated_mapping_content = self.__formated_mapping_content(
             selected_columns
         )
@@ -172,8 +171,7 @@ class NomenclatureTransformer:
                             row[1],
                             ", ".join(nomenc_values_ids),
                             el["mnemonique_type"],
-                            get_mnemo(set_default_value(
-                                el["mnemonique_type"])),
+                            get_mnemo(set_default_value(el["mnemonique_type"])),
                         ),
                     )
                 else:
@@ -233,8 +231,7 @@ class NomenclatureTransformer:
                 id_import=id_import,
                 step="CONTENT_MAPPING",
                 error_code="INVALID_EXISTING_PROOF_VALUE",
-                col_name=self.selected_columns.get(
-                    "id_nomenclature_exist_proof"),
+                col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
                 id_rows=row_with_errors_proof.id_rows,
             )
 

@@ -41,55 +41,56 @@ def import_data(info_role, import_id):
     import_obj = DB.session.query(TImports).get(import_id)
     import_as_dict = import_obj.as_dict(True)
 
-    if (import_obj.source_count > current_app.config['IMPORT']['MAX_LINE_LIMIT']):
+    if import_obj.source_count > current_app.config["IMPORT"]["MAX_LINE_LIMIT"]:
 
         import_obj.processing = True
 
         DB.session.commit()
 
-        import_data = {
-            "import_id": import_id
-        }
+        import_data = {"import_as_dict": import_as_dict}
 
         @copy_current_request_context
-        def data_import_task(import_id):
-            print('LAAAAAAAA')
+        def data_import_task(import_as_dict):
+            print("YOOOO")
             print(import_as_dict)
-            recipients = list(
-                (map(lambda a: a['email'], import_as_dict['author']))
-            )
+            recipients = list((map(lambda a: a["email"], import_as_dict.get("author"))))
             try:
-                print('YAHOOOOOO')
+
+                print("YAHOOOOOO")
                 res = import_in_synthese(import_id)
-                print('YAHOO DONEEEEE')
+                print("YAHOO DONEEEEE")
                 import_send_mail(
-                    id_import=import_as_dict['id_import'],
+                    id_import=import_as_dict["id_import"],
                     mail_to=recipients,
-                    file_name=import_as_dict['full_file_name'],
-                    step="import"
+                    file_name=import_as_dict["full_file_name"],
+                    step="import",
                 )
                 return res
             except Exception as e:
                 import_send_mail_error(
                     mail_to=recipients,
-                    file_name=import_as_dict['full_file_name'],
-                    error=e
+                    file_name=import_as_dict["full_file_name"],
+                    error=e,
                 )
-                return 'Error', 500
+                return "Error", 500
 
         a = threading.Thread(
-            name="data_import_task",
-            target=data_import_task,
-            kwargs=import_data
+            name="data_import_task", target=data_import_task, kwargs=import_data
         )
         a.start()
 
         import_obj = TImports.query.get(import_id)
-        mappings = DB.session.query(TMappings).filter(TMappings.id_mapping.in_(
-            [import_obj.id_content_mapping, import_obj.id_field_mapping]
-        )).all()
+        mappings = (
+            DB.session.query(TMappings)
+            .filter(
+                TMappings.id_mapping.in_(
+                    [import_obj.id_content_mapping, import_obj.id_field_mapping]
+                )
+            )
+            .all()
+        )
         import_as_dict = import_obj.as_dict()
-        import_as_dict['mappings'] = [m.as_dict() for m in mappings]
+        import_as_dict["mappings"] = [m.as_dict() for m in mappings]
 
         return import_as_dict
     else:
@@ -133,15 +134,13 @@ def import_in_synthese(import_id):
                 },
                 400,
             )
-        logger.info('INSERT IN t_sources')
+        logger.info("INSERT IN t_sources")
         # insert into t_sources
-        insert_into_t_sources(IMPORTS_SCHEMA_NAME,
-                              table_name, import_id, total_columns)
+        insert_into_t_sources(IMPORTS_SCHEMA_NAME, table_name, import_id, total_columns)
 
-        logger.info('#### Start insert in Synthese')
+        logger.info("#### Start insert in Synthese")
         # insert into synthese
-        load_data_to_synthese(IMPORTS_SCHEMA_NAME,
-                              table_name, total_columns, import_id)
+        load_data_to_synthese(IMPORTS_SCHEMA_NAME, table_name, total_columns, import_id)
 
         logger.info("-> Data imported in gn_synthese.synthese table")
 
@@ -155,11 +154,12 @@ def import_in_synthese(import_id):
             total_columns["date_min"],
             total_columns["date_max"],
         )
-        import_obj = DB.session.query(TImports).filter(
-            TImports.id_import == int(import_id)).first()
-        import_obj.import_count = get_n_valid_rows(
-            IMPORTS_SCHEMA_NAME, table_name
+        import_obj = (
+            DB.session.query(TImports)
+            .filter(TImports.id_import == int(import_id))
+            .first()
         )
+        import_obj.import_count = get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name)
         import_obj.taxa_count = get_n_taxa(
             IMPORTS_SCHEMA_NAME, table_name, total_columns["cd_nom"]
         )
@@ -172,18 +172,23 @@ def import_in_synthese(import_id):
 
         DB.session.commit()
 
-        mappings = DB.session.query(TMappings).filter(TMappings.id_mapping.in_(
-            [import_obj.id_content_mapping, import_obj.id_field_mapping]
-        )).all()
+        mappings = (
+            DB.session.query(TMappings)
+            .filter(
+                TMappings.id_mapping.in_(
+                    [import_obj.id_content_mapping, import_obj.id_field_mapping]
+                )
+            )
+            .all()
+        )
         import_as_dict = import_obj.as_dict()
-        import_as_dict['mappings'] = [m.as_dict() for m in mappings]
+        import_as_dict["mappings"] = [m.as_dict() for m in mappings]
 
         return import_as_dict
 
     except Exception as e:
         DB.session.rollback()
-        logger.error(
-            "*** SERVER ERROR WHEN IMPORTING DATA IN GN_SYNTHESE.SYNTHESE")
+        logger.error("*** SERVER ERROR WHEN IMPORTING DATA IN GN_SYNTHESE.SYNTHESE")
         logger.exception(e)
         raise GeonatureImportApiError(
             message="INTERNAL SERVER ERROR when importing data in gn_synthese.synthese",

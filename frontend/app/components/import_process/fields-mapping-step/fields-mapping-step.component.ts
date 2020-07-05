@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { Component, OnInit, ViewChild, ViewEncapsulation } from "@angular/core";
 import { Router } from "@angular/router";
 import { DataService } from "../../../services/data.service";
 import { FieldMappingService } from "../../../services/mappings/field-mapping.service";
@@ -24,7 +24,9 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 @Component({
   selector: "fields-mapping-step",
   styleUrls: ["fields-mapping-step.component.scss"],
-  templateUrl: "fields-mapping-step.component.html"
+  templateUrl: "fields-mapping-step.component.html",
+  encapsulation: ViewEncapsulation.None
+
 })
 export class FieldsMappingStepComponent implements OnInit {
   public spinner: boolean = false;
@@ -65,7 +67,7 @@ export class FieldsMappingStepComponent implements OnInit {
     private _router: Router,
     private _modalService: NgbModal,
     public cruvedStore: CruvedStoreService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(2);

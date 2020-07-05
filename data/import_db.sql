@@ -118,7 +118,8 @@ CREATE TABLE dict_fields(
     nomenclature boolean NOT NULL,
     id_theme integer NOT NULL,
     order_field integer NOT NULL,
-    display boolean NOT NULL
+    display boolean NOT NULL,
+    comment text
 );
 
 
