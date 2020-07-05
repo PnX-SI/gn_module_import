@@ -45,6 +45,11 @@ def insert_into_synthese(
             SELECT {select_part}
             FROM {schema_name}.{table_name}
             WHERE gn_is_valid='True';
+
+            ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_meta_dates_change_synthese;
+            ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_insert_cor_area_synthese;
+            ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_update_cor_area_taxon_update_cd_nom;
+            ALTER TABLE gn_synthese.cor_area_synthese ENABLE TRIGGER tri_maj_cor_area_taxon;
             COMMIT;            
             
             """.format(
