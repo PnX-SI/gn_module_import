@@ -62,6 +62,7 @@ export class ImportStepComponent implements OnInit {
       )
         this.displayWarnings = true;
     });
+
     // this._ds.sendEmail(this.stepData.importId).subscribe(
     //   res => {
 
@@ -69,6 +70,18 @@ export class ImportStepComponent implements OnInit {
     //   error => {
     //   }
     // );
+  }
+
+  openErrorSheet(idImport) {
+    // this._router.navigate(["/import/errors", idImport]);
+    const newRelativeUrl = this._router.createUrlTree([
+      "/import/errors",
+      idImport
+    ]);
+    let baseUrl = window.location.href.replace(this._router.url, "");
+    window.open(baseUrl + newRelativeUrl, "_blank");
+
+    // <a target="_blank" [routerLink]="['/import/errors', idImport]">
   }
 
   onStepBack() {
@@ -93,6 +106,7 @@ export class ImportStepComponent implements OnInit {
         });
 
         this.stepService.resetStepoer();
+
         if (res.source_count > ModuleConfig.MAX_LINE_LIMIT) {
           this.nbLignes = res.source_count;
           this._modalService.open(this.modalRedir);

@@ -10,22 +10,22 @@ const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 
 @Injectable()
 export class DataService {
-  constructor(private _http: HttpClient) { }
+  constructor(private _http: HttpClient) {}
 
   getImportList() {
     return this._http.get<any>(urlApi);
   }
 
   getOneImport(id_import) {
-    return this._http.get(`${urlApi}/${id_import}`)
+    return this._http.get(`${urlApi}/${id_import}`);
   }
 
   updateImport(idImport, data) {
-    return this._http.post(`${urlApi}/update_import/${idImport}`, data)
+    return this._http.post(`${urlApi}/update_import/${idImport}`, data);
   }
 
   deleteMapping(idMapping) {
-    return this._http.delete(`${urlApi}/mapping/${idMapping}`)
+    return this._http.delete(`${urlApi}/mapping/${idMapping}`);
   }
 
   postUserFile(value, datasetId, importId, isFileChanged, fileName) {
@@ -48,9 +48,7 @@ export class DataService {
   }
 
   getMappings(mapping_type) {
-    return this._http.get<any>(
-      `${urlApi}/mappings/${mapping_type}`
-    );
+    return this._http.get<any>(`${urlApi}/mappings/${mapping_type}`);
   }
 
   getMappingFields(id_mapping: number) {
@@ -62,11 +60,17 @@ export class DataService {
   }
 
   createOrUpdateFieldMapping(data, id_mapping) {
-    return this._http.post(`${urlApi}/create_or_update_field_mapping/${id_mapping}`, data)
+    return this._http.post(
+      `${urlApi}/create_or_update_field_mapping/${id_mapping}`,
+      data
+    );
   }
 
   updateContentMapping(id_mapping, data) {
-    return this._http.post(`${urlApi}/update_content_mapping/${id_mapping}`, data)
+    return this._http.post(
+      `${urlApi}/update_content_mapping/${id_mapping}`,
+      data
+    );
   }
 
   postMappingName(value, mappingType) {
@@ -77,13 +81,13 @@ export class DataService {
 
   /**
    * Perform all data checking on the table (content et field)
-   * @param idImport 
-   * @param idFieldMapping 
-   * @param idContentMapping 
+   * @param idImport
+   * @param idFieldMapping
+   * @param idContentMapping
    */
   dataChecker(idImport, idFieldMapping, idContentMapping) {
     const url = `${urlApi}/data_checker/${idImport}/field_mapping/${idFieldMapping}/content_mapping/${idContentMapping}`;
-    return this._http.post<any>(url, {})
+    return this._http.post<any>(url, {});
   }
 
   updateMappingName(value, mappingType, idMapping) {
@@ -91,7 +95,7 @@ export class DataService {
     let fd = new FormData();
     fd.append("mapping_id", idMapping);
     fd.append("mapping_type", mappingType);
-    fd.append('mappingName', value)
+    fd.append("mappingName", value);
     return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
   }
 
@@ -156,11 +160,16 @@ export class DataService {
   }
 
   goToStep4(import_id, id_mapping) {
-    return this._http.put<any>(`${urlApi}/goToStep4/${import_id}/${id_mapping}`, {});
+    return this._http.put<any>(
+      `${urlApi}/goToStep4/${import_id}/${id_mapping}`,
+      {}
+    );
   }
 
   getNomencInfo(id_import, id_field_mapping) {
-    return this._http.get<any>(`${urlApi}/getNomencInfo/${id_import}/field_mapping/${id_field_mapping}`);
+    return this._http.get<any>(
+      `${urlApi}/getNomencInfo/${id_import}/field_mapping/${id_field_mapping}`
+    );
   }
 
   importData(import_id) {
@@ -171,9 +180,9 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/getValidData/${importId}`);
   }
 
-  getCSV(importId: number) {
+  getErrorCSV(importId: number) {
     let fd = new FormData();
-    return this._http.post(`${urlApi}/getCSV/${importId}`, fd, {
+    return this._http.post(`${urlApi}/get_errors/${importId}`, fd, {
       responseType: "blob"
       //headers: new HttpHeaders().append("Content-Type", "application/json")
     });

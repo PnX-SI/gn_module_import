@@ -5,23 +5,29 @@
             <h3 class="title mb-0">
                 Récapitulatif avant import
             </h3>
-            <div class="card card-margin">
+            <div class="card">
                 <h4 class="card-header">
-                    <i class="icone-recap fa fa-wrench" aria-hidden="true"></i>
-                    Rapports
+                        <i class="icone-recap fa fa-wrench" aria-hidden="true"></i>
+                        Rapports
                 </h4> 
-                <div>
-                    <div *ngIf="displayErrors" class="content-report card-body">
-                        <a target="_blank" [routerLink]="['/import/errors', idImport]"> Rapport d'erreurs </a>
-                    </div>
-                    <div *ngIf="nInvalidData > 0" class="content-report">
-                        <a [routerLink]="" (click)="_csvExport.onCSV(stepData.importId)"> Exporter vos {{nInvalidData}} observations invalides </a>
-                    </div>
-                    <div *ngIf="nInvalidData==0 && !displayErrors" class="content-report">
-                        Aucune erreur à afficher
+                <div class="card-body card-margin">
+    
+                    <div>
+                        <div *ngIf="displayErrors" class="content-report card-margin">
+                            <button (click)="openErrorSheet(idImport)" class="btn btn-warning">
+                                    Rapport d'erreurs 
+                            </button>
+                        </div>
+                        <div *ngIf="nInvalidData > 0" class="content-report">
+                            <button class="btn btn-primary" (click)="_csvExport.onCSV(idImport)"> Exporter vos {{nInvalidData}} observations invalides </button>
+                        </div>
+                        <div *ngIf="nInvalidData==0 && !displayErrors" class="content-report">
+                            Aucune erreur à afficher
+                        </div>
                     </div>
                 </div>
             </div>
+
 
             <div class="card card-margin">
                 <h4 class="card-header"> 

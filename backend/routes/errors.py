@@ -3,9 +3,7 @@ Routes to manages errors
 """
 import os
 
-from flask import send_file
-
-from utils_flask_sqla.response import json_resp
+from utils_flask_sqla.response import json_resp, csv_resp
 from geonature.core.gn_permissions import decorators as permissions
 from geonature.utils.env import DB
 
@@ -15,8 +13,9 @@ from ..db.queries.user_errors import get_user_error_list
 from ..db.queries.user_table_queries import (
     get_table_names,
     get_n_invalid_rows,
-    save_invalid_data,
+    get_invalid_data,
     get_delimiter,
+    get_table_info
 )
 from ..logs import logger
 from ..utils.utils import get_upload_dir_path, get_pk_name
@@ -51,8 +50,9 @@ def check_invalid(info_role, import_id):
         )
 
 
-@blueprint.route("/getCSV/<import_id>", methods=["GET", "POST"])
+@blueprint.route("/get_errors/<import_id>", methods=["GET", "POST"])
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@csv_resp
 def get_csv(info_role, import_id):
     """
     Export invalid data in CSV
@@ -73,30 +73,36 @@ def get_csv(info_role, import_id):
         full_archive_table_name = table_names["archives_full_table_name"]
         full_imports_table_name = table_names["imports_full_table_name"]
         pk_name = get_pk_name(PREFIX)
-        file_name = "_".join([INVALID_CSV_NAME, table_names["archives_table_name"]])
+        file_name = "_".join(
+            [INVALID_CSV_NAME, table_names["archives_table_name"]])
         full_file_name = ".".join([file_name, "csv"])
         full_path = os.path.join(uploads_directory, full_file_name)
 
         delimiter = get_delimiter(IMPORTS_SCHEMA_NAME, import_id)
-        SEPARATOR_MAPPING = {"colon": ";", "tab": "\t", "space": " ", "comma" : ","}
+        SEPARATOR_MAPPING = {"colon": ";",
+                             "tab": "\t", "space": " ", "comma": ","}
 
         # save csv in upload directory
         conn = DB.engine.raw_connection()
         cur = conn.cursor()
         logger.info("saving csv of invalid data in upload directory")
-        save_invalid_data(
+        invalid_data_proxy = get_invalid_data(
             cur,
             full_archive_table_name,
             full_imports_table_name,
             full_path,
             pk_name,
-            SEPARATOR_MAPPING.get(delimiter),
         )
         logger.info(" -> csv saved")
-
-        return send_file(
-            full_path, as_attachment=True, attachment_filename=full_file_name
-        )
+        columns = []
+        invalid_data = []
+        for row in invalid_data_proxy:
+            temp = {}
+            for col, val in row.items():
+                columns.append(col)
+                temp[col] = val
+            invalid_data.append(temp)
+        return (full_file_name, invalid_data, columns,  SEPARATOR_MAPPING.get(delimiter))
 
     except Exception as e:
         logger.error("*** SERVER ERROR when saving csv file of invalid data")
