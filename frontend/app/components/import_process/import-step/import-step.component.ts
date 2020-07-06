@@ -93,8 +93,8 @@ export class ImportStepComponent implements OnInit {
         });
 
         this.stepService.resetStepoer();
-        if ((res + "").startsWith("Processing ")) {
-          this.nbLignes = (res + "").split(" ", 2)[1];
+        if (res.source_count > ModuleConfig.MAX_LINE_LIMIT) {
+          this.nbLignes = res.source_count;
           this._modalService.open(this.modalRedir);
         } else this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
       },

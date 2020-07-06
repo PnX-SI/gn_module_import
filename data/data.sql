@@ -119,7 +119,7 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('determiner', 'Déterminateur', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 2, TRUE, 'Correspondance champs standard: determinateur'),
 	('id_digitiser', 'Auteur de la saisie', '', '', 'integer', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 3, TRUE, NULL),
 	('id_nomenclature_exist_proof', 'Existance d''une preuve', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 4, TRUE, 'Correspondance champs standard: preuveExistante'),
-	('digital_proof', 'Preuve numérique', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 5, TRUE, 'preuveNumerique'),
+	('digital_proof', 'Preuve numérique', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 5, TRUE, 'Correspondance champs standard: preuveNumerique'),
 	('non_digital_proof', 'Preuve non-numérique', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 6, TRUE, 'Correspondance champs standard: preuveNonNumerique'),
 	('sample_number_proof', 'Identifiant de l''échantillon preuve', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 7, TRUE, NULL),
 	('id_nomenclature_valid_status', 'Statut de validation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 8, TRUE, NULL),
