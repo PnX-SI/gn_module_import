@@ -209,10 +209,10 @@ ALTER TABLE ONLY t_imports
     ADD CONSTRAINT fk_gn_meta_t_datasets FOREIGN KEY (id_dataset) REFERENCES gn_meta.t_datasets(id_dataset) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_imports
-    ADD CONSTRAINT fk_gn_imports_t_mappings_fields FOREIGN KEY (id_field_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_gn_imports_t_mappings_fields FOREIGN KEY (id_field_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE NO ACTION;
 
 ALTER TABLE ONLY t_imports
-    ADD CONSTRAINT fk_gn_import_t_mappings_values FOREIGN KEY (id_content_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_gn_import_t_mappings_values FOREIGN KEY (id_content_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE NO ACTION;
 
 ALTER TABLE ONLY cor_role_import
     ADD CONSTRAINT fk_utilisateurs_t_roles FOREIGN KEY (id_role) REFERENCES utilisateurs.t_roles(id_role) ON UPDATE CASCADE ON DELETE CASCADE;
