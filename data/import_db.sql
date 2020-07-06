@@ -42,7 +42,7 @@ CREATE TABLE t_imports(
     step integer,
     is_finished boolean DEFAULT FALSE,
     processing boolean DEFAULT FALSE,
-    error_report_path character varying(255)
+    in_error boolean DEFAULT FALSE
 );
 
 

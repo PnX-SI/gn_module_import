@@ -38,8 +38,8 @@ import time
 
 
 def run_control(import_id, id_field_mapping, id_content_mapping, file_name, authors):
-    recipients = list((map(lambda a: a["email"], authors)))
     try:
+        recipients = list((map(lambda a: a["email"], authors)))
         field_mapping_data_checking(import_id, id_field_mapping)
         content_mapping_data_checking(import_id, id_content_mapping)
         import_send_mail(
@@ -48,8 +48,11 @@ def run_control(import_id, id_field_mapping, id_content_mapping, file_name, auth
         #
         return "Done"
     except Exception as e:
-
-        import_send_mail_error(mail_to=recipients, file_name=file_name, error=e)
+        DB.session.query(TImports).filter(TImports.id_import ==
+                                          import_id).update({'in_error': True})
+        DB.session.commit()
+        import_send_mail_error(
+            mail_to=recipients, file_name=file_name, error=e)
         return "Error", 500
 
 
@@ -97,8 +100,14 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
 
         return import_as_dict
     else:
-        field_mapping_data_checking(import_id, id_field_mapping)
-        content_mapping_data_checking(import_id, id_content_mapping)
+        try:
+            field_mapping_data_checking(import_id, id_field_mapping)
+            content_mapping_data_checking(import_id, id_content_mapping)
+        except:
+            DB.session.query(TImports).filter(
+                TImports.id_import == import_id).update({'in_error': True})
+            DB.session.commit()
+            raise
         return import_as_dict
 
 
