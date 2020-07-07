@@ -38,10 +38,9 @@ def check_uuid(
         logger.info("CHECKING UUID VALUES")
         #  if generate_uuid = True we generate one even if uuid cols are provided
         if is_generate_uuid:
-            df[selected_columns["unique_id_sinp"]] = ""
-            df[selected_columns["unique_id_sinp"]] = df[
-                selected_columns["unique_id_sinp"]
-            ].apply(lambda x: str(uuid4()))
+            uuid_col = selected_columns.get("unique_id_sinp", "unique_id_sinp")
+            df[uuid_col] = ""
+            df[uuid_col] = df[uuid_col].apply(lambda x: str(uuid4()))
         else:
             uuid_cols = [
                 field
