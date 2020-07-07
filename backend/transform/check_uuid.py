@@ -67,11 +67,15 @@ def check_uuid(
                         "- checking duplicates in unique_id_sinp column (= %s user column)",
                         uuid_col_name,
                     )
-
+                    # remove NaN value to apply a .str
+                    df[uuid_col_name] = df[uuid_col_name].fillna("")
                     df["temp"] = df[uuid_col_name].str.lower().duplicated(keep=False)
                     df["temp"] = (
                         df["temp"]
-                        .where(cond=df[uuid_col_name].notnull(), other=False)
+                        .where(
+                            cond=df[uuid_col_name].isnull() | df[uuid_col_name] == "",
+                            other=False,
+                        )
                         .map(fill_map)
                         .astype("bool")
                     )
