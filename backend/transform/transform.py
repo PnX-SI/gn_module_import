@@ -374,7 +374,7 @@ def field_mapping_data_checking(import_id, id_mapping):
 
     set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME,
                   table_names['imports_full_table_name'], table_names['imports_table_name'],
-                  index_col, is_generate_alt, 'gn_the_geom_local', {})
+                  index_col, is_generate_alt, 'gn_the_geom_local')
 
     DB.session.commit()
     DB.session.close()
