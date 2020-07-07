@@ -10,8 +10,7 @@ def get_error_from_code(error_code):
     SELECT * FROM gn_imports.t_user_errors
     WHERE name = :error_code
     """
-    result = DB.session.execute(
-        text(query), {"error_code": error_code}).fetchone()
+    result = DB.session.execute(text(query), {"error_code": error_code}).fetchone()
     if result is None:
         raise "No error found for error_code {}".format(error_code)
     return result
@@ -54,13 +53,13 @@ def set_user_error(
         ),
     )
     try:
-        # set + 1 to id_rows error in order to not count the column line
+        #  set + 1 to id_rows error in order to not count the column line
         DB.session.execute(
             text(query),
             {
                 "id_import": id_import,
                 "col_name": col_name,
-                "id_rows": list(map(lambda x: x+1, id_rows)),
+                "id_rows": sorted(list(map(lambda x: x + 1, id_rows))),
                 "step": step,
                 "comment": comment,
             },
