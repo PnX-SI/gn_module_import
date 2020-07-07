@@ -15,7 +15,7 @@ from ..db.queries.user_table_queries import (
     get_n_invalid_rows,
     get_invalid_data,
     get_delimiter,
-    get_table_info
+    get_table_info,
 )
 from ..logs import logger
 from ..utils.utils import get_upload_dir_path, get_pk_name
@@ -73,25 +73,19 @@ def get_csv(info_role, import_id):
         full_archive_table_name = table_names["archives_full_table_name"]
         full_imports_table_name = table_names["imports_full_table_name"]
         pk_name = get_pk_name(PREFIX)
-        file_name = "_".join(
-            [INVALID_CSV_NAME, table_names["archives_table_name"]])
+        file_name = "_".join([INVALID_CSV_NAME, table_names["archives_table_name"]])
         full_file_name = ".".join([file_name, "csv"])
         full_path = os.path.join(uploads_directory, full_file_name)
 
         delimiter = get_delimiter(IMPORTS_SCHEMA_NAME, import_id)
-        SEPARATOR_MAPPING = {"colon": ";",
-                             "tab": "\t", "space": " ", "comma": ","}
+        SEPARATOR_MAPPING = {"colon": ";", "tab": "\t", "space": " ", "comma": ","}
 
         # save csv in upload directory
         conn = DB.engine.raw_connection()
         cur = conn.cursor()
         logger.info("saving csv of invalid data in upload directory")
         invalid_data_proxy = get_invalid_data(
-            cur,
-            full_archive_table_name,
-            full_imports_table_name,
-            full_path,
-            pk_name,
+            cur, full_archive_table_name, full_imports_table_name, full_path, pk_name,
         )
         logger.info(" -> csv saved")
         columns = []
@@ -102,7 +96,7 @@ def get_csv(info_role, import_id):
                 columns.append(col)
                 temp[col] = val
             invalid_data.append(temp)
-        return (full_file_name, invalid_data, columns,  SEPARATOR_MAPPING.get(delimiter))
+        return (full_file_name, invalid_data, columns, SEPARATOR_MAPPING.get(delimiter))
 
     except Exception as e:
         logger.error("*** SERVER ERROR when saving csv file of invalid data")

@@ -51,8 +51,7 @@ def import_data(info_role, import_id):
 
         @copy_current_request_context
         def data_import_task(import_as_dict):
-            recipients = list(
-                (map(lambda a: a["email"], import_as_dict.get("author"))))
+            recipients = list((map(lambda a: a["email"], import_as_dict.get("author"))))
             try:
                 res = import_in_synthese(import_id)
                 import_send_mail(
@@ -64,7 +63,8 @@ def import_data(info_role, import_id):
                 return res
             except Exception as e:
                 DB.session.query(TImports).filter(
-                    TImports.id_import == import_as_dict["id_import"]).update({'in_error': True})
+                    TImports.id_import == import_as_dict["id_import"]
+                ).update({"in_error": True})
                 DB.session.commit()
                 import_send_mail_error(
                     mail_to=recipients,
@@ -95,10 +95,13 @@ def import_data(info_role, import_id):
     else:
         try:
             return import_in_synthese(import_id)
-        except Exception:
-            DB.session.query(TImports).filter(
-                TImports.id_import == import_id).update({'in_error': True})
+        except Exception as e:
+            DB.session.query(TImports).filter(TImports.id_import == import_id).update(
+                {"in_error": True}
+            )
             DB.session.commit()
+
+            raise GeonatureImportApiError(message=str(e), details="", status_code=500)
 
 
 def import_in_synthese(import_id):
@@ -127,20 +130,20 @@ def import_in_synthese(import_id):
 
         # check if id_source already exists in synthese table
         is_id_source = check_id_source(import_id)
+        print(import_id)
         if is_id_source:
             raise GeonatureImportApiError(
                 message="échec : déjà importé (vérification basée sur l'id_source)",
-                status_code=400
+                details="",
+                status_code=400,
             )
         logger.info("INSERT IN t_sources")
         # insert into t_sources
-        insert_into_t_sources(IMPORTS_SCHEMA_NAME,
-                              table_name, import_id, total_columns)
+        insert_into_t_sources(IMPORTS_SCHEMA_NAME, table_name, import_id, total_columns)
 
         logger.info("#### Start insert in Synthese")
         # insert into synthese
-        load_data_to_synthese(IMPORTS_SCHEMA_NAME,
-                              table_name, total_columns, import_id)
+        load_data_to_synthese(IMPORTS_SCHEMA_NAME, table_name, total_columns, import_id)
 
         logger.info("-> Data imported in gn_synthese.synthese table")
 
@@ -155,8 +158,7 @@ def import_in_synthese(import_id):
             total_columns["date_max"],
         )
         import_obj = DB.session.query(TImports).get(int(import_id))
-        import_obj.import_count = get_n_valid_rows(
-            IMPORTS_SCHEMA_NAME, table_name)
+        import_obj.import_count = get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name)
         import_obj.taxa_count = get_n_taxa(
             IMPORTS_SCHEMA_NAME, table_name, total_columns["cd_nom"]
         )
@@ -186,12 +188,10 @@ def import_in_synthese(import_id):
 
     except Exception as e:
         DB.session.rollback()
-        logger.error(
-            "*** SERVER ERROR WHEN IMPORTING DATA IN GN_SYNTHESE.SYNTHESE")
+        logger.error("*** SERVER ERROR WHEN IMPORTING DATA IN GN_SYNTHESE.SYNTHESE")
         logger.exception(e)
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR when importing data in gn_synthese.synthese",
-            details=str(e),
+            message=str(e), details="",
         )
     finally:
         DB.session.close()

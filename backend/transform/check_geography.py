@@ -103,7 +103,6 @@ def check_geography(
         if len(line_with_codes) > 0:
             line_with_codes = line_with_codes - 1
         if "latitude" and "longitude" in selected_columns.keys():
-            print("PASSE LA ???????!!!!!!!!!!!")
             df["given_geom"] = df.apply(
                 lambda row: x_y_to_wkb(
                     row[selected_columns["longitude"]],
@@ -142,7 +141,7 @@ def check_geography(
                         col_name_error="Colonnes géometriques (x/y et WKT)",
                         df_col_name_valid="wkt_and_x_y",
                         id_rows_error=wkt_and_x_y.index.to_list(),
-                        comment="Un X/Y et un WKT ne peuvent être fournis pour la même ligne"
+                        comment="Un X/Y et un WKT ne peuvent être fournis pour la même ligne",
                     )
 
             # remove invalid where codecommune/maille or dep are fill
