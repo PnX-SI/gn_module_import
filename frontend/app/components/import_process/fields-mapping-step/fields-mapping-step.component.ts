@@ -397,7 +397,6 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   onMappingChange(id_mapping): void {
-    console.log(id_mapping);
     this.id_mapping = id_mapping;
     if (this.id_mapping && id_mapping != "") {
       this.fillMapping(this.id_mapping, this.columns);
@@ -414,6 +413,8 @@ export class FieldsMappingStepComponent implements OnInit {
    * @param fileColumns : columns of the provided file at step 1
    */
   fillMapping(id_mapping, fileColumns) {
+    console.log('file mapping');
+
     this.id_mapping = id_mapping;
     // build an array from array of object
     const columnsArray: Array<string> = this.columns.map(col => col.id);
@@ -423,7 +424,26 @@ export class FieldsMappingStepComponent implements OnInit {
         this.enableMapping(this.syntheseForm);
         if (mappingFields[0] != "empty") {
           for (let field of mappingFields) {
+            if (field["target_field"] == 'unique_id_sinp_generate') {
+              this.syntheseForm
+                .get('unique_id_sinp_generate')
+                .setValue(field["source_field"])
+            }
+            // get value for uuid_generate
+            if (field["target_field"] == 'unique_id_sinp_generate') {
+              this.syntheseForm
+                .get('unique_id_sinp_generate')
+                .setValue(field["source_field"])
+            }
+            if (field["target_field"] == 'altitudes_generate') {
+              this.syntheseForm
+                .get('altitudes_generate')
+                .setValue(field["source_field"])
+            }
+
             if (columnsArray.includes(field["source_field"])) {
+              console.log(field["target_field"]);
+
               this.syntheseForm
                 .get(field["target_field"])
                 .setValue(field["source_field"]);
