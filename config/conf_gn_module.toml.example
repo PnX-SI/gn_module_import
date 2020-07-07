@@ -22,3 +22,6 @@ ALLOWED_EXTENSIONS = [".csv", ".geojson"]
 
 # Activer ou non l'étape du mapping des valeurs
 ALLOW_VALUE_MAPPING = True
+
+# Nombre de ligne à partir duquel l'import est fait en tâche de fond
+MAX_LINE_LIMIT = 10000
