@@ -19,23 +19,16 @@ export class ImportErrorsComponent implements OnInit, OnDestroy {
     ngOnInit() {
 
         this.sub = this._activedRoute.params.subscribe(params => {
-            console.log(params);
             this._dataService.getOneImport(
                 params["id_import"]
             ).subscribe(data => {
-                this.import = data;
-                console.log(this.import);
+                console.log(data);
 
+                this.import = data;
             })
 
         })
     }
-
-    // ngAfterViewInit() {
-    //     console.log(this._activedRoute);
-
-
-    // }
 
     ngOnDestroy() {
         this.sub.unsubscribe();
