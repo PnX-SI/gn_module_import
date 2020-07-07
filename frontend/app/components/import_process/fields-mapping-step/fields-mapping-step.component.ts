@@ -433,17 +433,15 @@ export class FieldsMappingStepComponent implements OnInit {
             if (field["target_field"] == 'unique_id_sinp_generate') {
               this.syntheseForm
                 .get('unique_id_sinp_generate')
-                .setValue(field["source_field"])
+                .setValue(field["source_field"] == 'true')
             }
             if (field["target_field"] == 'altitudes_generate') {
               this.syntheseForm
                 .get('altitudes_generate')
-                .setValue(field["source_field"])
+                .setValue(field["source_field"] == 'true')
             }
 
             if (columnsArray.includes(field["source_field"])) {
-              console.log(field["target_field"]);
-
               this.syntheseForm
                 .get(field["target_field"])
                 .setValue(field["source_field"]);
