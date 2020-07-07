@@ -41,7 +41,7 @@ export class ImportStepComponent implements OnInit {
     private _ds: DataService,
     private _modalService: NgbModal,
     private _commonService: CommonService
-  ) {}
+  ) { }
 
   ngOnInit() {
     // set idImport from URL (email) or from localstorage
@@ -99,11 +99,11 @@ export class ImportStepComponent implements OnInit {
         console.log(res);
 
         this.spinner = false;
-        res.mappings.forEach(mapping => {
-          if (mapping.temporary) {
-            this._ds.deleteMapping(mapping.id_mapping).subscribe();
-          }
-        });
+        // res.mappings.forEach(mapping => {
+        //   if (mapping.temporary) {
+        //     this._ds.deleteMapping(mapping.id_mapping).subscribe();
+        //   }
+        // });
 
         this.stepService.resetStepoer();
 
