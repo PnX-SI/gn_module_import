@@ -8,6 +8,10 @@ WHERE name_field IN (
     'meta_update_date'
 );
 
+UPDATE gn_imports.t_mappings
+SET mapping_label = 'Synthèse GINCO'
+WHERE mapping_label = 'Synthèse GeoNature';
+
 
 -- Permissions groupe admin sur import
 INSERT INTO gn_permissions.cor_role_action_filter_module_object
