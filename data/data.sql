@@ -86,7 +86,7 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('altitude_min', 'Altitude min', '', '', 'integer', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 5, TRUE, 'Correspondance champs standard: altitudeMin'),
 	('altitude_max', 'Altitude max', '', '', 'integer', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 6, TRUE, 'Correspondance champs standard: altitudeMax'),
 	('altitudes_generate', 'Générer les altitudes', '', 'Génère automatiquement les altitudes pour chaque observation', '', FALSE, FALSE, TRUE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 7, TRUE, NULL),
-	('observers', 'Observateur(s)', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 8, TRUE, 'Correspondance champs standard: identiteObservateur'),
+	('observers', 'Observateur(s)', '', '', 'character varying(1000)', TRUE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 8, TRUE, 'Correspondance champs standard: identiteObservateur'),
 	('comment_context', 'Commentaire de relevé', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 9, TRUE, 'Commentaire du relevé'),
 	('id_nomenclature_info_geo_type', 'Type d''information géographique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 10, TRUE, 'Correspondance champs standard: typeInfoGeo'),
 	('longitude', 'Longitude (coord x)', '', '', 'real', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 11, TRUE, NULL),
@@ -127,8 +127,8 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('meta_validation_date', 'Date de validation', '', '', 'timestamp without time zone', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 10, TRUE, NULL),
 	('validation_comment', 'Commentaire de validation', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 11, TRUE, NULL),
 	('id_nomenclature_obs_technique', 'Techniques d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 11, TRUE, NULL),
-	('id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE, 'Correspondance champs standard: statutObservation'),
-	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE, 'Correspondance champs standard: statutSource'),
+	('id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, TRUE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE, 'Correspondance champs standard: statutObservation'),
+	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, TRUE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE, 'Correspondance champs standard: statutSource'),
 	('reference_biblio', 'Référence bibliographique', '', '', 'character varying(255)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 14, TRUE, 'Correspondance champs standard: referenceBiblio')
 ;
 
