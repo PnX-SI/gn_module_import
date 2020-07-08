@@ -352,11 +352,11 @@ def getNomencInfo(info_role, id_import, id_field_mapping):
         table_names = get_table_names(
             ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, id_import
         )
-        table_name = table_names["imports_table_name"]
+        archive_table_name = table_names["archives_table_name"]
 
         selected_columns = get_selected_columns(id_field_mapping)
         nomenc_info = get_nomenc_info(
-            selected_columns, IMPORTS_SCHEMA_NAME, table_name)
+            selected_columns, ARCHIVES_SCHEMA_NAME, archive_table_name)
         return {"content_mapping_info": nomenc_info}, 200
     except Exception as e:
         logger.error("*** ERROR WHEN GETTING NOMENCLATURE")

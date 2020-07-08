@@ -74,16 +74,6 @@ export class ContentMappingStepComponent implements OnInit {
 
     // listen to change on mappingListForm select
     this.onMappingName();
-
-    // fill the form
-    if (this.stepData.id_content_mapping) {
-      const formValue = {
-        id_mapping: this.stepData.id_content_mapping,
-        cruved: this.stepData.cruvedMapping
-      };
-      this.mappingListForm.setValue(formValue);
-      this.fillMapping(this.stepData.id_content_mapping);
-    }
   }
 
   getNomencInf() {
@@ -93,6 +83,15 @@ export class ContentMappingStepComponent implements OnInit {
         res => {
           this.stepData.contentMappingInfo = res["content_mapping_info"];
           this.generateContentForm();
+          // fill the form
+          if (this.stepData.id_content_mapping) {
+            const formValue = {
+              id_mapping: this.stepData.id_content_mapping,
+              cruved: this.stepData.cruvedMapping
+            };
+            this.mappingListForm.setValue(formValue);
+            this.fillMapping(this.stepData.id_content_mapping);
+          }
         },
         error => {
           if (error.statusText === "Unknown Error") {
@@ -111,8 +110,6 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   saveMappingName(value) {
-    console.log(this.newMappingNameForm.value);
-
     // save new mapping in bib_mapping
     // then select the mapping name in the select
     let mappingType = "CONTENT";
@@ -217,47 +214,9 @@ export class ContentMappingStepComponent implements OnInit {
           contentMapping.isCollapsed = false;
         }
         this.disabled = true;
-      } // onMappingName(): void {
-      //   this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
-      //     id_mapping => {
-      //       //this.onMappingChange(id_mapping);
-      //     },
-      //     error => {
-      //       if (error.statusText === "Unknown Error") {
-      //         // show error message if no connexion
-      //         this._commonService.regularToaster(
-      //           "error",
-      //           "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-      //         );
-      //       } else {
-      //         console.log(error);
-      //         this._commonService.regularToaster("error", error.error);
-      //       }
-      //     }
-      //   );
-      // }
+      }
     });
   }
-
-  // onMappingName(): void {
-  //   this.contentMappingForm.get("contentMapping").valueChanges.subscribe(
-  //     id_mapping => {
-  //       //this.onMappingChange(id_mapping);
-  //     },
-  //     error => {
-  //       if (error.statusText === "Unknown Error") {
-  //         // show error message if no connexion
-  //         this._commonService.regularToaster(
-  //           "error",
-  //           "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-  //         );
-  //       } else {
-  //         console.log(error);
-  //         this._commonService.regularToaster("error", error.error);
-  //       }
-  //     }
-  //   );
-  // }
 
   getId(userValue, nomencId) {
     this.stepData.contentMappingInfo.forEach(contentMapping => {
