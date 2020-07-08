@@ -111,6 +111,8 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   saveMappingName(value) {
+    console.log(this.newMappingNameForm.value);
+
     // save new mapping in bib_mapping
     // then select the mapping name in the select
     let mappingType = "CONTENT";
