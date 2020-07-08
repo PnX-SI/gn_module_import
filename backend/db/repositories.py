@@ -86,3 +86,21 @@ class TMappingsRepository:
                 mapping_as_dict.append(temp)
             return mapping_as_dict
         return [d.as_dict() for d in data]
+
+    def get_one(self, id_mapping, info_role, with_cruved):
+        users_mapping = self.get_user_mapping(info_role)
+        mapping = DB.session.query(TMappings).get(id_mapping)
+        if mapping:
+            mapping_as_dict = mapping.as_dict()
+            if with_cruved:
+                user_cruved = get_or_fetch_user_cruved(
+                    session=session,
+                    id_role=info_role.id_role,
+                    module_code="IMPORT",
+                    object_code="MAPPING",
+                )
+                mapping_as_dict["cruved"] = self.get_mapping_cruved(
+                    user_cruved, id_mapping, users_mapping
+                )
+            return mapping_as_dict
+        return None

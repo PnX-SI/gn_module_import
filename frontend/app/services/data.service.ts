@@ -10,7 +10,7 @@ const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 
 @Injectable()
 export class DataService {
-  constructor(private _http: HttpClient) {}
+  constructor(private _http: HttpClient) { }
 
   getImportList() {
     return this._http.get<any>(urlApi);
@@ -49,6 +49,10 @@ export class DataService {
 
   getMappings(mapping_type) {
     return this._http.get<any>(`${urlApi}/mappings/${mapping_type}`);
+  }
+
+  getOneBibMapping(id_mapping) {
+    return this._http.get<any>(`${urlApi}/mapping/${id_mapping}`);
   }
 
   getMappingFields(id_mapping: number) {

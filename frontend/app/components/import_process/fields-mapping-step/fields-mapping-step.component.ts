@@ -71,14 +71,35 @@ export class FieldsMappingStepComponent implements OnInit {
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(2);
-    // get all columns of the import and the mapping
-    forkJoin([
+    const forkJoinArray = [
       this._ds.getColumnsImport(this.stepData.importId),
       this._ds.getMappings("field")
-    ]).subscribe(
+    ]
+
+    if (this.stepData.id_field_mapping) {
+      forkJoinArray.push(
+        this._ds.getOneBibMapping(this.stepData.id_field_mapping)
+      )
+
+    }
+    // get all columns of the import and the mapping
+    forkJoin(forkJoinArray).subscribe(
       data => {
         this.setColumnsImport(data[0]);
         this.userFieldMappings = data[1];
+        // TODO: ne pas mettre deux fois le même id_mappon
+        if (data.length == 3) {
+          let mapping_already_present = false
+          this.userFieldMappings.forEach(element => {
+            if (element.id_mapping == this.stepData.id_field_mapping) {
+              mapping_already_present = true;
+            }
+          });
+          if (!mapping_already_present) {
+            this.userFieldMappings.push(data[2])
+          }
+        }
+
 
         // subscribe to mapping change
         this.fieldMappingForm.valueChanges
@@ -413,8 +434,6 @@ export class FieldsMappingStepComponent implements OnInit {
    * @param fileColumns : columns of the provided file at step 1
    */
   fillMapping(id_mapping, fileColumns) {
-    console.log('file mapping');
-
     this.id_mapping = id_mapping;
     // build an array from array of object
     const columnsArray: Array<string> = this.columns.map(col => col.id);
@@ -581,7 +600,6 @@ export class FieldsMappingStepComponent implements OnInit {
         }
       }
     }
-    console.log(this.unmappedColCount);
   }
 
   checkCondition(name_field) {

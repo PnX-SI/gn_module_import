@@ -4,7 +4,7 @@ import { ModuleConfig } from '../../../module.config';
 
 @Component({
 	selector: 'stepper',
-	styleUrls: [ 'stepper.component.scss' ],
+	styleUrls: ['stepper.component.scss'],
 	templateUrl: 'stepper.component.html'
 })
 
@@ -13,17 +13,19 @@ export class stepperComponent implements OnInit, OnChanges {
 	@Input() step: any;
 	public IMPORT_CONFIG = ModuleConfig;
 
-	constructor(private _router: Router) {}
+	constructor(private _router: Router) { }
 
 
-	ngOnInit() {}
+	ngOnInit() { }
 
 
-	onGoToStep(step){
-		this._router.navigate([ `${ModuleConfig.MODULE_URL}/process/step/${step}` ]);
+	onGoToStep(step) {
+		console.log("hzlooooo");
+
+		this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/${step}`]);
 	}
 
 
-    ngOnChanges() {}
+	ngOnChanges() { }
 
 }
