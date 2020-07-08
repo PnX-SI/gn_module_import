@@ -28,7 +28,7 @@ def rename_table(schema_name, original_name, new_name):
     try:
         DB.session.execute(
             """
-            ALTER TABLE {schema_name}.{original_name} 
+            ALTER TABLE {schema_name}.{original_name}
             RENAME TO {new_name};
             """.format(
                 schema_name=schema_name, original_name=original_name, new_name=new_name
@@ -45,7 +45,7 @@ def set_primary_key(schema_name, table_name, pk_col_name):
     try:
         DB.session.execute(
             """
-            ALTER TABLE ONLY {schema_name}.{table_name} 
+            ALTER TABLE ONLY {schema_name}.{table_name}
             ADD CONSTRAINT pk_{schema_name}_{table_name} PRIMARY KEY ({pk_col_name});
             """.format(
                 schema_name=schema_name, table_name=table_name, pk_col_name=pk_col_name
@@ -59,6 +59,7 @@ def set_primary_key(schema_name, table_name, pk_col_name):
 
 def get_table_info(table_name, info="all"):
     try:
+
         table_info = DB.session.execute(
             """
             SELECT column_name,is_nullable,column_default,data_type,character_maximum_length\
@@ -213,8 +214,8 @@ def set_imports_table_name(table_name):
 def check_row_number(id, loaded_table):
     n_original_rows = DB.session.execute(
         """
-        SELECT source_count 
-        FROM gn_imports.t_imports 
+        SELECT source_count
+        FROM gn_imports.t_imports
         WHERE id_import={};""".format(
             id
         )
@@ -222,7 +223,7 @@ def check_row_number(id, loaded_table):
 
     n_loaded_rows = DB.session.execute(
         """
-        SELECT count(*) 
+        SELECT count(*)
         FROM {}""".format(
             loaded_table
         )
@@ -252,7 +253,7 @@ def load_csv_to_db(full_path, cur, full_table_name, separator, columns):
 def get_row_number(full_table_name):
     nrows = DB.session.execute(
         """
-        SELECT count(*) AS count_1 
+        SELECT count(*) AS count_1
         FROM {};""".format(
             full_table_name
         )
@@ -267,7 +268,7 @@ def alter_column_type(schema_name, table_name, col_name, col_type):
         DB.session.execute(
             """
             ALTER TABLE {schema_name}.{table_name}
-            ALTER COLUMN {col_name} 
+            ALTER COLUMN {col_name}
             TYPE {col_type} USING {col_name}::{col_type};
             """.format(
                 schema_name=schema_name,
@@ -286,7 +287,7 @@ def get_n_loaded_rows(full_table_name):
     try:
         n_loaded_rows = DB.session.execute(
             """
-            SELECT count(*) 
+            SELECT count(*)
             FROM {};
             """.format(
                 full_table_name
@@ -301,7 +302,7 @@ def get_n_invalid_rows(full_table_name):
     try:
         n_invalid_rows = DB.session.execute(
             """
-            SELECT count(*) 
+            SELECT count(*)
             FROM {} WHERE gn_is_valid = 'False';
             """.format(
                 full_table_name
@@ -317,7 +318,7 @@ def get_valid_bbox(schema_name, table_name):
         """
             SELECT ST_AsGeojson(ST_Extent(gn_the_geom_4326))
             FROM {schema_name}.{table_name}
-            WHERE gn_is_valid = 'True';        
+            WHERE gn_is_valid = 'True';
             """.format(
             schema_name=schema_name, table_name=table_name,
         )
@@ -383,30 +384,22 @@ def get_date_ext(schema_name, table_name, date_min_col, date_max_col):
         raise
 
 
-def save_invalid_data(
-    cur, full_archive_table_name, full_imports_table_name, full_path, pk_name, delimiter
+def get_invalid_data(
+    cur, full_archive_table_name, full_imports_table_name, full_path, pk_name
 ):
-    try:
-        cmd = """
-                COPY
-                    (
-                    SELECT I.gn_invalid_reason, A.*
-                    FROM {full_imports_table_name} I
-                    LEFT JOIN {full_archive_table_name} A ON I.{pk_name} = A.{pk_name}
-                    WHERE I.gn_is_valid = 'False'
-                    ORDER BY I.{pk_name} ASC
-                    )
-                TO STDOUT WITH DELIMITER '{delimiter}' CSV HEADER;
-            """.format(
-            full_archive_table_name=full_archive_table_name,
-            full_imports_table_name=full_imports_table_name,
-            pk_name=pk_name,
-            delimiter=str(delimiter[0]),
-        )
-        with open(full_path, "w") as f:
-            cur.copy_expert(cmd, f)
-    except Exception:
-        raise
+    query = """
+            SELECT I.gn_invalid_reason, A.*
+            FROM {full_imports_table_name} I
+            LEFT JOIN {full_archive_table_name} A ON I.{pk_name} = A.{pk_name}
+            WHERE I.gn_is_valid = 'False'
+            ORDER BY I.{pk_name} ASC
+            ;
+        """.format(
+        full_archive_table_name=full_archive_table_name,
+        full_imports_table_name=full_imports_table_name,
+        pk_name=pk_name,
+    )
+    return DB.session.execute(query).fetchall()
 
 
 def get_uuid_list():

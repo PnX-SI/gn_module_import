@@ -125,6 +125,25 @@ def check_geography(
                     id_rows_error=no_geom_errors.index.to_list(),
                 )
 
+            #  row with x/y AND wkt
+            if "WKT" in selected_columns.keys():
+                df["wkt_and_x_y"] = (
+                    df[selected_columns["latitude"]].notnull()
+                    & df[selected_columns["longitude"]].notnull()
+                    & df[selected_columns["WKT"]].notnull()
+                )
+                wkt_and_x_y = df[df["wkt_and_x_y"] == True]
+                if len(wkt_and_x_y) > 0:
+                    set_error_and_invalid_reason(
+                        df=df,
+                        id_import=import_id,
+                        error_code="INVALID_GEOMETRY",
+                        col_name_error="Colonnes géometriques (x/y et WKT)",
+                        df_col_name_valid="wkt_and_x_y",
+                        id_rows_error=wkt_and_x_y.index.to_list(),
+                        comment="Un X/Y et un WKT ne peuvent être fournis pour la même ligne",
+                    )
+
             # remove invalid where codecommune/maille or dep are fill
             df["valid_x_y"] = df.iloc[
                 line_with_codes, df.columns.get_loc("valid_x_y")

@@ -72,7 +72,8 @@ def get_valid_data(info_role, import_id):
             table_names = get_table_names(
                 ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id)
             )
-            n_invalid = get_n_invalid_rows(table_names["imports_full_table_name"])
+            n_invalid = get_n_invalid_rows(
+                table_names["imports_full_table_name"])
 
             logger.info("-> got valid data for preview")
         else:
@@ -81,7 +82,7 @@ def get_valid_data(info_role, import_id):
 
         return (
             {
-                #'total_columns': total_columns,
+                # 'total_columns': total_columns,
                 "valid_data": valid_data_list,
                 "n_valid_data": n_valid,
                 "n_invalid_data": n_invalid,

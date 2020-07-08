@@ -1,52 +1,54 @@
 <div class=container>
     <stepper [step]=4></stepper>
 
-    <div *ngIf="tableReady" class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">
+    <div *ngIf="tableReady" >
+            <h3 class="title mb-0">
                 Récapitulatif avant import
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="row no-gutters">
-                <div class="titre-recap col-12 col-sm-6 col-md-8">
-                    <h4> 
-                        <i class="icone-recap fa fa-map-marker" aria-hidden="true"></i>
-                        Zone géographique
-                    </h4>
-                    <pnx-map height="40vh" searchBar="false">
-                        <pnx-geojson
-                        [geojson]="this.validBbox"
-                        [zoomOnFirstTime]="true"
-                        >
-                        </pnx-geojson>
-                    </pnx-map>
-                </div>
-                    <div class="titre-recap col-6 col-md-4">
-                    <h4>
+            </h3>
+            <div class="card">
+                <h4 class="card-header">
                         <i class="icone-recap fa fa-wrench" aria-hidden="true"></i>
                         Rapports
-                    </h4> 
+                </h4> 
+                <div class="card-body card-margin">
+    
                     <div>
-                        <div *ngIf="displayErrors" class="content-report">
-                            <a target="_blank" [routerLink]="['/import/errors', stepData.importId]"> Rapport d'erreurs </a>
+                        <div *ngIf="displayErrors" class="content-report card-margin">
+                            <button (click)="openErrorSheet(idImport)" class="btn btn-warning">
+                                    Rapport d'erreurs 
+                            </button>
                         </div>
                         <div *ngIf="nInvalidData > 0" class="content-report">
-                            <a [routerLink]="" (click)="_csvExport.onCSV(stepData.importId)"> Exporter vos {{nInvalidData}} observations invalides </a>
+                            <button class="btn btn-primary" (click)="_csvExport.onCSV(idImport)"> Exporter vos {{nInvalidData}} observations invalides </button>
                         </div>
                         <div *ngIf="nInvalidData==0 && !displayErrors" class="content-report">
                             Aucune erreur à afficher
                         </div>
                     </div>
-                    
                 </div>
             </div>
-        </div>
+
+
+            <div class="card card-margin">
+                <h4 class="card-header"> 
+                    <i class="icone-recap fa fa-map-marker" aria-hidden="true"></i>
+                    Zone géographique
+                </h4>
+                <pnx-map height="40vh" searchBar="false">
+                    <pnx-geojson
+                    [geojson]="this.validBbox"
+                    [zoomOnFirstTime]="true"
+                    >
+                    </pnx-geojson>
+                </pnx-map>
+            </div>
+
     </div>
 
     <div *ngIf="tableReady" class="card">
         <div class="card-header">
             <h5 class="card-title mb-0">
+                <i class="icone-recap fa fa-list-alt" aria-hidden="true"></i>
                 Prévisualisation des observations valides prêtes à être importées
             </h5>
         </div>
@@ -75,7 +77,7 @@
                 </div>
         </div>
         <footer>
-            <footer-stepper importId={{stepData.importId}}></footer-stepper>
+            <footer-stepper importId={{idImport}}></footer-stepper>
         </footer>
     </div>
 </div>
@@ -86,13 +88,13 @@
 
 <ng-template #modalRedir let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Enregistrement du modèle</h4>
+        <h4 class="modal-title" id="modal-basic-title">Import des données en cours...</h4>
             <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
                 <span aria-hidden="true">&times;</span>
             </button>
     </div>
     <div class="modal-body">
-        Le fichier importé contient {{nbLignes}} lignes, un mail de notification vous sera envoyé à la fin de son traitement.
+        L'import des fichier dans la synthèse est en cours... Un mail de notification vous sera envoyé à la fin du traitement.
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-warning" (click)="onRedirect(); modal.close()"> OK </button>

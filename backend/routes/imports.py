@@ -1,7 +1,7 @@
 """
 Routes to manage import (import list, cancel import, import info...)
 """
-from flask import request
+from flask import request, current_app
 from sqlalchemy.orm import exc as SQLAlchelyExc
 
 from utils_flask_sqla.response import json_resp
@@ -31,8 +31,6 @@ from ..utils.clean_names import *
 from ..utils.utils import get_pk_name
 from ..upload.upload_errors import *
 from ..blueprint import blueprint
-
-
 
 
 @blueprint.route("", methods=["GET"])
@@ -71,7 +69,11 @@ def update_import(id_import):
     if not id_import:
         return None
     data_post = request.get_json()
-    DB.session.query(TImports).filter(TImports.id_import == id_import).update(data_post)
+    # set id_value_mapping if value mapping step is skipped
+    if current_app.config['IMPORT']['ALLOW_VALUE_MAPPING'] == False:
+        data_post['id_content_mapping'] = current_app.config['IMPORT']['DEFAULT_VALUE_MAPPING_ID']
+    DB.session.query(TImports.id_content_mapping).filter(
+        TImports.id_import == id_import).update(data_post)
     DB.session.commit()
     return TImports.query.get(id_import).to_dict()
 
@@ -166,7 +168,8 @@ def cancel_import(info_role, import_id):
                 .filter(TSources.name_source == name_source)
                 .one()[0]
             )
-            DB.session.query(Synthese).filter(Synthese.id_source == id_source).delete()
+            DB.session.query(Synthese).filter(
+                Synthese.id_source == id_source).delete()
             DB.session.query(TSources).filter(
                 TSources.name_source == name_source
             ).delete()
@@ -192,7 +195,8 @@ def cancel_import(info_role, import_id):
                 blueprint.config["ARCHIVES_SCHEMA_NAME"], user_data_name
             )
             imports_table_name = set_imports_table_name(user_data_name)
-            imports_full_name = get_full_table_name("gn_imports", imports_table_name)
+            imports_full_name = get_full_table_name(
+                "gn_imports", imports_table_name)
 
             # delete tables
             engine = DB.engine
@@ -217,7 +221,8 @@ def cancel_import(info_role, import_id):
             )
 
         # delete metadata
-        DB.session.query(TImports).filter(TImports.id_import == import_id).delete()
+        DB.session.query(TImports).filter(
+            TImports.id_import == import_id).delete()
         DB.session.query(CorRoleImport).filter(
             CorRoleImport.id_import == import_id
         ).delete()
@@ -248,8 +253,10 @@ def get_import_columns_name(id_import):
     """
     ARCHIVES_SCHEMA_NAME = blueprint.config["ARCHIVES_SCHEMA_NAME"]
     IMPORTS_SCHEMA_NAME = blueprint.config["IMPORTS_SCHEMA_NAME"]
-    table_names = get_table_names(ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, id_import)
-    col_names = get_table_info(table_names["imports_table_name"], info="column_name")
+    table_names = get_table_names(
+        ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, id_import)
+    col_names = get_table_info(
+        table_names["imports_table_name"], info="column_name")
     col_names.remove("gn_is_valid")
     col_names.remove("gn_invalid_reason")
     col_names.remove(get_pk_name(blueprint.config["PREFIX"]))

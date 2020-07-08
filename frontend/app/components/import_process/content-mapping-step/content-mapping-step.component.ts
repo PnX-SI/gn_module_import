@@ -47,8 +47,8 @@ export class ContentMappingStepComponent implements OnInit {
   public mappingListForm = new FormControl();
   public newMappingNameForm = new FormControl();
 
-  @ViewChild('modalConfirm') modalConfirm: any;
-  @ViewChild('modalRedir') modalRedir: any;
+  @ViewChild("modalConfirm") modalConfirm: any;
+  @ViewChild("modalRedir") modalRedir: any;
 
   constructor(
     private stepService: StepsService,
@@ -343,24 +343,29 @@ export class ContentMappingStepComponent implements OnInit {
     this._ds
       .dataChecker(this.stepData.importId, this.idFieldMapping, this.id_mapping)
       .subscribe(
-        res => {
+        import_obj => {
           this.spinner = false;
           //this.contentMapRes = res;
           this._ds.getErrorList(this.stepData.importId).subscribe(err => {
-            this.n_errors = err.errors.filter(error => error.error_level == 'ERROR').length;
-            this.n_warnings = err.errors.filter(error => error.error_level == 'WARNING').length;
+            this.n_errors = err.errors.filter(
+              error => error.error_level == "ERROR"
+            ).length;
+            this.n_warnings = err.errors.filter(
+              error => error.error_level == "WARNING"
+            ).length;
             if (this.n_errors == 0) {
               this.disableNextStep = false;
               this.showValidateMappingBtn = false;
             }
-          })
-          if (res == 'Done')
-            this._router.navigate([ModuleConfig.MODULE_URL + '/process/step/4']);
-          else if ((res+'').startsWith("Processing ")){
-            this.nbLignes = (res+"").split(" ", 2)[1];
+          });
+          if (import_obj.source_count < ModuleConfig.MAX_LINE_LIMIT) {
+            this._router.navigate([
+              ModuleConfig.MODULE_URL + "/process/step/4"
+            ]);
+          } else {
+            this.nbLignes = import_obj.source_count;
             this._modalService.open(this.modalRedir);
           }
-
         },
         error => {
           this.spinner = false;

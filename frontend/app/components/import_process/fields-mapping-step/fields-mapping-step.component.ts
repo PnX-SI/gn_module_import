@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { Component, OnInit, ViewChild, ViewEncapsulation } from "@angular/core";
 import { Router } from "@angular/router";
 import { DataService } from "../../../services/data.service";
 import { FieldMappingService } from "../../../services/mappings/field-mapping.service";
@@ -24,7 +24,9 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 @Component({
   selector: "fields-mapping-step",
   styleUrls: ["fields-mapping-step.component.scss"],
-  templateUrl: "fields-mapping-step.component.html"
+  templateUrl: "fields-mapping-step.component.html",
+  encapsulation: ViewEncapsulation.None
+
 })
 export class FieldsMappingStepComponent implements OnInit {
   public spinner: boolean = false;
@@ -53,7 +55,9 @@ export class FieldsMappingStepComponent implements OnInit {
   public mappedColCount: number;
   public unmappedColCount: number;
   public mappedList = [];
+  public nbLignes: number;
   @ViewChild("modalConfirm") modalConfirm: any;
+  @ViewChild("modalRedir") modalRedir: any;
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
@@ -63,7 +67,7 @@ export class FieldsMappingStepComponent implements OnInit {
     private _router: Router,
     private _modalService: NgbModal,
     public cruvedStore: CruvedStoreService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(2);
@@ -186,6 +190,10 @@ export class FieldsMappingStepComponent implements OnInit {
       );
   }
 
+  onRedirect() {
+    this._router.navigate([ModuleConfig.MODULE_URL]);
+  }
+
   createOrUpdateMapping(temporary) {
     let step3data: Step3Data = {
       //table_name: this.step3Response.table_name,
@@ -230,15 +238,23 @@ export class FieldsMappingStepComponent implements OnInit {
               ModuleConfig.DEFAULT_VALUE_MAPPING_ID
             )
             .subscribe(
-              d => {
+              import_obj => {
                 this.spinner = false;
                 let step4Data: Step4Data = {
                   importId: this.stepData.importId
                 };
-                this.stepService.setStepData(4, step4Data);
-                this._router.navigate([
-                  `${ModuleConfig.MODULE_URL}/process/step/4`
-                ]);
+                if (import_obj.source_count < ModuleConfig.MAX_LINE_LIMIT) {
+                  this.stepService.setStepData(4, step4Data);
+                  this._router.navigate([
+                    `${ModuleConfig.MODULE_URL}/process/step/4`
+                  ]);
+                  this._router.navigate([
+                    ModuleConfig.MODULE_URL + "/process/step/4"
+                  ]);
+                } else {
+                  this.nbLignes = import_obj.source_count;
+                  this._modalService.open(this.modalRedir);
+                }
               },
               error => {
                 this.spinner = false;
@@ -381,7 +397,6 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   onMappingChange(id_mapping): void {
-    console.log(id_mapping);
     this.id_mapping = id_mapping;
     if (this.id_mapping && id_mapping != "") {
       this.fillMapping(this.id_mapping, this.columns);
@@ -398,6 +413,8 @@ export class FieldsMappingStepComponent implements OnInit {
    * @param fileColumns : columns of the provided file at step 1
    */
   fillMapping(id_mapping, fileColumns) {
+    console.log('file mapping');
+
     this.id_mapping = id_mapping;
     // build an array from array of object
     const columnsArray: Array<string> = this.columns.map(col => col.id);
@@ -407,6 +424,23 @@ export class FieldsMappingStepComponent implements OnInit {
         this.enableMapping(this.syntheseForm);
         if (mappingFields[0] != "empty") {
           for (let field of mappingFields) {
+            if (field["target_field"] == 'unique_id_sinp_generate') {
+              this.syntheseForm
+                .get('unique_id_sinp_generate')
+                .setValue(field["source_field"])
+            }
+            // get value for uuid_generate
+            if (field["target_field"] == 'unique_id_sinp_generate') {
+              this.syntheseForm
+                .get('unique_id_sinp_generate')
+                .setValue(field["source_field"] == 'true')
+            }
+            if (field["target_field"] == 'altitudes_generate') {
+              this.syntheseForm
+                .get('altitudes_generate')
+                .setValue(field["source_field"] == 'true')
+            }
+
             if (columnsArray.includes(field["source_field"])) {
               this.syntheseForm
                 .get(field["target_field"])

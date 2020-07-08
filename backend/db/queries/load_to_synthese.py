@@ -24,21 +24,6 @@ def insert_into_synthese(
     schema_name, table_name, select_part, total_columns, import_id
 ):
     try:
-        # insert user values in synthese
-        query = """
-            INSERT INTO gn_synthese.synthese ({into_part})
-            SELECT {select_part}
-            FROM {schema_name}.{table_name}
-            WHERE gn_is_valid='True';
-            """.format(
-            into_part=",".join(total_columns.keys()),
-            select_part=",".join(select_part),
-            schema_name=schema_name,
-            table_name=table_name,
-        )
-        DB.session.execute(query)
-
-        # update last_action in synthese
         id_source = DB.session.execute(
             """
             SELECT id_source
@@ -48,12 +33,73 @@ def insert_into_synthese(
                 import_id=import_id
             )
         ).fetchone()[0]
+        # insert user values in synthese
+        query = """
+            BEGIN;
+            ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_meta_dates_change_synthese;
+            ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_insert_cor_area_synthese;
+            ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_update_cor_area_taxon_update_cd_nom;
 
+            INSERT INTO gn_synthese.synthese ({into_part})
+            SELECT {select_part}
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid='True';
+
+            ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_meta_dates_change_synthese;
+            ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_insert_cor_area_synthese;
+            ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_update_cor_area_taxon_update_cd_nom;
+            COMMIT;            
+            
+            """.format(
+            into_part=",".join(total_columns.keys()),
+            select_part=",".join(select_part),
+            schema_name=schema_name,
+            table_name=table_name,
+            import_id=import_id,
+            id_source=id_source,
+        )
+        DB.session.execute(query)
+
+        # update last_action in synthese
         DB.session.execute(
             """
+            -- restore trigger
+            -- cor_area_synthese
+            BEGIN;
+            ALTER TABLE gn_synthese.cor_area_synthese DISABLE TRIGGER tri_maj_cor_area_taxon;
+
+            INSERT INTO gn_synthese.cor_area_synthese
+            SELECT
+            s.id_synthese,
+            a.id_area
+            FROM ref_geo.l_areas a
+            JOIN gn_synthese.synthese s ON public.st_intersects(s.the_geom_local, a.geom)
+            WHERE a.enable = true AND s.id_source = {id_source}
+            ;
+            ALTER TABLE gn_synthese.cor_area_synthese ENABLE TRIGGER tri_maj_cor_area_taxon;
+
+            COMMIT;
+
+            BEGIN;
+            -- cor area_taxon
+            DELETE from gn_synthese.cor_area_taxon cat
+            WHERE cat.cd_nom in (SELECT DISTINCT cd_nom from gn_synthese.synthese where id_source ={id_source});
+
+            INSERT INTO gn_synthese.cor_area_taxon (cd_nom, nb_obs, id_area, last_date)
+            SELECT s.cd_nom, count(s.id_synthese), cor.id_area,  max(s.date_min)
+            FROM gn_synthese.cor_area_synthese cor
+            JOIN gn_synthese.synthese s ON s.id_synthese = cor.id_synthese
+            WHERE s.id_source = {id_source}
+            GROUP BY cor.id_area, s.cd_nom;
+            COMMIT;
+
+            BEGIN;
+            UPDATE gn_synthese.synthese SET meta_create_date = NOW() WHERE meta_create_date IS NULL;
+            UPDATE gn_synthese.synthese SET meta_update_date = NOW() WHERE meta_update_date IS NULL;
             UPDATE gn_synthese.synthese
             SET last_action = 'I'
             WHERE id_source = {id_source};
+            COMMIT;
         """.format(
                 id_source=id_source
             )
@@ -78,7 +124,7 @@ def insert_into_t_sources(schema_name, table_name, import_id, total_columns):
             )
             """.format(
                 import_id=import_id,
-                entity_col_name=total_columns["entity_source_pk_value"],
+                entity_col_name=total_columns.get("entity_source_pk_value", None),
                 schema_name=schema_name,
                 table_name=table_name,
             )

@@ -84,6 +84,7 @@ class TImports(DB.Model):
     )
     is_finished = DB.Column(DB.Boolean, nullable=False, default=False)
     processing = DB.Column(DB.Boolean, nullable=False, default=False)
+    in_error = DB.Column(DB.Boolean)
     errors = DB.relationship(
         "VUserImportsErrors", lazy="joined", order_by="VUserImportsErrors.error_type"
     )
@@ -176,6 +177,7 @@ class BibFields(DB.Model):
     nomenclature = DB.Column(DB.Boolean, nullable=False)
     id_theme = DB.Column(DB.Integer, nullable=False)
     order_field = DB.Column(DB.Integer, nullable=False)
+    comment = DB.Column(DB.Unicode)
 
 
 @serializable

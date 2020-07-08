@@ -46,6 +46,10 @@ const routes: Routes = [
     path: "process/step/4",
     component: ImportStepComponent,
     canActivate: [StepperGuardService]
+  },
+  {
+    path: "process/step/4/id_import/:id_import",
+    component: ImportStepComponent
   }
 ];
 
@@ -83,4 +87,4 @@ const routes: Routes = [
 
   bootstrap: []
 })
-export class GeonatureModule { }
+export class GeonatureModule {}
