@@ -257,10 +257,16 @@ def field_mapping_data_checking(import_id, id_mapping):
             required_cols.remove("codecommune")
             required_cols.remove("codemaille")
             required_cols.remove("codedepartement")
-        if ("codecommune" or "codemaille" or "codedepartement") in selected_columns_tab:
+        if "codecommune" in selected_columns_tab or "codemaille" or selected_columns_tab or "codedepartement" in selected_columns_tab in selected_columns_tab:
+            print('PASSSE LA ??????????')
             required_cols.remove("WKT")
             required_cols.remove("longitude")
             required_cols.remove("latitude")
+            required_cols.remove("codecommune")
+            required_cols.remove("codemaille")
+            required_cols.remove("codedepartement")
+        print('LAAAAAAAAAAAAAAAAAAAAa')
+        print(selected_columns)
     except ValueError:
         logger.info("Try no remove an inexisting columns... pass")
     for col in required_cols:
