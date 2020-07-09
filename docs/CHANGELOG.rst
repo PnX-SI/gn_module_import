@@ -13,16 +13,19 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 * Ajout de la possibilité de ne pas afficher l'étape "Mapping des contenus" en définissant un mapping par défaut (avec les paramètres ``ALLOW_VALUE_MAPPING`` et ``DEFAULT_VALUE_MAPPING_ID``) (#100)
 * Import possible des données sans géométrie en utilisant les colonnes ``codecommune``, ``codemaille`` ou ``codedepartement`` et en récupérant ``id_area`` et leur géométrie correspondantes dans la couche des zonages du ``ref_geo`` (#107)
 * Révision et complément des contrôles des données et amélioration des rapports d'erreurs (#114)
-
-  - Regroupement du contrôle des données après l'étape de mapping des valeurs, avant l'étape de prévisualisation des données à intégrer
-  - Ajout d'un tableau d'erreur à la première étape d'upload du fichier
-  - Ajout d'un rapport d'erreur consultable à la dernière étape avant intégration des données et depuis la liste des imports
-  - Ajout de contrôles, sur les champs conditionnels et les géométries notamment (validité et bounding box) (#130)
-  - Ajout du paramètre ``INSTANCE_BOUNDING_BOX`` pour définir les coordonnées de la bounding box de contrôle de la géométrie des données (en 4326 - WGS84) (#130)
-  - Ajout des paramètres ``ENABLE_BOUNDING_BOX_CHECK`` et ``ENABLE_SYNTHESE_UUID_CHECK`` pour activer ou non les contrôles de bounding box et d'UUID qui peuvent être chronophages
-  - Enregistrement et affichage des lignes en erreur
-  - Ajout d'une vue ``gn_imports.v_imports_errors`` permettant de lister les erreurs d'un import
-  - Ajout du paramètre ``FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE`` pour remplir ou non les nomenclatures en erreur par la valeur par défaut définie dans la BDD
+* Implémentation du CRUVED pour identifier si l'utilisateur peut modifier ou créer un mapping
+* Renommage des intitulés (#122). Mapping devient "modèle d'import"
+* Parallélisation des traitements et des contrôles (#123)
+* Simplification des étapes d'import pour les non-administrateurs (#113)
+* Regroupement du contrôle des données après l'étape de mapping des valeurs, avant l'étape de prévisualisation des données à intégrer
+* Ajout d'un tableau d'erreur à la première étape d'upload du fichier
+* Ajout d'un rapport d'erreur consultable à la dernière étape avant intégration des données et depuis la liste des imports
+* Ajout de contrôles, sur les champs conditionnels et les géométries notamment (validité et bounding box) (#130)
+* Ajout du paramètre ``INSTANCE_BOUNDING_BOX`` pour définir les coordonnées de la bounding box de contrôle de la géométrie des données (en 4326 * WGS84) (#130)
+* Ajout des paramètres ``ENABLE_BOUNDING_BOX_CHECK`` et ``ENABLE_SYNTHESE_UUID_CHECK`` pour activer ou non les contrôles de bounding box et d'UUID qui peuvent être chronophages
+* Enregistrement et affichage des lignes en erreur
+* Ajout d'une vue ``gn_imports.v_imports_errors`` permettant de lister les erreurs d'un import
+* Ajout du paramètre ``FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE`` pour remplir ou non les nomenclatures en erreur par la valeur par défaut définie dans la BDD
 * Prévisualisation des données avant intégration : Ajout d'une carte avec la boundinx box des données (#58)
 * Liste des imports : Ajout d'une recherche libre et du tri des colonnes (#75)
 * Liste des imports : Ajout des colonnes "Auteur", "Nombre de données" et "Nombre de taxons" (paramétrable comme les autres colonnes) (#92)
@@ -33,10 +36,6 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 
 **🔮 A venir**
 
-* Simplification des étapes d'import pour les non-administrateurs (#113)
-* Implémentation du CRUVED pour identifier si l'utilisateur peut modifier ou créer un mapping
-* Parallélisation des traitements et des contrôles (#123)
-* Renommage des intitulés (#122)
 
 **🐛 Corrections**
 
