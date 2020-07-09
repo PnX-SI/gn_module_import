@@ -422,6 +422,7 @@ def field_mapping_data_checking(import_id, id_mapping):
         logger.error("*** ERROR IN CORRESPONDANCE MAPPING")
         logger.exception(e)
         DB.session.rollback()
+        DB.session.query(TImports).filter(TImports.id_import == import_id).update({'processing' : False})
     
         if is_temp_table_name:
             DB.session.execute(
