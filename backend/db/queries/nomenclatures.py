@@ -33,18 +33,21 @@ def get_nomenc_details(nomenclature_abb):
 
 
 def get_nomenclature_values(mnemoniques_type: list):
-    query = """
-    SELECT bib.mnemonique as mnemnonique,
-     array_agg(nom.id_nomenclature) as id_nomenclatures
-     FROM  ref_nomenclatures.t_nomenclatures as nom
-     JOIN ref_nomenclatures.bib_nomenclatures_types AS bib ON nom.id_type = bib.id_type
-     WHERE bib.mnemonique IN :mnemoniques_type
-     GROUP BY bib.mnemonique
+    if len(mnemoniques_type) > 0:
+        query = """
+        SELECT bib.mnemonique as mnemnonique,
+        array_agg(nom.id_nomenclature) as id_nomenclatures
+        FROM  ref_nomenclatures.t_nomenclatures as nom
+        JOIN ref_nomenclatures.bib_nomenclatures_types AS bib ON nom.id_type = bib.id_type
+        WHERE bib.mnemonique IN :mnemoniques_type
+        GROUP BY bib.mnemonique
 
-     """
-    return DB.session.execute(
-        text(query), {"mnemoniques_type": tuple(mnemoniques_type)}
-    ).fetchall()
+        """
+        return DB.session.execute(
+            text(query), {"mnemoniques_type": tuple(mnemoniques_type)}
+        ).fetchall()
+    else:
+        return []
 
 
 def get_nomenc_values(nommenclature_abb):
@@ -62,13 +65,15 @@ def get_nomenc_values(nommenclature_abb):
 
 def get_nomenclature_label_from_id(id_nomenclature):
     query = "SELECT label_default FROM ref_nomenclatures.t_nomenclatures WHERE id_nomenclature = :id_nomenclature"
-
-    data = DB.session.execute(
-        text(query), {"id_nomenclature": id_nomenclature}
-    ).fetchone()
-    if data:
-        return data.label_default
-    return data
+    try:
+        data = DB.session.execute(
+            text(query), {"id_nomenclature": id_nomenclature}
+        ).fetchone()
+        if data:
+            return data.label_default
+        return data
+    except Exception:
+        return 'Nomenclature non trouvée'
 
 
 def get_nomenc_user_values(user_nomenc_col, schema_name, table_name):

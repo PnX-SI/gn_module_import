@@ -7,6 +7,7 @@ from geonature.utils.env import DB
 
 from ..wrappers import checker
 from ..logs import logger
+from ..transform.utils import remove_temp_columns
 
 
 @checker("Extracted (from DB table to Dask dataframe)")
@@ -24,7 +25,17 @@ def extract(table_name, schema_name, column_names, index_col, id):
 
     # set dask dataframe index
     index_dask = sqlalchemy.sql.column(index_col).label("gn_id")
-    logger.info('INDEX_DASK')
+    query = """
+    ALTER TABLE {schema_name}.{table_name}
+    ALTER {index_col} TYPE integer
+    USING {index_col}::integer;
+    """
+    try:
+        DB.session.execute(query.format(
+            schema_name=schema_name, table_name=table_name, index_col=index_col))
+        DB.session.commit()
+    except Exception as e:
+        DB.session.rollback()
 
     # get user table row data as a dask dataframe
     df = dd.read_sql_table(
@@ -35,6 +46,5 @@ def extract(table_name, schema_name, column_names, index_col, id):
         # bytes_per_chunk=100000000,
         npartitions=2
     )
-    logger.info('FINISHHHHHHHH')
 
     return df

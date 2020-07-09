@@ -12,6 +12,15 @@ UPDATE gn_imports.t_mappings
 SET mapping_label = 'Synthèse GINCO'
 WHERE mapping_label = 'Synthèse GeoNature';
 
+DELETE FROM gn_imports.t_mappings_fields
+WHERE target_field in (
+     'id_nomenclature_sensitivity',
+    'id_digitiser',
+    'meta_v_taxref',
+    'meta_create_date',
+    'meta_update_date'
+);
+
 
 -- Permissions groupe admin sur import
 INSERT INTO gn_permissions.cor_role_action_filter_module_object

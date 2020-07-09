@@ -54,7 +54,8 @@ class NomenclatureTransformer:
         """
         self.table_name = table_name
         self.id_mapping = id_mapping
-        self.nomenclature_fields = self.__set_nomenclature_fields(selected_columns)
+        self.nomenclature_fields = self.__set_nomenclature_fields(
+            selected_columns)
         self.formated_mapping_content = self.__formated_mapping_content(
             selected_columns
         )
@@ -171,7 +172,8 @@ class NomenclatureTransformer:
                             row[1],
                             ", ".join(nomenc_values_ids),
                             el["mnemonique_type"],
-                            get_mnemo(set_default_value(el["mnemonique_type"])),
+                            get_mnemo(set_default_value(
+                                el["mnemonique_type"])),
                         ),
                     )
                 else:
@@ -231,7 +233,8 @@ class NomenclatureTransformer:
                 id_import=id_import,
                 step="CONTENT_MAPPING",
                 error_code="INVALID_EXISTING_PROOF_VALUE",
-                col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
+                col_name=self.selected_columns.get(
+                    "id_nomenclature_exist_proof"),
                 id_rows=row_with_errors_proof.id_rows,
             )
 
@@ -272,6 +275,9 @@ class NomenclatureTransformer:
 
 
 def get_nomenc_info(form_data, schema_name, table_name):
+    """
+    Build correspondance between mapping and nomenclature value of the file
+    """
     try:
         logger.info("get nomenclature info")
 
@@ -294,7 +300,7 @@ def get_nomenc_info(form_data, schema_name, table_name):
                 }
                 val_def_list.append(d)
 
-            # get user_nomenclature column name and values:
+            # get user_nomenclature column name and values from archive table:
             user_nomenc_col = get_synthese_col(nomenc)
             nomenc_user_values = get_nomenc_user_values(
                 form_data[user_nomenc_col], schema_name, table_name
