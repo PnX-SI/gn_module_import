@@ -23,5 +23,13 @@ ALLOWED_EXTENSIONS = [".csv", ".geojson"]
 # Activer ou non l'étape du mapping des valeurs
 ALLOW_VALUE_MAPPING = True
 
+# si la mapping par des valeurs est désactiver, specifier l'identifiant du mapping qui doit être utilisé
+DEFAULT_VALUE_MAPPING_ID = 3
 # Nombre de ligne à partir duquel l'import est fait en tâche de fond
 MAX_LINE_LIMIT = 10000
+
+# encoding acceptés
+ENCODAGE = ["UTF-8"]
+
+# Afficher le bouton pour afficher/masquer les champs déjà mappé
+DISPLAY_CHECK_BOX_MAPPED_FIELD = true
