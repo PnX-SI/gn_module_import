@@ -122,7 +122,7 @@ def data_cleaning(
         check_missing(
             df, selected_columns, synthese_info, missing_val, import_id, schema_name
         )
-        check_row_duplicates(df, selected_columns, import_id, schema_name)
+        # check_row_duplicates(df, selected_columns, import_id, schema_name)
         check_types(
             df, selected_columns, synthese_info, missing_val, schema_name, import_id,
         )

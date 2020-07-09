@@ -218,12 +218,6 @@ class GeometrySetter:
         """
         Make the projection translation from a source to a target column
         """
-        query = "select array_agg(gn_pk) from {table_name} where gn_is_valid = 'True'".format(
-            table_name=self.table_name
-        )
-        t = DB.session.execute(query).fetchall()
-        print("LAAAAAAAA")
-        print(t)
         query = """
         UPDATE {table_name} 
         SET {target_geom_col} = ST_transform(
@@ -241,8 +235,6 @@ class GeometrySetter:
             DB.session.execute(query)
             DB.session.commit()
         except Exception as e:
-            print("ERRRRRRRRRRRRRRRRR")
-            print(e)
             DB.session.rollback()
 
     def calculate_geom_point(self, source_geom_column, target_geom_column):
