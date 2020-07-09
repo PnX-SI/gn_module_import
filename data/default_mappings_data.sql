@@ -18,22 +18,27 @@ VALUES
 ('Nomenclatures SINP (labels)', 'CONTENT', true),
 ('Nomenclatures SINP (codes)', 'CONTENT', true);
 
-
+-- On donne des droits à tous les groupes GN pour tous les mappings 
 INSERT INTO gn_imports.cor_role_mapping(id_mapping, id_role)
-VALUES
--- Administrateur test
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Administrateur')),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Nomenclatures SINP (labels)'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Administrateur')),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Nomenclatures SINP (codes)'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Administrateur')),
--- Groupe Admin
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Grp_admin')),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Nomenclatures SINP (labels)'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Grp_admin')),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Nomenclatures SINP (codes)'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Grp_admin'));
+SELECT 
+tm.id_mapping,
+id_role
+FROM utilisateurs.t_roles, gn_imports.t_mappings tm
+WHERE groupe IS True 
+AND id_role IN (
+    SELECT id_role
+    FROM utilisateurs.cor_role_app_profil 
+    WHERE id_application IN (
+        SELECT id_application FROM utilisateurs.t_applications
+        WHERE code_application = 'GN'
+    )
+);
+
 
 INSERT INTO gn_imports.t_mappings_fields (id_mapping, source_field, target_field, is_selected, is_added)
 VALUES 
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'permid','unique_id_sinp',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'permid','entity_source_pk_value',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'idsynthese','entity_source_pk_value',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'permidgrp','unique_id_sinp_grp',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','unique_id_sinp_generate',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','meta_create_date',false,false),
@@ -44,8 +49,8 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'altmin','altitude_min',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'altmax','altitude_max',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','altitudes_generate',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','longitude',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','latitude',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'x_centroid','longitude',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'y_centroid','latitude',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'observer','observers',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'obsdescr','comment_description',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'typinfgeo','id_nomenclature_info_geo_type',true,false),
@@ -67,12 +72,12 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'denbrmin','count_min',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'denbrmax','count_max',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','id_nomenclature_determination_method',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','determiner',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','id_digitiser',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'detminer','determiner',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'id_digitiser','id_digitiser',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'preuveoui','id_nomenclature_exist_proof',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','digital_proof',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','non_digital_proof',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','sample_number_proof',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'preuvnum','digital_proof',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'preuvnonum','non_digital_proof',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'samplenumb','sample_number_proof',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','id_nomenclature_valid_status',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'validateur','validator',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','meta_validation_date',false,false),

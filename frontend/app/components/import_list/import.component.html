@@ -24,6 +24,7 @@
                     [rowHeight]="40" 
                     [limit]="15" 
                     [selectionType]='single'
+                    [sorts]="[{prop: 'id_import', dir: 'desc'}]"
                 >
                     <ngx-datatable-column *ngFor="let col of config.LIST_COLUMNS_FRONTEND" name="{{col.name}}"
                         [prop]="col.prop" [maxWidth]="col.max_width">
@@ -40,10 +41,22 @@
                     </ngx-datatable-column>
                     <ngx-datatable-column maxWidth="200" name="Fin import" [sortable]="true" prop="date_end_import">
                         <ng-template let-row="row" ngx-datatable-cell-template>
-                            <button *ngIf="!row.is_finished" class="clickable btn btn-sm btn-dark" style="margin-top: -10px;"
-                                (click)="onFinishImport(row)"> Finir 
-                            </button>
-                            <p *ngIf="row.is_finished" >{{row.date_end_import |date:'dd-MM-yyyy'}}</p>
+                            <span *ngIf="row.in_error; else elseBlock" class="badge badge-dark font-size-medium">  
+                                Import en erreur
+                            </span>
+                            <ng-template #elseBlock>
+                                <div *ngIf="!row.is_finished">
+                                        <button *ngIf="!row.processing" class="clickable btn btn-sm btn-dark" style="margin-top: -10px;"
+                                            (click)="onFinishImport(row)"> {{row.processing ? 'Traitement en cours' : 'Finir'}} 
+                                        </button>
+                                        <span *ngIf="row.processing" class="badge badge-dark font-size-medium">
+                                            Traitement en cours...
+                                        </span>
+                                </div>
+
+                                <p *ngIf="row.is_finished" >{{row.date_end_import |date:'dd-MM-yyyy'}}</p>
+                            </ng-template>
+
                         </ng-template>
                     </ngx-datatable-column>
                     <ngx-datatable-column maxWidth="200" name="Rapport d'erreur" [sortable]="true" >

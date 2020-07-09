@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormControl } from "@angular/forms";
 import { CommonService } from "@geonature_common/service/common.service";
-import { CruvedStoreService } from '@geonature_common/../services/cruved-store.service';
+import { CruvedStoreService } from '@geonature_common/service/cruved-store.service';
 import { DataService } from "../../services/data.service";
 import { ModuleConfig } from "../../module.config";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
@@ -13,6 +13,7 @@ import {
   Step4Data
 } from "../import_process/steps.service";
 import { CsvExportService } from "../../services/csv-export.service";
+
 
 @Component({
   selector: "pnx-import",
@@ -30,6 +31,7 @@ export class ImportComponent implements OnInit {
   n_invalid: any;
   csvDownloadResp: any;
   public deleteOne: any;
+  public interval: any;
 
   public search = new FormControl()
 
@@ -44,10 +46,22 @@ export class ImportComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+
     this.onImportList();
+
+    clearInterval(this.interval)
+    this.interval = setInterval(() => { 
+      this.onImportList(); 
+    }, 15000);
+
     this.search.valueChanges.subscribe(value => {
       this.updateFilter(value);
     });
+  }
+
+  ngOnDestroy() {
+    this._ds.getImportList().subscribe().unsubscribe();
+    clearInterval(this.interval)
   }
 
   updateFilter(val: any) {
@@ -75,6 +89,7 @@ export class ImportComponent implements OnInit {
   }
 
   private onImportList() {
+
     this._ds.getImportList().subscribe(
       res => {
         this.history = res.history;

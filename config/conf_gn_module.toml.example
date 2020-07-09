@@ -8,3 +8,20 @@ ENABLE_BOUNDING_BOX_CHECK = true
 # est-ce que l'on vérifie que les uuid fournit sont déjà dans la synthese
 # mettre à false dans le cas d'une synthese volumineuse (Ne prévient pas d'eventuel doublon d'uuid dans la Synthese)
 ENABLE_SYNTHESE_UUID_CHECK = true
+
+# Taille maximal du fichier - en Mo
+MAX_FILE_SIZE=500
+# SRID autorisés pour les fichiers en entrée
+SRID = [
+  {name = "WGS84", code = 4326}, 
+  {name = "Lambert93", code: 2154}
+]
+# Extension autorisées (seul le csv et geojson sont acceptés)
+# On peut juste enlever un des deux formats
+ALLOWED_EXTENSIONS = [".csv", ".geojson"]
+
+# Activer ou non l'étape du mapping des valeurs
+ALLOW_VALUE_MAPPING = True
+
+# Nombre de ligne à partir duquel l'import est fait en tâche de fond
+MAX_LINE_LIMIT = 10000

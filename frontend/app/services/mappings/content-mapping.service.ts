@@ -1,24 +1,34 @@
 import { Injectable } from "@angular/core";
-import { FormGroup, FormControl } from "@angular/forms";
 import { DataService } from "../data.service";
 import { CommonService } from "@geonature_common/service/common.service";
+import { ModuleConfig } from "../../module.config";
 
 @Injectable()
 export class ContentMappingService {
   public userContentMappings;
   public newMapping: boolean = false;
   public id_mapping;
+  public displayMapped: boolean;
 
   constructor(
     private _ds: DataService,
     private _commonService: CommonService
-  ) {}
+  ) {
+    this.displayMapped = ModuleConfig.DISPLAY_MAPPED_VALUES;
+  }
 
-  getMappingNamesList(mapping_type, importId) {
+  getMappingNamesList(newContentId?, formControl?) {
     // get list of existing content mapping in the select
-    this._ds.getMappings(mapping_type, importId).subscribe(
+    this._ds.getMappings("content").subscribe(
       result => {
-        this.userContentMappings = result["mappings"];
+        this.userContentMappings = result
+        if (newContentId) {
+          const newMapping = result.find(el => {
+            return el.id_mapping == newContentId
+          })
+          formControl.setValue(newMapping)
+        }
+
       },
       error => {
         console.log(error);
@@ -39,6 +49,7 @@ export class ContentMappingService {
   createMapping(mappingForm) {
     mappingForm.reset();
     this.newMapping = true;
+    this.displayMapped = true;
   }
 
   cancelMapping(mappingForm) {
@@ -46,30 +57,4 @@ export class ContentMappingService {
     mappingForm.controls["mappingName"].setValue("");
   }
 
-  saveMappingName(value, importId, mappingForm) {
-    // save new mapping in bib_mapping
-    // then select the mapping name in the select
-    let mappingType = "CONTENT";
-    this._ds.postMappingName(value, mappingType).subscribe(
-      res => {
-        this.newMapping = false;
-        this.getMappingNamesList(mappingType, importId);
-        mappingForm.controls["contentMapping"].setValue(res);
-        mappingForm.controls["mappingName"].setValue("");
-        //this.enableMapping(targetForm);
-      },
-      error => {
-        if (error.statusText === "Unknown Error") {
-          // show error message if no connexion
-          this._commonService.regularToaster(
-            "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-          );
-        } else {
-          console.log(error);
-          this._commonService.regularToaster("error", error.error);
-        }
-      }
-    );
-  }
 }

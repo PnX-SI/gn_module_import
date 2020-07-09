@@ -53,12 +53,13 @@ def set_user_error(
         ),
     )
     try:
+        #  set + 1 to id_rows error in order to not count the column line
         DB.session.execute(
             text(query),
             {
                 "id_import": id_import,
                 "col_name": col_name,
-                "id_rows": id_rows,
+                "id_rows": sorted(list(map(lambda x: x + 1, id_rows))),
                 "step": step,
                 "comment": comment,
             },

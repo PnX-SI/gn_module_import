@@ -83,7 +83,7 @@ SRID = [{"name": "WGS84", "code": 4326}, {"name": "Lambert93", "code": 2154}]
 ENCODAGE = ["UTF-8"]
 
 
-MAX_FILE_SIZE = 500
+MAX_FILE_SIZE = 1000
 
 ALLOWED_EXTENSIONS = [".csv", ".geojson"]
 
@@ -91,28 +91,32 @@ MISSING_VALUES = ["", "NA", "NaN", "na"]
 
 DEFAULT_COUNT_VALUE = 1
 
-EXCLUDED_SYNTHESE_FIELDS_FRONT = [
-    "id_synthese",
-    "id_source",
-    "id_module",
-    "id_dataset",
-    "the_geom_4326",
-    "the_geom_point",
-    "the_geom_local",
-    "last_action",
-]
-
-NOT_NULLABLE_SYNTHESE_FIELDS = ["cd_nom", "nom_cite", "date_min"]
-
 INVALID_CSV_NAME = "invalid"
-
 
 ALLOW_VALUE_MAPPING = True
 
-# If VALUE MAPPING is not allowed, you must specify the DEFAULT_MAPPING_ID
-DEFAULT_MAPPING_ID = 3
+
+# If VALUE MAPPING is not allowed, you must specify the DEFAULT_VALUE_MAPPING_ID
+DEFAULT_VALUE_MAPPING_ID = 3
+
+# Once the MAX_LINE_LIMIT has been exceeded, control processing will take place in the background,
+# you will be notified once this is completed
+MAX_LINE_LIMIT = 10000
 
 INSTANCE_BOUNDING_BOX = [-5.0, 41, 10, 51.15]
+
+# Inutilisé pour l'instant
+ALLOW_FIELD_MAPPING = True
+DEFAULT_FIELD_MAPPING_ID = 1
+
+
+ALLOW_MODIFY_DEFAULT_MAPPING = True
+ALLOW_FIELD_MAPPING = True
+DEFAULT_FIELD_MAPPING_ID = 1
+# Parameter to define if the mapped fields are displayed or not.
+DISPLAY_MAPPED_FIELD = False
+# Parameter to define if the checkbox allowing to change display mode is displayed or not.
+DISPLAY_CHECK_BOX_MAPPED_FIELD = True
 
 
 class GnModuleSchemaConf(Schema):
@@ -127,18 +131,20 @@ class GnModuleSchemaConf(Schema):
     ALLOWED_EXTENSIONS = fields.List(fields.String, missing=ALLOWED_EXTENSIONS)
     MISSING_VALUES = fields.List(fields.String, missing=MISSING_VALUES)
     DEFAULT_COUNT_VALUE = fields.Integer(missing=DEFAULT_COUNT_VALUE)
-    EXCLUDED_SYNTHESE_FIELDS_FRONT = fields.List(
-        fields.String, missing=EXCLUDED_SYNTHESE_FIELDS_FRONT
-    )
-    NOT_NULLABLE_SYNTHESE_FIELDS = fields.List(
-        fields.String, missing=NOT_NULLABLE_SYNTHESE_FIELDS
-    )
     INVALID_CSV_NAME = fields.String(missing=INVALID_CSV_NAME)
     ALLOW_VALUE_MAPPING = fields.Boolean(missing=ALLOW_VALUE_MAPPING)
-    DEFAULT_MAPPING_ID = fields.Integer(missing=DEFAULT_MAPPING_ID)
+    DEFAULT_VALUE_MAPPING_ID = fields.Integer(missing=DEFAULT_VALUE_MAPPING_ID)
     FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(missing=False)
+    DISPLAY_MAPPED_VALUES = fields.Boolean(missing=False)
+    DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(missing=True)
+    MAX_LINE_LIMIT = fields.Integer(missing=MAX_LINE_LIMIT)
     INSTANCE_BOUNDING_BOX = fields.List(fields.Float, missing=INSTANCE_BOUNDING_BOX)
     ENABLE_BOUNDING_BOX_CHECK = fields.Boolean(missing=True)
     ENABLE_SYNTHESE_UUID_CHECK = fields.Boolean(missing=True)
     DISPLAY_MAPPED_VALUES = fields.Boolean(missing=False)
     DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(missing=True)
+    ALLOW_MODIFY_DEFAULT_MAPPING = fields.Boolean(missing=ALLOW_MODIFY_DEFAULT_MAPPING)
+    ALLOW_FIELD_MAPPING = fields.Boolean(missing=ALLOW_FIELD_MAPPING)
+    DEFAULT_FIELD_MAPPING_ID = fields.Integer(missing=DEFAULT_FIELD_MAPPING_ID)
+    DISPLAY_MAPPED_FIELD = fields.Boolean(missing=False)
+    DISPLAY_CHECK_BOX_MAPPED_FIELD = fields.Boolean(missing=True)

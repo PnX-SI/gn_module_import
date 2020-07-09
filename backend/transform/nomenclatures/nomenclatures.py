@@ -54,7 +54,8 @@ class NomenclatureTransformer:
         """
         self.table_name = table_name
         self.id_mapping = id_mapping
-        self.nomenclature_fields = self.__set_nomenclature_fields(selected_columns)
+        self.nomenclature_fields = self.__set_nomenclature_fields(
+            selected_columns)
         self.formated_mapping_content = self.__formated_mapping_content(
             selected_columns
         )
@@ -153,8 +154,6 @@ class NomenclatureTransformer:
             )
             for row in rows_with_err:
                 # ou remplacer par un warning quand la valeur par défaut a été utilisée
-                print("row[1] = " + row[1])
-                print("user_col = " + el["user_col"])
 
                 if current_app.config["IMPORT"][
                     "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"
@@ -173,7 +172,8 @@ class NomenclatureTransformer:
                             row[1],
                             ", ".join(nomenc_values_ids),
                             el["mnemonique_type"],
-                            get_mnemo(set_default_value(el["mnemonique_type"])),
+                            get_mnemo(set_default_value(
+                                el["mnemonique_type"])),
                         ),
                     )
                 else:
@@ -228,12 +228,13 @@ class NomenclatureTransformer:
             self.selected_columns.get("digital_proof"),
             self.selected_columns.get("non_digital_proof"),
         )
-        if row_with_errors_proof:
+        if row_with_errors_proof and row_with_errors_proof.id_rows:
             set_user_error(
                 id_import=id_import,
                 step="CONTENT_MAPPING",
                 error_code="INVALID_EXISTING_PROOF_VALUE",
-                col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
+                col_name=self.selected_columns.get(
+                    "id_nomenclature_exist_proof"),
                 id_rows=row_with_errors_proof.id_rows,
             )
 
@@ -243,7 +244,7 @@ class NomenclatureTransformer:
             id_import,
             self.selected_columns.get("id_nomenclature_blurring"),
         )
-        if row_with_errors_blurr:
+        if row_with_errors_blurr and row_with_errors_blurr.id_rows:
             set_user_error(
                 id_import=id_import,
                 step="CONTENT_MAPPING",
@@ -261,7 +262,7 @@ class NomenclatureTransformer:
             ),
             field_ref_biblio=self.selected_columns.get("reference_biblio"),
         )
-        if row_with_errors_bib:
+        if row_with_errors_bib and row_with_errors_bib.id_rows:
             set_user_error(
                 id_import=id_import,
                 step="CONTENT_MAPPING",
@@ -273,53 +274,19 @@ class NomenclatureTransformer:
             )
 
 
-# @checker("Set nomenclature ids from content mapping form")
-# def set_nomenclature_ids(table_name, selected_content, selected_cols):
-#     try:
-#         content_list = []
-#         for id_nomenclature, mapped_values in selected_content.items():
-#             mnemonique_type = get_nomenc_abb(id_nomenclature)
-#             synthese_name = get_synthese_col(mnemonique_type)
-#             if synthese_name in selected_cols:
-#                 d = {
-#                     "id_nomenclature": id_nomenclature,
-#                     "user_values": mapped_values,
-#                     "user_col": selected_cols[synthese_name],
-#                 }
-#                 content_list.append(d)
-
-#         for element in content_list:
-#             for val in element["user_values"]:
-#                 set_nomenclature_id(
-#                     table_name,
-#                     element["user_col"],
-#                     val,
-#                     str(element["id_nomenclature"]),
-#                 )
-#                 DB.session.flush()
-
-#         DB.session.commit()
-
-#     except Exception:
-#         DB.session.rollback()
-#         raise
-
-
 def get_nomenc_info(form_data, schema_name, table_name):
+    """
+    Build correspondance between mapping and nomenclature value of the file
+    """
     try:
-
         logger.info("get nomenclature info")
 
         # get list of user-selected synthese column names dealing with SINP nomenclatures
         selected_SINP_nomenc = get_nomenc_abbs(form_data)
-
         front_info = []
-
         for nomenc in selected_SINP_nomenc:
-
             # get nomenclature name and id
             nomenc_info = get_nomenc_details(nomenc)
-
             # get nomenclature values
             nomenc_values = get_nomenc_values(nomenc)
 
@@ -333,7 +300,7 @@ def get_nomenc_info(form_data, schema_name, table_name):
                 }
                 val_def_list.append(d)
 
-            # get user_nomenclature column name and values:
+            # get user_nomenclature column name and values from archive table:
             user_nomenc_col = get_synthese_col(nomenc)
             nomenc_user_values = get_nomenc_user_values(
                 form_data[user_nomenc_col], schema_name, table_name
@@ -343,13 +310,14 @@ def get_nomenc_info(form_data, schema_name, table_name):
             for index, val in enumerate(nomenc_user_values):
                 user_val_dict = {"id": index, "value": val.user_val}
                 user_values_list.append(user_val_dict)
-
             d = {
                 "nomenc_abbr": nomenc,
                 "nomenc_id": nomenc_info.id,
                 "nomenc_name": nomenc_info.name,
                 "nomenc_synthese_name": user_nomenc_col,
                 "nomenc_values_def": val_def_list,
+                "nomenc_default_value": nomenc_info.label_default_nomenclature,
+                "nomenc_def": nomenc_info.definition_default,
                 "user_values": {
                     "column_name": form_data[user_nomenc_col],
                     "values": user_values_list,

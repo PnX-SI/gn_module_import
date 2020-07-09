@@ -25,7 +25,9 @@ export interface Step2Data {
 	srid?: any;
 	id_field_mapping?: any;
 	mappingIsValidate?: boolean;
+	temporaryMapping?: boolean;
 	mappingRes?: any;
+	cruvedMapping?: any;
 }
 
 export interface Step3Data {
@@ -33,6 +35,9 @@ export interface Step3Data {
 	// table_name?: any;
 	contentMappingInfo?: any;
 	id_content_mapping?: number;
+	temporaryMapping?: boolean;
+	cruvedMapping?: any;
+
 }
 
 export interface Step4Data {

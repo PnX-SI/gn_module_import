@@ -1,11 +1,12 @@
-import { Component, OnInit } from "@angular/core";
-import { Router } from "@angular/router";
+import { Component, OnInit, ViewChild } from "@angular/core";
+import { Router, ActivatedRoute } from "@angular/router";
 import { StepsService, Step4Data } from "../steps.service";
 import { DataService } from "../../../services/data.service";
 import { CsvExportService } from "../../../services/csv-export.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../../module.config";
 import * as _ from "lodash";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
   selector: "import-step",
@@ -14,6 +15,7 @@ import * as _ from "lodash";
 })
 export class ImportStepComponent implements OnInit {
   public isCollapsed = false;
+  public idImport: any;
   importDataRes: any;
   validData: any;
   total_columns: any;
@@ -25,18 +27,61 @@ export class ImportStepComponent implements OnInit {
   nInvalidData: number;
   validBbox: any;
   public spinner: boolean = false;
+  displayErrors: boolean = false;
+  displayWarnings: boolean = false;
+  public nbLignes: string = "X";
+
+  @ViewChild("modalRedir") modalRedir: any;
 
   constructor(
     private stepService: StepsService,
     private _csvExport: CsvExportService,
     private _router: Router,
+    private _route: ActivatedRoute,
     private _ds: DataService,
+    private _modalService: NgbModal,
     private _commonService: CommonService
   ) { }
 
   ngOnInit() {
-    this.stepData = this.stepService.getStepData(4);
+    // set idImport from URL (email) or from localstorage
+    this.idImport =
+      this._route.snapshot.paramMap.get("id_import") ||
+      this.stepService.getStepData(4).importId;
+
     this.getValidData();
+    this._ds.getErrorList(this.idImport).subscribe(errorList => {
+      if (
+        errorList.errors.filter(error => error.error_level == "ERROR").length >
+        0
+      )
+        this.displayErrors = true;
+      if (
+        errorList.errors.filter(error => error.error_level == "WARNING")
+          .length > 0
+      )
+        this.displayWarnings = true;
+    });
+
+    // this._ds.sendEmail(this.stepData.importId).subscribe(
+    //   res => {
+
+    //   },
+    //   error => {
+    //   }
+    // );
+  }
+
+  openErrorSheet(idImport) {
+    // this._router.navigate(["/import/errors", idImport]);
+    const newRelativeUrl = this._router.createUrlTree([
+      "/import/errors",
+      idImport
+    ]);
+    let baseUrl = window.location.href.replace(this._router.url, "");
+    window.open(baseUrl + newRelativeUrl, "_blank");
+
+    // <a target="_blank" [routerLink]="['/import/errors', idImport]">
   }
 
   onStepBack() {
@@ -49,12 +94,23 @@ export class ImportStepComponent implements OnInit {
 
   onImport() {
     this.spinner = true;
-    this._ds.importData(this.stepData.importId).subscribe(
+    this._ds.importData(this.idImport).subscribe(
       res => {
+        console.log(res);
+
         this.spinner = false;
-        this.importDataRes = res;
+        // res.mappings.forEach(mapping => {
+        //   if (mapping.temporary) {
+        //     this._ds.deleteMapping(mapping.id_mapping).subscribe();
+        //   }
+        // });
+
         this.stepService.resetStepoer();
-        this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
+
+        if (res.source_count > ModuleConfig.MAX_LINE_LIMIT) {
+          this.nbLignes = res.source_count;
+          this._modalService.open(this.modalRedir);
+        } else this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
       },
       error => {
         this.spinner = false;
@@ -75,9 +131,13 @@ export class ImportStepComponent implements OnInit {
     );
   }
 
+  onRedirect() {
+    this._router.navigate([ModuleConfig.MODULE_URL]);
+  }
+
   getValidData() {
     this.spinner = true;
-    this._ds.getValidData(this.stepData.importId).subscribe(
+    this._ds.getValidData(this.idImport).subscribe(
       res => {
         this.spinner = false;
         this.total_columns = res.total_columns;

@@ -40,8 +40,9 @@ CREATE TABLE t_imports(
     date_min_data timestamp without time zone,
     date_max_data timestamp without time zone,
     step integer,
-    is_finished boolean DEFAULT 'f',
-    error_report_path character varying(255)
+    is_finished boolean DEFAULT FALSE,
+    processing boolean DEFAULT FALSE,
+    in_error boolean DEFAULT FALSE
 );
 
 
@@ -89,7 +90,8 @@ CREATE TABLE t_mappings(
     id_mapping serial NOT NULL,
     mapping_label character varying(255) NOT NULL,
     mapping_type character varying(10) NOT NULL,
-    active boolean NOT NULL
+    active boolean NOT NULL,
+    temporary boolean NOT NULL DEFAULT false
 );
 
 
@@ -116,7 +118,8 @@ CREATE TABLE dict_fields(
     nomenclature boolean NOT NULL,
     id_theme integer NOT NULL,
     order_field integer NOT NULL,
-    display boolean NOT NULL
+    display boolean NOT NULL,
+    comment text
 );
 
 
@@ -206,10 +209,10 @@ ALTER TABLE ONLY t_imports
     ADD CONSTRAINT fk_gn_meta_t_datasets FOREIGN KEY (id_dataset) REFERENCES gn_meta.t_datasets(id_dataset) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_imports
-    ADD CONSTRAINT fk_gn_imports_t_mappings_fields FOREIGN KEY (id_field_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_gn_imports_t_mappings_fields FOREIGN KEY (id_field_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE NO ACTION;
 
 ALTER TABLE ONLY t_imports
-    ADD CONSTRAINT fk_gn_import_t_mappings_values FOREIGN KEY (id_content_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_gn_import_t_mappings_values FOREIGN KEY (id_content_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE NO ACTION;
 
 ALTER TABLE ONLY cor_role_import
     ADD CONSTRAINT fk_utilisateurs_t_roles FOREIGN KEY (id_role) REFERENCES utilisateurs.t_roles(id_role) ON UPDATE CASCADE ON DELETE CASCADE;

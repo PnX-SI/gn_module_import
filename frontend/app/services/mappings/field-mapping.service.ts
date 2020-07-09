@@ -14,10 +14,10 @@ export class FieldMappingService {
   constructor(
     private _ds: DataService,
     private _commonService: CommonService
-  ) {}
+  ) { }
 
-  getMappingNamesList(mapping_type, importId) {
-    this._ds.getMappings(mapping_type, importId).subscribe(
+  getMappingNamesList(mapping_type) {
+    this._ds.getMappings(mapping_type).subscribe(
       result => {
         this.userFieldMappings = result["mappings"];
         if (result["column_names"] != "undefined import_id") {
@@ -54,30 +54,7 @@ export class FieldMappingService {
     this.fieldMappingForm.controls["mappingName"].setValue("");
   }
 
-  saveMappingName(value, importId, targetForm) {
-    let mappingType = "FIELD";
-    this._ds.postMappingName(value, mappingType).subscribe(
-      res => {
-        this.newMapping = false;
-        this.getMappingNamesList(mappingType, importId);
-        this.fieldMappingForm.controls["fieldMapping"].setValue(res);
-        this.fieldMappingForm.controls["mappingName"].setValue("");
-        this.enableMapping(targetForm);
-      },
-      error => {
-        if (error.statusText === "Unknown Error") {
-          // show error message if no connexion
-          this._commonService.regularToaster(
-            "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-          );
-        } else {
-          console.error(error);
-          this._commonService.regularToaster("error", error.error);
-        }
-      }
-    );
-  }
+
 
   onMappingName(mappingForm, targetFormName): void {
     mappingForm.get("fieldMapping").valueChanges.subscribe(
@@ -210,31 +187,31 @@ export class FieldMappingService {
       this.setFormControlNotRequired(targetForm, "codecommune");
       this.setFormControlNotRequired(targetForm, "codedepartement");
     }
-  if (targetForm.get("codemaille").value !== "") {
-    this.setFormControlRequired(targetForm, "codemaille");
-    this.setFormControlNotRequired(targetForm, "WKT");
-    this.setFormControlNotRequired(targetForm, "longitude");
-    this.setFormControlNotRequired(targetForm, "latitude");
-    this.setFormControlNotRequired(targetForm, "codecommune");
-    this.setFormControlNotRequired(targetForm, "codedepartement");
+    if (targetForm.get("codemaille").value !== "") {
+      this.setFormControlRequired(targetForm, "codemaille");
+      this.setFormControlNotRequired(targetForm, "WKT");
+      this.setFormControlNotRequired(targetForm, "longitude");
+      this.setFormControlNotRequired(targetForm, "latitude");
+      this.setFormControlNotRequired(targetForm, "codecommune");
+      this.setFormControlNotRequired(targetForm, "codedepartement");
+    }
+    if (targetForm.get("codecommune").value !== "") {
+      this.setFormControlRequired(targetForm, "codecommune");
+      this.setFormControlNotRequired(targetForm, "WKT");
+      this.setFormControlNotRequired(targetForm, "longitude");
+      this.setFormControlNotRequired(targetForm, "latitude");
+      this.setFormControlNotRequired(targetForm, "codemaille");
+      this.setFormControlNotRequired(targetForm, "codedepartement");
+    }
+    if (targetForm.get("codedepartement").value !== "") {
+      this.setFormControlRequired(targetForm, "codedepartement");
+      this.setFormControlNotRequired(targetForm, "WKT");
+      this.setFormControlNotRequired(targetForm, "longitude");
+      this.setFormControlNotRequired(targetForm, "latitude");
+      this.setFormControlNotRequired(targetForm, "codecommune");
+      this.setFormControlNotRequired(targetForm, "codemaille");
+    }
   }
-  if (targetForm.get("codecommune").value !== "") {
-    this.setFormControlRequired(targetForm, "codecommune");
-    this.setFormControlNotRequired(targetForm, "WKT");
-    this.setFormControlNotRequired(targetForm, "longitude");
-    this.setFormControlNotRequired(targetForm, "latitude");
-    this.setFormControlNotRequired(targetForm, "codemaille");
-    this.setFormControlNotRequired(targetForm, "codedepartement");
-  }
-  if (targetForm.get("codedepartement").value !== "") {
-    this.setFormControlRequired(targetForm, "codedepartement");
-    this.setFormControlNotRequired(targetForm, "WKT");
-    this.setFormControlNotRequired(targetForm, "longitude");
-    this.setFormControlNotRequired(targetForm, "latitude");
-    this.setFormControlNotRequired(targetForm, "codecommune");
-    this.setFormControlNotRequired(targetForm, "codemaille");
-  }
-}
 
   onSelect(id_mapping, targetForm) {
     this.id_mapping = id_mapping;

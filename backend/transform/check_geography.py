@@ -1,8 +1,11 @@
 import geopandas as gpd
 import pandas as pd
 from shapely import wkt, wkb
-from shapely.geometry import Point
+from shapely.geometry import Point, Polygon
+from shapely.ops import transform
 import numpy as np
+from pyproj import CRS, Transformer, Proj
+
 
 from ..logs import logger
 from .utils import fill_map, set_is_valid, set_error_and_invalid_reason
@@ -21,9 +24,31 @@ def x_y_to_wkb(x, y):
     try:
         assert not pd.isna(x)
         assert not pd.isna(y)
+        wkt = Point(float(x), float(y))
+
         return Point(float(x), float(y)).wkb.hex()
     except Exception:
         return None
+
+
+def check_bounds_x_y(x, y, local_bounding_box: Polygon):
+    #  if is Nan (float): don't check if fit bounds
+    # x and y are str
+    if type(x) is float or type(y) is float:
+        return True
+    else:
+        cur_wkt = Point(float(x), float(y))
+        return check_bound(cur_wkt, local_bounding_box)
+
+
+def check_bounds_wkt(value, local_bounding_box: Polygon):
+    try:
+        cur_wkt = wkt.loads(value)
+        if not cur_wkt:
+            return True
+        return check_bound(cur_wkt, local_bounding_box)
+    except Exception:
+        return True
 
 
 def check_multiple_code(val):
@@ -32,33 +57,26 @@ def check_multiple_code(val):
     return True
 
 
-def check_wkt(value, min_x, max_x, min_y, max_y):
+def check_bound(wkt, local_bounding_box: Polygon):
     try:
-        if value.geom_type == "Point":
-            if value.x > max_x:
-                return False
-            if value.x < min_x:
-                return False
-            if value.y > max_y:
-                return False
-            if value.y < min_y:
-                return False
-        if value.geom_type == "Polygon":
-            for x_coord in value.exterior.coords.xy[0]:
-                if x_coord > max_x:
-                    return False
-                if x_coord < min_x:
-                    return False
-            for y_coord in value.exterior.coords.xy[1]:
-                if y_coord > max_y:
-                    return False
-                if y_coord < min_y:
-                    return False
-        return True
+        return wkt.within(local_bounding_box)
     except Exception:
         return True
 
         # id_rows_invalid = df.index[df["temp"] == False].to_list()
+
+
+def calculate_bounding_box(given_srid):
+    """
+    calculate the local bounding box and 
+    return a shapely polygon of this BB with local coordq
+    """
+    xmin, ymin, xmax, ymax = CRS.from_epsg(given_srid).area_of_use.bounds
+    bounding_polygon_4326 = Polygon(
+        [[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]]
+    )
+    projection = Transformer.from_crs(4326, int(given_srid))
+    return transform(projection.transform, bounding_polygon_4326)
 
 
 def manage_erros_and_validity(
@@ -87,7 +105,10 @@ def check_geography(
     try:
 
         logger.info("CHECKING GEOGRAPHIC DATA:")
+
+        local_bounding_box = calculate_bounding_box(srid)
         line_with_codes = []
+
         try:
             mask_with_code = (
                 (df[selected_columns["codecommune"]].notnull())
@@ -111,9 +132,12 @@ def check_geography(
                 axis=1,
             )
             df["valid_x_y"] = df["given_geom"].notnull()
-
-            #  row with not code and no valid wkt
-            df["no_geom"] = ~mask_with_code & ~df["valid_x_y"]
+            if "WKT" in selected_columns:
+                mask_with_wkt = df[selected_columns["WKT"]].notnull()
+                #  row with not code and no valid x_y
+                df["no_geom"] = ~mask_with_code & ~mask_with_wkt & ~df["valid_x_y"]
+            else:
+                df["no_geom"] = ~mask_with_code & ~df["valid_x_y"]
             no_geom_errors = df[df["no_geom"] == True]
             if len(no_geom_errors) > 0:
                 set_error_and_invalid_reason(
@@ -125,7 +149,66 @@ def check_geography(
                     id_rows_error=no_geom_errors.index.to_list(),
                 )
 
+            df["in_bounds"] = df.apply(
+                lambda row: check_bounds_x_y(
+                    row[selected_columns["longitude"]],
+                    row[selected_columns["latitude"]],
+                    local_bounding_box,
+                ),
+                axis=1,
+            )
+
+            out_bound_errors = df[df["in_bounds"] == False]
+            if len(out_bound_errors) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="PROJECTION_ERROR",
+                    col_name_error="Colonnes géometriques",
+                    df_col_name_valid="in_bounds",
+                    id_rows_error=out_bound_errors.index.to_list(),
+                )
+            #  row with x/y AND wkt
+            if "WKT" in selected_columns.keys():
+                df["wkt_and_x_y"] = (
+                    df[selected_columns["latitude"]].notnull()
+                    & df[selected_columns["longitude"]].notnull()
+                    & df[selected_columns["WKT"]].notnull()
+                )
+                wkt_and_x_y = df[df["wkt_and_x_y"] == True]
+                if len(wkt_and_x_y) > 0:
+                    set_error_and_invalid_reason(
+                        df=df,
+                        id_import=import_id,
+                        error_code="INVALID_GEOMETRY",
+                        col_name_error="Colonnes géometriques (x/y et WKT)",
+                        df_col_name_valid="wkt_and_x_y",
+                        id_rows_error=wkt_and_x_y.index.to_list(),
+                        comment="Un X/Y et un WKT ne peuvent être fournis pour la même ligne",
+                    )
+                df["in_bounds_wkt"] = df.apply(
+                    lambda row: check_bounds_wkt(
+                        row[selected_columns["WKT"]], local_bounding_box,
+                    ),
+                    axis=1,
+                )
+                out_bound_errors = df[df["in_bounds_wkt"] == False]
+                if len(out_bound_errors) > 0:
+                    set_error_and_invalid_reason(
+                        df=df,
+                        id_import=import_id,
+                        error_code="PROJECTION_ERROR",
+                        col_name_error="Colonnes géometriques",
+                        df_col_name_valid="in_bounds_wkt",
+                        id_rows_error=out_bound_errors.index.to_list(),
+                    )
+
             # remove invalid where codecommune/maille or dep are fill
+
+            # load wkt
+            df["given_geom"] = df[selected_columns["WKT"]].apply(lambda x: set_wkb(x))
+
+            df["valid_wkt"] = df["given_geom"].notnull()
             df["valid_x_y"] = df.iloc[
                 line_with_codes, df.columns.get_loc("valid_x_y")
             ] = True
@@ -145,9 +228,6 @@ def check_geography(
             df.drop("valid_x_y", axis=1)
 
         elif "WKT" in selected_columns:
-            # create wkt with crs provided by user
-            crs = {"init": "epsg:{}".format(srid)}
-
             # load wkt
             df["given_geom"] = df[selected_columns["WKT"]].apply(lambda x: set_wkb(x))
 
@@ -165,6 +245,23 @@ def check_geography(
                     df_col_name_valid="no_geom",
                     id_rows_error=no_geom_errors.index.to_list(),
                 )
+
+                df["in_bounds"] = df.apply(
+                    lambda row: check_bounds_wkt(
+                        row[selected_columns["WKT"]], local_bounding_box
+                    ),
+                    axis=1,
+                )
+                out_bound_errors = df[df["in_bounds"] == False]
+                if len(out_bound_errors) > 0:
+                    set_error_and_invalid_reason(
+                        df=df,
+                        id_import=import_id,
+                        error_code="PROJECTION_ERROR",
+                        col_name_error="Colonnes géometriques",
+                        df_col_name_valid="in_bounds",
+                        id_rows_error=out_bound_errors.index.to_list(),
+                    )
 
             # remove invalid where codecommune/maille or dep are fill
             df["valid_wkt"] = df.iloc[

@@ -17,11 +17,15 @@ export class DataService {
   }
 
   getOneImport(id_import) {
-    return this._http.get(`${urlApi}/${id_import}`)
+    return this._http.get(`${urlApi}/${id_import}`);
   }
 
   updateImport(idImport, data) {
-    return this._http.post(`${urlApi}/update_import/${idImport}`, data)
+    return this._http.post(`${urlApi}/update_import/${idImport}`, data);
+  }
+
+  deleteMapping(idMapping) {
+    return this._http.delete(`${urlApi}/mapping/${idMapping}`);
   }
 
   postUserFile(value, datasetId, importId, isFileChanged, fileName) {
@@ -43,10 +47,12 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/datasets`);
   }
 
-  getMappings(mapping_type, import_id) {
-    return this._http.get<any>(
-      `${urlApi}/mappings/${mapping_type}/${import_id}`
-    );
+  getMappings(mapping_type) {
+    return this._http.get<any>(`${urlApi}/mappings/${mapping_type}`);
+  }
+
+  getOneBibMapping(id_mapping) {
+    return this._http.get<any>(`${urlApi}/mapping/${id_mapping}`);
   }
 
   getMappingFields(id_mapping: number) {
@@ -57,37 +63,56 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/content_mappings/${id_mapping}`);
   }
 
-  updateFieldMapping(id_mapping, data) {
-    return this._http.post(`${urlApi}/update_field_mapping/${id_mapping}`, data)
+  createOrUpdateFieldMapping(data, id_mapping) {
+    return this._http.post(
+      `${urlApi}/create_or_update_field_mapping/${id_mapping}`,
+      data
+    );
   }
 
   updateContentMapping(id_mapping, data) {
-    return this._http.post(`${urlApi}/update_content_mapping/${id_mapping}`, data)
+    return this._http.post(
+      `${urlApi}/update_content_mapping/${id_mapping}`,
+      data
+    );
   }
 
   postMappingName(value, mappingType) {
-    const urlMapping = `${urlApi}/mappingName`;
-    let fd = new FormData();
-    for (let key of Object.keys(value)) {
-      fd.append(key, value[key]);
-    }
-    fd.append("mapping_type", mappingType);
-    return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
+    const urlMapping = `${urlApi}/mapping`;
+    value["mapping_type"] = mappingType;
+    return this._http.post<any>(urlMapping, value);
   }
 
   /**
    * Perform all data checking on the table (content et field)
-   * @param idImport 
-   * @param idFieldMapping 
-   * @param idContentMapping 
+   * @param idImport
+   * @param idFieldMapping
+   * @param idContentMapping
    */
   dataChecker(idImport, idFieldMapping, idContentMapping) {
     const url = `${urlApi}/data_checker/${idImport}/field_mapping/${idFieldMapping}/content_mapping/${idContentMapping}`;
-    return this._http.post(url, {})
+    return this._http.post<any>(url, {});
+  }
+
+  updateMappingName(value, mappingType, idMapping) {
+    const urlMapping = `${urlApi}/updateMappingName`;
+    let fd = new FormData();
+    fd.append("mapping_id", idMapping);
+    fd.append("mapping_type", mappingType);
+    fd.append("mappingName", value);
+    return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
   }
 
   cancelImport(importId: number) {
     return this._http.get<any>(`${urlApi}/cancel_import/${importId}`);
+  }
+
+  /**
+   * Return all the column of the file of an import
+   * @param idImport : integer
+   */
+  getColumnsImport(idImport) {
+    return this._http.get<any>(`${urlApi}/columns_import/${idImport}`);
   }
 
   getSynColumnNames() {
@@ -105,6 +130,15 @@ export class DataService {
       fd.append(key, value[key]);
     }
     fd.append("srid", user_srid);
+    return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
+  }
+
+  updateMappingField(value, importId: number, id_mapping: number) {
+    const urlMapping = `${urlApi}/updateMappingField/${importId}/${id_mapping}`;
+    let fd = new FormData();
+    for (let key of Object.keys(value)) {
+      fd.append(key, value[key]);
+    }
     return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
   }
 
@@ -130,11 +164,16 @@ export class DataService {
   }
 
   goToStep4(import_id, id_mapping) {
-    return this._http.put<any>(`${urlApi}/goToStep4/${import_id}/${id_mapping}`, {});
+    return this._http.put<any>(
+      `${urlApi}/goToStep4/${import_id}/${id_mapping}`,
+      {}
+    );
   }
 
   getNomencInfo(id_import, id_field_mapping) {
-    return this._http.get<any>(`${urlApi}/getNomencInfo/${id_import}/field_mapping/${id_field_mapping}`);
+    return this._http.get<any>(
+      `${urlApi}/getNomencInfo/${id_import}/field_mapping/${id_field_mapping}`
+    );
   }
 
   importData(import_id) {
@@ -145,9 +184,9 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/getValidData/${importId}`);
   }
 
-  getCSV(importId: number) {
+  getErrorCSV(importId: number) {
     let fd = new FormData();
-    return this._http.post(`${urlApi}/getCSV/${importId}`, fd, {
+    return this._http.post(`${urlApi}/get_errors/${importId}`, fd, {
       responseType: "blob"
       //headers: new HttpHeaders().append("Content-Type", "application/json")
     });
@@ -159,5 +198,9 @@ export class DataService {
 
   getErrorList(importId) {
     return this._http.get<any>(`${urlApi}/get_error_list/${importId}`);
+  }
+
+  sendEmail(import_id) {
+    return this._http.get<any>(`${urlApi}/sendemail`);
   }
 }

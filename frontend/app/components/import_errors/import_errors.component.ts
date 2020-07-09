@@ -13,26 +13,22 @@ import { DataService } from '../../services/data.service'
 export class ImportErrorsComponent implements OnInit, OnDestroy {
     private sub: any;
     public import: any;
+    public formatedErrors: string;
     constructor(private _dataService: DataService, private _activedRoute: ActivatedRoute) { }
 
     ngOnInit() {
 
         this.sub = this._activedRoute.params.subscribe(params => {
-            console.log(params);
             this._dataService.getOneImport(
                 params["id_import"]
             ).subscribe(data => {
+                console.log(data);
+
                 this.import = data;
             })
 
         })
     }
-
-    // ngAfterViewInit() {
-    //     console.log(this._activedRoute);
-
-
-    // }
 
     ngOnDestroy() {
         this.sub.unsubscribe();

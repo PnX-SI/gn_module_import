@@ -35,16 +35,18 @@ def check_uuid(
 
     try:
 
-        # send warnings if some uuid are missing :
-
         logger.info("CHECKING UUID VALUES")
-
-        uuid_cols = [
-            field
-            for field in synthese_info
-            if synthese_info[field]["data_type"] == "uuid"
-        ]
-        if len(uuid_cols) > 0:
+        #  if generate_uuid = True we generate one even if uuid cols are provided
+        if is_generate_uuid:
+            uuid_col = selected_columns.get("unique_id_sinp", "unique_id_sinp")
+            df[uuid_col] = ""
+            df[uuid_col] = df[uuid_col].apply(lambda x: str(uuid4()))
+        else:
+            uuid_cols = [
+                field
+                for field in synthese_info
+                if synthese_info[field]["data_type"] == "uuid"
+            ]
 
             for col in uuid_cols:
                 # localize null values
@@ -67,11 +69,15 @@ def check_uuid(
                         "- checking duplicates in unique_id_sinp column (= %s user column)",
                         uuid_col_name,
                     )
-
+                    # remove NaN value to apply a .str
+                    df[uuid_col_name] = df[uuid_col_name].fillna("")
                     df["temp"] = df[uuid_col_name].str.lower().duplicated(keep=False)
                     df["temp"] = (
                         df["temp"]
-                        .where(cond=df[uuid_col_name].notnull(), other=False)
+                        .where(
+                            cond=df[uuid_col_name].isnull() | df[uuid_col_name] == "",
+                            other=False,
+                        )
                         .map(fill_map)
                         .astype("bool")
                     )
@@ -176,16 +182,6 @@ def check_uuid(
                     )
 
         # create unique_id_sinp column with uuid values if not existing :
-
-        if "unique_id_sinp" not in uuid_cols:
-            if is_generate_uuid:
-                logger.info(
-                    "no unique_id_sinp column provided: creating uuid for each row"
-                )
-                df["unique_id_sinp"] = ""
-                df["unique_id_sinp"] = df["unique_id_sinp"].apply(
-                    lambda x: str(uuid4())
-                )
 
     except Exception:
         raise
