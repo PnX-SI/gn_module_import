@@ -16,8 +16,7 @@ def extract(table_name, schema_name, column_names, index_col, id):
     # create empty dataframe as model for importing data from sql table to dask dataframe
     # (for meta argument in read_sql_table method)
     empty_df = pd.DataFrame(columns=column_names, dtype="object")
-    empty_df[index_col] = pd.to_numeric(
-        empty_df[index_col], errors="coerce")
+    empty_df[index_col] = pd.to_numeric(empty_df[index_col], errors="coerce")
 
     # get number of cores to set npartitions:
     ncores = psutil.cpu_count(logical=False)
@@ -31,8 +30,11 @@ def extract(table_name, schema_name, column_names, index_col, id):
     USING {index_col}::integer;
     """
     try:
-        DB.session.execute(query.format(
-            schema_name=schema_name, table_name=table_name, index_col=index_col))
+        DB.session.execute(
+            query.format(
+                schema_name=schema_name, table_name=table_name, index_col=index_col
+            )
+        )
         DB.session.commit()
     except Exception as e:
         DB.session.rollback()
@@ -44,7 +46,7 @@ def extract(table_name, schema_name, column_names, index_col, id):
         uri=str(DB.engine.url),
         schema=schema_name,
         # bytes_per_chunk=100000000,
-        npartitions=2
+        npartitions=1,
     )
 
     return df

@@ -25,7 +25,8 @@ INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level)
 ,('inconsistency error','ALTI_MIN_SUP_ALTI_MAX','altitude min > altitude max','ERROR')
 ,('Doublon','DUPLICATE_ENTITY_SOURCE_PK','Deux lignes du fichier ont la même clé primaire d’origine ; les clés primaires du fichier source ne peuvent pas être dupliquées.','ERROR')
 ,('Erreur de format','INVALID_REAL','Le format numérique réel est incorrect ou négatif dans une des colonnes de type REEL.','ERROR')
-,('Géométrie','GEOMETRY_OUT_OF_BOX','Coordonnées géographiques en dehors du périmètre géographique de l''instance','ERROR')
+,('Géométrie','GEOMETRY_OUT_OF_BOX','Coordonnées géographiques en dehors du périmètre géographique de l''instance','ERROR'),
+,('Géométrie','PROJECTION_ERROR','Erreur de projection pour les coordonnées fournies','ERROR'),
 ,('Doublon','EXISTING_UUID','L''identifiant SINP fourni existe déjà en base.  Il faut en fournir une autre ou laisser la valeur vide pour une attribution automatique.','ERROR')
 ,('Erreur de référentiel','ID_DIGITISER_NOT_EXISITING','id_digitizer n''existe pas dans la table "t_roles"','ERROR')
 ,('Erreur de référentiel','INVALID_GEOM_CODE','Le code (maille/département/commune) n''existe pas dans le réferentiel géographique actuel','ERROR')
