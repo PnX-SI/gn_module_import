@@ -278,9 +278,7 @@ export class ContentMappingStepComponent implements OnInit {
         this.n_mappes -= contentMapping.user_values.values.filter(
           val => val.value
         ).length;
-        if (
-          contentMapping.user_values.values.filter(val => val.value).length > 0
-        )      }
+      }
       // at the end set the formgroup as pristine
       this.contentTargetForm.markAsPristine();
     }),
