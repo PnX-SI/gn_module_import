@@ -18,17 +18,23 @@ VALUES
 ('Nomenclatures SINP (labels)', 'CONTENT', true),
 ('Nomenclatures SINP (codes)', 'CONTENT', true);
 
-
+-- On donne des droits à tous les groupes GN pour tous les mappings fournis
+INSERT INTO gn_imports.cor_role_mapping(id_mapping, id_role)
+SELECT 
+tm.id_mapping,
+id_role
+FROM utilisateurs.t_roles, gn_imports.t_mappings tm
+WHERE groupe IS True 
+AND id_role IN (
+    SELECT id_role
+    FROM utilisateurs.cor_role_app_profil 
+    WHERE id_application IN (
+        SELECT id_application FROM utilisateurs.t_applications
+        WHERE code_application = 'GN'
+    )
+);
 INSERT INTO gn_imports.cor_role_mapping(id_mapping, id_role)
 VALUES
--- Administrateur test
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Administrateur')),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Nomenclatures SINP (labels)'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Administrateur')),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Nomenclatures SINP (codes)'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Administrateur')),
--- Groupe Admin
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Grp_admin')),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Nomenclatures SINP (labels)'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Grp_admin')),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Nomenclatures SINP (codes)'),(SELECT id_role FROM utilisateurs.t_roles WHERE nom_role='Grp_admin'));
 
 INSERT INTO gn_imports.t_mappings_fields (id_mapping, source_field, target_field, is_selected, is_added)
 VALUES 
