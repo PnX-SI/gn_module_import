@@ -20,8 +20,6 @@ export class stepperComponent implements OnInit, OnChanges {
 
 
 	onGoToStep(step) {
-		console.log("hzlooooo");
-
 		this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/${step}`]);
 	}
 
