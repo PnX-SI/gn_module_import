@@ -7,7 +7,7 @@ export class StepperGuardService implements CanActivate {
 
 	canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
 		let url: string = state.url.split('?')[0];
-		if (JSON.parse(localStorage.getItem('startPorcess'))) {
+		if (route.queryParams["resetStepper"] || JSON.parse(localStorage.getItem('startPorcess'))) {
 			if (url.endsWith('process/step/1')) {
 				return true;
 			} else if (url.endsWith('process/step/2')) {
