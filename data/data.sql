@@ -79,7 +79,6 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('meta_create_date', 'Date de création de la donnée', '', '', 'timestamp without time zone', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='general_info'), 4, TRUE, NULL),
 	('meta_v_taxref', 'Version du référentiel taxonomique', '', '', 'character varying(50)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='general_info'), 5, TRUE , NULL),
 	('meta_update_date', 'Date de mise à jour de la donnée', '', '', 'timestamp without time zone', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='general_info'), 6, TRUE, NULL),
-
 	('id_nomenclature_grp_typ', 'Type de relevé/regroupement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 1, TRUE, 'Correspondance champs standard: typeRegroupement'),
 	('unique_id_sinp_grp','Identifiant relevé (uuid)','','','uuid', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 2, TRUE, ('UUID du regroupement')),
 	('date_min', 'Date début', '', '', 'timestamp without time zone', TRUE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 3, TRUE, 'Date de début de l''observation. Le format attendu est YYYY-MM-DD ou DD-MM-YYYY (les heures sont acceptées sous ce format: HH:MM:SS) - Les séparateurs / . : sont également acceptés '),
@@ -177,3 +176,37 @@ VALUES(
 	(SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING'),
 	(SELECT id_module FROM gn_commons.t_modules WHERE module_code = 'IMPORT')
 );
+
+-- Donner aux groupes d'utilisateurs les mêmes droits sur les mappings que sur le module d'import lui-même
+DO $$
+DECLARE role integer;
+	BEGIN
+		FOR role IN (SELECT DISTINCT id_role FROM utilisateurs.t_roles WHERE groupe)
+			LOOP
+				IF EXISTS (SELECT * FROM gn_permissions.cor_role_action_filter_module_object WHERE id_role=role AND id_module=(SELECT id_module FROM gn_commons.t_modules WHERE module_code='IMPORT'))
+					THEN 
+						WITH permissions AS (SELECT * FROM gn_permissions.cor_role_action_filter_module_object WHERE id_role=role AND id_module=(SELECT id_module FROM gn_commons.t_modules WHERE module_code='IMPORT'))
+						INSERT INTO gn_permissions.cor_role_action_filter_module_object (id_role, id_action, id_filter, id_module, id_object)
+						select 
+							p.id_role as id_role,
+							p.id_action as id_action,
+							p.id_filter as id_filter,
+							p.id_module as id_module,
+							tob.id_object as id_object 
+						from permissions p, gn_permissions.t_objects tob
+						where tob.code_object='MAPPING';
+					ELSE
+						WITH permissions_gn AS (SELECT * FROM gn_permissions.cor_role_action_filter_module_object WHERE id_role=role AND id_module=(SELECT id_module FROM gn_commons.t_modules WHERE module_code='GEONATURE'))
+						INSERT INTO gn_permissions.cor_role_action_filter_module_object (id_role, id_action, id_filter, id_module, id_object)
+						select 
+							p.id_role as id_role,
+							p.id_action as id_action,
+							p.id_filter as id_filter,
+							p.id_module as id_module,
+							tob.id_object as id_object 
+						from permissions_gn p, gn_permissions.t_objects tob
+						where tob.code_object='MAPPING';
+				END IF;
+			END LOOP;
+	END;
+$$;
