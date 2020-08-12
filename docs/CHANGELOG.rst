@@ -12,7 +12,7 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 * Possibilité de supprimer un import (et les données associées) (#124)
 * Ajout de la possibilité de ne pas afficher l'étape "Mapping des contenus" en définissant un mapping par défaut (avec les paramètres ``ALLOW_VALUE_MAPPING`` et ``DEFAULT_VALUE_MAPPING_ID``) (#100)
 * Import possible des données sans géométrie en utilisant les colonnes ``codecommune``, ``codemaille`` ou ``codedepartement`` et en récupérant ``id_area`` et leur géométrie correspondantes dans la couche des zonages du ``ref_geo`` (#107)
-* Implémentation du CRUVED pour identifier si l'utilisateur peut modifier ou créer un mapping (#136)
+* Implémentation du CRUVED pour identifier si l'utilisateur peut modifier ou créer un mapping. Les mappings sont un objet dont le CRUVED est paramétrable (module admin->permissions) (#136)
 * Création de mappings temporaires supprimés automatiquement à la fin d'un import, pour les utilisateurs ne pouvant pas modifier ou créer des mappings (#136)
 * Renommage des intitulés (#122). "Mapping" devient notamment "Modèle d'import" et "Correspondance"
 * Parallélisation des traitements et des contrôles à partir d'un seuil de nombre de lignes paramétrable (``MAX_LINE_LIMIT``) (#123)
@@ -44,12 +44,13 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 * Correction du modèle d'import "Synthèse GeoNature" fournis par défaut (#118)
 * Suppression du message d'erreur quand un champs défini dans un mapping n'est pas présent dans le fichier importé (#108)
 * Correction et amélioration des contrôles de dates (#128)
-* !!!!!!!!!! Suppression temporaire de la vérification des doublons, trop lourde en performance et non fonctionnelle
+* !!!!!!!!!! Suppression temporaire de la vérification des doublons dans le fichier source, trop lourde en performance et non fonctionnelle
 
 **Notes de version**
 
 * Exécuter le fichier de mise à jour du schéma de la BDD du module (``data/migration/1.0.0to1.1.0.sql``)
 * Vérifier les éventuelles nouveaux paramètres que vous souhaiteriez surcouchés dans le fichier ``config/conf_gn_module.toml`` à partir du fichier d'exemple ``config/conf_gn_module.toml.example``
+* Si vous activez la parallélisation des contrôles (``MAX_LINE_LIMIT``) (#123), assurez-vous d'avoir définit les paramètres d'envois de mails dans la configuration générique de geonature (geonature/config/geonature_config.toml)
 
 1.0.0 - A vos marques, prêts, importez ! (2020-02-26)
 -----------------------------------------------------
