@@ -23,8 +23,6 @@ Le module doit ensuite être installé comme suit :
    
 Le module est installé et prêt à importer !
 
-⚠️ Les trois mappings par défaut sont associés à tous les groupes d'utilisateurs de GeoNature.
-
 Configuration du module
 =======================
 
@@ -43,7 +41,41 @@ Après avoir regroupé les champs dans leurs "blocs" et leur avoir associé un o
 Droits du module
 ================
 
-Les droits sur les "mappings" (possibilité d'éditer/créer des mappings) n'est pas fournie par défault. Le réglage des droits se fait dans le module "admin" de GeoNature ("Admin" -> "permissions")
+Les mappings constituent un "objet" du module d'import disposant de droits paramétrables pour les différents rôles. Par défaut, les droits accordés sur les mappings sont identiques aux droits que les utilisateurs ont sur le module Import en lui-même. Le réglage des droits se fait dans le module "admin" de GeoNature ("Admin" -> "permissions")
+
+
+Mise à jour du module
+=====================
+
+- Téléchargez la nouvelle version du module
+
+```
+wget https://github.com/PnX-SI/gn_module_import/archive/X.Y.Z.zip
+unzip X.Y.Z.zip
+rm X.Y.Z.zip
+```
+
+- Renommez l'ancien et le nouveau répertoire
+
+```
+mv /home/`whoami`/gn_module_import /home/`whoami`/gn_module_import_old
+mv /home/`whoami`/gn_module_import-X.Y.Z /home/`whoami`/gn_module_import
+```
+
+- Rapatriez le fichier de configuration
+
+```
+cp /home/`whoami`/gn_module_import_old/config/conf_gn_module.toml  /home/`whoami`/gn_module_import/config/conf_gn_module.toml
+```
+
+- Relancez la compilation en mettant à jour la configuration
+
+```
+cd /home/`whoami`/geonature/backend
+source venv/bin/activate
+geonature update_module_configuration IMPORT
+```
+
 
 Utilisation du module d'imports
 ===============================
