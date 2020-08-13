@@ -480,7 +480,7 @@ def content_mapping_data_checking(import_id, id_mapping):
         # SAVE MAPPING
 
         # Nomenclature checking
-        logger.info("Check and remplace nomenclature")
+        logger.info("Check and replace nomenclature")
         import_object = TImports.query.get(import_id)
         if not import_object:
             raise
