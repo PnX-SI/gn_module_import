@@ -43,6 +43,8 @@ export class UploadFileStepComponent implements OnInit {
 
   ngOnInit() {
     this.datasetId = this._activatedRoute.snapshot.queryParams["datasetId"];
+    if (this._activatedRoute.snapshot.queryParams["resetStepper"])
+      this.stepService.setStepData(1);
     this.stepData = this.stepService.getStepData(1);
     if (this.stepData) {
       this.importId = this.stepData.importId;
