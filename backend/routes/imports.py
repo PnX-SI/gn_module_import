@@ -44,7 +44,6 @@ def get_import_list(info_role):
         results = (
             DB.session.query(TImports)
             .order_by(TImports.id_import)
-            .filter(TImports.step >= 2)
             .all()
         )
 

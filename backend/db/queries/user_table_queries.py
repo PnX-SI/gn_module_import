@@ -52,7 +52,7 @@ def set_primary_key(schema_name, table_name, pk_col_name):
             )
         )
         DB.session.commit()
-    except Exception:
+    except Exception as e:
         DB.session.rollback()
         raise
 
@@ -135,15 +135,13 @@ def delete_tables(id_import, archives_schema, imports_schema):
                         DB.session.execute(
                             """
                             DROP TABLE IF EXISTS {}""".format(
-                                get_full_table_name(
-                                    archives_schema, table_name)
+                                get_full_table_name(archives_schema, table_name)
                             )
                         )
                         DB.session.execute(
                             """
                             DROP TABLE IF EXISTS {}""".format(
-                                get_full_table_name(
-                                    imports_schema, imports_table_name)
+                                get_full_table_name(imports_schema, imports_table_name)
                             )
                         )
                 except ValueError:

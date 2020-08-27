@@ -99,6 +99,7 @@ def post_user_file(info_role):
                     date_create_import=init_date,
                     date_update_import=init_date,
                     full_file_name=file_name,
+                    step=1,
                     id_dataset=metadata["datasetId"],
                     encoding=metadata["encodage"],
                     format_source_file=extension,

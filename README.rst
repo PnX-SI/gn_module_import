@@ -23,12 +23,12 @@ Le module doit ensuite être installé comme suit :
    
 Le module est installé et prêt à importer !
 
-⚠️ Les mappings sont associés à des rôles pour définir qui peut les utiliser. Ainsi les mappings fournis lors de l'installation du module sont associés aux rôles ``Administrateur`` et ``Grp_admin`` par défaut (https://github.com/PnX-SI/gn_module_import/blob/master/data/default_mappings_data.sql#L22-L31). Si vous ne disposez pas de ces rôles, adaptez le SQL avant installation du module, ou associez les mappings aux rôles que vous souhaitez après installation.
- 
+⚠️ Les trois mappings par défaut sont associés à tous les groupes d'utilisateurs de GeoNature.
+
 Configuration du module
 =======================
 
-La configuration du module se fait pour partie via le fichier ``conf_schema_toml.py`` (champs affichés en interface à l'étape 1, préfixe des champs ajoutés par le module, répertoire d'upload des fichiers, SRID, encodage, séparateurs, etc). 
+La configuration du module se fait pour partie via le fichier ``conf_gn_module.toml``. Voir le fichier ``conf_gn_module.toml.exemple`` pour voir la liste des paramètre disponible (champs affichés en interface à l'étape 1, préfixe des champs ajoutés par le module, répertoire d'upload des fichiers, SRID, encodage, séparateurs, etc). 
 
 Une autre partie se fait directement via la base de données, dans les tables ``dict_fields`` et ``dict_themes``, permettant de masquer, ajouter, ou rendre obligatoire certains champs à renseigner pour l'import. Un champs masqué sera traité comme un champs non rempli, et se verra associer des valeurs par défaut ou une information vide. Il est également possible de paramétrer l'ordonnancement des champs (ordre, regroupements dans des blocs) dans l'interface du mapping de champs. A l'instar des attributs gérés dans TaxHub, il est possible de définir des "blocs" dans la table ``gn_imports.dict_themes``, et d'y attribuer des champs (``dict_fields``) en y définissant leur ordre d'affichage.  
 
@@ -39,6 +39,11 @@ Après avoir regroupé les champs dans leurs "blocs" et leur avoir associé un o
    cd
    cd geonature/frontend
    npm run build
+
+Droits du module
+================
+
+Les droits sur les "mappings" (possibilité d'éditer/créer des mappings) n'est pas fournie par défault. Le réglage des droits se fait dans le module "admin" de GeoNature ("Admin" -> "permissions")
 
 Utilisation du module d'imports
 ===============================

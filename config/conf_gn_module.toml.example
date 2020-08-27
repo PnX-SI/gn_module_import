@@ -1,27 +1,36 @@
-# bounding box des données de l'instance. Utilisé pour lever des warning lorsque les données
-# sont en dehors. Format: [XMIN, YMIN, XMAX, YMAX]
-# par défaut: France métropolitaine incluant la Corse
+# Bounding box des données de l'instance. 
+# Utilisé pour lever des warning lorsque les données sont en dehors. 
+# Format: [XMIN, YMIN, XMAX, YMAX]
+# Par défaut: France métropolitaine incluant la Corse
 INSTANCE_BOUNDING_BOX = [-5.0, 41, 10, 51.15]
-# est-ce que l'on vérifie que les données sont bien dans la bounding box
+# Est-ce que l'on vérifie que les données sont bien dans la bounding box
 ENABLE_BOUNDING_BOX_CHECK = true
 
-# est-ce que l'on vérifie que les uuid fournit sont déjà dans la synthese
-# mettre à false dans le cas d'une synthese volumineuse (Ne prévient pas d'eventuel doublon d'uuid dans la Synthese)
+# Est-ce que l'on vérifie que les UUID fournis sont déjà dans la synthese de GeoNature
+# Mettre à false dans le cas d'une synthese volumineuse (Ne prévient pas d'eventuels doublons d'UUID dans la Synthese)
 ENABLE_SYNTHESE_UUID_CHECK = true
 
-# Taille maximal du fichier - en Mo
+# Taille maximale du fichier chargé (en Mo)
 MAX_FILE_SIZE=500
 # SRID autorisés pour les fichiers en entrée
 SRID = [
   {name = "WGS84", code = 4326}, 
   {name = "Lambert93", code: 2154}
 ]
-# Extension autorisées (seul le csv et geojson sont acceptés)
-# On peut juste enlever un des deux formats
+# Extensions autorisées (seul le csv et geojson sont acceptés)
+# On peut donc uniquement enlever un des deux formats
 ALLOWED_EXTENSIONS = [".csv", ".geojson"]
 
 # Activer ou non l'étape du mapping des valeurs
 ALLOW_VALUE_MAPPING = True
 
-# Nombre de ligne à partir duquel l'import est fait en tâche de fond
+# Si le mapping des valeurs est désactive, specifier l'identifiant du mapping qui doit être utilisé
+DEFAULT_VALUE_MAPPING_ID = 3
+# Nombre de lignes à partir duquel l'import est fait en tâche de fond
 MAX_LINE_LIMIT = 10000
+
+# Encodages acceptés
+ENCODAGE = ["UTF-8"]
+
+# Afficher le bouton pour afficher/masquer les champs déjà mappés
+DISPLAY_CHECK_BOX_MAPPED_FIELD = true

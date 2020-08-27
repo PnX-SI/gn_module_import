@@ -1,12 +1,15 @@
 from flask import current_app
 from shapely.geometry import Polygon
 
+from geonature.utils.env import DB
+
 from ..wrappers import checker
 from ..logs import logger
 from ..db.queries.geometries import get_id_area_type
 from ..db.queries.utils import execute_query
 from ..db.queries.user_errors import set_user_error
 from ..load.import_class import ImportDescriptor
+from .utils import set_error_and_invalid_reason
 
 
 class GeometrySetter:
@@ -205,6 +208,7 @@ class GeometrySetter:
         query = """
                 UPDATE {table_name} 
                 SET {target_colmun} = ST_SetSRID(given_geom, {srid})
+                WHERE gn_is_valid = 'True' AND given_geom IS NOT NULL;
                 """.format(
             table_name=self.table_name, target_colmun=target_colmun, srid=srid,
         )
@@ -214,25 +218,31 @@ class GeometrySetter:
         """
         Make the projection translation from a source to a target column
         """
-
         query = """
         UPDATE {table_name} 
         SET {target_geom_col} = ST_transform(
             ST_SetSRID(given_geom, {origin_srid}), 
             {target_srid}
-        )
+            )
+        WHERE gn_is_valid = 'True';
         """.format(
             table_name=self.table_name,
             target_geom_col=target_geom_col,
             origin_srid=origin_srid,
             target_srid=target_srid,
         )
-        execute_query(query, commit=True)
+        try:
+            DB.session.execute(query)
+            DB.session.commit()
+        except Exception as e:
+            DB.session.rollback()
 
     def calculate_geom_point(self, source_geom_column, target_geom_column):
         query = """
             UPDATE {table_name}
-            SET {target_geom_column} = ST_centroid({source_geom_column});
+            SET {target_geom_column} = ST_centroid({source_geom_column})
+            WHERE gn_is_valid = 'True'
+            ;
             """.format(
             table_name=self.table_name,
             target_geom_column=target_geom_column,
