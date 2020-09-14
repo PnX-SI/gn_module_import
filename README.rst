@@ -51,32 +51,36 @@ Mise à jour du module
 
 - Téléchargez la nouvelle version du module
 
-```
-wget https://github.com/PnX-SI/gn_module_import/archive/X.Y.Z.zip
-unzip X.Y.Z.zip
-rm X.Y.Z.zip
-```
+::
+
+   wget https://github.com/PnX-SI/gn_module_import/archive/X.Y.Z.zip
+   unzip X.Y.Z.zip
+   rm X.Y.Z.zip
+
 
 - Renommez l'ancien et le nouveau répertoire
 
-```
-mv /home/`whoami`/gn_module_import /home/`whoami`/gn_module_import_old
-mv /home/`whoami`/gn_module_import-X.Y.Z /home/`whoami`/gn_module_import
-```
+::
+
+   mv /home/`whoami`/gn_module_import /home/`whoami`/gn_module_import_old
+   mv /home/`whoami`/gn_module_import-X.Y.Z /home/`whoami`/gn_module_import
+
 
 - Rapatriez le fichier de configuration
 
-```
-cp /home/`whoami`/gn_module_import_old/config/conf_gn_module.toml  /home/`whoami`/gn_module_import/config/conf_gn_module.toml
-```
+::
+
+   cp /home/`whoami`/gn_module_import_old/config/conf_gn_module.toml  /home/`whoami`/gn_module_import/config/conf_gn_module.toml
+
 
 - Relancez la compilation en mettant à jour la configuration
 
-```
-cd /home/`whoami`/geonature/backend
-source venv/bin/activate
-geonature update_module_configuration IMPORT
-```
+::
+
+   cd /home/`whoami`/geonature/backend
+   source venv/bin/activate
+   geonature update_module_configuration IMPORT
+
 
 Utilisation du module d'imports
 ===============================
