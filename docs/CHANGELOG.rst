@@ -37,6 +37,7 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 * Documentation de l'utilisation et du fonctionnement du module
 * Documentation de la mise à jour du module (#149)
 * Script de mise à jour de la BDD 1.0.0to1.1.0.sql 
+* Ajouts et mises à jour de champs de la synthèse (modifiée depuis GeoNature 2.5.0)
 
 **🐛 Corrections**
 
