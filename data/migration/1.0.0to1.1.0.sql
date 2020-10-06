@@ -25,3 +25,8 @@ id_rows,
 comment
 FROM  gn_imports.t_user_error_list el 
 JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error;
+
+UPDATE gn_imports.dict_fields
+SET fr_label='Identifiant de l''auteur de la saisie (id_role dans l''instance cible)',
+display=False
+WHERE name_field='id_digitiser';
