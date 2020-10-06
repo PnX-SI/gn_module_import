@@ -79,7 +79,6 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('meta_create_date', 'Date de création de la donnée', '', '', 'timestamp without time zone', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='general_info'), 4, TRUE, NULL),
 	('meta_v_taxref', 'Version du référentiel taxonomique', '', '', 'character varying(50)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='general_info'), 5, TRUE , NULL),
 	('meta_update_date', 'Date de mise à jour de la donnée', '', '', 'timestamp without time zone', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='general_info'), 6, TRUE, NULL),
-
 	('id_nomenclature_grp_typ', 'Type de relevé/regroupement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 1, TRUE, 'Correspondance champs standard: typeRegroupement'),
 	('unique_id_sinp_grp','Identifiant relevé (uuid)','','','uuid', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 2, TRUE, ('UUID du regroupement')),
 	('date_min', 'Date début', '', '', 'timestamp without time zone', TRUE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 3, TRUE, 'Date de début de l''observation. Le format attendu est YYYY-MM-DD ou DD-MM-YYYY (les heures sont acceptées sous ce format: HH:MM:SS) - Les séparateurs / . : sont également acceptés '),
@@ -102,7 +101,7 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('the_geom_4326','Geométrie (SRID 4326)','','','geometry', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 20, FALSE, NULL),
 	('nom_cite', 'Nom du taxon cité', '', '', 'character varying(1000)', TRUE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 1, TRUE, 'Correspondance champs standard: nomCite'),
 	('cd_nom', 'Cd nom taxref', '', '', 'integer', TRUE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 2, TRUE, 'Code Taxref de l''espèce observé Correspondance champs standard: cdNom'),
-	('id_nomenclature_obs_meth', 'Méthode d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 3, TRUE, 'Correspondance champs standard: obsMethode'),
+	('id_nomenclature_obs_technique', 'Méthode d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 3, TRUE, 'Correspondance champs standard: obsMethode'),
 	('id_nomenclature_bio_status', 'Statut biologique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 4, TRUE, 'Correspondance champs standard: occStatutBioGeographique'),
 	('id_nomenclature_bio_condition', 'Etat biologique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 5, TRUE, 'Correspondance champs standard: occEtatBiologique'),
 	('id_nomenclature_naturalness', 'Naturalité', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 6, TRUE, 'Correspondance champs standard: occNaturalite'),
@@ -127,10 +126,17 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('validator', 'Validateur', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 9, TRUE, 'Correspondance champs standard: validateur'),
 	('meta_validation_date', 'Date de validation', '', '', 'timestamp without time zone', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 10, TRUE, NULL),
 	('validation_comment', 'Commentaire de validation', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 11, TRUE, NULL),
-	('id_nomenclature_obs_technique', 'Techniques d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 11, TRUE, NULL),
 	('id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE, 'Correspondance champs standard: statutObservation'),
 	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE, 'Correspondance champs standard: statutSource'),
 	('reference_biblio', 'Référence bibliographique', '', '', 'character varying(255)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 14, TRUE, 'Correspondance champs standard: referenceBiblio')
+	('cd_hab', 'Code habitat', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 22, TRUE, 'Correspondance champs standard: CodeHabitatValue'),
+	('grp_method', '', '', '', 'character varying(255)', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 26, TRUE, 'Correspondance champs standard: methodeRegroupement'),
+	('id_nomenclature_behaviour', 'Comportement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 15, TRUE, 'Correspondance champs standard: occComportement'),
+	('depth_min', 'Profondeur min', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 24, FALSE, 'Correspondance champs standard: profondeurMin'),
+	('depth_max', 'Profondeur max', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 25, FALSE, 'Correspondance champs standard: profondeurMax'),
+	('place_name', 'Nom du lieu', '', '', 'character varying(500)', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 23, TRUE, 'Correspondance champs standard: nomLieu'),
+	('precision', 'Précision du pointage (m)', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 21, TRUE, 'Correspondance champs standard: precisionGeometrie'),
+	('additionnal_data', 'Champs additionnels', '', '', 'jsonb', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 16, FALSE, 'Attributs additionnels') -- Ajouter un thème dédié à terme et prévoir un widget multiselect qui concatène les infos sous format jsonb ?
 ;
 
 INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
@@ -143,7 +149,7 @@ INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
     ('SEXE',	'id_nomenclature_sex'),
     ('STADE_VIE',	'id_nomenclature_life_stage'),
     ('STATUT_BIO',	'id_nomenclature_bio_status'),
-    ('METH_OBS',	'id_nomenclature_obs_meth'),
+    ('METH_OBS',	'id_nomenclature_obs_technique'),
     ('PREUVE_EXIST',	'id_nomenclature_exist_proof'),
     ('SENSIBILITE',	'id_nomenclature_sensitivity'),
     ('STATUT_OBS',	'id_nomenclature_observation_status'),
@@ -151,9 +157,10 @@ INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
     ('TYP_DENBR',	'id_nomenclature_type_count'),
     ('TYP_INF_GEO',	'id_nomenclature_info_geo_type'),
     ('TYP_GRP',	'id_nomenclature_grp_typ'),
-    ('TECHNIQUE_OBS',	'id_nomenclature_obs_technique'),
     ('STATUT_VALID',	'id_nomenclature_valid_status'),
-    ('METH_DETERMIN',	'id_nomenclature_determination_method');
+    ('METH_DETERMIN',	'id_nomenclature_determination_method'),
+    ('OCC_COMPORTEMENT', 'id_nomenclature_behaviour')
+    ;
 
 -----------------
 ---PERMISSIONS---
