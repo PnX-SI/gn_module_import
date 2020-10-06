@@ -5,10 +5,7 @@ from geonature.utils.env import DB
 from geonature.core.gn_permissions import decorators as permissions
 from ..db.models import TImports
 
-from ..transform.transform import (
-    field_mapping_data_checking,
-    content_mapping_data_checking,
-)
+from ..transform.transform import field_mapping_data_checking, content_mapping_data_checking
 from ..api_error import GeonatureImportApiError
 
 from ..blueprint import blueprint
@@ -18,6 +15,7 @@ from ..wrappers import checker
 from ..send_mail import import_send_mail, import_send_mail_error
 
 import threading
+
 
 # import redis
 # from celery import Celery
@@ -43,16 +41,16 @@ def run_control(import_id, id_field_mapping, id_content_mapping, file_name, auth
         field_mapping_data_checking(import_id, id_field_mapping)
         content_mapping_data_checking(import_id, id_content_mapping)
         import_send_mail(
-            id_import=import_id, mail_to=recipients, file_name=file_name, step="check",
+            id_import=import_id, mail_to=recipients, file_name=file_name, step="check"
         )
         #
         return "Done"
     except Exception as e:
-        DB.session.query(TImports).filter(TImports.id_import ==
-                                          import_id).update({'in_error': True})
+        DB.session.query(TImports).filter(TImports.id_import == import_id).update(
+            {"in_error": True}
+        )
         DB.session.commit()
-        import_send_mail_error(
-            mail_to=recipients, file_name=file_name, error=e)
+        import_send_mail_error(mail_to=recipients, file_name=file_name, error=e)
         return "Error", 500
 
 
@@ -104,8 +102,9 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
             field_mapping_data_checking(import_id, id_field_mapping)
             content_mapping_data_checking(import_id, id_content_mapping)
         except:
-            DB.session.query(TImports).filter(
-                TImports.id_import == import_id).update({'in_error': True})
+            DB.session.query(TImports).filter(TImports.id_import == import_id).update(
+                {"in_error": True}
+            )
             DB.session.commit()
             raise
         return import_as_dict
