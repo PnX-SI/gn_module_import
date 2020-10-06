@@ -43,3 +43,13 @@ WHERE name_field='id_nomenclature_obs_technique';
 UPDATE gn_imports.dict_fields
 SET name_field='id_nomenclature_obs_technique'
 WHERE name_field='id_nomenclature_obs_meth';
+
+INSERT INTO gn_imports.cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
+('OCC_COMPORTEMENT', 'id_nomenclature_behaviour');
+
+UPDATE gn_imports.cor_synthese_nomenclature
+SET synthese_col='id_nomenclature_obs_technique'
+WHERE mnemonique='METH_OBS';
+
+DELETE FROM gn_imports.cor_synthese_nomenclature
+WHERE mnemonique='TECHNIQUE_OBS';
