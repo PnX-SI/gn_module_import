@@ -12,9 +12,14 @@ UPDATE gn_imports.t_mappings
 SET mapping_label = 'Synthèse GINCO'
 WHERE mapping_label = 'Synthèse GeoNature';
 
+UPDATE gn_imports.dict_fields
+SET mandatory = TRUE
+WHERE name_field IN ('id_nomenclature_source_status', 'observers', 'id_nomenclature_observation_status');
+
+
 DELETE FROM gn_imports.t_mappings_fields
 WHERE target_field in (
-     'id_nomenclature_sensitivity',
+    'id_nomenclature_sensitivity',
     'id_digitiser',
     'meta_v_taxref',
     'meta_create_date',

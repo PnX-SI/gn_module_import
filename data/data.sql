@@ -26,6 +26,7 @@ INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level)
 ,('Doublon','DUPLICATE_ENTITY_SOURCE_PK','Deux lignes du fichier ont la même clé primaire d’origine ; les clés primaires du fichier source ne peuvent pas être dupliquées.','ERROR')
 ,('Erreur de format','INVALID_REAL','Le format numérique réel est incorrect ou négatif dans une des colonnes de type REEL.','ERROR')
 ,('Géométrie','GEOMETRY_OUT_OF_BOX','Coordonnées géographiques en dehors du périmètre géographique de l''instance','ERROR')
+,('Géométrie','PROJECTION_ERROR','Erreur de projection pour les coordonnées fournies','ERROR')
 ,('Doublon','EXISTING_UUID','L''identifiant SINP fourni existe déjà en base.  Il faut en fournir une autre ou laisser la valeur vide pour une attribution automatique.','ERROR')
 ,('Erreur de référentiel','ID_DIGITISER_NOT_EXISITING','id_digitizer n''existe pas dans la table "t_roles"','ERROR')
 ,('Erreur de référentiel','INVALID_GEOM_CODE','Le code (maille/département/commune) n''existe pas dans le réferentiel géographique actuel','ERROR')
@@ -127,8 +128,8 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('meta_validation_date', 'Date de validation', '', '', 'timestamp without time zone', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 10, TRUE, NULL),
 	('validation_comment', 'Commentaire de validation', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 11, TRUE, NULL),
 	('id_nomenclature_obs_technique', 'Techniques d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 11, TRUE, NULL),
-	('id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, TRUE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE, 'Correspondance champs standard: statutObservation'),
-	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, TRUE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE, 'Correspondance champs standard: statutSource'),
+	('id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE, 'Correspondance champs standard: statutObservation'),
+	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE, 'Correspondance champs standard: statutSource'),
 	('reference_biblio', 'Référence bibliographique', '', '', 'character varying(255)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 14, TRUE, 'Correspondance champs standard: referenceBiblio')
 ;
 
@@ -157,6 +158,14 @@ INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
 -----------------
 ---PERMISSIONS---
 -----------------
+DELETE FROM gn_permissions.cor_role_action_filter_module_object
+WHERE id_object = (SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING');
+
+DELETE FROM gn_permissions.cor_object_module
+WHERE id_object = (SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING');
+
+DELETE FROM gn_permissions.t_objects
+WHERE code_object = 'MAPPING'; 
 
 INSERT INTO gn_permissions.t_objects
 (code_object, description_object)

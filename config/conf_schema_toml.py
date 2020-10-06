@@ -83,7 +83,7 @@ SRID = [{"name": "WGS84", "code": 4326}, {"name": "Lambert93", "code": 2154}]
 ENCODAGE = ["UTF-8"]
 
 
-MAX_FILE_SIZE = 500
+MAX_FILE_SIZE = 1000
 
 ALLOWED_EXTENSIONS = [".csv", ".geojson"]
 
@@ -120,8 +120,7 @@ DISPLAY_CHECK_BOX_MAPPED_FIELD = True
 
 
 class GnModuleSchemaConf(Schema):
-    LIST_COLUMNS_FRONTEND = fields.List(
-        fields.Dict, missing=DEFAULT_LIST_COLUMN)
+    LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, missing=DEFAULT_LIST_COLUMN)
     UPLOAD_DIRECTORY = fields.String(missing=UPLOAD_DIRECTORY)
     ARCHIVES_SCHEMA_NAME = fields.String(missing=ARCHIVES_SCHEMA_NAME)
     IMPORTS_SCHEMA_NAME = fields.String(missing=IMPORTS_SCHEMA_NAME)
@@ -135,19 +134,16 @@ class GnModuleSchemaConf(Schema):
     INVALID_CSV_NAME = fields.String(missing=INVALID_CSV_NAME)
     ALLOW_VALUE_MAPPING = fields.Boolean(missing=ALLOW_VALUE_MAPPING)
     DEFAULT_VALUE_MAPPING_ID = fields.Integer(missing=DEFAULT_VALUE_MAPPING_ID)
-    FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(
-        missing=False)
+    FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(missing=False)
     DISPLAY_MAPPED_VALUES = fields.Boolean(missing=False)
     DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(missing=True)
     MAX_LINE_LIMIT = fields.Integer(missing=MAX_LINE_LIMIT)
-    INSTANCE_BOUNDING_BOX = fields.List(
-        fields.Float, missing=INSTANCE_BOUNDING_BOX)
+    INSTANCE_BOUNDING_BOX = fields.List(fields.Float, missing=INSTANCE_BOUNDING_BOX)
     ENABLE_BOUNDING_BOX_CHECK = fields.Boolean(missing=True)
     ENABLE_SYNTHESE_UUID_CHECK = fields.Boolean(missing=True)
     DISPLAY_MAPPED_VALUES = fields.Boolean(missing=False)
     DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(missing=True)
-    ALLOW_MODIFY_DEFAULT_MAPPING = fields.Boolean(
-        missing=ALLOW_MODIFY_DEFAULT_MAPPING)
+    ALLOW_MODIFY_DEFAULT_MAPPING = fields.Boolean(missing=ALLOW_MODIFY_DEFAULT_MAPPING)
     ALLOW_FIELD_MAPPING = fields.Boolean(missing=ALLOW_FIELD_MAPPING)
     DEFAULT_FIELD_MAPPING_ID = fields.Integer(missing=DEFAULT_FIELD_MAPPING_ID)
     DISPLAY_MAPPED_FIELD = fields.Boolean(missing=False)

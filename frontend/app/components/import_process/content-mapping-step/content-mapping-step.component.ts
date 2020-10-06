@@ -59,7 +59,7 @@ export class ContentMappingStepComponent implements OnInit {
     private _router: Router,
     private _modalService: NgbModal,
     public cruvedStore: CruvedStoreService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(3);
@@ -85,12 +85,22 @@ export class ContentMappingStepComponent implements OnInit {
           this.generateContentForm();
           // fill the form
           if (this.stepData.id_content_mapping) {
-            const formValue = {
-              id_mapping: this.stepData.id_content_mapping,
-              cruved: this.stepData.cruvedMapping
-            };
-            this.mappingListForm.setValue(formValue);
-            this.fillMapping(this.stepData.id_content_mapping);
+
+            this._ds.getOneBibMapping(this.stepData.id_content_mapping).subscribe(mapping => {
+              let mapping_already_there = false;
+              this._cm.userContentMappings.forEach(curMapping => {
+                if (curMapping.id_mapping == this.stepData.id_content_mapping) {
+                  mapping_already_there = true;
+                }
+              });
+              if (!mapping_already_there) {
+                this._cm.userContentMappings.push(mapping)
+              }
+              this.mappingListForm.setValue(mapping);
+              this.fillMapping(this.stepData.id_content_mapping);
+
+            })
+
           }
         },
         error => {
@@ -156,10 +166,6 @@ export class ContentMappingStepComponent implements OnInit {
   onSelectChange(selectedVal, group, formControlName) {
     this.stepData.contentMappingInfo.map(ele => {
       if (ele.nomenc_abbr === group.nomenc_abbr) {
-        /*if (ele.nomenc_abbr == 'NAT_OBJ_GEO') {
-          console.log(ele.user_values.values);
-          console.log(selectedVal);
-        }*/
         ele.user_values.values = ele.user_values.values.filter(value => {
           return !(value.value == selectedVal.value);
         });
@@ -272,10 +278,6 @@ export class ContentMappingStepComponent implements OnInit {
         this.n_mappes -= contentMapping.user_values.values.filter(
           val => val.value
         ).length;
-        if (
-          contentMapping.user_values.values.filter(val => val.value).length > 0
-        )
-          console.log(contentMapping.user_values);
       }
       // at the end set the formgroup as pristine
       this.contentTargetForm.markAsPristine();

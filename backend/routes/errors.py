@@ -80,22 +80,22 @@ def get_csv(info_role, import_id):
         delimiter = get_delimiter(IMPORTS_SCHEMA_NAME, import_id)
         SEPARATOR_MAPPING = {"colon": ";", "tab": "\t", "space": " ", "comma": ","}
 
-        # save csv in upload directory
         conn = DB.engine.raw_connection()
         cur = conn.cursor()
-        logger.info("saving csv of invalid data in upload directory")
         invalid_data_proxy = get_invalid_data(
             cur, full_archive_table_name, full_imports_table_name, full_path, pk_name,
         )
-        logger.info(" -> csv saved")
         columns = []
         invalid_data = []
+        i = 0
         for row in invalid_data_proxy:
             temp = {}
             for col, val in row.items():
-                columns.append(col)
+                if i == 0:
+                    columns.append(col)
                 temp[col] = val
             invalid_data.append(temp)
+            i = i + 1
         return (full_file_name, invalid_data, columns, SEPARATOR_MAPPING.get(delimiter))
 
     except Exception as e:
