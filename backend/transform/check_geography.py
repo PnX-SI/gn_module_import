@@ -31,22 +31,22 @@ def x_y_to_wkb(x, y):
         return None
 
 
-def check_bounds_x_y(x, y, local_bounding_box: Polygon):
+def check_bounds_x_y(x, y, file_srid_bounding_box: Polygon):
     #  if is Nan (float): don't check if fit bounds
     # x and y are str
     if type(x) is float or type(y) is float:
         return True
     else:
         cur_wkt = Point(float(x), float(y))
-        return check_bound(cur_wkt, local_bounding_box)
+        return check_bound(cur_wkt, file_srid_bounding_box)
 
 
-def check_bounds_wkt(value, local_bounding_box: Polygon):
+def check_bounds_wkt(value, file_srid_bounding_box: Polygon):
     try:
         cur_wkt = wkt.loads(value)
         if not cur_wkt:
             return True
-        return check_bound(cur_wkt, local_bounding_box)
+        return check_bound(cur_wkt, file_srid_bounding_box)
     except Exception:
         return True
 
@@ -57,9 +57,9 @@ def check_multiple_code(val):
     return True
 
 
-def check_bound(wkt, local_bounding_box: Polygon):
+def check_bound(wkt, file_srid_bounding_box: Polygon):
     try:
-        return wkt.within(local_bounding_box)
+        return wkt.within(file_srid_bounding_box)
     except Exception:
         return True
 
@@ -72,10 +72,15 @@ def calculate_bounding_box(given_srid):
     return a shapely polygon of this BB with local coordq
     """
     xmin, ymin, xmax, ymax = CRS.from_epsg(given_srid).area_of_use.bounds
-    bounding_polygon_4326 = Polygon(
-        [[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]]
+    bounding_polygon_4326 = Polygon([
+        (xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)
+    ])
+
+    projection = Transformer.from_crs(
+        CRS(4326),
+        CRS(int(given_srid)),
+        always_xy=True
     )
-    projection = Transformer.from_crs(4326, int(given_srid))
     return transform(projection.transform, bounding_polygon_4326)
 
 
@@ -105,8 +110,7 @@ def check_geography(
     try:
 
         logger.info("CHECKING GEOGRAPHIC DATA:")
-
-        local_bounding_box = calculate_bounding_box(srid)
+        file_srid_bounding_box = calculate_bounding_box(srid)
         line_with_codes = []
 
         try:
@@ -149,7 +153,7 @@ def check_geography(
                 lambda row: check_bounds_x_y(
                     row[selected_columns["longitude"]],
                     row[selected_columns["latitude"]],
-                    local_bounding_box,
+                    file_srid_bounding_box,
                 ),
                 axis=1,
             )
@@ -185,7 +189,7 @@ def check_geography(
 
                 df["in_bounds"] = df.apply(
                     lambda row: check_bounds_wkt(
-                        row[selected_columns["WKT"]], local_bounding_box
+                        row[selected_columns["WKT"]], file_srid_bounding_box
                     ),
                     axis=1,
                 )

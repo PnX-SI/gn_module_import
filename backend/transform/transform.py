@@ -74,7 +74,7 @@ def data_cleaning(
     missing_val,
     def_count_val,
     cd_nom_list,
-    srid,
+    file_srid,
     local_srid,
     is_generate_uuid,
     schema_name,
@@ -152,7 +152,7 @@ def data_cleaning(
         )
         check_id_digitizer(df, selected_columns, synthese_info, import_id, schema_name)
         check_geography(
-            df, import_id, added_cols, selected_columns, srid, local_srid, schema_name
+            df, import_id, added_cols, selected_columns, file_srid, local_srid, schema_name
         )
         check_altitudes(
             df,
@@ -166,7 +166,6 @@ def data_cleaning(
 
     except Exception:
         raise
-
 
 def field_mapping_data_checking(import_id, id_mapping):
     """
@@ -303,18 +302,18 @@ def field_mapping_data_checking(import_id, id_mapping):
         partition = df.get_partition(i)
         partition_df = compute_df(partition)
         data_cleaning(
-            partition_df,
-            import_id,
-            selected_columns,
-            MISSING_VALUES,
-            DEFAULT_COUNT_VALUE,
-            cd_nom_list,
-            import_obj_dict["srid"],
-            local_srid,
-            is_generate_uuid,
-            IMPORTS_SCHEMA_NAME,
-            is_generate_alt,
-            PREFIX,
+            df=partition_df,
+            import_id=import_id,
+            selected_columns=selected_columns,
+            missing_val=MISSING_VALUES,
+            def_count_val=DEFAULT_COUNT_VALUE,
+            cd_nom_list=cd_nom_list,
+            file_srid=import_obj_dict["srid"],
+            local_srid=local_srid,
+            is_generate_uuid=is_generate_uuid,
+            schema_name=IMPORTS_SCHEMA_NAME,
+            is_generate_altitude=is_generate_alt,
+            prefix=PREFIX,
         )
 
         temp_cols = [
