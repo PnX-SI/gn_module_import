@@ -33,5 +33,9 @@ WHERE mnemonique='TECHNIQUE_OBS';
 
 
 INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level) VALUES 
-('inconsistency error','DEPTH_MIN_SUP_ALTI_MAX','profondeur min > profondeur max','ERROR')
+('Erreur d''incohérence','DEPTH_MIN_SUP_ALTI_MAX','profondeur min > profondeur max','ERROR')
+,('Erreur de référentiel','CD_HAB_NOT_FOUND','Le cdHab indiqué n’est pas dans le référentiel HABREF ; la valeur de cdHab n’a pu être trouvée dans la version courante du référentiel.','ERROR')
 ;
+
+UPDATE gn_imports.t_user_errors
+SET error_type = 'Erreur d''incohérence' WHERE "name" = 'CD_NOM_NOT_FOUND';
