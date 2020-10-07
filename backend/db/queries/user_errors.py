@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 from geonature.utils.env import DB
 from ..models import VUserImportsErrors
-
+from ...api_error import GeonatureImportApiError
 
 def get_error_from_code(error_code):
     query = """
@@ -12,7 +12,9 @@ def get_error_from_code(error_code):
     """
     result = DB.session.execute(text(query), {"error_code": error_code}).fetchone()
     if result is None:
-        raise "No error found for error_code {}".format(error_code)
+        raise GeonatureImportApiError(
+            message="No error found for error_code {}".format(error_code),
+        )
     return result
 
 
