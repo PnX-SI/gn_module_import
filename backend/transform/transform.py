@@ -12,7 +12,7 @@ from .check_uuid import check_uuid
 from .check_types import check_types
 from .check_other_fields import check_entity_source, check_id_digitizer, check_url
 from .check_counts import check_counts
-from .check_altitudes import check_altitudes
+from .check_min_max import check_min_max
 from .check_geography import check_geography
 from .check_duplicated import check_row_duplicates
 
@@ -154,13 +154,27 @@ def data_cleaning(
         check_geography(
             df, import_id, added_cols, selected_columns, srid, local_srid, schema_name
         )
-        check_altitudes(
+        # check altitudes
+        check_min_max(
             df,
             selected_columns,
             synthese_info,
             is_generate_altitude,
             import_id,
             schema_name,
+            "altitude_min",
+            "altitude_max",
+        )
+        # check depth
+        check_min_max(
+            df,
+            selected_columns,
+            synthese_info,
+            False,
+            import_id,
+            schema_name,
+            "depth_min",
+            "depth_max",
         )
         check_url(df, selected_columns, import_id)
 
