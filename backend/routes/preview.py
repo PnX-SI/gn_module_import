@@ -23,77 +23,80 @@ from ..blueprint import blueprint
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def get_valid_data(info_role, import_id):
-    try:
-        logger.info("Get valid data for preview")
+    # try:
+    from geonature.utils.env import DB
 
-        ARCHIVES_SCHEMA_NAME = blueprint.config["ARCHIVES_SCHEMA_NAME"]
-        IMPORTS_SCHEMA_NAME = blueprint.config["IMPORTS_SCHEMA_NAME"]
-        MODULE_CODE = blueprint.config["MODULE_CODE"]
+    # DB.session.rollback()
 
-        if import_id != "undefined":
+    logger.info("Get valid data for preview")
 
-            # get table name
-            table_name = set_imports_table_name(get_table_name(import_id))
+    ARCHIVES_SCHEMA_NAME = blueprint.config["ARCHIVES_SCHEMA_NAME"]
+    IMPORTS_SCHEMA_NAME = blueprint.config["IMPORTS_SCHEMA_NAME"]
+    MODULE_CODE = blueprint.config["MODULE_CODE"]
 
-            # set total user columns
-            # form_data = request.form.to_dict(flat=False)
-            id_mapping = get_id_field_mapping(import_id)
-            selected_cols = get_selected_columns(id_mapping)
+    if import_id != "undefined":
 
-            # added_cols = get_added_columns(id_mapping)
-            # TODO: remove added cols
-            added_cols = {
-                "the_geom_4326": "gn_the_geom_4326",
-                "the_geom_local": "gn_the_geom_local",
-                "the_geom_point": "gn_the_geom_point",
-                "id_area_attachment": "id_area_attachment",
-            }
+        # get table name
+        table_name = set_imports_table_name(get_table_name(import_id))
 
-            total_columns = set_total_columns(
-                selected_cols, added_cols, import_id, MODULE_CODE
-            )
+        # set total user columns
+        # form_data = request.form.to_dict(flat=False)
+        id_mapping = get_id_field_mapping(import_id)
+        selected_cols = get_selected_columns(id_mapping)
 
-            # get content mapping data
-            id_content_mapping = get_id_mapping(import_id)
-            selected_content = get_saved_content_mapping(id_content_mapping)
+        # added_cols = get_added_columns(id_mapping)
+        # TODO: remove added cols
+        added_cols = {
+            "the_geom_4326": "gn_the_geom_4326",
+            "the_geom_local": "gn_the_geom_local",
+            "the_geom_point": "gn_the_geom_point",
+            "id_area_attachment": "id_area_attachment",
+        }
 
-            # get valid data preview
-            valid_data_list = get_preview(
-                IMPORTS_SCHEMA_NAME, table_name, total_columns, selected_content
-            )
-
-            # get valid gejson
-            valid_bbox = get_valid_bbox(IMPORTS_SCHEMA_NAME, table_name)
-
-            # get n valid data
-            n_valid = get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name)
-
-            # get n invalid data
-            table_names = get_table_names(
-                ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id)
-            )
-            n_invalid = get_n_invalid_rows(
-                table_names["imports_full_table_name"])
-
-            logger.info("-> got valid data for preview")
-        else:
-            valid_data_list = "no data"
-            total_columns = ""
-
-        return (
-            {
-                # 'total_columns': total_columns,
-                "valid_data": valid_data_list,
-                "n_valid_data": n_valid,
-                "n_invalid_data": n_invalid,
-                "valid_bbox": valid_bbox,
-            },
-            200,
+        total_columns = set_total_columns(
+            selected_cols, added_cols, import_id, MODULE_CODE
         )
 
-    except Exception as e:
-        logger.error("*** SERVER ERROR WHEN GETTING VALID DATA")
-        logger.exception(e)
-        raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR when getting valid data", details=str(e)
+        # get content mapping data
+        id_content_mapping = get_id_mapping(import_id)
+        selected_content = get_saved_content_mapping(id_content_mapping)
+
+        # get valid data preview
+        valid_data_list = get_preview(
+            IMPORTS_SCHEMA_NAME, table_name, total_columns, selected_content
         )
+
+        # get valid gejson
+        valid_bbox = get_valid_bbox(IMPORTS_SCHEMA_NAME, table_name)
+
+        # get n valid data
+        n_valid = get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name)
+
+        # get n invalid data
+        table_names = get_table_names(
+            ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id)
+        )
+        n_invalid = get_n_invalid_rows(table_names["imports_full_table_name"])
+
+        logger.info("-> got valid data for preview")
+    else:
+        valid_data_list = "no data"
+        total_columns = ""
+
+    return (
+        {
+            # 'total_columns': total_columns,
+            "valid_data": valid_data_list,
+            "n_valid_data": n_valid,
+            "n_invalid_data": n_invalid,
+            "valid_bbox": valid_bbox,
+        },
+        200,
+    )
+
+    # except Exception as e:
+    #     logger.error("*** SERVER ERROR WHEN GETTING VALID DATA")
+    #     logger.exception(e)
+    #     raise GeonatureImportApiError(
+    #         message="INTERNAL SERVER ERROR when getting valid data", details=str(e)
+    #     )

@@ -2,14 +2,41 @@ import itertools
 from types import SimpleNamespace
 
 from flask import current_app
-from psycopg2.extensions import AsIs, QuotedString
+from sqlalchemy import exc
 from sqlalchemy.sql import text
-
+from psycopg2.errors import DuplicateColumn
 from geonature.utils.env import DB
 
 from collections import defaultdict
+from ...api_error import GeonatureImportApiError
 
 from ..models import TMappingsValues, TMappings
+
+
+def check_for_injection(param):
+    dieWords = ["DROP", "DELETE", "INSERT", "UPDATE", "#", "CREATE", "\\"]
+    for word in dieWords:
+        if word in param or word.lower() in param:
+            raise GeonatureImportApiError(
+                message="Tentative d'injection SQL", status_code=400
+            )
+
+
+def add_nomenclature_transformed_col(col_name, table_name):
+    col_name = f"_transformed_{col_name}"
+    check_for_injection(col_name)
+    query_add = f"""
+        ALTER TABLE gn_imports.{table_name}
+        ADD COLUMN {col_name} character varying(5);
+    """
+    try:
+        DB.session.execute(query_add)
+    except exc.ProgrammingError as e:
+        # pgcode of duplicateColumnError
+        if e.orig.pgcode == "42701":
+            DB.session.rollback()
+        else:
+            raise
 
 
 def get_nomenc_details(nomenclature_abb):
@@ -25,9 +52,7 @@ def get_nomenc_details(nomenclature_abb):
             FROM ref_nomenclatures.bib_nomenclatures_types
             WHERE mnemonique = :nomenc;
         """
-        return DB.session.execute(
-            text(query), {"nomenc": nomenclature_abb}
-        ).fetchone()
+        return DB.session.execute(text(query), {"nomenc": nomenclature_abb}).fetchone()
     except Exception:
         raise
 
@@ -65,15 +90,12 @@ def get_nomenc_values(nommenclature_abb):
 
 def get_nomenclature_label_from_id(id_nomenclature):
     query = "SELECT label_default FROM ref_nomenclatures.t_nomenclatures WHERE id_nomenclature = :id_nomenclature"
-    try:
-        data = DB.session.execute(
-            text(query), {"id_nomenclature": id_nomenclature}
-        ).fetchone()
-        if data:
-            return data.label_default
-        return data
-    except Exception:
-        return 'Nomenclature non trouvée'
+    data = DB.session.execute(
+        text(query), {"id_nomenclature": id_nomenclature}
+    ).fetchone()
+    if data:
+        return data.label_default
+    return data
 
 
 def get_nomenc_user_values(user_nomenc_col, schema_name, table_name):
@@ -111,8 +133,7 @@ def get_synthese_col(abb):
         LEFT JOIN ref_nomenclatures.bib_nomenclatures_types BNT ON BNT.mnemonique = CSN.mnemonique
         WHERE BNT.mnemonique = :abb;
     """
-    nomenc_synthese_name = DB.session.execute(
-        text(query), {"abb": abb}).fetchone()
+    nomenc_synthese_name = DB.session.execute(text(query), {"abb": abb}).fetchone()
     return nomenc_synthese_name.synthese_name
 
 
@@ -164,7 +185,7 @@ def get_nomenc_abb(id_nomenclature):
 def set_nomenclature_id(table_name, user_col, value, id_nomenclature):
     query = """
             UPDATE {schema_name}.{table_name}
-            SET {user_col} = :id_nomenclature
+            SET _transformed_{user_col} = :id_nomenclature
             WHERE {user_col} = :value
             """.format(
         schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
@@ -183,7 +204,7 @@ def find_row_with_nomenclatures_error(table_name, nomenclature_column, ids_accep
     query = """
     SELECT array_agg(gn_pk) as gn_pk, {nomenclature_column}
     FROM {schema_name}.{table_name}
-    WHERE {nomenclature_column} NOT IN :ids_accepted
+    WHERE _transformed_{nomenclature_column} NOT IN :ids_accepted
     GROUP BY {nomenclature_column}
     """.format(
         schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
@@ -209,8 +230,7 @@ def get_nomenc_abb_from_name(synthese_name):
 
 def set_default_value(abb):
     default_value = DB.session.execute(
-        text("SELECT gn_synthese.get_default_nomenclature_value(:abb)"), {
-            "abb": abb},
+        text("SELECT gn_synthese.get_default_nomenclature_value(:abb)"), {"abb": abb},
     ).fetchone()[0]
     if default_value is None:
         default_value = "NULL"
@@ -235,8 +255,7 @@ def set_default_nomenclature_id(table_name, nomenc_abb, user_col, id_types):
         user_col=user_col,
     )
     DB.session.execute(
-        text(query), {"default_value": default_value,
-                      "id_types": tuple(id_types)}
+        text(query), {"default_value": default_value, "id_types": tuple(id_types)}
     )
 
 
@@ -323,7 +342,7 @@ def exist_proof_check(
     query = """
         SELECT array_agg(gn_pk) as id_rows
         FROM {schema}.{table}
-        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature({field_proof}::integer) = '1' 
+        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature(_transformed_{field_proof}::integer) = '1' 
         """.format(
         schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table=table_name,
@@ -365,8 +384,7 @@ def dee_bluring_check(table_name, id_import, bluring_col):
         WHERE id_import = :id_import
         )
     """
-    ds_public = DB.session.execute(
-        query_ds_pub, {"id_import": id_import}).fetchone()
+    ds_public = DB.session.execute(query_ds_pub, {"id_import": id_import}).fetchone()
     if ds_public.code != "Pr":
         return None
     else:
@@ -395,7 +413,7 @@ def ref_biblio_check(table_name, field_statut_source, field_ref_biblio):
     query = """
         SELECT array_agg(gn_pk) as id_rows
         FROM {schema}.{table}
-        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature({field_statut_source}::integer) = 'Li' 
+        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature(_transformed_{field_statut_source}::integer) = 'Li' 
         """.format(
         schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table=table_name,

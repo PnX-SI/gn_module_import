@@ -126,20 +126,21 @@ def data_cleaning(
         )
         # check cd_nom
         check_referential(
-            df=df, 
-            selected_columns=selected_columns, 
+            df=df,
+            selected_columns=selected_columns,
             ref_list=cd_nom_list,
             import_id=import_id,
-            ref_col="cd_nom"
+            ref_col="cd_nom",
         )
         # check cd_hab
-        check_referential(
-            df=df, 
-            selected_columns=selected_columns, 
-            ref_list=cd_hab_list,
-            import_id=import_id,
-            ref_col="cd_hab"
-        )
+        if "cd_hab" in selected_columns.keys():
+            check_referential(
+                df=df,
+                selected_columns=selected_columns,
+                ref_list=cd_hab_list,
+                import_id=import_id,
+                ref_col="cd_hab",
+            )
         check_dates(df, selected_columns, synthese_info, import_id, schema_name)
         check_uuid(
             df,
@@ -542,7 +543,6 @@ def content_mapping_data_checking(import_id, id_mapping):
         )
 
         DB.session.commit()
-
         logger.info("-> t_imports updated from step 3 to step 4")
 
         return "content_mapping done", 200
