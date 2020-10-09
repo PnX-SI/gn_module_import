@@ -58,6 +58,14 @@ WHERE mnemonique='METH_OBS';
 DELETE FROM gn_imports.cor_synthese_nomenclature
 WHERE mnemonique='TECHNIQUE_OBS';
 
+-- Suppression des champs sample_number_proof et obs_technique (ancien) dans les mappings existants
+DELETE FROM gn_imports.t_mappings_fields
+WHERE target_field IN ('id_nomenclature_obs_technique','sample_number_proof');
+
+-- Remplacement de id_nomenclature_obs_meth vers id_nomenclature_obs_technique (nouveau) dans les mappings existants
+UPDATE gn_imports.t_mappings_fields
+SET target_field='id_nomenclature_obs_technique'
+WHERE target_field='id_nomenclature_obs_meth';
 
 INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level) VALUES 
 ('Erreur d''incohérence','DEPTH_MIN_SUP_ALTI_MAX','profondeur min > profondeur max','ERROR')
