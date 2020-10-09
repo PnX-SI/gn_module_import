@@ -15,7 +15,7 @@ def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
         select_part = []
         for key, value in total_columns.items():
             if key.startswith("id_nomenclature"):
-                value = f"_transformed_{value}"
+                value = f"_transformed_{key}_{value}"
             if key == "the_geom_4326":
                 key_type = "geometry(Geometry,4326)"
             elif key == "the_geom_point":
