@@ -21,6 +21,7 @@ from ...db.queries.nomenclatures import (
     set_default_value,
     get_mnemo,
     get_nomenc_values,
+    add_nomenclature_transformed_col,
 )
 from ...db.queries.user_errors import set_user_error
 from ...db.queries.utils import execute_query
@@ -38,7 +39,7 @@ class NomenclatureTransformer:
 
     Object attributes:
 
-    :table_name str: the name of the table where we proced the transformations
+    :table_name str: the name of the table where we proceed the transformations
     :nomenclature_fields list<dict>: Describe all the synthese nomenclature field and their column correspodance of the import table
     :raw_mapping_content list<dict>: The content mapping from the DB
     :formated_mapping_content list<dict>: 
@@ -54,13 +55,13 @@ class NomenclatureTransformer:
         """
         self.table_name = table_name
         self.id_mapping = id_mapping
-        self.nomenclature_fields = self.__set_nomenclature_fields(
-            selected_columns)
+        self.nomenclature_fields = self.__set_nomenclature_fields(selected_columns)
         self.formated_mapping_content = self.__formated_mapping_content(
             selected_columns
         )
         self.selected_columns = selected_columns
         self.accepted_id_nomencatures = self.__set_accepted_id_nomencatures()
+        self.__create_col_transformation()
 
     def __set_nomenclature_fields(self, selected_columns):
         nomenclature_fields = []
@@ -74,6 +75,14 @@ class NomenclatureTransformer:
                     }
                 )
         return nomenclature_fields
+
+    def __create_col_transformation(self):
+        """
+        Create a column for tranformed nomenclature (id_nomenclature) from code or label
+        for each provided nomenclature column
+        """
+        for nom in self.nomenclature_fields:
+            add_nomenclature_transformed_col(nom["file_col"], self.table_name)
 
     def __formated_mapping_content(self, selected_columns):
         """
@@ -172,8 +181,7 @@ class NomenclatureTransformer:
                             row[1],
                             ", ".join(nomenc_values_ids),
                             el["mnemonique_type"],
-                            get_mnemo(set_default_value(
-                                el["mnemonique_type"])),
+                            get_mnemo(set_default_value(el["mnemonique_type"])),
                         ),
                     )
                 else:
@@ -233,8 +241,7 @@ class NomenclatureTransformer:
                 id_import=id_import,
                 step="CONTENT_MAPPING",
                 error_code="INVALID_EXISTING_PROOF_VALUE",
-                col_name=self.selected_columns.get(
-                    "id_nomenclature_exist_proof"),
+                col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
                 id_rows=row_with_errors_proof.id_rows,
             )
 
