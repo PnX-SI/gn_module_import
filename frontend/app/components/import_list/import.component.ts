@@ -19,7 +19,7 @@ import { CsvExportService } from "../../services/csv-export.service";
   selector: "pnx-import",
   styleUrls: ["import.component.scss"],
   templateUrl: "import.component.html",
-  encapsulation: ViewEncapsulation.None
+  // encapsulation: ViewEncapsulation.None
 })
 export class ImportComponent implements OnInit {
   public deletedStep1;
@@ -50,8 +50,8 @@ export class ImportComponent implements OnInit {
     this.onImportList();
 
     clearInterval(this.interval)
-    this.interval = setInterval(() => { 
-      this.onImportList(); 
+    this.interval = setInterval(() => {
+      this.onImportList();
     }, 15000);
 
     this.search.valueChanges.subscribe(value => {

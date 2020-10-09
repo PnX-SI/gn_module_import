@@ -231,7 +231,7 @@ def cancel_import(info_role, import_id):
 
         DB.session.commit()
 
-        return {"message": "Import annulé"}, 200
+        return {"message": "Import supprimé"}, 200
     except Exception as e:
         DB.session.rollback()
         raise GeonatureImportApiError(
