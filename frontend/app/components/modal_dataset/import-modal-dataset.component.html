@@ -36,7 +36,7 @@
                 (click)="onSubmit(selectDatasetForm.value)"
                 [disabled]="selectDatasetForm.invalid"
                 mat-raised-button
-                class="button-success"
+                color="primary"
             >
                 Valider
             </button>
@@ -49,6 +49,7 @@
     mat-fab
     color="primary"
     (click)="onOpenModal(content)"
+    matTooltip="Nouvel import"
 >
     <mat-icon>add</mat-icon>
 </button>

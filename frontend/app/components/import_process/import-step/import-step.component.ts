@@ -9,177 +9,163 @@ import * as _ from "lodash";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
-  selector: "import-step",
-  styleUrls: ["import-step.component.scss"],
-  templateUrl: "import-step.component.html"
+    selector: "import-step",
+    styleUrls: ["import-step.component.scss"],
+    templateUrl: "import-step.component.html"
 })
 export class ImportStepComponent implements OnInit {
-  public isCollapsed = false;
-  public idImport: any;
-  importDataRes: any;
-  validData: any;
-  total_columns: any;
-  columns: any[] = [];
-  rows: any[] = [];
-  tableReady: boolean = false;
-  stepData: Step4Data;
-  nValidData: number;
-  nInvalidData: number;
-  validBbox: any;
-  public spinner: boolean = false;
-  displayErrors: boolean = false;
-  displayWarnings: boolean = false;
-  public nbLignes: string = "X";
+    public isCollapsed = false;
+    public idImport: any;
+    importDataRes: any;
+    validData: any;
+    total_columns: any;
+    columns: any[] = [];
+    tableReady: boolean = false;
+    stepData: Step4Data;
+    nValidData: number;
+    nInvalidData: number;
+    validBbox: any;
+    public spinner: boolean = false;
+    displayErrors: boolean = false;
+    displayWarnings: boolean = false;
+    public nbLignes: string = "X";
 
-  @ViewChild("modalRedir") modalRedir: any;
+    @ViewChild("modalRedir") modalRedir: any;
 
-  constructor(
-    private stepService: StepsService,
-    private _csvExport: CsvExportService,
-    private _router: Router,
-    private _route: ActivatedRoute,
-    private _ds: DataService,
-    private _modalService: NgbModal,
-    private _commonService: CommonService
-  ) { }
+    constructor(
+        private stepService: StepsService,
+        private _csvExport: CsvExportService,
+        private _router: Router,
+        private _route: ActivatedRoute,
+        private _ds: DataService,
+        private _modalService: NgbModal,
+        private _commonService: CommonService
+    ) { }
 
-  ngOnInit() {
-    // set idImport from URL (email) or from localstorage
-    this.idImport =
-      this._route.snapshot.paramMap.get("id_import") ||
-      this.stepService.getStepData(4).importId;
+    ngOnInit() {
+        // set idImport from URL (email) or from localstorage
+        this.idImport =
+            this._route.snapshot.paramMap.get("id_import") ||
+            this.stepService.getStepData(4).importId;
 
-    this.getValidData();
-    this._ds.getErrorList(this.idImport).subscribe(errorList => {
-      if (
-        errorList.errors.filter(error => error.error_level == "ERROR").length >
-        0
-      )
-        this.displayErrors = true;
-      if (
-        errorList.errors.filter(error => error.error_level == "WARNING")
-          .length > 0
-      )
-        this.displayWarnings = true;
-    });
+        this.getValidData();
+        this._ds.getErrorList(this.idImport).subscribe(errorList => {
+            if (
+                errorList.errors.filter(error => error.error_level == "ERROR").length >
+                0
+            )
+                this.displayErrors = true;
+            if (
+                errorList.errors.filter(error => error.error_level == "WARNING")
+                    .length > 0
+            )
+                this.displayWarnings = true;
+        });
 
-    // this._ds.sendEmail(this.stepData.importId).subscribe(
-    //   res => {
+        // this._ds.sendEmail(this.stepData.importId).subscribe(
+        //   res => {
 
-    //   },
-    //   error => {
-    //   }
-    // );
-  }
-
-  openErrorSheet(idImport) {
-    // this._router.navigate(["/import/errors", idImport]);
-    const newRelativeUrl = this._router.createUrlTree([
-      "/import/errors",
-      idImport
-    ]);
-    let baseUrl = window.location.href.replace(this._router.url, "");
-    window.open(baseUrl + newRelativeUrl, "_blank");
-
-    // <a target="_blank" [routerLink]="['/import/errors', idImport]">
-  }
-
-  onStepBack() {
-    if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
-      this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/2`]);
-    } else {
-      this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
-    }
-  }
-
-  onImport() {
-    this.spinner = true;
-    this._ds.importData(this.idImport).subscribe(
-      res => {
-        console.log(res);
-
-        this.spinner = false;
-        // res.mappings.forEach(mapping => {
-        //   if (mapping.temporary) {
-        //     this._ds.deleteMapping(mapping.id_mapping).subscribe();
+        //   },
+        //   error => {
         //   }
-        // });
+        // );
+    }
 
-        this.stepService.resetStepoer();
+    openErrorSheet(idImport) {
+        // this._router.navigate(["/import/errors", idImport]);
+        const newRelativeUrl = this._router.createUrlTree([
+            "/import/errors",
+            idImport
+        ]);
+        let baseUrl = window.location.href.replace(this._router.url, "");
+        window.open(baseUrl + newRelativeUrl, "_blank");
 
-        if (res.source_count > ModuleConfig.MAX_LINE_LIMIT) {
-          this.nbLignes = res.source_count;
-          this._modalService.open(this.modalRedir);
-        } else this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
-      },
-      error => {
-        this.spinner = false;
-        if (error.statusText === "Unknown Error") {
-          // show error message if no connexion
-          this._commonService.regularToaster(
-            "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-          );
+        // <a target="_blank" [routerLink]="['/import/errors', idImport]">
+    }
+
+    onStepBack() {
+        if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
+            this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/2`]);
         } else {
-          // show error message if other server error
-          this._commonService.regularToaster(
-            "error",
-            error.error.message + " = " + error.error.details
-          );
+            this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
         }
-      }
-    );
-  }
+    }
 
-  onRedirect() {
-    this._router.navigate([ModuleConfig.MODULE_URL]);
-  }
+    onImport() {
+        this.spinner = true;
+        this._ds.importData(this.idImport).subscribe(
+            res => {
+                console.log(res);
 
-  getValidData() {
-    this.spinner = true;
-    this._ds.getValidData(this.idImport).subscribe(
-      res => {
-        this.spinner = false;
-        this.total_columns = res.total_columns;
-        this.nValidData = res.n_valid_data;
-        this.nInvalidData = res.n_invalid_data;
-        this.validData = res.valid_data;
-        this.validBbox = res.valid_bbox;
-        if (this.validData != "no data") {
-          this.columns = [];
-          this.rows = [];
-          _.forEach(this.validData[0], el => {
-            let key = el.key;
-            let val = el.value;
-            this.columns.push({ name: key, prop: key });
-          });
+                this.spinner = false;
+                // res.mappings.forEach(mapping => {
+                //   if (mapping.temporary) {
+                //     this._ds.deleteMapping(mapping.id_mapping).subscribe();
+                //   }
+                // });
 
-          _.forEach(this.validData, data => {
-            let obj = {};
-            _.forEach(data, el => {
-              let key = el.key;
-              let val = el.value;
-              obj[key] = val;
-            });
-            this.rows.push(obj);
-          });
+                this.stepService.resetStepoer();
 
-          this.tableReady = true;
-        }
-      },
-      error => {
-        this.spinner = false;
-        if (error.statusText === "Unknown Error") {
-          // show error message if no connexion
-          this._commonService.regularToaster(
-            "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-          );
-        } else {
-          // show error message if other server error
-          this._commonService.regularToaster("error", error.error.message);
-        }
-      }
-    );
-  }
+                if (res.source_count > ModuleConfig.MAX_LINE_LIMIT) {
+                    this.nbLignes = res.source_count;
+                    this._modalService.open(this.modalRedir);
+                } else this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
+            },
+            error => {
+                this.spinner = false;
+                if (error.statusText === "Unknown Error") {
+                    // show error message if no connexion
+                    this._commonService.regularToaster(
+                        "error",
+                        "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+                    );
+                } else {
+                    // show error message if other server error
+                    this._commonService.regularToaster(
+                        "error",
+                        error.error.message + " = " + error.error.details
+                    );
+                }
+            }
+        );
+    }
+
+    onRedirect() {
+        this._router.navigate([ModuleConfig.MODULE_URL]);
+    }
+
+    getValidData() {
+        this.spinner = true;
+        this._ds.getValidData(this.idImport).subscribe(
+            res => {
+                this.spinner = false;
+                this.total_columns = res.total_columns;
+                this.nValidData = res.n_valid_data;
+                this.nInvalidData = res.n_invalid_data;
+                this.validData = res.valid_data;
+                this.validBbox = res.valid_bbox;
+                if (this.validData != "no data") {
+                    this.columns = [];
+                    this.columns = Object.keys(this.validData[0]).map(el => {
+                        return { prop: el, name: el }
+
+                    });
+                    this.tableReady = true;
+                }
+            },
+            error => {
+                this.spinner = false;
+                if (error.statusText === "Unknown Error") {
+                    // show error message if no connexion
+                    this._commonService.regularToaster(
+                        "error",
+                        "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+                    );
+                } else {
+                    // show error message if other server error
+                    this._commonService.regularToaster("error", error.error.message);
+                }
+            }
+        );
+    }
 }

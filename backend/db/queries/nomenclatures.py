@@ -23,7 +23,6 @@ def check_for_injection(param):
 
 
 def add_nomenclature_transformed_col(col_name, table_name):
-    col_name = f"_transformed_{col_name}"
     check_for_injection(col_name)
     query_add = f"""
         ALTER TABLE gn_imports.{table_name}
@@ -31,6 +30,7 @@ def add_nomenclature_transformed_col(col_name, table_name):
     """
     try:
         DB.session.execute(query_add)
+        DB.session.commit()
     except exc.ProgrammingError as e:
         # pgcode of duplicateColumnError
         if e.orig.pgcode == "42701":
@@ -182,15 +182,16 @@ def get_nomenc_abb(id_nomenclature):
     return nomenc_abb.abb
 
 
-def set_nomenclature_id(table_name, user_col, value, id_nomenclature):
+def set_nomenclature_id(table_name, user_col, target_col, value, id_nomenclature):
     query = """
             UPDATE {schema_name}.{table_name}
-            SET _transformed_{user_col} = :id_nomenclature
+            SET {target_col} = :id_nomenclature
             WHERE {user_col} = :value
             """.format(
         schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table_name=table_name,
         user_col=user_col,
+        target_col=target_col
     )
     DB.session.execute(
         text(query), {"id_nomenclature": id_nomenclature, "value": value}
@@ -204,7 +205,7 @@ def find_row_with_nomenclatures_error(table_name, nomenclature_column, ids_accep
     query = """
     SELECT array_agg(gn_pk) as gn_pk, {nomenclature_column}
     FROM {schema_name}.{table_name}
-    WHERE _transformed_{nomenclature_column} NOT IN :ids_accepted
+    WHERE {nomenclature_column} NOT IN :ids_accepted
     GROUP BY {nomenclature_column}
     """.format(
         schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],

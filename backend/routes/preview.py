@@ -63,7 +63,7 @@ def get_valid_data(info_role, import_id):
 
         # get valid data preview
         valid_data_list = get_preview(
-            IMPORTS_SCHEMA_NAME, table_name, total_columns, selected_content
+            IMPORTS_SCHEMA_NAME, table_name, total_columns, selected_content, selected_cols
         )
 
         # get valid gejson
@@ -82,7 +82,6 @@ def get_valid_data(info_role, import_id):
     else:
         valid_data_list = "no data"
         total_columns = ""
-
     return (
         {
             # 'total_columns': total_columns,

@@ -515,7 +515,9 @@ def content_mapping_data_checking(import_id, id_mapping):
         selected_columns = get_selected_columns(import_object.id_field_mapping)
         table_name = set_imports_table_name(get_table_name(import_id))
         # build nomenclature_transformer service
-        nomenclature_transformer = NomenclatureTransformer(
+        nomenclature_transformer = NomenclatureTransformer()
+        
+        nomenclature_transformer.init(
             id_mapping, selected_columns, table_name
         )
 

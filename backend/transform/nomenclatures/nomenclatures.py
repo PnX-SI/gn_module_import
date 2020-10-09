@@ -48,41 +48,46 @@ class NomenclatureTransformer:
         exemple : {'objdenbr': '['84', '83', '82', '81']'}
     """
 
-    def __init__(self, id_mapping, selected_columns, table_name):
+    def __init__(self):
+        pass
+
+
+    def init(self, id_mapping, selected_columns, table_name):
         """
         :params id_mapping int: the id_mapping
         :params selected_columns: colums of the field mapping corresponding of the import
         """
         self.table_name = table_name
         self.id_mapping = id_mapping
-        self.nomenclature_fields = self.__set_nomenclature_fields(selected_columns)
+        self.nomenclature_fields = self.set_nomenclature_fields(selected_columns)
         self.formated_mapping_content = self.__formated_mapping_content(
             selected_columns
         )
         self.selected_columns = selected_columns
         self.accepted_id_nomencatures = self.__set_accepted_id_nomencatures()
-        self.__create_col_transformation()
+        self.__create_col_transformation(self.nomenclature_fields)
 
-    def __set_nomenclature_fields(self, selected_columns):
+    def set_nomenclature_fields(self, selected_columns)->list:
         nomenclature_fields = []
         for row in get_SINP_synthese_cols_with_mnemonique():
             if row["synthese_name"] in selected_columns:
                 nomenclature_fields.append(
                     {
                         "synthese_col": row["synthese_name"],
-                        "file_col": selected_columns[row["synthese_name"]],
+                        "user_col": selected_columns[row['synthese_name']],
+                        "transformed_col": f"_transformed_{row['synthese_name']}_{selected_columns[row['synthese_name']]}",
                         "mnemonique_type": row["mnemonique_type"],
                     }
                 )
         return nomenclature_fields
 
-    def __create_col_transformation(self):
+    def __create_col_transformation(self, nomenclature_fields):
         """
         Create a column for tranformed nomenclature (id_nomenclature) from code or label
         for each provided nomenclature column
         """
-        for nom in self.nomenclature_fields:
-            add_nomenclature_transformed_col(nom["file_col"], self.table_name)
+        for nom in nomenclature_fields:
+            add_nomenclature_transformed_col(nom["transformed_col"], self.table_name)
 
     def __formated_mapping_content(self, selected_columns):
         """
@@ -98,6 +103,7 @@ class NomenclatureTransformer:
                     "id_nomenclature": id_nomenclature,
                     "user_values": mapped_values,
                     "user_col": selected_columns[synthese_name],
+                    "transformed_col": f"_transformed_{synthese_name}_{selected_columns[synthese_name]}"
                 }
                 formated_mapping_content.append(d)
         return formated_mapping_content
@@ -118,18 +124,18 @@ class NomenclatureTransformer:
             accepted_id_nom.append(
                 {
                     "mnemonique_type": row.mnemnonique,
-                    "user_col": self.__find_file_col(row.mnemnonique),
+                    "transformed_col": self.__find_transformed_col(row.mnemnonique),
                     "accepted_id_nomenclature": row.id_nomenclatures,
                 }
             )
         return accepted_id_nom
 
-    def __find_file_col(self, mnemonique_type):
-        """get col_name from mnemonique_type"""
+    def __find_transformed_col(self, mnemonique_type):
+        """get transformed_col from mnemonique_type"""
         file_col_name = None
         for col in self.nomenclature_fields:
             if col["mnemonique_type"] == mnemonique_type:
-                file_col_name = col["file_col"]
+                file_col_name = col["transformed_col"]
                 break
         return file_col_name
 
@@ -137,12 +143,14 @@ class NomenclatureTransformer:
     def set_nomenclature_ids(self):
         try:
             for element in self.formated_mapping_content:
+                print(element)
                 for val in element["user_values"]:
                     set_nomenclature_id(
-                        self.table_name,
-                        element["user_col"],
-                        val,
-                        str(element["id_nomenclature"]),
+                        table_name=self.table_name,
+                        user_col=element["user_col"],
+                        target_col=element["transformed_col"],
+                        value=val,
+                        id_nomenclature=str(element["id_nomenclature"]),
                     )
                     # DB.session.flush()
 
@@ -156,9 +164,10 @@ class NomenclatureTransformer:
         Detect nomenclature which not check with the given value mapping
         """
         for el in self.accepted_id_nomencatures:
+            print(el)
             rows_with_err = find_row_with_nomenclatures_error(
                 self.table_name,
-                el["user_col"],
+                el["transformed_col"],
                 list(map(lambda id: str(id), el["accepted_id_nomenclature"])),
             )
             for row in rows_with_err:

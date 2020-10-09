@@ -82,7 +82,8 @@
                 *ngIf="tableReady"
                 #table
                 class="material striped"
-                [rows]="rows"
+                [rows]="validData"
+                [columns]="columns"
                 [columnMode]="'force'"
                 [headerHeight]="35"
                 [scrollbarH]="true"
@@ -91,12 +92,12 @@
                 [limit]="15"
                 [selectionType]='single'
             >
-                <ngx-datatable-column
+                <!-- <ngx-datatable-column
                     *ngFor="let col of columns"
                     name="{{col.name}}"
                     prop="{{col.prop}}"
                 >
-                </ngx-datatable-column>
+                </ngx-datatable-column> -->
             </ngx-datatable>
 
             <br />
@@ -106,6 +107,7 @@
                     (click)="onStepBack()"
                     class="d-flex justify-content-center align-content-between"
                     mat-raised-button
+                    color="primary"
                 >
                     <mat-icon>navigate_before</mat-icon>
                     Précédent
