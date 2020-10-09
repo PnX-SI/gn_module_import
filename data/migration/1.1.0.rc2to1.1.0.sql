@@ -42,7 +42,7 @@ INSERT INTO gn_imports.dict_fields (name_field, fr_label, eng_label, desc_field,
   ),
 
 DELETE FROM gn_imports.dict_fields
-WHERE name_field='id_nomenclature_obs_technique';
+WHERE name_field IN ('id_nomenclature_obs_technique', 'sample_number_proof');
 
 UPDATE gn_imports.dict_fields
 SET name_field='id_nomenclature_obs_technique'
