@@ -107,7 +107,6 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('precision', 'Précision du pointage (m)', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 24, TRUE, 'Correspondance champs standard: precisionGeometrie'),	
 	('cd_hab', 'Code habitat', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 25, TRUE, 'Correspondance champs standard: CodeHabitatValue'),
 	('grp_method', '', '', '', 'character varying(255)', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 26, TRUE, 'Correspondance champs standard: methodeRegroupement'),
-
 	('nom_cite', 'Nom du taxon cité', '', '', 'character varying(1000)', TRUE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 1, TRUE, 'Correspondance champs standard: nomCite'),
 	('cd_nom', 'Cd nom taxref', '', '', 'integer', TRUE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 2, TRUE, 'Code Taxref de l''espèce observé Correspondance champs standard: cdNom'),
 	('id_nomenclature_obs_technique', 'Méthode d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 3, TRUE, 'Correspondance champs standard: obsMethode'),
@@ -130,7 +129,6 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('id_nomenclature_exist_proof', 'Existance d''une preuve', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 4, TRUE, 'Correspondance champs standard: preuveExistante'),
 	('digital_proof', 'Preuve numérique', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 5, TRUE, 'Correspondance champs standard: preuveNumerique'),
 	('non_digital_proof', 'Preuve non-numérique', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 6, TRUE, 'Correspondance champs standard: preuveNonNumerique'),
-	('sample_number_proof', 'Identifiant de l''échantillon preuve', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 7, TRUE, NULL),
 	('id_nomenclature_valid_status', 'Statut de validation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 8, TRUE, NULL),
 	('validator', 'Validateur', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 9, TRUE, 'Correspondance champs standard: validateur'),
 	('meta_validation_date', 'Date de validation', '', '', 'timestamp without time zone', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 10, TRUE, NULL),
