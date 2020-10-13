@@ -143,7 +143,6 @@ class NomenclatureTransformer:
     def set_nomenclature_ids(self):
         try:
             for element in self.formated_mapping_content:
-                print(element)
                 for val in element["user_values"]:
                     set_nomenclature_id(
                         table_name=self.table_name,
@@ -164,7 +163,6 @@ class NomenclatureTransformer:
         Detect nomenclature which not check with the given value mapping
         """
         for el in self.accepted_id_nomencatures:
-            print(el)
             rows_with_err = find_row_with_nomenclatures_error(
                 self.table_name,
                 el["transformed_col"],
@@ -241,7 +239,7 @@ class NomenclatureTransformer:
         # Proof checker
         row_with_errors_proof = exist_proof_check(
             self.table_name,
-            self.selected_columns.get("id_nomenclature_exist_proof"),
+            self.__find_transformed_col('PREUVE_EXIST'),
             self.selected_columns.get("digital_proof"),
             self.selected_columns.get("non_digital_proof"),
         )
@@ -258,14 +256,14 @@ class NomenclatureTransformer:
         row_with_errors_blurr = dee_bluring_check(
             self.table_name,
             id_import,
-            self.selected_columns.get("id_nomenclature_blurring"),
+            self.__find_transformed_col('DEE_FLOU'),
         )
         if row_with_errors_blurr and row_with_errors_blurr.id_rows:
             set_user_error(
                 id_import=id_import,
                 step="CONTENT_MAPPING",
                 error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
-                col_name=self.selected_columns.get("id_nomenclature_blurring"),
+                col_name= self.selected_columns.get("id_nomenclature_blurring"),
                 id_rows=row_with_errors_blurr.id_rows,
                 comment="Le champ dEEFloutage doit être remplit si le jeu de données est privé",
             )
@@ -273,9 +271,7 @@ class NomenclatureTransformer:
         #  literature checker
         row_with_errors_bib = ref_biblio_check(
             self.table_name,
-            field_statut_source=self.selected_columns.get(
-                "id_nomenclature_source_status"
-            ),
+            field_statut_source=self.__find_transformed_col('STATUT_SOURCE'),
             field_ref_biblio=self.selected_columns.get("reference_biblio"),
         )
         if row_with_errors_bib and row_with_errors_bib.id_rows:

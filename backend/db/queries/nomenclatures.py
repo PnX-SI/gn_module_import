@@ -343,7 +343,7 @@ def exist_proof_check(
     query = """
         SELECT array_agg(gn_pk) as id_rows
         FROM {schema}.{table}
-        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature(_transformed_{field_proof}::integer) = '1' 
+        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature({field_proof}::integer) = '1' 
         """.format(
         schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table=table_name,
@@ -414,7 +414,7 @@ def ref_biblio_check(table_name, field_statut_source, field_ref_biblio):
     query = """
         SELECT array_agg(gn_pk) as id_rows
         FROM {schema}.{table}
-        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature(_transformed_{field_statut_source}::integer) = 'Li' 
+        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature({field_statut_source}::integer) = 'Li' 
         """.format(
         schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table=table_name,
