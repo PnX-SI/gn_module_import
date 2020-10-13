@@ -5,14 +5,14 @@ from geonature.utils.env import DB
 from ..db.queries.load_to_synthese import get_synthese_info
 from ..db.queries.utils import is_cd_nom_required
 
-from .check_cd_nom import check_cd_nom
+from .check_referential import check_referential
 from .check_dates import check_dates
 from .check_missing import format_missing, check_missing
 from .check_uuid import check_uuid
 from .check_types import check_types
 from .check_other_fields import check_entity_source, check_id_digitizer, check_url
 from .check_counts import check_counts
-from .check_altitudes import check_altitudes
+from .check_min_max import check_min_max
 from .check_geography import check_geography
 from .check_duplicated import check_row_duplicates
 
@@ -44,13 +44,10 @@ from ..db.queries.save_mapping import (
 )
 
 from ..db.queries.taxonomy import get_cd_nom_list
-
+from ..db.queries.habref import get_cd_hab_list
 from ..db.queries.user_errors import delete_user_errors
-
 from ..db.queries.geometries import get_local_srid
-
 from ..utils.clean_names import *
-
 from ..upload.upload_errors import *
 
 
@@ -74,7 +71,12 @@ def data_cleaning(
     missing_val,
     def_count_val,
     cd_nom_list,
+<<<<<<< HEAD
     file_srid,
+=======
+    cd_hab_list,
+    srid,
+>>>>>>> origin/nomenclature
     local_srid,
     is_generate_uuid,
     schema_name,
@@ -126,9 +128,23 @@ def data_cleaning(
         check_types(
             df, selected_columns, synthese_info, missing_val, schema_name, import_id,
         )
-        check_cd_nom(
-            df, selected_columns, missing_val, cd_nom_list, schema_name, import_id
+        # check cd_nom
+        check_referential(
+            df=df,
+            selected_columns=selected_columns,
+            ref_list=cd_nom_list,
+            import_id=import_id,
+            ref_col="cd_nom",
         )
+        # check cd_hab
+        if "cd_hab" in selected_columns.keys():
+            check_referential(
+                df=df,
+                selected_columns=selected_columns,
+                ref_list=cd_hab_list,
+                import_id=import_id,
+                ref_col="cd_hab",
+            )
         check_dates(df, selected_columns, synthese_info, import_id, schema_name)
         check_uuid(
             df,
@@ -154,13 +170,27 @@ def data_cleaning(
         check_geography(
             df, import_id, added_cols, selected_columns, file_srid, local_srid, schema_name
         )
-        check_altitudes(
+        # check altitudes
+        check_min_max(
             df,
             selected_columns,
             synthese_info,
             is_generate_altitude,
             import_id,
             schema_name,
+            "altitude_min",
+            "altitude_max",
+        )
+        # check depth
+        check_min_max(
+            df,
+            selected_columns,
+            synthese_info,
+            False,
+            import_id,
+            schema_name,
+            "depth_min",
+            "depth_max",
         )
         check_url(df, selected_columns, import_id)
 
@@ -294,6 +324,7 @@ def field_mapping_data_checking(import_id, id_mapping):
 
     # get cd_nom list
     cd_nom_list = get_cd_nom_list()
+    cd_hab_list = get_cd_hab_list()
 
     # TRANSFORM (data checking and cleaning)
     # start process (transform and load)
@@ -302,6 +333,7 @@ def field_mapping_data_checking(import_id, id_mapping):
         partition = df.get_partition(i)
         partition_df = compute_df(partition)
         data_cleaning(
+<<<<<<< HEAD
             df=partition_df,
             import_id=import_id,
             selected_columns=selected_columns,
@@ -314,6 +346,21 @@ def field_mapping_data_checking(import_id, id_mapping):
             schema_name=IMPORTS_SCHEMA_NAME,
             is_generate_altitude=is_generate_alt,
             prefix=PREFIX,
+=======
+            partition_df,
+            import_id,
+            selected_columns,
+            MISSING_VALUES,
+            DEFAULT_COUNT_VALUE,
+            cd_nom_list,
+            cd_hab_list,
+            import_obj_dict["srid"],
+            local_srid,
+            is_generate_uuid,
+            IMPORTS_SCHEMA_NAME,
+            is_generate_alt,
+            PREFIX,
+>>>>>>> origin/nomenclature
         )
 
         temp_cols = [
@@ -486,10 +533,11 @@ def content_mapping_data_checking(import_id, id_mapping):
         selected_columns = get_selected_columns(import_object.id_field_mapping)
         table_name = set_imports_table_name(get_table_name(import_id))
         # build nomenclature_transformer service
-        nomenclature_transformer = NomenclatureTransformer(
+        nomenclature_transformer = NomenclatureTransformer()
+        
+        nomenclature_transformer.init(
             id_mapping, selected_columns, table_name
         )
-
         # with the mapping given, find all the corresponding nomenclatures
         nomenclature_transformer.set_nomenclature_ids()
 
@@ -514,7 +562,6 @@ def content_mapping_data_checking(import_id, id_mapping):
         )
 
         DB.session.commit()
-
         logger.info("-> t_imports updated from step 3 to step 4")
 
         return "content_mapping done", 200

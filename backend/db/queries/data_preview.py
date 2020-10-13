@@ -2,14 +2,15 @@ from geonature.utils.env import DB
 from ..models import TImports
 
 
-def get_valid_user_data(schema_name, table_name, limit):
+def get_valid_user_data(schema_name, table_name, selected_cols, limit):
     try:
         preview = DB.session.execute("""
-                SELECT *
+                SELECT {cols}
                 FROM {schema_name}.{table_name}
                 WHERE gn_is_valid = 'True'
                 LIMIT {limit};        
                 """.format(
+                    cols=",".join([str(target) for source, target in selected_cols.items()]),
                     schema_name = schema_name,
                     table_name = table_name,
                     limit = limit

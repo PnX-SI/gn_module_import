@@ -5,7 +5,10 @@ from geonature.utils.env import DB
 from geonature.core.gn_permissions import decorators as permissions
 from ..db.models import TImports
 
-from ..transform.transform import field_mapping_data_checking, content_mapping_data_checking
+from ..transform.transform import (
+    field_mapping_data_checking,
+    content_mapping_data_checking,
+)
 from ..api_error import GeonatureImportApiError
 
 from ..blueprint import blueprint
@@ -66,6 +69,8 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
     """
     import_obj = DB.session.query(TImports).get(import_id)
     import_as_dict = import_obj.as_dict(True)
+    import_obj.id_content_mapping = int(id_content_mapping)
+    DB.session.commit()
     if import_obj.source_count > current_app.config["IMPORT"]["MAX_LINE_LIMIT"]:
         import_obj.processing = True
         DB.session.commit()

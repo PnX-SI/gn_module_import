@@ -57,7 +57,7 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'methgrp','id_nomenclature_grp_typ',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'nomcite','nom_cite',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'cdnom','cd_nom',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'obsmeth','id_nomenclature_obs_meth',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'obsmeth','id_nomenclature_obs_technique',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','id_nomenclature_bio_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'ocetatbio','id_nomenclature_bio_condition',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'ocnat','id_nomenclature_naturalness',true,false),
