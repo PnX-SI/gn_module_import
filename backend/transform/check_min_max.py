@@ -51,8 +51,6 @@ def check_min_max(
         if calcul is False:
 
             if len(fields_min_max) == 2:
-                print('PASSE LA############################')
-                print(min_col)
                 # check max >= min
                 df["temp"] = ""
                 df["temp"] = df.apply(

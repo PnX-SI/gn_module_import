@@ -38,6 +38,9 @@ def get_preview(schema_name, table_name, total_columns, selected_content, select
                     source=user_file_col,
                     target=nomenclature_col_dict["synthese_col"]
                 )
+                print(new_dict_key)
+                print(value)
+                print(get_nomenclature_label_from_id(value))
                 row_dict[new_dict_key] = get_nomenclature_label_from_id(value)
                 key_to_remove.append(nomenclature_col_dict["user_col"])
             else:

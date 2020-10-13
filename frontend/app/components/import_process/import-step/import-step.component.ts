@@ -144,14 +144,16 @@ export class ImportStepComponent implements OnInit {
                 this.nInvalidData = res.n_invalid_data;
                 this.validData = res.valid_data;
                 this.validBbox = res.valid_bbox;
-                if (this.validData != "no data") {
-                    this.columns = [];
+                this.columns = [];
+
+                if (this.validData.length > 0) {
                     this.columns = Object.keys(this.validData[0]).map(el => {
                         return { prop: el, name: el }
 
                     });
-                    this.tableReady = true;
                 }
+                this.tableReady = true;
+
             },
             error => {
                 this.spinner = false;

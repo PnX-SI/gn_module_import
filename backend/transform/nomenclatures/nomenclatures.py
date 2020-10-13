@@ -151,8 +151,6 @@ class NomenclatureTransformer:
                         value=val,
                         id_nomenclature=str(element["id_nomenclature"]),
                     )
-                    # DB.session.flush()
-
             DB.session.commit()
         except Exception:
             DB.session.rollback()
