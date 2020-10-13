@@ -23,7 +23,9 @@ from sqlalchemy import inspect
 
 def get_preview(schema_name, table_name, total_columns, selected_content, selected_cols):
     nomenclature_fields = NomenclatureTransformer().set_nomenclature_fields(selected_cols)
-    data_preview = get_valid_user_data(schema_name, table_name, 100)
+    for field in nomenclature_fields:
+        total_columns[field['synthese_col']] = field['transformed_col']
+    data_preview = get_valid_user_data(schema_name, table_name, total_columns, 100)
     valid_data_list = []
     # build a dict from rowProxy
     for row in data_preview:
@@ -38,9 +40,6 @@ def get_preview(schema_name, table_name, total_columns, selected_content, select
                     source=user_file_col,
                     target=nomenclature_col_dict["synthese_col"]
                 )
-                print(new_dict_key)
-                print(value)
-                print(get_nomenclature_label_from_id(value))
                 row_dict[new_dict_key] = get_nomenclature_label_from_id(value)
                 key_to_remove.append(nomenclature_col_dict["user_col"])
             else:
