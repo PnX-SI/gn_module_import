@@ -71,12 +71,7 @@ def data_cleaning(
     missing_val,
     def_count_val,
     cd_nom_list,
-<<<<<<< HEAD
     file_srid,
-=======
-    cd_hab_list,
-    srid,
->>>>>>> origin/nomenclature
     local_srid,
     is_generate_uuid,
     schema_name,
@@ -333,7 +328,6 @@ def field_mapping_data_checking(import_id, id_mapping):
         partition = df.get_partition(i)
         partition_df = compute_df(partition)
         data_cleaning(
-<<<<<<< HEAD
             df=partition_df,
             import_id=import_id,
             selected_columns=selected_columns,
@@ -346,21 +340,6 @@ def field_mapping_data_checking(import_id, id_mapping):
             schema_name=IMPORTS_SCHEMA_NAME,
             is_generate_altitude=is_generate_alt,
             prefix=PREFIX,
-=======
-            partition_df,
-            import_id,
-            selected_columns,
-            MISSING_VALUES,
-            DEFAULT_COUNT_VALUE,
-            cd_nom_list,
-            cd_hab_list,
-            import_obj_dict["srid"],
-            local_srid,
-            is_generate_uuid,
-            IMPORTS_SCHEMA_NAME,
-            is_generate_alt,
-            PREFIX,
->>>>>>> origin/nomenclature
         )
 
         temp_cols = [

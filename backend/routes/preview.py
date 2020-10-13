@@ -10,6 +10,7 @@ from ..db.queries.user_table_queries import (
     get_n_invalid_rows,
     get_valid_bbox,
 )
+
 from ..db.queries.metadata import get_id_field_mapping, get_id_mapping
 from ..db.queries.nomenclatures import get_saved_content_mapping
 from ..db.queries.save_mapping import get_selected_columns
@@ -23,17 +24,12 @@ from ..blueprint import blueprint
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def get_valid_data(info_role, import_id):
-    # try:
-    from geonature.utils.env import DB
-
-    # DB.session.rollback()
 
     logger.info("Get valid data for preview")
 
     ARCHIVES_SCHEMA_NAME = blueprint.config["ARCHIVES_SCHEMA_NAME"]
     IMPORTS_SCHEMA_NAME = blueprint.config["IMPORTS_SCHEMA_NAME"]
     MODULE_CODE = blueprint.config["MODULE_CODE"]
-
 
    # get table name
     table_name = set_imports_table_name(get_table_name(import_id))
@@ -44,7 +40,6 @@ def get_valid_data(info_role, import_id):
     selected_cols = get_selected_columns(id_mapping)
 
     # added_cols = get_added_columns(id_mapping)
-    # TODO: remove added cols
     added_cols = {
         "the_geom_4326": "gn_the_geom_4326",
         "the_geom_local": "gn_the_geom_local",

@@ -24,13 +24,14 @@ def set_altitudes(
             added_cols = {}
             # altitude_min
 
-            create_col_name(df, added_cols, "altitude_min", import_id)
+            # create_col_name(df, added_cols, "altitude_min", import_id)
+            df['gn_altitude_min'] = ""
             create_column(
-                full_table_name=full_table_name, alt_col=added_cols["altitude_min"]
+                full_table_name=full_table_name, alt_col="gn_altitude_min"
             )
 
             if "altitude_min" not in selected_columns.keys():
-                original_alt_col = added_cols["altitude_min"]
+                original_alt_col = "gn_altitude_min"
                 generate_type = "generate_all"
             else:
                 original_alt_col = selected_columns["altitude_min"]
@@ -40,7 +41,7 @@ def set_altitudes(
                 type_alt="min",
                 schema=schema_name,
                 table=table_name,
-                alt_col=added_cols["altitude_min"],
+                alt_col="gn_altitude_min",
                 original_alt_col=original_alt_col,
                 table_pk=index_col,
                 geom_col=the_geom_local_col,
@@ -49,13 +50,14 @@ def set_altitudes(
 
             # altitude_max
 
-            create_col_name(df, added_cols, "altitude_max", import_id)
+            # create_col_name(df, added_cols, "altitude_max", import_id)
+            df['gn_altitude_min'] = ""
             create_column(
                 full_table_name=full_table_name, alt_col=added_cols["altitude_max"]
             )
 
             if "altitude_max" not in selected_columns.keys():
-                original_alt_col = added_cols["altitude_max"]
+                original_alt_col = "gn_altitude_max"
             else:
                 original_alt_col = selected_columns["altitude_max"]
 
@@ -63,7 +65,7 @@ def set_altitudes(
                 type_alt="max",
                 schema=schema_name,
                 table=table_name,
-                alt_col=added_cols["altitude_max"],
+                alt_col="gn_altitude_max",
                 original_alt_col=original_alt_col,
                 table_pk=index_col,
                 geom_col=the_geom_local_col,
