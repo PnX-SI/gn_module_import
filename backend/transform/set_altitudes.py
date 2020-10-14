@@ -25,24 +25,31 @@ def set_altitudes(
             # altitude_min
 
             # create_col_name(df, added_cols, "altitude_min", import_id)
-            df['gn_altitude_min'] = ""
-            create_column(
-                full_table_name=full_table_name, alt_col="gn_altitude_min"
-            )
 
+            generate_type = None
             if "altitude_min" not in selected_columns.keys():
-                original_alt_col = "gn_altitude_min"
                 generate_type = "generate_all"
+                df["gn_altitude_min"] = ""
+                create_column(
+                    full_table_name=full_table_name, alt_col="gn_altitude_min"
+                )
             else:
                 original_alt_col = selected_columns["altitude_min"]
                 generate_type = "generate_missing"
 
+            if "altitude_max" not in selected_columns.keys():
+                df["gn_altitude_max"] = ""
+                create_column(
+                    full_table_name=full_table_name, alt_col="gn_altitude_max"
+                )
+            else:
+                original_alt_col = selected_columns["altitude_max"]
+
             generate_altitudes(
-                type_alt="min",
                 schema=schema_name,
                 table=table_name,
-                alt_col="gn_altitude_min",
-                original_alt_col=original_alt_col,
+                alti_min_col=selected_columns.get("altitude_min", "gn_altitude_min"),
+                alti_max_col=selected_columns.get("altitude_max", "gn_altitude_max"),
                 table_pk=index_col,
                 geom_col=the_geom_local_col,
                 generate_type=generate_type,
@@ -51,26 +58,16 @@ def set_altitudes(
             # altitude_max
 
             # create_col_name(df, added_cols, "altitude_max", import_id)
-            df['gn_altitude_min'] = ""
-            create_column(
-                full_table_name=full_table_name, alt_col=added_cols["altitude_max"]
-            )
 
-            if "altitude_max" not in selected_columns.keys():
-                original_alt_col = "gn_altitude_max"
-            else:
-                original_alt_col = selected_columns["altitude_max"]
-
-            generate_altitudes(
-                type_alt="max",
-                schema=schema_name,
-                table=table_name,
-                alt_col="gn_altitude_max",
-                original_alt_col=original_alt_col,
-                table_pk=index_col,
-                geom_col=the_geom_local_col,
-                generate_type=generate_type,
-            )
+            # generate_altitudes(
+            #     type_alt="max",
+            #     schema=schema_name,
+            #     table=table_name,
+            #     alt_col=selected_columns.get("altitude_min", "gn_altitude_max"),
+            #     table_pk=index_col,
+            #     geom_col=the_geom_local_col,
+            #     generate_type=generate_type,
+            # )
 
     except Exception:
         raise
