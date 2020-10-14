@@ -36,6 +36,7 @@ export class UploadFileStepComponent implements OnInit {
   ) {
     this.uploadForm = this._fb.group({
       file: [null, Validators.required],
+      fileName: [null, [Validators.required, Validators.maxLength(50)]],
       encodage: [null, Validators.required],
       srid: [null, Validators.required],
     });
@@ -56,6 +57,7 @@ export class UploadFileStepComponent implements OnInit {
         file: this.fileName,
         encodage: this.dataForm.encoding,
         srid: this.dataForm.srid,
+        fileName: this.fileName
       });
       this.formListener();
     }
@@ -77,8 +79,11 @@ export class UploadFileStepComponent implements OnInit {
   }
 
   onFileSelected(event: any) {
+    console.log(event.target.files[0].name.length);
+
     this.uploadForm.patchValue({
-      file: <File>event.target.files[0]
+      file: <File>event.target.files[0],
+      fileName: event.target.files[0].name
     });
     if (event.target.value.length == 0) {
       this.fileName = null;
