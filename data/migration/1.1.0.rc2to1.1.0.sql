@@ -97,7 +97,7 @@ SET comment = 'Correspondance champs standard: versionTAXREF'
 WHERE name_field = 'meta_v_taxref';
 
 UPDATE gn_imports.dict_fields 
-SET comment = 'Correspondance champs standard: identifiantRegroupementPermanent'
+SET comment = 'UUID du regroupement. Correspondance champs standard: identifiantRegroupementPermanent'
 WHERE name_field = 'unique_id_sinp_grp';
 
 UPDATE gn_imports.dict_fields 
