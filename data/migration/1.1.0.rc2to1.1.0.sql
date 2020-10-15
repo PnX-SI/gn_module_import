@@ -13,7 +13,7 @@ INSERT INTO gn_imports.dict_fields (name_field, fr_label, eng_label, desc_field,
   ),
   ('hour_max', 'Heure max', '', '', 'text', FALSE, FALSE, FALSE, FALSE, 
     (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 5, TRUE, 
-    'Correspondance champs standard: heureDebut'
+    'Correspondance champs standard: heureFin'
   ),
 	('depth_min', 'Profondeur min', '', '', 'integer', TRUE, FALSE, FALSE, FALSE, 
     (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 9, TRUE, 
@@ -143,3 +143,7 @@ WHERE name_field = 'meta_validation_date';
 UPDATE gn_imports.dict_fields 
 SET mandatory = FALSE
 WHERE name_field = 'id_nomenclature_source_status';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Fournir un id_role GeoNature'
+WHERE name_field = 'id_digitiser';

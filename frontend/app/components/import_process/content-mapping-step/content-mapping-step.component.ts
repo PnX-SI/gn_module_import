@@ -210,6 +210,7 @@ export class ContentMappingStepComponent implements OnInit {
 
   onMappingName(): void {
     this.mappingListForm.valueChanges.subscribe(mapping => {
+
       if (mapping && mapping.id_mapping) {
         this.disabled = false;
         this.fillMapping(mapping.id_mapping);
@@ -233,7 +234,6 @@ export class ContentMappingStepComponent implements OnInit {
         }
       });
     });
-    // console.log(this.idInfo);
 
     return this.idInfo;
   }
@@ -241,13 +241,12 @@ export class ContentMappingStepComponent implements OnInit {
   fillMapping(id_mapping) {
     this.id_mapping = id_mapping;
     this._ds.getMappingContents(id_mapping).subscribe(mappingContents => {
-      // console.log(mappingContents);
       this.contentTargetForm.reset();
       if (mappingContents[0] != "empty") {
+
         this.n_mappes = 0;
         for (let content of mappingContents) {
           let arrayVal: any = [];
-          // console.log(content);
 
           for (let val of content) {
             if (val["source_value"] != "") {
@@ -263,7 +262,7 @@ export class ContentMappingStepComponent implements OnInit {
           );
           if (formControl) {
             formControl.setValue(arrayVal);
-            ++this.n_mappes;
+            this.n_mappes = this.n_mappes++;
           }
         }
       } else {
