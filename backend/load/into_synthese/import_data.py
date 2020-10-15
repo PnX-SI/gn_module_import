@@ -10,7 +10,6 @@ from ...db.queries.load_to_synthese import (
 def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
     try:
         total_columns["id_source"] = get_id_source(import_id)
-        print(total_columns)
         # add key type info to value ('value::type')
         select_part = []
         for key, value in total_columns.items():

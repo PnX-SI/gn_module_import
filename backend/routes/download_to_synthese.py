@@ -51,8 +51,7 @@ def import_data(info_role, import_id):
 
         @copy_current_request_context
         def data_import_task(import_as_dict):
-            recipients = list(
-                (map(lambda a: a["email"], import_as_dict.get("author"))))
+            recipients = list((map(lambda a: a["email"], import_as_dict.get("author"))))
             try:
                 res = import_in_synthese(import_id)
                 import_send_mail(
@@ -102,8 +101,7 @@ def import_data(info_role, import_id):
             )
             DB.session.commit()
 
-            raise GeonatureImportApiError(
-                message=str(e), details="", status_code=500)
+            raise GeonatureImportApiError(message=str(e), details="", status_code=500)
 
 
 def import_in_synthese(import_id):
@@ -126,6 +124,9 @@ def import_in_synthese(import_id):
             "the_geom_point": "gn_the_geom_point",
             "id_area_attachment": "id_area_attachment",
         }
+        #  add date_max if not provided
+        if "date_max" not in selected_cols:
+            added_cols["date_max"] = "date_max"
         total_columns = set_total_columns(
             selected_cols, added_cols, import_id, MODULE_CODE
         )
@@ -140,13 +141,11 @@ def import_in_synthese(import_id):
             )
         logger.info("INSERT IN t_sources")
         # insert into t_sources
-        insert_into_t_sources(IMPORTS_SCHEMA_NAME,
-                              table_name, import_id, total_columns)
+        insert_into_t_sources(IMPORTS_SCHEMA_NAME, table_name, import_id, total_columns)
 
         logger.info("#### Start insert in Synthese")
         # insert into synthese
-        load_data_to_synthese(IMPORTS_SCHEMA_NAME,
-                              table_name, total_columns, import_id)
+        load_data_to_synthese(IMPORTS_SCHEMA_NAME, table_name, total_columns, import_id)
 
         logger.info("-> Data imported in gn_synthese.synthese table")
 
@@ -161,8 +160,7 @@ def import_in_synthese(import_id):
             total_columns["date_max"],
         )
         import_obj = DB.session.query(TImports).get(int(import_id))
-        import_obj.import_count = get_n_valid_rows(
-            IMPORTS_SCHEMA_NAME, table_name)
+        import_obj.import_count = get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name)
         import_obj.taxa_count = get_n_taxa(
             IMPORTS_SCHEMA_NAME, table_name, total_columns["cd_nom"]
         )
@@ -192,8 +190,7 @@ def import_in_synthese(import_id):
 
     except Exception as e:
         DB.session.rollback()
-        logger.error(
-            "*** SERVER ERROR WHEN IMPORTING DATA IN GN_SYNTHESE.SYNTHESE")
+        logger.error("*** SERVER ERROR WHEN IMPORTING DATA IN GN_SYNTHESE.SYNTHESE")
         logger.exception(e)
         raise GeonatureImportApiError(
             message=str(e), details="",
