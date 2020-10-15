@@ -10,7 +10,7 @@ from ...db.queries.load_to_synthese import (
 def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
     try:
         total_columns["id_source"] = get_id_source(import_id)
-
+        print(total_columns)
         # add key type info to value ('value::type')
         select_part = []
         for key, value in total_columns.items():
@@ -23,9 +23,9 @@ def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
             elif key == "the_geom_local":
                 key_type = "geometry(Geometry,2154)"
             elif key == "gn_unique_id_sinp":
-                key_type = 'uuid'
+                key_type = "uuid"
             elif key in ("gn_altitude_min", "gn_altitude_max"):
-                key_type = 'integer'
+                key_type = "integer"
             else:
                 key_type = get_data_type(key)
             select_part.append("::".join([str(value), key_type]))
