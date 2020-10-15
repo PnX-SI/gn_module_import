@@ -45,7 +45,8 @@ DELETE FROM gn_imports.dict_fields
 WHERE name_field='id_nomenclature_obs_technique';
 
 UPDATE gn_imports.dict_fields
-SET name_field='id_nomenclature_obs_technique'
+SET name_field='id_nomenclature_obs_technique',
+comment='Correspondance champs standard: obsTechnique'
 WHERE name_field='id_nomenclature_obs_meth';
 
 INSERT INTO gn_imports.cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
@@ -72,3 +73,64 @@ SET error_type = 'Erreur d''incohérence' WHERE "name" = 'CD_NOM_NOT_FOUND';
 UPDATE gn_imports.dict_fields 
 SET fr_label = 'Floutage sur la donnée'
 WHERE name_field = 'id_nomenclature_blurring';
+
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: identifiantOrigine'
+WHERE name_field = 'entity_source_pk_value';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: identifiantPermanent'
+WHERE name_field = 'unique_id_sinp';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: versionTAXREF'
+WHERE name_field = 'meta_v_taxref';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: identifiantRegroupementPermanent'
+WHERE name_field = 'unique_id_sinp_grp';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: identiteObservateur. Format attendu : Nom Prénom (Organisme), Nom Prénom (Organisme)...'
+WHERE name_field = 'observers';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: codeCommune. Code INSEE attendu'
+WHERE name_field = 'codecommune';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: codeMaille. Code maille-10 MNHN attendu'
+WHERE name_field = 'codemaille';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: codeDepartement. Code INSEE attendu'
+WHERE name_field = 'codedepartement';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: codeDepartement. Code INSEE attendu'
+WHERE name_field = 'codemaille';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: urlPreuveNumerique.'
+WHERE name_field = 'digital_proof';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: nivVal. Validation producteur'
+WHERE name_field = 'id_nomenclature_valid_status';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: validateur. Format attendu : Nom Prénom (Organisme), Nom Prénom (Organisme)...'
+WHERE name_field = 'validator';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: DateCtrl (Validation producteur)'
+WHERE name_field = 'meta_validation_date';
+
+UPDATE gn_imports.dict_fields 
+SET comment = 'Correspondance champs standard: DateCtrl (Validation producteur)'
+WHERE name_field = 'meta_validation_date';
+
+UPDATE gn_imports.dict_fields 
+SET mandatory = FALSE
+WHERE name_field = 'id_nomenclature_source_status';
