@@ -260,10 +260,12 @@ export class ContentMappingStepComponent implements OnInit {
           const formControl = this.contentTargetForm.get(
             String(content[0]["id_target_value"])
           );
+
           if (formControl) {
-            formControl.setValue(arrayVal);
-            this.n_mappes = this.n_mappes++;
+            formControl.setValue(arrayVal)
+            this.n_mappes = this.n_mappes + 1;
           }
+
         }
       } else {
         this.contentTargetForm.reset();

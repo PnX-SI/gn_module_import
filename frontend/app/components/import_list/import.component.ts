@@ -102,7 +102,11 @@ export class ImportComponent implements OnInit {
           this._commonService.regularToaster(
             "error",
             "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-          );
+          )
+        }
+        else if (error.status === 404) {
+          this._commonService.regularToaster("warning", "Aucun import trouvé");
+
         } else {
           // show error message if other server error
           this._commonService.regularToaster("error", error.error.message);
