@@ -128,20 +128,19 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('count_max', 'Nombre maximal', '', '', 'integer', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='enumeration'), 6, TRUE, 'Correspondance champs standard: denombrementMax'),
 	('id_nomenclature_determination_method', 'Méthode de détermination', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 1, TRUE, 'Correspondance champs standard: occMethodeDetermination'),
 	('determiner', 'Déterminateur', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 2, TRUE, 'Correspondance champs standard: determinateur. Format attendu : Nom Prénom (Organisme), Nom Prénom (Organisme)…"'),
-	('id_digitiser', 'Auteur de la saisie', '', '', 'integer', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 3, TRUE, 'Fournir un id_role GeoNature'),
+	('id_digitiser', 'Identifiant de l''auteur de la saisie (id_role dans l''instance cible)', '', '', 'integer', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 3, FALSE, 'Fournir un id_role GeoNature'),
 	('id_nomenclature_exist_proof', 'Existance d''une preuve', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 4, TRUE, 'Correspondance champs standard: preuveExistante'),
 	('digital_proof', 'Preuve numérique', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 5, TRUE, 'Correspondance champs standard: urlPreuveNumerique'),
 	('non_digital_proof', 'Preuve non-numérique', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 6, TRUE, 'Correspondance champs standard: preuveNonNumerique'),
-	('sample_number_proof', 'Identifiant de l''échantillon preuve', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 7, TRUE, NULL),
-	('id_nomenclature_valid_status', 'Statut de validation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 8, TRUE, 'Correspondance champs standard: nivVal. Validation producteur'),
-	('validator', 'Validateur', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 9, TRUE, 'Correspondance champs standard: validateur. Format attendu : Nom Prénom (Organisme), Nom Prénom (Organisme)...'),
-	('meta_validation_date', 'Date de validation', '', '', 'timestamp without time zone', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 10, TRUE, 'Correspondance champs standard: DateCtrl (Validation producteur)'),
-	('validation_comment', 'Commentaire de validation', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 11, TRUE, NULL),
-	('id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE, 'Correspondance champs standard: statutObservation'),
-	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE, 'Correspondance champs standard: statutSource'),
-	('reference_biblio', 'Référence bibliographique', '', '', 'character varying(255)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 14, TRUE, 'Correspondance champs standard: referenceBiblio'),
-	('id_nomenclature_behaviour', 'Comportement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 15, TRUE, 'Correspondance champs standard: occComportement'),
-	('additionnal_data', 'Champs additionnels', '', '', 'jsonb', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 16, FALSE, 'Attributs additionnels') 
+	('id_nomenclature_valid_status', 'Statut de validation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 7, TRUE, 'Correspondance champs standard: nivVal. Validation producteur'),
+	('validator', 'Validateur', '', '', 'character varying(1000)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 8, TRUE, 'Correspondance champs standard: validateur. Format attendu : Nom Prénom (Organisme), Nom Prénom (Organisme)...'),
+	('meta_validation_date', 'Date de validation', '', '', 'timestamp without time zone', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 9, TRUE, 'Correspondance champs standard: DateCtrl (Validation producteur)'),
+	('validation_comment', 'Commentaire de validation', '', '', 'text', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='validation'), 10, TRUE, NULL),
+	('id_nomenclature_observation_status', 'Statut d''observation', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 11, TRUE, 'Correspondance champs standard: statutObservation'),
+	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE, 'Correspondance champs standard: statutSource'),
+	('reference_biblio', 'Référence bibliographique', '', '', 'character varying(255)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE, 'Correspondance champs standard: referenceBiblio'),
+	('id_nomenclature_behaviour', 'Comportement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 14, TRUE, 'Correspondance champs standard: occComportement'),
+	('additionnal_data', 'Champs additionnels', '', '', 'jsonb', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 15, FALSE, 'Attributs additionnels') 
 ;
 	-- Ajouter un thème dédié à terme et prévoir un widget multiselect qui concatène les infos sous format jsonb ?
 
@@ -191,3 +190,37 @@ VALUES(
 	(SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING'),
 	(SELECT id_module FROM gn_commons.t_modules WHERE module_code = 'IMPORT')
 );
+
+-- Donner aux groupes d'utilisateurs les mêmes droits sur les mappings que sur le module d'import lui-même
+DO $$
+DECLARE role integer;
+	BEGIN
+		FOR role IN (SELECT DISTINCT id_role FROM utilisateurs.t_roles WHERE groupe)
+			LOOP
+				IF EXISTS (SELECT * FROM gn_permissions.cor_role_action_filter_module_object WHERE id_role=role AND id_module=(SELECT id_module FROM gn_commons.t_modules WHERE module_code='IMPORT'))
+					THEN 
+						WITH permissions AS (SELECT * FROM gn_permissions.cor_role_action_filter_module_object WHERE id_role=role AND id_module=(SELECT id_module FROM gn_commons.t_modules WHERE module_code='IMPORT'))
+						INSERT INTO gn_permissions.cor_role_action_filter_module_object (id_role, id_action, id_filter, id_module, id_object)
+						select 
+							p.id_role as id_role,
+							p.id_action as id_action,
+							p.id_filter as id_filter,
+							p.id_module as id_module,
+							tob.id_object as id_object 
+						from permissions p, gn_permissions.t_objects tob
+						where tob.code_object='MAPPING';
+					ELSE
+						WITH permissions_gn AS (SELECT * FROM gn_permissions.cor_role_action_filter_module_object WHERE id_role=role AND id_module=(SELECT id_module FROM gn_commons.t_modules WHERE module_code='GEONATURE'))
+						INSERT INTO gn_permissions.cor_role_action_filter_module_object (id_role, id_action, id_filter, id_module, id_object)
+						select 
+							p.id_role as id_role,
+							p.id_action as id_action,
+							p.id_filter as id_filter,
+							p.id_module as id_module,
+							tob.id_object as id_object 
+						from permissions_gn p, gn_permissions.t_objects tob
+						where tob.code_object='MAPPING';
+				END IF;
+			END LOOP;
+	END;
+$$;

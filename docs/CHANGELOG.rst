@@ -48,6 +48,7 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 * Suppression du message d'erreur quand un champs défini dans un mapping n'est pas présent dans le fichier importé (#108)
 * Correction et amélioration des contrôles de dates (#128)
 * !!!!!!!!!! Suppression temporaire de la vérification des doublons dans le fichier source, trop lourde en performance et non fonctionnelle
+* Clarification de l'intitulé et masquage par défaut du champs "id_digitiser" (#159)
 
 **Notes de version**
 
