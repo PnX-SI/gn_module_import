@@ -190,3 +190,37 @@ VALUES(
 	(SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING'),
 	(SELECT id_module FROM gn_commons.t_modules WHERE module_code = 'IMPORT')
 );
+
+-- Donner aux groupes d'utilisateurs les mêmes droits sur les mappings que sur le module d'import lui-même
+DO $$
+DECLARE role integer;
+	BEGIN
+		FOR role IN (SELECT DISTINCT id_role FROM utilisateurs.t_roles WHERE groupe)
+			LOOP
+				IF EXISTS (SELECT * FROM gn_permissions.cor_role_action_filter_module_object WHERE id_role=role AND id_module=(SELECT id_module FROM gn_commons.t_modules WHERE module_code='IMPORT'))
+					THEN 
+						WITH permissions AS (SELECT * FROM gn_permissions.cor_role_action_filter_module_object WHERE id_role=role AND id_module=(SELECT id_module FROM gn_commons.t_modules WHERE module_code='IMPORT'))
+						INSERT INTO gn_permissions.cor_role_action_filter_module_object (id_role, id_action, id_filter, id_module, id_object)
+						select 
+							p.id_role as id_role,
+							p.id_action as id_action,
+							p.id_filter as id_filter,
+							p.id_module as id_module,
+							tob.id_object as id_object 
+						from permissions p, gn_permissions.t_objects tob
+						where tob.code_object='MAPPING';
+					ELSE
+						WITH permissions_gn AS (SELECT * FROM gn_permissions.cor_role_action_filter_module_object WHERE id_role=role AND id_module=(SELECT id_module FROM gn_commons.t_modules WHERE module_code='GEONATURE'))
+						INSERT INTO gn_permissions.cor_role_action_filter_module_object (id_role, id_action, id_filter, id_module, id_object)
+						select 
+							p.id_role as id_role,
+							p.id_action as id_action,
+							p.id_filter as id_filter,
+							p.id_module as id_module,
+							tob.id_object as id_object 
+						from permissions_gn p, gn_permissions.t_objects tob
+						where tob.code_object='MAPPING';
+				END IF;
+			END LOOP;
+	END;
+$$;
