@@ -1,3 +1,4 @@
+import re
 from flask import Flask, request, current_app, copy_current_request_context
 
 from utils_flask_sqla.response import json_resp
@@ -41,6 +42,8 @@ import time
 def run_control(import_id, id_field_mapping, id_content_mapping, file_name, authors):
     try:
         recipients = list((map(lambda a: a["email"], authors)))
+        recipients = []
+
         field_mapping_data_checking(import_id, id_field_mapping)
         content_mapping_data_checking(import_id, id_content_mapping)
         import_send_mail(
@@ -71,7 +74,18 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
     import_as_dict = import_obj.as_dict(True)
     import_obj.id_content_mapping = int(id_content_mapping)
     DB.session.commit()
+
     if import_obj.source_count > current_app.config["IMPORT"]["MAX_LINE_LIMIT"]:
+        recipients = []
+        REGEX_EMAIL = re.compile(r"[\w\.-]+@[\w\.-]+(?:\.[\w]+)+")
+        for auth in import_as_dict["author"]:
+            if REGEX_EMAIL.match(auth["email"]):
+                recipients.append(import_obj["authors"])
+        if len(recipients) == 0:
+            raise GeonatureImportApiError(
+                message="L'utilisateur ne dispose pas d'email (ou il est invalide)",
+                status_code=400,
+            )
         import_obj.processing = True
         DB.session.commit()
         import_data = {
