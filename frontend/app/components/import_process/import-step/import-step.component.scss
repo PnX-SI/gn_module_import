@@ -4,6 +4,11 @@ table {
   color: black;
   background-color: rgb(241, 241, 241);
 }
+
+.mat-icon {
+  vertical-align: middle;
+}
+
 ngx-datatable {
   box-shadow: none !important;
 }

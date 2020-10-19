@@ -25,3 +25,4 @@ id_rows,
 comment
 FROM  gn_imports.t_user_error_list el 
 JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error;
+
