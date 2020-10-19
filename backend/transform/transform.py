@@ -119,7 +119,7 @@ def data_cleaning(
         check_missing(
             df, selected_columns, synthese_info, missing_val, import_id, schema_name
         )
-        # check_row_duplicates(df, selected_columns, import_id, schema_name)
+        check_dates(df, selected_columns, synthese_info, import_id, schema_name)
         check_types(
             df, selected_columns, synthese_info, missing_val, schema_name, import_id,
         )
@@ -140,7 +140,7 @@ def data_cleaning(
                 import_id=import_id,
                 ref_col="cd_hab",
             )
-        check_dates(df, selected_columns, synthese_info, import_id, schema_name)
+
         check_uuid(
             df,
             selected_columns,
@@ -163,7 +163,13 @@ def data_cleaning(
         )
         check_id_digitizer(df, selected_columns, synthese_info, import_id, schema_name)
         check_geography(
-            df, import_id, added_cols, selected_columns, file_srid, local_srid, schema_name
+            df,
+            import_id,
+            added_cols,
+            selected_columns,
+            file_srid,
+            local_srid,
+            schema_name,
         )
         # check altitudes
         check_min_max(
@@ -191,6 +197,7 @@ def data_cleaning(
 
     except Exception:
         raise
+
 
 def field_mapping_data_checking(import_id, id_mapping):
     """
@@ -513,10 +520,8 @@ def content_mapping_data_checking(import_id, id_mapping):
         table_name = set_imports_table_name(get_table_name(import_id))
         # build nomenclature_transformer service
         nomenclature_transformer = NomenclatureTransformer()
-        
-        nomenclature_transformer.init(
-            id_mapping, selected_columns, table_name
-        )
+
+        nomenclature_transformer.init(id_mapping, selected_columns, table_name)
         # with the mapping given, find all the corresponding nomenclatures
         nomenclature_transformer.set_nomenclature_ids()
 

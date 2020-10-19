@@ -79,12 +79,18 @@ def check_types(
 
         # DATE TYPE COLUMNS :
 
+        # date_fields = [
+        #     field
+        #     for field in synthese_info
+        #     if synthese_info[field]["data_type"] == "timestamp without time zone"
+        # ]
         date_fields = [
-            field
-            for field in synthese_info
-            if synthese_info[field]["data_type"] == "timestamp without time zone"
+            source
+            for source, target in selected_columns.items()
+            if source in ("date_min", "date_max")
         ]
-
+        print("LAAAAAAAAAAAAA")
+        print(selected_columns)
         for field in date_fields:
 
             logger.info(

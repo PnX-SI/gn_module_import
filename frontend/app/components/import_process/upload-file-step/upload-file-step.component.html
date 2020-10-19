@@ -7,7 +7,6 @@
         <div class="card-body">
             <form
                 [formGroup]="uploadForm"
-                class="was-validated"
             >
                 <div class="form-group">
                     <label>Importer un fichier :</label>
@@ -23,6 +22,10 @@
                             id="selectedFile"
                             name="file"
                         >
+                        <small style="color: red;" *ngIf="uploadForm.get('fileName').errors?.maxlength">
+                            Le nom du fichier doit faire au maximum 50 caractères 
+                            ({{uploadForm.get('fileName').errors?.maxlength.actualLength}} actuellement)
+                        </small>
                         <label
                             *ngIf="fileName"
                             class="custom-file-label"
