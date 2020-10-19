@@ -147,3 +147,8 @@ WHERE name_field = 'id_nomenclature_source_status';
 UPDATE gn_imports.dict_fields 
 SET comment = 'Fournir un id_role GeoNature'
 WHERE name_field = 'id_digitiser';
+
+UPDATE gn_imports.dict_fields
+SET fr_label='Identifiant de l''auteur de la saisie (id_role dans l''instance cible)',
+display=False
+WHERE name_field='id_digitiser';
