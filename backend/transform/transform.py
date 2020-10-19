@@ -242,127 +242,140 @@ def field_mapping_data_checking(import_id, id_mapping):
         logger.debug("import_id = %s", import_id)
         logger.debug("DB table name = %s", table_names["imports_table_name"])
 
-    # DELETE USER ERRORS
-    delete_user_errors(import_id, "FIELD_MAPPING")
-    # EXTRACT
-    logger.info("* START EXTRACT FROM DB TABLE TO PYTHON")
-    df = extract(
-        table_names["imports_table_name"],
-        IMPORTS_SCHEMA_NAME,
-        column_names,
-        index_col,
-        import_id,
-    )
-    # HACK: add code_commune, code_maille, code_dep columns
-    #  TODO: conserver le formulaire dans le store !
-    add_code_columns(selected_columns, df)
-
-    logger.info("* END EXTRACT FROM DB TABLE TO PYTHON")
-
-    # get cd_nom list
-    cd_nom_list = get_cd_nom_list()
-    cd_hab_list = get_cd_hab_list()
-
-    # TRANSFORM (data checking and cleaning)
-    # start process (transform and load)
-    for i in range(df.npartitions):
-        logger.info("* START DATA CLEANING partition %s", i)
-        partition = df.get_partition(i)
-        partition_df = compute_df(partition)
-        data_cleaning(
-            df=partition_df,
-            import_id=import_id,
-            selected_columns=selected_columns,
-            missing_val=MISSING_VALUES,
-            def_count_val=DEFAULT_COUNT_VALUE,
-            cd_nom_list=cd_nom_list,
-            file_srid=import_obj_dict["srid"],
-            local_srid=local_srid,
-            is_generate_uuid=is_generate_uuid,
-            schema_name=IMPORTS_SCHEMA_NAME,
-            is_generate_altitude=is_generate_alt,
-            prefix=PREFIX,
+        # DELETE USER ERRORS
+        delete_user_errors(import_id, "FIELD_MAPPING")
+        # EXTRACT
+        logger.info("* START EXTRACT FROM DB TABLE TO PYTHON")
+        df = extract(
+            table_names["imports_table_name"],
+            IMPORTS_SCHEMA_NAME,
+            column_names,
+            index_col,
+            import_id,
         )
+        # HACK: add code_commune, code_maille, code_dep columns
+        #  TODO: conserver le formulaire dans le store !
+        add_code_columns(selected_columns, df)
 
-        # set primary key
-        set_primary_key(IMPORTS_SCHEMA_NAME,
-                        table_names["imports_table_name"], index_col)
+        logger.info("* END EXTRACT FROM DB TABLE TO PYTHON")
 
-        # check if df is fully loaded in postgresql table :
-        is_nrows_ok = check_row_number(import_id, table_names["imports_full_table_name"])
-        if not is_nrows_ok:
-            logger.error("missing rows because of loading server error")
-            raise GeonatureImportApiError(
-                message='INTERNAL SERVER ERROR ("postMapping() error"): \
-                            lignes manquantes dans {} - refaire le matching'.format(
-                    table_names["imports_full_table_name"]
-                ),
-                details="",
-            )
-        # # # calculate geometries and altitudes
-        geometry_setter = GeometrySetter(
-            importObject,
-            local_srid=local_srid,
-            code_commune_col=selected_columns.get("codecommune", "codecommune"),
-            code_maille_col=selected_columns.get("codemaille", "codemaille"),
-            code_dep_col=selected_columns.get(
-                "codedepartement", "codedepartement"),
-        )
-        geometry_setter.set_geometry()
+        # get cd_nom list
+        cd_nom_list = get_cd_nom_list()
+        cd_hab_list = get_cd_hab_list()
 
-        set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME,
-                    table_names['imports_full_table_name'], table_names['imports_table_name'],
-                    index_col, is_generate_alt, 'gn_the_geom_local')
-
-        DB.session.commit()
-        DB.session.close()
-
-        # check if df is fully loaded in postgresql table :
-        is_nrows_ok = check_row_number(
-            import_id, table_names["imports_full_table_name"])
-        if not is_nrows_ok:
-            logger.error("missing rows because of loading server error")
-            raise GeonatureImportApiError(
-                message='INTERNAL SERVER ERROR ("postMapping() error"): \
-                            lignes manquantes dans {} - refaire le matching'.format(
-                    table_names["imports_full_table_name"]
-                ),
-                details="",
+        # TRANSFORM (data checking and cleaning)
+        # start process (transform and load)
+        for i in range(df.npartitions):
+            logger.info("* START DATA CLEANING partition %s", i)
+            partition = df.get_partition(i)
+            partition_df = compute_df(partition)
+            data_cleaning(
+                df=partition_df,
+                import_id=import_id,
+                selected_columns=selected_columns,
+                missing_val=MISSING_VALUES,
+                def_count_val=DEFAULT_COUNT_VALUE,
+                cd_nom_list=cd_nom_list,
+                file_srid=import_obj_dict["srid"],
+                local_srid=local_srid,
+                is_generate_uuid=is_generate_uuid,
+                schema_name=IMPORTS_SCHEMA_NAME,
+                is_generate_altitude=is_generate_alt,
+                prefix=PREFIX,
             )
 
-        # calculate number of invalid lines
-        n_invalid_rows = get_n_invalid_rows(table_names["imports_full_table_name"])
+            # set primary key
+            set_primary_key(
+                IMPORTS_SCHEMA_NAME, table_names["imports_table_name"], index_col
+            )
 
-        # check total number of lines
-        n_table_rows = get_row_number(table_names["imports_full_table_name"])
+            # check if df is fully loaded in postgresql table :
+            is_nrows_ok = check_row_number(
+                import_id, table_names["imports_full_table_name"]
+            )
+            if not is_nrows_ok:
+                logger.error("missing rows because of loading server error")
+                raise GeonatureImportApiError(
+                    message='INTERNAL SERVER ERROR ("postMapping() error"): \
+                                lignes manquantes dans {} - refaire le matching'.format(
+                        table_names["imports_full_table_name"]
+                    ),
+                    details="",
+                )
+            # # # calculate geometries and altitudes
+            geometry_setter = GeometrySetter(
+                importObject,
+                local_srid=local_srid,
+                code_commune_col=selected_columns.get("codecommune", "codecommune"),
+                code_maille_col=selected_columns.get("codemaille", "codemaille"),
+                code_dep_col=selected_columns.get("codedepartement", "codedepartement"),
+            )
+            geometry_setter.set_geometry()
 
-        logger.info("*** END CORRESPONDANCE MAPPING")
+            set_altitudes(
+                df,
+                selected_columns,
+                import_id,
+                IMPORTS_SCHEMA_NAME,
+                table_names["imports_full_table_name"],
+                table_names["imports_table_name"],
+                index_col,
+                is_generate_alt,
+                "gn_the_geom_local",
+            )
 
-        DB.session.query(TImports).filter(TImports.id_import == int(import_id)).update(
-            {TImports.id_field_mapping: int(id_mapping)}
-        )
+            DB.session.commit()
+            DB.session.close()
 
-        DB.session.commit()
-        DB.session.close()
+            # check if df is fully loaded in postgresql table :
+            is_nrows_ok = check_row_number(
+                import_id, table_names["imports_full_table_name"]
+            )
+            if not is_nrows_ok:
+                logger.error("missing rows because of loading server error")
+                raise GeonatureImportApiError(
+                    message='INTERNAL SERVER ERROR ("postMapping() error"): \
+                                lignes manquantes dans {} - refaire le matching'.format(
+                        table_names["imports_full_table_name"]
+                    ),
+                    details="",
+                )
 
-        is_running = False
+            # calculate number of invalid lines
+            n_invalid_rows = get_n_invalid_rows(table_names["imports_full_table_name"])
 
-        return (
-            {
-                "n_table_rows": n_table_rows,
-                "import_id": import_id,
-                "id_mapping": id_mapping,
-                "table_name": table_names["imports_table_name"],
-                "is_running": is_running,
-            },
-        )
+            # check total number of lines
+            n_table_rows = get_row_number(table_names["imports_full_table_name"])
+
+            logger.info("*** END CORRESPONDANCE MAPPING")
+
+            DB.session.query(TImports).filter(
+                TImports.id_import == int(import_id)
+            ).update({TImports.id_field_mapping: int(id_mapping)})
+
+            DB.session.commit()
+            DB.session.close()
+
+            is_running = False
+
+            return (
+                {
+                    "n_table_rows": n_table_rows,
+                    "import_id": import_id,
+                    "id_mapping": id_mapping,
+                    "table_name": table_names["imports_table_name"],
+                    "is_running": is_running,
+                },
+            )
 
     except Exception as e:
         logger.error("*** ERROR IN CORRESPONDANCE MAPPING")
         logger.exception(e)
         DB.session.rollback()
-        DB.session.query(TImports).filter(TImports.id_import == import_id).update({'processing' : False})
-    
+        DB.session.query(TImports).filter(TImports.id_import == import_id).update(
+            {"processing": False}
+        )
+
         if is_temp_table_name:
             DB.session.execute(
                 """
@@ -373,11 +386,10 @@ def field_mapping_data_checking(import_id, id_mapping):
             )
             DB.session.commit()
             DB.session.close()
-    
+
         if is_table_names:
-            n_loaded_rows = get_n_loaded_rows(
-                table_names["imports_full_table_name"])
-    
+            n_loaded_rows = get_n_loaded_rows(table_names["imports_full_table_name"])
+
         if is_table_names:
             if n_loaded_rows == 0:
                 logger.error(
@@ -392,7 +404,7 @@ def field_mapping_data_checking(import_id, id_mapping):
                     ),
                     details="",
                 )
-    
+
         raise GeonatureImportApiError(
             message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
             details=str(e),
@@ -454,7 +466,9 @@ def content_mapping_data_checking(import_id, id_mapping):
 
     except Exception as e:
         DB.session.rollback()
-        DB.session.query(TImports).filter(TImports.id_import == import_id).update({'processing' : False})
+        DB.session.query(TImports).filter(TImports.id_import == import_id).update(
+            {"processing": False}
+        )
         DB.session.close()
         logger.error("*** SERVER ERROR DURING CONTENT MAPPING (user values to id_types")
         logger.exception(e)
