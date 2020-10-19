@@ -101,7 +101,7 @@ DEFAULT_VALUE_MAPPING_ID = 3
 
 # Once the MAX_LINE_LIMIT has been exceeded, control processing will take place in the background,
 # you will be notified once this is completed
-MAX_LINE_LIMIT = 10000
+MAX_LINE_LIMIT = 20
 
 INSTANCE_BOUNDING_BOX = [-5.0, 41, 10, 51.15]
 
