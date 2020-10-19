@@ -41,6 +41,7 @@ column_error,
 id_rows,
 comment
 FROM  gn_imports.t_user_error_list el 
+<<<<<<< HEAD
 JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error
 ;
 
@@ -323,3 +324,7 @@ DECLARE role integer;
 			END LOOP;
 	END;
 $$;
+=======
+JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error;
+
+>>>>>>> develop

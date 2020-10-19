@@ -57,7 +57,7 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'methgrp','id_nomenclature_grp_typ',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'nomcite','nom_cite',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'cdnom','cd_nom',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'obsmeth','id_nomenclature_obs_meth',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'obsmeth','id_nomenclature_obs_technique',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','id_nomenclature_bio_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'ocetatbio','id_nomenclature_bio_condition',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'ocnat','id_nomenclature_naturalness',true,false),
@@ -106,7 +106,7 @@ n.label_default,
 n.id_nomenclature
 FROM gn_imports.t_mappings m, ref_nomenclatures.t_nomenclatures n
 JOIN ref_nomenclatures.bib_nomenclatures_types bnt ON bnt.id_type=n.id_type 
-WHERE m.mapping_label='Nomenclatures SINP (labels)' AND bnt.mnemonique IN (SELECT DISTINCT(mnemonique) FROM gn_imports.cor_synthese_nomenclature) AND n.active;
+WHERE m.mapping_label='Nomenclatures SINP (labels)' AND bnt.mnemonique IN (SELECT DISTINCT(mnemonique) FROM gn_imports.cor_synthese_nomenclature);
 
 
 -- Intégration du mapping de valeurs SINP (codes) par défaut pour les nomenclatures de la synthèse

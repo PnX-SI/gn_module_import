@@ -1,21 +1,15 @@
-from sqlalchemy import (
-    Column,
-    DateTime,
-    String,
-    Integer,
-    ForeignKey,
-    func,
-    PrimaryKeyConstraint,
-)
+import datetime
+
+from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func, PrimaryKeyConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import ARRAY
 from geoalchemy2 import Geometry
 
-import datetime
+from utils_flask_sqla.serializers import serializable
+from utils_flask_sqla_geo.serializers import geoserializable
 
 from geonature.utils.env import DB
 
-from geonature.utils.utilssqlalchemy import serializable, geoserializable
 from geonature.core.gn_meta.models import TDatasets
 from geonature.core.gn_synthese.models import TSources
 from pypnusershub.db.models import User
@@ -26,8 +20,7 @@ class VUserImportsErrors(DB.Model):
     __tablename__ = "v_imports_errors"
     __table_args__ = {"schema": "gn_imports"}
     id_user_error = DB.Column(DB.Integer, primary_key=True)
-    id_import = DB.Column(DB.Integer, ForeignKey(
-        "gn_imports.t_imports.id_import"))
+    id_import = DB.Column(DB.Integer, ForeignKey("gn_imports.t_imports.id_import"))
     error_type = DB.Column(DB.Unicode)
     error_name = DB.Column(DB.Unicode)
     error_level = DB.Column(DB.Unicode)
@@ -58,9 +51,7 @@ class TImports(DB.Model):
     encoding = DB.Column(DB.Unicode, nullable=True)
     import_table = DB.Column(DB.Unicode, nullable=True)
     full_file_name = DB.Column(DB.Unicode, nullable=True)
-    id_dataset = DB.Column(
-        DB.Integer, ForeignKey("gn_meta.t_datasets.id_dataset"), nullable=True,
-    )
+    id_dataset = DB.Column(DB.Integer, ForeignKey("gn_meta.t_datasets.id_dataset"), nullable=True)
     id_field_mapping = DB.Column(DB.Integer, nullable=True)
     id_content_mapping = DB.Column(DB.Integer, nullable=True)
     date_create_import = DB.Column(DB.DateTime, nullable=True)
@@ -80,7 +71,7 @@ class TImports(DB.Model):
         secondary=CorRoleImport.__table__,
         primaryjoin=(CorRoleImport.id_import == id_import),
         secondaryjoin=(CorRoleImport.id_role == User.id_role),
-        foreign_keys=[CorRoleImport.id_import, CorRoleImport.id_role, ],
+        foreign_keys=[CorRoleImport.id_import, CorRoleImport.id_role],
     )
     is_finished = DB.Column(DB.Boolean, nullable=False, default=False)
     processing = DB.Column(DB.Boolean, nullable=False, default=False)
@@ -127,8 +118,7 @@ class TMappingsFields(DB.Model):
     __tablename__ = "t_mappings_fields"
     __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
-    id_match_fields = DB.Column(
-        DB.Integer, primary_key=True, autoincrement=True)
+    id_match_fields = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
     source_field = DB.Column(DB.Unicode, nullable=False)
     target_field = DB.Column(DB.Unicode, nullable=False)
@@ -141,8 +131,7 @@ class TMappingsValues(DB.Model):
     __tablename__ = "t_mappings_values"
     __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
-    id_match_values = DB.Column(
-        DB.Integer, primary_key=True, autoincrement=True)
+    id_match_values = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     id_mapping = DB.Column(DB.Integer, primary_key=True)
     source_value = DB.Column(DB.Unicode, nullable=False)
     id_target_value = DB.Column(DB.Integer, nullable=False)
@@ -202,9 +191,7 @@ class CorImportArchives(DB.Model):
     table_archive = DB.Column(DB.Integer, primary_key=True)
 
 
-def generate_user_table_class(
-    schema_name, table_name, pk_name, user_columns, id, schema_type
-):
+def generate_user_table_class(schema_name, table_name, pk_name, user_columns, id, schema_type):
     """
         Generate dynamically the user file class used to copy user data (csv) into db tables
         parameters :
@@ -230,8 +217,7 @@ def generate_user_table_class(
 
     if schema_type == "gn_imports":
         user_table.update({"gn_is_valid": DB.Column(DB.Text, nullable=True)})
-        user_table.update(
-            {"gn_invalid_reason": DB.Column(DB.Text, nullable=True)})
+        user_table.update({"gn_invalid_reason": DB.Column(DB.Text, nullable=True)})
 
     user_table.update({pk_name: DB.Column(DB.Integer, autoincrement=True)})
     for column in user_columns:
@@ -239,12 +225,8 @@ def generate_user_table_class(
 
     # creation of the user file class :
     if schema_type == "archives":
-        UserTableClass = type(
-            "UserArchivesTableClass{}".format(id), (DB.Model,), user_table
-        )
+        UserTableClass = type("UserArchivesTableClass{}".format(id), (DB.Model,), user_table)
     else:
-        UserTableClass = type(
-            "UserTimportsTableClass{}".format(id), (DB.Model,), user_table
-        )
+        UserTableClass = type("UserTimportsTableClass{}".format(id), (DB.Model,), user_table)
 
     return UserTableClass

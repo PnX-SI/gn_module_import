@@ -31,22 +31,22 @@ def x_y_to_wkb(x, y):
         return None
 
 
-def check_bounds_x_y(x, y, local_bounding_box: Polygon):
+def check_bounds_x_y(x, y, file_srid_bounding_box: Polygon):
     #  if is Nan (float): don't check if fit bounds
     # x and y are str
     if type(x) is float or type(y) is float:
         return True
     else:
         cur_wkt = Point(float(x), float(y))
-        return check_bound(cur_wkt, local_bounding_box)
+        return check_bound(cur_wkt, file_srid_bounding_box)
 
 
-def check_bounds_wkt(value, local_bounding_box: Polygon):
+def check_bounds_wkt(value, file_srid_bounding_box: Polygon):
     try:
         cur_wkt = wkt.loads(value)
         if not cur_wkt:
             return True
-        return check_bound(cur_wkt, local_bounding_box)
+        return check_bound(cur_wkt, file_srid_bounding_box)
     except Exception:
         return True
 
@@ -57,9 +57,9 @@ def check_multiple_code(val):
     return True
 
 
-def check_bound(wkt, local_bounding_box: Polygon):
+def check_bound(wkt, file_srid_bounding_box: Polygon):
     try:
-        return wkt.within(local_bounding_box)
+        return wkt.within(file_srid_bounding_box)
     except Exception:
         return True
 
@@ -72,10 +72,15 @@ def calculate_bounding_box(given_srid):
     return a shapely polygon of this BB with local coordq
     """
     xmin, ymin, xmax, ymax = CRS.from_epsg(given_srid).area_of_use.bounds
-    bounding_polygon_4326 = Polygon(
-        [[xmin, ymin], [xmax, ymin], [xmax, ymax], [xmin, ymax]]
+    bounding_polygon_4326 = Polygon([
+        (xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)
+    ])
+
+    projection = Transformer.from_crs(
+        CRS(4326),
+        CRS(int(given_srid)),
+        always_xy=True
     )
-    projection = Transformer.from_crs(4326, int(given_srid))
     return transform(projection.transform, bounding_polygon_4326)
 
 
@@ -105,8 +110,7 @@ def check_geography(
     try:
 
         logger.info("CHECKING GEOGRAPHIC DATA:")
-
-        local_bounding_box = calculate_bounding_box(srid)
+        file_srid_bounding_box = calculate_bounding_box(srid)
         line_with_codes = []
 
         try:
@@ -132,12 +136,8 @@ def check_geography(
                 axis=1,
             )
             df["valid_x_y"] = df["given_geom"].notnull()
-            if "WKT" in selected_columns:
-                mask_with_wkt = df[selected_columns["WKT"]].notnull()
-                #  row with not code and no valid x_y
-                df["no_geom"] = ~mask_with_code & ~mask_with_wkt & ~df["valid_x_y"]
-            else:
-                df["no_geom"] = ~mask_with_code & ~df["valid_x_y"]
+            df["no_geom"] = ~mask_with_code & ~df["valid_x_y"]
+            df["geom_correct"] = ~df["no_geom"]
             no_geom_errors = df[df["no_geom"] == True]
             if len(no_geom_errors) > 0:
                 set_error_and_invalid_reason(
@@ -145,7 +145,7 @@ def check_geography(
                     id_import=import_id,
                     error_code="NO-GEOM",
                     col_name_error="Colonnes géometriques",
-                    df_col_name_valid="no_geom",
+                    df_col_name_valid="geom_correct",
                     id_rows_error=no_geom_errors.index.to_list(),
                 )
 
@@ -153,7 +153,7 @@ def check_geography(
                 lambda row: check_bounds_x_y(
                     row[selected_columns["longitude"]],
                     row[selected_columns["latitude"]],
-                    local_bounding_box,
+                    file_srid_bounding_box,
                 ),
                 axis=1,
             )
@@ -168,73 +168,14 @@ def check_geography(
                     df_col_name_valid="in_bounds",
                     id_rows_error=out_bound_errors.index.to_list(),
                 )
-            #  row with x/y AND wkt
-            if "WKT" in selected_columns.keys():
-                df["wkt_and_x_y"] = (
-                    df[selected_columns["latitude"]].notnull()
-                    & df[selected_columns["longitude"]].notnull()
-                    & df[selected_columns["WKT"]].notnull()
-                )
-                wkt_and_x_y = df[df["wkt_and_x_y"] == True]
-                if len(wkt_and_x_y) > 0:
-                    set_error_and_invalid_reason(
-                        df=df,
-                        id_import=import_id,
-                        error_code="INVALID_GEOMETRY",
-                        col_name_error="Colonnes géometriques (x/y et WKT)",
-                        df_col_name_valid="wkt_and_x_y",
-                        id_rows_error=wkt_and_x_y.index.to_list(),
-                        comment="Un X/Y et un WKT ne peuvent être fournis pour la même ligne",
-                    )
-                df["in_bounds_wkt"] = df.apply(
-                    lambda row: check_bounds_wkt(
-                        row[selected_columns["WKT"]], local_bounding_box,
-                    ),
-                    axis=1,
-                )
-                out_bound_errors = df[df["in_bounds_wkt"] == False]
-                if len(out_bound_errors) > 0:
-                    set_error_and_invalid_reason(
-                        df=df,
-                        id_import=import_id,
-                        error_code="PROJECTION_ERROR",
-                        col_name_error="Colonnes géometriques",
-                        df_col_name_valid="in_bounds_wkt",
-                        id_rows_error=out_bound_errors.index.to_list(),
-                    )
-
-            # remove invalid where codecommune/maille or dep are fill
-
-            # load wkt
-            df["given_geom"] = df[selected_columns["WKT"]].apply(lambda x: set_wkb(x))
-
-            df["valid_wkt"] = df["given_geom"].notnull()
-            df["valid_x_y"] = df.iloc[
-                line_with_codes, df.columns.get_loc("valid_x_y")
-            ] = True
-            set_is_valid(df, "valid_x_y")
-            id_rows_errors = df.index[df["valid_x_y"] == False].to_list()
-            if len(id_rows_errors) > 0:
-                set_error_and_invalid_reason(
-                    df=df,
-                    id_import=import_id,
-                    error_code="INVALID_GEOMETRY",
-                    col_name_error=selected_columns["longitude"]
-                    + " "
-                    + selected_columns["latitude"],
-                    df_col_name_valid="valid_x_y",
-                    id_rows_error=id_rows_errors,
-                )
-            df.drop("valid_x_y", axis=1)
 
         elif "WKT" in selected_columns:
             # load wkt
             df["given_geom"] = df[selected_columns["WKT"]].apply(lambda x: set_wkb(x))
-
             df["valid_wkt"] = df["given_geom"].notnull()
-
             #  row with not code and no valid wkt
             df["no_geom"] = ~mask_with_code & ~df["valid_wkt"]
+            df["geom_correct"] = ~df["no_geom"]
             no_geom_errors = df[df["no_geom"] == True]
             if len(no_geom_errors) > 0:
                 set_error_and_invalid_reason(
@@ -242,13 +183,13 @@ def check_geography(
                     id_import=import_id,
                     error_code="NO-GEOM",
                     col_name_error="Colonnes géometriques",
-                    df_col_name_valid="no_geom",
+                    df_col_name_valid="geom_correct",
                     id_rows_error=no_geom_errors.index.to_list(),
                 )
 
                 df["in_bounds"] = df.apply(
                     lambda row: check_bounds_wkt(
-                        row[selected_columns["WKT"]], local_bounding_box
+                        row[selected_columns["WKT"]], file_srid_bounding_box
                     ),
                     axis=1,
                 )
@@ -289,13 +230,14 @@ def check_geography(
         else:
             df["no_geom"] = ~mask_with_code & df["given_geom"].isnull()
             no_geom_errors = df[df["no_geom"] == True]
+            df["geom_correct"] = ~df["no_geom"]
             if len(no_geom_errors) > 0:
                 set_error_and_invalid_reason(
                     df=df,
                     id_import=import_id,
                     error_code="NO-GEOM",
                     col_name_error="Colonnes géometriques",
-                    df_col_name_valid="no_geom",
+                    df_col_name_valid="geom_correct",
                     id_rows_error=no_geom_errors.index.to_list(),
                 )
 

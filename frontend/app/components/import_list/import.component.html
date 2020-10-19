@@ -14,74 +14,140 @@
                     aria-label="Search"
                     aria-describedby="basic-addon1"
                 />
-                <ngx-datatable 
-                    #table 
-                    class="material striped" 
-                    [rows]="filteredHistory" 
+                <ngx-datatable
+                    #table
+                    class="material striped"
+                    [rows]="filteredHistory"
                     [columnMode]="'force'"
-                    [headerHeight]="35" 
-                    [footerHeight]="40" 
-                    [rowHeight]="40" 
-                    [limit]="15" 
+                    [headerHeight]="35"
+                    [footerHeight]="40"
+                    [rowHeight]="40"
+                    [limit]="15"
                     [selectionType]='single'
                     [sorts]="[{prop: 'id_import', dir: 'desc'}]"
                 >
-                    <ngx-datatable-column *ngFor="let col of config.LIST_COLUMNS_FRONTEND" name="{{col.name}}"
-                        [prop]="col.prop" [maxWidth]="col.max_width">
+                    <ngx-datatable-column
+                        *ngFor="let col of config.LIST_COLUMNS_FRONTEND"
+                        name="{{col.name}}"
+                        [prop]="col.prop"
+                        [maxWidth]="col.max_width"
+                    >
                         <div *ngIf="col.prop=='dataset_name'">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                                <a routerLink="/metadata/dataset_detail/{{row.id_dataset}}" matTooltip="Voir la fiche du JDD">{{row.dataset_name}}</a>
+                            <ng-template
+                                let-row="row"
+                                ngx-datatable-cell-template
+                            >
+                                <a
+                                    routerLink="/metadata/dataset_detail/{{row.id_dataset}}"
+                                    matTooltip="Voir la fiche du JDD"
+                                >{{row.dataset_name}}</a>
                             </ng-template>
                         </div>
                         <div *ngIf="col.prop=='date_create_import'">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
+                            <ng-template
+                                let-row="row"
+                                ngx-datatable-cell-template
+                            >
                                 {{row.date_create_import |date:'dd-MM-yyyy'}}
                             </ng-template>
                         </div>
                     </ngx-datatable-column>
-                    <ngx-datatable-column maxWidth="200" name="Fin import" [sortable]="true" prop="date_end_import">
-                        <ng-template let-row="row" ngx-datatable-cell-template>
-                            <span *ngIf="row.in_error; else elseBlock" class="badge badge-dark font-size-medium">  
+                    <ngx-datatable-column
+                        maxWidth="200"
+                        name="Fin import"
+                        [sortable]="true"
+                        prop="date_end_import"
+                        class="date-col"
+                    >
+                        <ng-template
+                            let-row="row"
+                            ngx-datatable-cell-template
+                        >
+                            <span
+                                *ngIf="row.in_error; else elseBlock"
+                                class="badge font-size-medium"
+                            >
                                 Import en erreur
                             </span>
                             <ng-template #elseBlock>
                                 <div *ngIf="!row.is_finished">
-                                        <button *ngIf="!row.processing" class="clickable btn btn-sm btn-dark" style="margin-top: -10px;"
-                                            (click)="onFinishImport(row)"> {{row.processing ? 'Traitement en cours' : 'Finir'}} 
-                                        </button>
-                                        <span *ngIf="row.processing" class="badge badge-dark font-size-medium">
-                                            Traitement en cours...
-                                        </span>
+                                    <button
+                                        mat-raised-button
+                                        color="primary"
+                                        *ngIf="!row.processing"
+                                        class="clickable btn-dark"
+                                        style="margin-top: -10px;"
+                                        (click)="onFinishImport(row)"
+                                    >
+                                        {{row.processing ? 'Traitement en cours' : 'Finir'}}
+                                    </button>
+                                    <span
+                                        *ngIf="row.processing"
+                                        class="badge font-size-medium"
+                                    >
+                                        Traitement en cours...
+                                    </span>
                                 </div>
 
-                                <p *ngIf="row.is_finished" >{{row.date_end_import |date:'dd-MM-yyyy'}}</p>
+                                <p *ngIf="row.is_finished">{{row.date_end_import |date:'dd-MM-yyyy'}}</p>
                             </ng-template>
 
                         </ng-template>
                     </ngx-datatable-column>
-                    <ngx-datatable-column maxWidth="200" name="Rapport d'erreur" [sortable]="true" >
-                        <ng-template let-row="row" ngx-datatable-cell-template>
-                            <button *ngIf="row.errors.length > 0" matTooltip="Rapport d'erreur" class="clickable btn btn-sm btn-danger" style="margin-top: -10px;"
-                                [routerLink]="['errors', row.id_import]"> 
-                                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> 
+                    <ngx-datatable-column
+                        maxWidth="200"
+                        name="Rapport d'erreur"
+                        [sortable]="true"
+                    >
+                        <ng-template
+                            let-row="row"
+                            ngx-datatable-cell-template
+                        >
+                            <button
+                                *ngIf="row.errors.length > 0"
+                                matTooltip="Rapport d'erreur"
+                                mat-icon-button
+                                color=warn
+                                style="margin-top: -10px;"
+                                [routerLink]="['errors', row.id_import]"
+                            >
+                                <mat-icon>warning</mat-icon>
                             </button>
                         </ng-template>
                     </ngx-datatable-column>
-                    <ngx-datatable-column maxWidth="120" >
-                        <ng-template let-row="row" ngx-datatable-cell-template>
-                            <button *ngIf="(row.is_finished) && ((row.source_count - row.import_count) > 0)" class="clickable btn btn-sm btn-warning" style="margin-top: -10px;"
-                            (click)="_csvExport.onCSV(row.id_import)" 
-                            matTooltip='Téléchargement des données invalides'> 
-                            <i class="fa fa-download"></i>
+                    <ngx-datatable-column maxWidth="120">
+                        <ng-template
+                            let-row="row"
+                            ngx-datatable-cell-template
+                        >
+                            <button
+                                *ngIf="(row.is_finished) && ((row.source_count - row.import_count) > 0)"
+                                mat-icon-button
+                                color=warn
+                                style="margin-top: -10px;"
+                                (click)="_csvExport.onCSV(row.id_import)"
+                                matTooltip='Téléchargement des données invalides'
+                            >
+                                <mat-icon>donwload</mat-icon>
                             </button>
                         </ng-template>
                     </ngx-datatable-column>
-                    <ngx-datatable-column maxWidth="80" name="Suppr." >
-                        <ng-template let-row="row" ngx-datatable-cell-template>
-                            <button class="clickable btn btn-sm btn-danger" style="margin-top: -10px;"
-                                (click)="openDeleteModal(row, deleteModal)" 
-                                matTooltip="Supprimer l'import"> 
-                                <i class="fa fa-trash"></i>
+                    <ngx-datatable-column
+                        maxWidth="80"
+                        name="Suppr."
+                    >
+                        <ng-template
+                            let-row="row"
+                            ngx-datatable-cell-template
+                        >
+                            <button
+                                mat-icon-button
+                                color=warn
+                                style="margin-top: -10px;"
+                                (click)="openDeleteModal(row, deleteModal)"
+                                matTooltip="Supprimer l'import"
+                            >
+                                <mat-icon>delete</mat-icon>
                             </button>
                         </ng-template>
                     </ngx-datatable-column>
@@ -92,14 +158,19 @@
             </div>
             <import-modal-dataset class="pull-right mt-3"></import-modal-dataset>
 
-            <ng-template #deleteModal let-c="close " let-d="dismiss">
-          
-                <import-delete 
-                  [row]="deleteOne"
-                  [c]="c"
-                  (onDelete)="onImportList()">
+            <ng-template
+                #deleteModal
+                let-c="close "
+                let-d="dismiss"
+            >
+
+                <import-delete
+                    [row]="deleteOne"
+                    [c]="c"
+                    (onDelete)="onImportList()"
+                >
                 </import-delete>
-              
+
             </ng-template>
         </div>
     </div>

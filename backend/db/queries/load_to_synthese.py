@@ -58,6 +58,8 @@ def insert_into_synthese(
             import_id=import_id,
             id_source=id_source,
         )
+        print('LAAAA')
+        print(query)
         DB.session.execute(query)
 
         # update last_action in synthese

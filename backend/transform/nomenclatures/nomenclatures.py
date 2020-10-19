@@ -21,6 +21,7 @@ from ...db.queries.nomenclatures import (
     set_default_value,
     get_mnemo,
     get_nomenc_values,
+    add_nomenclature_transformed_col,
 )
 from ...db.queries.user_errors import set_user_error
 from ...db.queries.utils import execute_query
@@ -38,7 +39,7 @@ class NomenclatureTransformer:
 
     Object attributes:
 
-    :table_name str: the name of the table where we proced the transformations
+    :table_name str: the name of the table where we proceed the transformations
     :nomenclature_fields list<dict>: Describe all the synthese nomenclature field and their column correspodance of the import table
     :raw_mapping_content list<dict>: The content mapping from the DB
     :formated_mapping_content list<dict>: 
@@ -47,33 +48,46 @@ class NomenclatureTransformer:
         exemple : {'objdenbr': '['84', '83', '82', '81']'}
     """
 
-    def __init__(self, id_mapping, selected_columns, table_name):
+    def __init__(self):
+        pass
+
+
+    def init(self, id_mapping, selected_columns, table_name):
         """
         :params id_mapping int: the id_mapping
         :params selected_columns: colums of the field mapping corresponding of the import
         """
         self.table_name = table_name
         self.id_mapping = id_mapping
-        self.nomenclature_fields = self.__set_nomenclature_fields(
-            selected_columns)
+        self.nomenclature_fields = self.set_nomenclature_fields(selected_columns)
         self.formated_mapping_content = self.__formated_mapping_content(
             selected_columns
         )
         self.selected_columns = selected_columns
         self.accepted_id_nomencatures = self.__set_accepted_id_nomencatures()
+        self.__create_col_transformation(self.nomenclature_fields)
 
-    def __set_nomenclature_fields(self, selected_columns):
+    def set_nomenclature_fields(self, selected_columns)->list:
         nomenclature_fields = []
         for row in get_SINP_synthese_cols_with_mnemonique():
             if row["synthese_name"] in selected_columns:
                 nomenclature_fields.append(
                     {
                         "synthese_col": row["synthese_name"],
-                        "file_col": selected_columns[row["synthese_name"]],
+                        "user_col": selected_columns[row['synthese_name']],
+                        "transformed_col": f"_transformed_{row['synthese_name']}_{selected_columns[row['synthese_name']]}",
                         "mnemonique_type": row["mnemonique_type"],
                     }
                 )
         return nomenclature_fields
+
+    def __create_col_transformation(self, nomenclature_fields):
+        """
+        Create a column for tranformed nomenclature (id_nomenclature) from code or label
+        for each provided nomenclature column
+        """
+        for nom in nomenclature_fields:
+            add_nomenclature_transformed_col(nom["transformed_col"], self.table_name)
 
     def __formated_mapping_content(self, selected_columns):
         """
@@ -89,6 +103,7 @@ class NomenclatureTransformer:
                     "id_nomenclature": id_nomenclature,
                     "user_values": mapped_values,
                     "user_col": selected_columns[synthese_name],
+                    "transformed_col": f"_transformed_{synthese_name}_{selected_columns[synthese_name]}"
                 }
                 formated_mapping_content.append(d)
         return formated_mapping_content
@@ -109,18 +124,18 @@ class NomenclatureTransformer:
             accepted_id_nom.append(
                 {
                     "mnemonique_type": row.mnemnonique,
-                    "user_col": self.__find_file_col(row.mnemnonique),
+                    "transformed_col": self.__find_transformed_col(row.mnemnonique),
                     "accepted_id_nomenclature": row.id_nomenclatures,
                 }
             )
         return accepted_id_nom
 
-    def __find_file_col(self, mnemonique_type):
-        """get col_name from mnemonique_type"""
+    def __find_transformed_col(self, mnemonique_type):
+        """get transformed_col from mnemonique_type"""
         file_col_name = None
         for col in self.nomenclature_fields:
             if col["mnemonique_type"] == mnemonique_type:
-                file_col_name = col["file_col"]
+                file_col_name = col["transformed_col"]
                 break
         return file_col_name
 
@@ -130,13 +145,12 @@ class NomenclatureTransformer:
             for element in self.formated_mapping_content:
                 for val in element["user_values"]:
                     set_nomenclature_id(
-                        self.table_name,
-                        element["user_col"],
-                        val,
-                        str(element["id_nomenclature"]),
+                        table_name=self.table_name,
+                        user_col=element["user_col"],
+                        target_col=element["transformed_col"],
+                        value=val,
+                        id_nomenclature=str(element["id_nomenclature"]),
                     )
-                    # DB.session.flush()
-
             DB.session.commit()
         except Exception:
             DB.session.rollback()
@@ -149,7 +163,7 @@ class NomenclatureTransformer:
         for el in self.accepted_id_nomencatures:
             rows_with_err = find_row_with_nomenclatures_error(
                 self.table_name,
-                el["user_col"],
+                el["transformed_col"],
                 list(map(lambda id: str(id), el["accepted_id_nomenclature"])),
             )
             for row in rows_with_err:
@@ -172,8 +186,7 @@ class NomenclatureTransformer:
                             row[1],
                             ", ".join(nomenc_values_ids),
                             el["mnemonique_type"],
-                            get_mnemo(set_default_value(
-                                el["mnemonique_type"])),
+                            get_mnemo(set_default_value(el["mnemonique_type"])),
                         ),
                     )
                 else:
@@ -224,7 +237,7 @@ class NomenclatureTransformer:
         # Proof checker
         row_with_errors_proof = exist_proof_check(
             self.table_name,
-            self.selected_columns.get("id_nomenclature_exist_proof"),
+            self.__find_transformed_col('PREUVE_EXIST'),
             self.selected_columns.get("digital_proof"),
             self.selected_columns.get("non_digital_proof"),
         )
@@ -233,8 +246,7 @@ class NomenclatureTransformer:
                 id_import=id_import,
                 step="CONTENT_MAPPING",
                 error_code="INVALID_EXISTING_PROOF_VALUE",
-                col_name=self.selected_columns.get(
-                    "id_nomenclature_exist_proof"),
+                col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
                 id_rows=row_with_errors_proof.id_rows,
             )
 
@@ -242,14 +254,14 @@ class NomenclatureTransformer:
         row_with_errors_blurr = dee_bluring_check(
             self.table_name,
             id_import,
-            self.selected_columns.get("id_nomenclature_blurring"),
+            self.__find_transformed_col('DEE_FLOU'),
         )
         if row_with_errors_blurr and row_with_errors_blurr.id_rows:
             set_user_error(
                 id_import=id_import,
                 step="CONTENT_MAPPING",
                 error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
-                col_name=self.selected_columns.get("id_nomenclature_blurring"),
+                col_name= self.selected_columns.get("id_nomenclature_blurring"),
                 id_rows=row_with_errors_blurr.id_rows,
                 comment="Le champ dEEFloutage doit être remplit si le jeu de données est privé",
             )
@@ -257,9 +269,7 @@ class NomenclatureTransformer:
         #  literature checker
         row_with_errors_bib = ref_biblio_check(
             self.table_name,
-            field_statut_source=self.selected_columns.get(
-                "id_nomenclature_source_status"
-            ),
+            field_statut_source=self.__find_transformed_col('STATUT_SOURCE'),
             field_ref_biblio=self.selected_columns.get("reference_biblio"),
         )
         if row_with_errors_bib and row_with_errors_bib.id_rows:

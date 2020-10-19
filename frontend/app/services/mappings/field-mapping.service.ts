@@ -139,6 +139,14 @@ export class FieldMappingService {
     targetForm.get(formControlName).updateValueAndValidity();
   }
 
+  setInvalid(targetForm, formControlName, errorName) {
+    const error = {}
+    error[errorName] = true
+    targetForm.get(formControlName).setErrors(error)
+
+
+  }
+
   /**
    * Add custom validator to the form
    */
@@ -149,6 +157,7 @@ export class FieldMappingService {
         - wkt == '' and both coordinates != '' : wkt not required, codes not required, coordinates required
         - wkt != '' : wkt required, coordinates and codes not required
         - one of the code not empty: others not required
+        - wkt and X/Y filled => error
         */
     if (
       targetForm.get("WKT").value === "" &&
@@ -210,6 +219,13 @@ export class FieldMappingService {
       this.setFormControlNotRequired(targetForm, "latitude");
       this.setFormControlNotRequired(targetForm, "codecommune");
       this.setFormControlNotRequired(targetForm, "codemaille");
+    }
+    if (targetForm.get('WKT').value != "" && (targetForm.get("latitude").value != "" || targetForm.get("longitude").value != "")) {
+      console.log('passe la ?');
+
+      this.setInvalid(targetForm, "WKT", 'geomError');
+      this.setInvalid(targetForm, "longitude", 'geomError');
+      this.setInvalid(targetForm, "latitude", 'geomError');
     }
   }
 

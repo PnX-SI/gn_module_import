@@ -5,14 +5,39 @@
             <h5 class="card-title mb-0"> Téléversement du fichier </h5>
         </div>
         <div class="card-body">
-            <form  [formGroup]="uploadForm" class="was-validated">
+            <form
+                [formGroup]="uploadForm"
+            >
                 <div class="form-group">
                     <label>Importer un fichier :</label>
-                    <div class="custom-file" id="upload_files">
-                        <input class="custom-file-input" type=file (click)="onFileClick($event)"
-                            (change)="onFileSelected($event)" id="selectedFile" name="file" >
-                        <label *ngIf="fileName" class="custom-file-label" [class.error-file]="uploadForm.get('file').errors" for="selectedFile">{{fileName}}</label>
-                        <label *ngIf="!fileName" class="custom-file-label" [class.error-file]="uploadForm.get('file').errors" for="selectedFile"> Choisissez
+                    <div
+                        class="custom-file"
+                        id="upload_files"
+                    >
+                        <input
+                            class="custom-file-input"
+                            type=file
+                            (click)="onFileClick($event)"
+                            (change)="onFileSelected($event)"
+                            id="selectedFile"
+                            name="file"
+                        >
+                        <small style="color: red;" *ngIf="uploadForm.get('fileName').errors?.maxlength">
+                            Le nom du fichier doit faire au maximum 50 caractères 
+                            ({{uploadForm.get('fileName').errors?.maxlength.actualLength}} actuellement)
+                        </small>
+                        <label
+                            *ngIf="fileName"
+                            class="custom-file-label"
+                            [class.error-file]="uploadForm.get('file').errors"
+                            for="selectedFile"
+                        >{{fileName}}</label>
+                        <label
+                            *ngIf="!fileName"
+                            class="custom-file-label"
+                            [class.error-file]="uploadForm.get('file').errors"
+                            for="selectedFile"
+                        > Choisissez
                             votre
                             fichier</label>
                     </div>
@@ -20,8 +45,16 @@
                 <!-- Encoding field -->
                 <div class="form-group">
                     <label> Encodage de votre fichier :</label>
-                    <select class="custom-select mr-sm-2" id="encodage" formControlName="encodage" required>
-                        <option *ngFor="let encodage of importConfig.ENCODAGE" [value]="encodage">
+                    <select
+                        class="custom-select mr-sm-2"
+                        id="encodage"
+                        formControlName="encodage"
+                        required
+                    >
+                        <option
+                            *ngFor="let encodage of importConfig.ENCODAGE"
+                            [value]="encodage"
+                        >
                             {{encodage}}
                         </option>
                     </select>
@@ -30,8 +63,16 @@
                 <!-- SRID field -->
                 <div class="form-group">
                     <label>SRID de vos données géographiques :</label>
-                    <select class="custom-select mr-sm-2" id="srid" formControlName="srid" required>
-                        <option *ngFor="let srid of importConfig.SRID" [value]="srid.code">
+                    <select
+                        class="custom-select mr-sm-2"
+                        id="srid"
+                        formControlName="srid"
+                        required
+                    >
+                        <option
+                            *ngFor="let srid of importConfig.SRID"
+                            [value]="srid.code"
+                        >
                             {{srid.name}}
                         </option>
                     </select>
@@ -40,18 +81,33 @@
             </form>
             <!-- Navigation buttons -->
             <div class="navigate-btn">
-                <button type="submit"
-                    class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                    (click)="onUpload(uploadForm.value)" [disabled]="isDisable()" id="validate">
+                <button
+                    type="submit"
+                    class="d-flex justify-content-center align-content-between"
+                    mat-raised-button
+                    color=primary
+                    (click)="onUpload(uploadForm.value)"
+                    [disabled]="isDisable()"
+                    id="validate"
+                >
                     Suivant
                     <i class="material-icons"> navigate_next </i>
                 </button>
             </div>
             <!-- Error list in table -->
-            <div id="errorList" *ngIf="uploadFileErrors">
+            <div
+                id="errorList"
+                *ngIf="uploadFileErrors"
+            >
                 <div> Attention, erreurs detectées dans le fichier soumis </div>
-                <button class="btn btn-warning box-shadow">
-                    <a  target="_blank" [routerLink]="['/import/errors', importId]"> 
+                <button
+                    mat-raised-button
+                    color="warn"
+                >
+                    <a
+                        target="_blank"
+                        [routerLink]="['/import/errors', importId]"
+                    >
 
                         Voir le rapport complet
                     </a>
@@ -64,7 +120,15 @@
     </footer>
 </div>
 <!-- Spinner -->
-<div *ngIf="spinner" class="spinner">
-    <mat-spinner class="upload-spinner" [color]="color" [diameter]="150" [strokeWidth]="12">
+<div
+    *ngIf="spinner"
+    class="spinner"
+>
+    <mat-spinner
+        class="upload-spinner"
+        [color]="color"
+        [diameter]="150"
+        [strokeWidth]="12"
+    >
     </mat-spinner>
 </div>
