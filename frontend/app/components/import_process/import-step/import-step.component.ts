@@ -5,7 +5,6 @@ import { DataService } from "../../../services/data.service";
 import { CsvExportService } from "../../../services/csv-export.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../../module.config";
-import * as _ from "lodash";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
