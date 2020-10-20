@@ -61,13 +61,6 @@ export class ImportStepComponent implements OnInit {
                 this.displayWarnings = true;
         });
 
-        // this._ds.sendEmail(this.stepData.importId).subscribe(
-        //   res => {
-
-        //   },
-        //   error => {
-        //   }
-        // );
     }
 
     openErrorSheet(idImport) {
@@ -84,9 +77,9 @@ export class ImportStepComponent implements OnInit {
 
     onStepBack() {
         if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
-            this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/2`]);
+            this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.idImport}/step/2`]);
         } else {
-            this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
+            this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.idImport}step/3`]);
         }
     }
 
@@ -97,11 +90,6 @@ export class ImportStepComponent implements OnInit {
                 console.log(res);
 
                 this.spinner = false;
-                // res.mappings.forEach(mapping => {
-                //   if (mapping.temporary) {
-                //     this._ds.deleteMapping(mapping.id_mapping).subscribe();
-                //   }
-                // });
 
                 this.stepService.resetStepoer();
 
