@@ -33,22 +33,22 @@ const routes: Routes = [
     canActivate: [StepperGuardService]
   },
   {
-    path: "process/step/2",
+    path: "process/id_import/:id_import/step/2",
     component: FieldsMappingStepComponent,
     canActivate: [StepperGuardService]
   },
   {
-    path: "process/step/3",
+    path: "process/id_import/:id_import/step/3",
     component: ContentMappingStepComponent,
     canActivate: [StepperGuardService]
   },
   {
-    path: "process/step/4",
+    path: "process/id_import/:id_import/step/4",
     component: ImportStepComponent,
     canActivate: [StepperGuardService]
   },
   {
-    path: "process/step/4/id_import/:id_import",
+    path: "process//id_import/:id_import/step/4",
     component: ImportStepComponent
   }
 ];
@@ -87,4 +87,4 @@ const routes: Routes = [
 
   bootstrap: []
 })
-export class GeonatureModule {}
+export class GeonatureModule { }

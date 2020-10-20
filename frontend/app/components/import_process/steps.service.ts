@@ -32,7 +32,6 @@ export interface Step2Data {
 
 export interface Step3Data {
 	importId?: number;
-	// table_name?: any;
 	contentMappingInfo?: any;
 	id_content_mapping?: number;
 	temporaryMapping?: boolean;

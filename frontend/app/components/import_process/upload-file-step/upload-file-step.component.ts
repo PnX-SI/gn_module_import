@@ -142,7 +142,7 @@ export class UploadFileStepComponent implements OnInit {
               };
               this.stepService.setStepData(1, step1data);
               this._router.navigate([
-                `${ModuleConfig.MODULE_URL}/process/step/2`
+                `${ModuleConfig.MODULE_URL}/process/id_import/${res.importId}/step/2`
               ]);
               this.spinner = false;
             },
@@ -170,7 +170,7 @@ export class UploadFileStepComponent implements OnInit {
           );
       } else {
         this.spinner = false;
-        this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/2`]);
+        this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.importId}/step/2`]);
       }
     } else {
       this._commonService.regularToaster("error", "un upload déjà en cours");

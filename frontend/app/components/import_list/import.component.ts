@@ -166,9 +166,17 @@ export class ImportComponent implements OnInit {
         break;
       }
     }
-    this._router.navigate([
-      `${ModuleConfig.MODULE_URL}/process/step/${row.step}`
-    ]);
+
+    if (row.step == 1) {
+      this._router.navigate([
+        `${ModuleConfig.MODULE_URL}/process/step/${row.step}`
+      ]);
+    } else {
+      this._router.navigate([
+        `${ModuleConfig.MODULE_URL}/process/id_import/${row.id_import}/step/${row.step}`
+      ]);
+    }
+
   }
 
   onViewDataset(row) {

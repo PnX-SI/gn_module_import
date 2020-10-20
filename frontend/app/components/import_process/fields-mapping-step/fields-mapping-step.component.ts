@@ -70,6 +70,7 @@ export class FieldsMappingStepComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+
     this.stepData = this.stepService.getStepData(2);
     const forkJoinArray = [
       this._ds.getColumnsImport(this.stepData.importId),
@@ -78,6 +79,7 @@ export class FieldsMappingStepComponent implements OnInit {
     ]
 
     if (this.stepData.id_field_mapping) {
+
       forkJoinArray.push(
         this._ds.getOneBibMapping(this.stepData.id_field_mapping)
       )
@@ -90,14 +92,6 @@ export class FieldsMappingStepComponent implements OnInit {
         this.userFieldMappings = data[1];
 
         let importData: any = data[2];
-        console.log("importData.id_field_mapping");
-        console.log(importData.id_field_mapping);
-        if (importData.id_field_mapping) {
-          this.fieldMappingForm.setValue(
-            this.userFieldMappings.find(mapping => mapping.id_mapping==importData.id_field_mapping)
-          );
-        }
-        // TODO: ne pas mettre deux fois le même id_mappon
         if (data.length == 4) {
           let mapping_already_present = false
           this.userFieldMappings.forEach(element => {
@@ -107,6 +101,12 @@ export class FieldsMappingStepComponent implements OnInit {
           });
           if (!mapping_already_present) {
             this.userFieldMappings.push(data[3])
+          }
+
+          if (importData.id_field_mapping) {
+            this.fieldMappingForm.setValue(
+              this.userFieldMappings.find(mapping => mapping.id_mapping == importData.id_field_mapping)
+            );
           }
         }
 
@@ -263,7 +263,6 @@ export class FieldsMappingStepComponent implements OnInit {
           });
 
         if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
-          // this.stepService.setStepData(4, step4Data);
           this._ds
             .dataChecker(
               this.stepData.importId,
@@ -279,10 +278,7 @@ export class FieldsMappingStepComponent implements OnInit {
                 if (import_obj.source_count < ModuleConfig.MAX_LINE_LIMIT) {
                   this.stepService.setStepData(4, step4Data);
                   this._router.navigate([
-                    `${ModuleConfig.MODULE_URL}/process/step/4`
-                  ]);
-                  this._router.navigate([
-                    ModuleConfig.MODULE_URL + "/process/step/4"
+                    `${ModuleConfig.MODULE_URL}/process/id_import/${import_obj.id_import}/step/4`
                   ]);
                 } else {
                   this.nbLignes = import_obj.source_count;
@@ -298,7 +294,7 @@ export class FieldsMappingStepComponent implements OnInit {
               }
             );
         } else {
-          this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/3`]);
+          this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.stepData.importId}/step/3`]);
         }
       });
   }
@@ -630,7 +626,6 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   onSelect(id_mapping, targetForm) {
-    // console.log(targetForm.value)
     this.count(targetForm);
     this.id_mapping = id_mapping;
     this.shadeSelectedColumns(targetForm);

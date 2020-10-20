@@ -63,6 +63,7 @@ export class ContentMappingStepComponent implements OnInit {
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(3);
+
     const step2: Step2Data = this.stepService.getStepData(2);
     this.idFieldMapping = step2.id_field_mapping;
     this.contentTargetForm = this._fb.group({});
@@ -297,7 +298,7 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   onStepBack() {
-    this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/2`]);
+    this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.stepData.importId}/step/2`]);
   }
 
   onDataChecking() {
@@ -324,7 +325,7 @@ export class ContentMappingStepComponent implements OnInit {
           });
           if (import_obj.source_count < ModuleConfig.MAX_LINE_LIMIT) {
             this._router.navigate([
-              ModuleConfig.MODULE_URL + "/process/step/4"
+              `${ModuleConfig.MODULE_URL}/process/id_import/${this.stepData.importId}/step/4`
             ]);
           } else {
             this.nbLignes = import_obj.source_count;
