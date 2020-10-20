@@ -39,17 +39,13 @@ import time
 #     return concurrent_data_check(import_id, id_field_mapping, id_content_mapping)
 
 
-def run_control(import_id, id_field_mapping, id_content_mapping, file_name, authors):
+def run_control(import_id, id_field_mapping, id_content_mapping, file_name, recipients):
     try:
-        recipients = list((map(lambda a: a["email"], authors)))
-        recipients = []
-
         field_mapping_data_checking(import_id, id_field_mapping)
         content_mapping_data_checking(import_id, id_content_mapping)
         import_send_mail(
             id_import=import_id, mail_to=recipients, file_name=file_name, step="check"
         )
-        #
         return "Done"
     except Exception as e:
         DB.session.query(TImports).filter(TImports.id_import == import_id).update(
@@ -80,7 +76,7 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
         REGEX_EMAIL = re.compile(r"[\w\.-]+@[\w\.-]+(?:\.[\w]+)+")
         for auth in import_as_dict["author"]:
             if REGEX_EMAIL.match(auth["email"]):
-                recipients.append(import_obj["authors"])
+                recipients.append(auth["email"])
         if len(recipients) == 0:
             raise GeonatureImportApiError(
                 message="L'utilisateur ne dispose pas d'email (ou il est invalide)",
@@ -107,7 +103,7 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
                 id_field_mapping,
                 id_content_mapping,
                 import_as_dict["full_file_name"],
-                import_as_dict["author"],
+                recipients,
             )
 
         a = threading.Thread(
