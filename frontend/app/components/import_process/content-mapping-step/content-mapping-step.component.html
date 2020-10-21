@@ -10,7 +10,7 @@
                 <fieldset>
                     <div *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.R != '0'">
                         <legend class="px-1">
-                            Choix du modèle d'imports
+                            Choix du modèle d'import
                         </legend>
                         <div class="form-group">
                             <select
@@ -155,7 +155,7 @@
                                 *ngIf="contentMapping.user_values.values.length > 0 && mappingListForm.value != null"
                                 class="alert alert-warning"
                             >
-                                <b> Attention: </b> des valeurs du fichiers n'ont trouvé aucune correspondance dans le
+                                <b> Attention: </b> des valeurs du fichier n'ont trouvé aucune correspondance dans le
                                 modèle selectionné:
                                 <ul>
                                     <li *ngFor="let item of contentMapping.user_values.values">

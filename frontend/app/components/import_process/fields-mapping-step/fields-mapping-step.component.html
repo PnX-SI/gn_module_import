@@ -14,7 +14,7 @@
                 <fieldset>
                     <div *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.R != '0'">
                         <legend class="px-1">
-                            Choix du modèle d'imports
+                            Choix du modèle d'import
                         </legend>
                         <select
                             class="form-control form-control-sm"
@@ -82,6 +82,7 @@
                         <button
                             class="d-flex justify-content-center align-content-between mr-2 button-success"
                             mat-raised-button
+                            matTooltip="Créer un nouveau mapping"
                             (click)="saveMappingName(newMappingForm.value, syntheseForm)"
                             [disabled]="newMappingForm.value == null"
                         >
@@ -112,11 +113,13 @@
                             class="d-flex justify-content-center align-content-between mr-2 button-success"
                             (click)="updateMappingName(newMappingForm.value)"
                             mat-raised-button
+                            matTooltip="Modifier le nom du modèle d'import"
                             [disabled]="newMappingForm.value == null"
                         >
-                            <mat-icon>add</mat-icon>
+                            <mat-icon>check</mat-icon>
                         </button>
                         <button
+                            matTooltip="Annuler la modification du nom du modèle d'import"
                             class="d-flex justify-content-center align-content-between"
                             (click)="cancelMapping()"
                             mat-raised-button
