@@ -63,6 +63,7 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'obsmeth','id_nomenclature_obs_technique',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'ocstatbio','id_nomenclature_bio_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'ocetatbio','id_nomenclature_bio_condition',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'occComport','id_nomenclature_behaviour',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'ocnat','id_nomenclature_naturalness',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'obsctx','comment_context',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'sensiniv','id_nomenclature_sensitivity',true,false),
@@ -84,6 +85,7 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'validateur','validator',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'datectrl','meta_validation_date',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','validation_comment',false,false),
+
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'natObjGeo','id_nomenclature_geo_object_nature',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'obstech','id_nomenclature_obs_technique',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'statobs','id_nomenclature_observation_status',true,false),
