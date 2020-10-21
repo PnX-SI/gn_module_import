@@ -1,5 +1,6 @@
 import re
 import numpy as np
+import pandas as pd
 from ..wrappers import checker
 from .utils import set_is_valid, fill_map, set_error_and_invalid_reason
 from ..logs import logger
@@ -97,6 +98,18 @@ def check_id_digitizer(df, selected_columns, synthese_info, import_id, schema_na
         raise
 
 
+def reg_match(element, regex):
+    if pd.isnull(element):
+        return True
+    else:
+        try:
+            element = str(e)
+            match = regex.match(element)
+            return match if match else False
+        except Exception:
+            return False
+
+
 @checker("Data cleaning : url checked")
 def check_url(df, selected_columns, import_id):
     regex = re.compile(
@@ -107,14 +120,19 @@ def check_url(df, selected_columns, import_id):
         r"(?:/?|[/?]\S+)$",
         re.IGNORECASE,
     )
+    # ACCEPT NAN ?
+    # accept emty str ?
     if "digital_proof" in selected_columns:
         digit_col = df[selected_columns["digital_proof"]]
-        # regex return none where the value null or not a string. We put true in this case
-        df["valid_url"] = digit_col.str.contains(regex).where(
-            digit_col.notnull(), other=True
-        )
+        # better perf but don't work ?
+        # df.loc[digit_proof_not_null, "valid_url"] = df.loc[
+        #     digit_proof_not_null, digit_col
+        # ].str.contains(regex)
+
+        # set true where null and compare the regex on all other lines
+        df["valid_url"] = digit_col.apply(lambda x: reg_match(x, regex))
         invalid_rows = df[df["valid_url"] == False]
-        invalid_values = invalid_rows[selected_columns["digital_proof"]].to_list()
+
         if len(invalid_rows) > 0:
             set_error_and_invalid_reason(
                 df=df,
@@ -123,8 +141,5 @@ def check_url(df, selected_columns, import_id):
                 col_name_error=selected_columns["digital_proof"],
                 df_col_name_valid="valid_url",
                 id_rows_error=invalid_rows.index.to_list(),
-                comment="Les valeurs suivantes ne sont pas des URL conformes '{}'".format(
-                    ", ".join(invalid_values)
-                ),
             )
 
