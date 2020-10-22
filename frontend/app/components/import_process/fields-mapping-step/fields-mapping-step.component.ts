@@ -469,10 +469,12 @@ export class FieldsMappingStepComponent implements OnInit {
             }
 
             if (columnsArray.includes(field["source_field"])) {
-              this.syntheseForm
-                .get(field["target_field"])
-                .setValue(field["source_field"]);
-              this.mappedList.push(field["target_field"]);
+              const target_form = this.syntheseForm.get(field["target_field"])
+              if (target_form) {
+                target_form.setValue(field["source_field"]);
+                this.mappedList.push(field["target_field"]);
+              }
+
             }
           }
           this.shadeSelectedColumns(this.syntheseForm);
