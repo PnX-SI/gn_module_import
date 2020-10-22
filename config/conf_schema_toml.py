@@ -113,8 +113,6 @@ DEFAULT_FIELD_MAPPING_ID = 1
 ALLOW_MODIFY_DEFAULT_MAPPING = True
 ALLOW_FIELD_MAPPING = True
 DEFAULT_FIELD_MAPPING_ID = 1
-# Parameter to define if the mapped fields are displayed or not.
-DISPLAY_MAPPED_FIELD = False
 # Parameter to define if the checkbox allowing to change display mode is displayed or not.
 DISPLAY_CHECK_BOX_MAPPED_FIELD = True
 
@@ -135,7 +133,8 @@ class GnModuleSchemaConf(Schema):
     ALLOW_VALUE_MAPPING = fields.Boolean(missing=ALLOW_VALUE_MAPPING)
     DEFAULT_VALUE_MAPPING_ID = fields.Integer(missing=DEFAULT_VALUE_MAPPING_ID)
     FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(missing=False)
-    DISPLAY_MAPPED_VALUES = fields.Boolean(missing=False)
+    # Parameter to define if the mapped fields are displayed or not.
+    DISPLAY_MAPPED_VALUES = fields.Boolean(missing=True)
     DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(missing=True)
     MAX_LINE_LIMIT = fields.Integer(missing=MAX_LINE_LIMIT)
     INSTANCE_BOUNDING_BOX = fields.List(fields.Float, missing=INSTANCE_BOUNDING_BOX)
