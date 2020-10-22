@@ -30,7 +30,7 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 })
 export class FieldsMappingStepComponent implements OnInit {
   public spinner: boolean = false;
-  public displayAllValues: boolean = false;
+  public displayAllValues: boolean = ModuleConfig.DISPLAY_MAPPED_VALUES;
   public IMPORT_CONFIG = ModuleConfig;
   public syntheseForm: FormGroup;
   public isErrorButtonClicked: boolean = false;

@@ -238,7 +238,9 @@ def field_mapping_data_checking(import_id, id_mapping):
         logger.debug("DB table name = %s", table_names["imports_table_name"])
 
         # get synthese fields filled in the user form:
-        selected_columns = get_selected_columns(id_mapping)
+        selected_columns = get_selected_columns(
+            table_names["imports_table_name"], id_mapping
+        )
 
         importObject = ImportDescriptor(
             id_import=import_id,
@@ -254,17 +256,6 @@ def field_mapping_data_checking(import_id, id_mapping):
         logger.debug(
             "selected columns in correspondance mapping = %s", selected_columns
         )
-        # check if column names provided in the field form exists in the user table
-        for key, value in selected_columns.items():
-            if key not in ["unique_id_sinp_generate", "altitudes_generate"]:
-                if value not in column_names:
-                    raise GeonatureImportApiError(
-                        message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
-                        details="""La colonne '{}' n'existe pas. 
-                            Avez-vous sélectionné le bon mapping ?""".format(
-                            value
-                        ),
-                    )
 
         # check if required fields are not empty:
         missing_cols = []
@@ -523,8 +514,10 @@ def content_mapping_data_checking(import_id, id_mapping):
         import_object = TImports.query.get(import_id)
         if not import_object:
             raise
-        selected_columns = get_selected_columns(import_object.id_field_mapping)
         table_name = set_imports_table_name(get_table_name(import_id))
+        selected_columns = get_selected_columns(
+            table_name, import_object.id_field_mapping
+        )
         # build nomenclature_transformer service
         nomenclature_transformer = NomenclatureTransformer()
 

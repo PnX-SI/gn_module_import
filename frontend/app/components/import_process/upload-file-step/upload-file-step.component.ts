@@ -81,8 +81,6 @@ export class UploadFileStepComponent implements OnInit {
   }
 
   onFileSelected(event: any) {
-    console.log(event.target.files[0].name.length);
-
     this.uploadForm.patchValue({
       file: <File>event.target.files[0],
       fileName: event.target.files[0].name

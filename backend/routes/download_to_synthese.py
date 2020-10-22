@@ -117,7 +117,7 @@ def import_in_synthese(import_id):
         table_name = set_imports_table_name(get_table_name(import_id))
         # set total user columns
         id_mapping = get_id_field_mapping(import_id)
-        selected_cols = get_selected_columns(id_mapping)
+        selected_cols = get_selected_columns(table_name, id_mapping)
         added_cols = {
             "the_geom_4326": "gn_the_geom_4326",
             "the_geom_local": "gn_the_geom_local",

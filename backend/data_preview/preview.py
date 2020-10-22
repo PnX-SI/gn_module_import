@@ -69,7 +69,7 @@ def get_preview(
                     source=user_file_col, target=nomenclature_col_dict["synthese_col"]
                 )
                 row_dict[new_dict_key] = get_nomenclature_label_from_id(value)
-                key_to_remove.append(nomenclature_col_dict["user_col"])
+                key_to_remove.append(nomenclature_col_dict["synthese_col"])
                 # find target columns in the modified dict create bellow
             syn_targets = modified_dict[key]
             for syn_target in syn_targets:

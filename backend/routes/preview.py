@@ -37,7 +37,7 @@ def get_valid_data(info_role, import_id):
     # set total user columns
     # form_data = request.form.to_dict(flat=False)
     id_mapping = get_id_field_mapping(import_id)
-    selected_cols = get_selected_columns(id_mapping)
+    selected_cols = get_selected_columns(table_name, id_mapping)
 
     # added_cols = get_added_columns(id_mapping)
     added_cols = {
