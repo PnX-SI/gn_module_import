@@ -248,7 +248,7 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'refbiblio','reference_biblio',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'cdhab','cd_hab',true,false),
 
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'geometry','WKT',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'geometrie','WKT',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'gn_1_the_geom_point_2','the_geom_point',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'gn_1_the_geom_local_2','the_geom_local',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'gn_1_the_geom_4326_2','the_geom_4326',false,true),
