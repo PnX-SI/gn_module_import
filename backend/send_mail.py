@@ -16,8 +16,8 @@ def import_send_mail(mail_to, file_name, step, id_import):
         :param mail_to: User who runs the import
         :param step: step of the process: 'import' | 'check'
     """
-    if step == 'check':
-        link = f"{current_app.config['URL_APPLICATION']}/#/import/process/id_import/{str(id_import)/}step/4"
+    if step == "check":
+        link = f"{current_app.config['URL_APPLICATION']}/#/import/process/id_import/{str(id_import)}/step/4"
         msg = f"""
         Bonjour,
         <p>
@@ -37,9 +37,10 @@ def import_send_mail(mail_to, file_name, step, id_import):
 
     send_mail(
         recipients=mail_to,
-        subject="[GeoNature] Import réalisé" if (
-            step == "import") else "[GeoNature] Contrôles terminés",
-        msg_html=msg
+        subject="[GeoNature] Import réalisé"
+        if (step == "import")
+        else "[GeoNature] Contrôles terminés",
+        msg_html=msg,
     )
 
 
@@ -66,5 +67,5 @@ def import_send_mail_error(mail_to, file_name, error):
     send_mail(
         recipients=mail_to,
         subject="[GeoNature][ERREUR] Import {}".format(file_name),
-        msg_html=msg
+        msg_html=msg,
     )
