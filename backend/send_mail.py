@@ -39,7 +39,7 @@ def import_send_mail(mail_to, file_name, step, id_import):
         recipients=mail_to,
         subject="[GeoNature] Import réalisé"
         if (step == "import")
-        else "[GeoNature] Contrôles terminés",
+        else "[GeoNature] Import - Contrôles terminés",
         msg_html=msg,
     )
 
