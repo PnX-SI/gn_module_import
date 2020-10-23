@@ -97,7 +97,7 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('id_nomenclature_info_geo_type', 'Type d''information géographique', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 13, TRUE, 'Correspondance champs standard: typeInfoGeo'),
 	('longitude', 'Longitude (coord x)', '', '', 'real', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 14, TRUE, NULL),
 	('latitude', 'Latitude (coord y)', '', '', 'real', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 15, TRUE, NULL),
-	('WKT', 'WKT', '', '', 'wkt', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 16, TRUE, NULL),
+	('WKT', 'Géometrie (WKT)', '', '', 'wkt', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 16, TRUE, NULL),
 	('codecommune', 'Code commune', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 17, TRUE, 'Correspondance champs standard: codeCommune. Code INSEE attendu'),
 	('codemaille', 'Code maille', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 18, TRUE, 'Correspondance champs standard: codeMaille. Code maille-10 MNHN attendu'),
 	('codedepartement', 'Code département', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 19, TRUE, 'Correspondance champs standard: codeDepartement. Code INSEE attendu'),

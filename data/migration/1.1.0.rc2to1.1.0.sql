@@ -91,6 +91,10 @@ UPDATE gn_imports.dict_fields
 SET fr_label = 'Floutage sur la donnée'
 WHERE name_field = 'id_nomenclature_blurring';
 
+UPDATE gn_imports.dict_fields 
+SET fr_label = 'Méthode de regroupement'
+WHERE name_field = 'grp_method';
+
 
 UPDATE gn_imports.dict_fields 
 SET comment = 'Correspondance champs standard: identifiantOrigine'
@@ -167,6 +171,9 @@ UPDATE gn_imports.t_mappings_fields
 SET target_field='id_nomenclature_obs_technique'
 WHERE target_field='id_nomenclature_obs_meth';
 
+UPDATE gn_imports.t_mappings_fields
+SET fr_label='Géometrie (WKT)'
+WHERE name_field='WKT';
 
 	-- Ajout de la nomenclature comportement aux mappings SINP par défaut s'ils existent
 -- Intégration du mapping de valeurs SINP (labels) par défaut pour les nomenclatures de la synthèse 
@@ -209,8 +216,8 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'profmin','depth_min',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'profmax','depth_max',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','altitudes_generate',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'x_centroid','longitude',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'y_centroid','latitude',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'x_centroid','longitude',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'y_centroid','latitude',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'observer','observers',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'obsdescr','comment_description',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'typinfgeo','id_nomenclature_info_geo_type',true,false),
@@ -235,7 +242,7 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'denbrmax','count_max',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'ocmethdet','id_nomenclature_determination_method',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'detminer','determiner',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'id_digitiser','id_digitiser',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'id_digitiser','id_digitiser',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'preuveoui','id_nomenclature_exist_proof',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'urlpreuv','digital_proof',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'preuvnonum','non_digital_proof',true,false),
@@ -262,3 +269,8 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'codemaille','codemaille',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'codedepartement','codedepartement',true,false)
 ;
+
+
+UPDATE gn_imports.t_user_errors
+SET description = 'L''identifiant SINP fourni existe déjà en base.  Il faut en fournir un autre ou laisser la valeur vide pour une attribution automatique.'
+WHERE "name" = 'EXISTING_UUID';
