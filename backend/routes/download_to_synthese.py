@@ -53,7 +53,7 @@ def import_data(info_role, import_id):
         def data_import_task(import_as_dict):
             recipients = list((map(lambda a: a["email"], import_as_dict.get("author"))))
             try:
-                res = import_in_synthese(import_id)
+                res = import_in_synthese(import_obj)
                 import_send_mail(
                     id_import=import_as_dict["id_import"],
                     mail_to=recipients,
@@ -94,7 +94,7 @@ def import_data(info_role, import_id):
         return import_as_dict
     else:
         try:
-            return import_in_synthese(import_id)
+            return import_in_synthese(import_obj)
         except Exception as e:
             DB.session.query(TImports).filter(TImports.id_import == import_id).update(
                 {"in_error": True}
@@ -104,7 +104,7 @@ def import_data(info_role, import_id):
             raise GeonatureImportApiError(message=str(e), details="", status_code=500)
 
 
-def import_in_synthese(import_id):
+def import_in_synthese(import_obj):
     """"Import data in synthese"""
     try:
 
@@ -114,10 +114,9 @@ def import_in_synthese(import_id):
         MODULE_CODE = blueprint.config["MODULE_CODE"]
 
         # get table name
-        table_name = set_imports_table_name(get_table_name(import_id))
+        table_name = set_imports_table_name(get_table_name(import_obj.id_import))
         # set total user columns
-        id_mapping = get_id_field_mapping(import_id)
-        selected_cols = get_selected_columns(table_name, id_mapping)
+        selected_cols = get_selected_columns(table_name, import_obj.id_field_mapping)
         added_cols = {
             "the_geom_4326": "gn_the_geom_4326",
             "the_geom_local": "gn_the_geom_local",
@@ -128,11 +127,11 @@ def import_in_synthese(import_id):
         if "date_max" not in selected_cols:
             added_cols["date_max"] = "date_max"
         total_columns = set_total_columns(
-            selected_cols, added_cols, import_id, MODULE_CODE
+            selected_cols, added_cols, import_obj.id_import, MODULE_CODE
         )
 
         # check if id_source already exists in synthese table
-        is_id_source = check_id_source(import_id)
+        is_id_source = check_id_source(import_obj.id_import)
         if is_id_source:
             raise GeonatureImportApiError(
                 message="échec : déjà importé (vérification basée sur l'id_source)",
@@ -141,11 +140,15 @@ def import_in_synthese(import_id):
             )
         logger.info("INSERT IN t_sources")
         # insert into t_sources
-        insert_into_t_sources(IMPORTS_SCHEMA_NAME, table_name, import_id, total_columns)
+        insert_into_t_sources(
+            IMPORTS_SCHEMA_NAME, table_name, import_obj.id_import, total_columns
+        )
 
         logger.info("#### Start insert in Synthese")
         # insert into synthese
-        load_data_to_synthese(IMPORTS_SCHEMA_NAME, table_name, total_columns, import_id)
+        load_data_to_synthese(
+            IMPORTS_SCHEMA_NAME, table_name, total_columns, import_obj
+        )
 
         logger.info("-> Data imported in gn_synthese.synthese table")
 
@@ -159,7 +162,6 @@ def import_in_synthese(import_id):
             total_columns["date_min"],
             total_columns["date_max"],
         )
-        import_obj = DB.session.query(TImports).get(int(import_id))
         import_obj.import_count = get_n_valid_rows(IMPORTS_SCHEMA_NAME, table_name)
         import_obj.taxa_count = get_n_taxa(
             IMPORTS_SCHEMA_NAME, table_name, total_columns["cd_nom"]
