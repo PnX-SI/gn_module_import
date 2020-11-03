@@ -38,6 +38,9 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 * Documentation de la mise à jour du module (#149)
 * Script de mise à jour de la BDD 1.0.0to1.1.0.sql 
 * Ajouts et mises à jour de champs de la synthèse (modifiée depuis GeoNature 2.5.0)
+* Ajout des champs du standard Octax V2 et ajout de champs rajoutés dans la synthèse
+* Ajout de la correspondance au standard sur l'ensemble des champs du mapping dans une tooltip
+
 
 **🐛 Corrections**
 
@@ -49,6 +52,13 @@ Voir https://github.com/PnX-SI/gn_module_import/compare/develop
 * Correction et amélioration des contrôles de dates (#128)
 * !!!!!!!!!! Suppression temporaire de la vérification des doublons dans le fichier source, trop lourde en performance et non fonctionnelle
 * Clarification de l'intitulé et masquage par défaut du champs "id_digitiser" (#159)
+* Correction de la génération des UUID SINP (#156)
+* Correction de la génération des altitudes (#155)
+* Correction de la vérification de la bounding box (#151)
+* Ajout d'une vérification sur la longueur des fichiers fournis (50 charactères)
+* Transformation des nomenclatures dans des colonnes séparées (#148)
+* Vérification que l'utilisateur a bien un email renseigné
+
 
 **Notes de version**
 
