@@ -5,11 +5,15 @@ from ...db.queries.load_to_synthese import (
     insert_into_synthese,
     get_id_source,
 )
+from ...db.queries.data_preview import get_id_module
+from ...db.models import TImports
 
 
-def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
+def load_data_to_synthese(schema_name, table_name, total_columns, import_obj):
     try:
-        total_columns["id_source"] = get_id_source(import_id)
+        total_columns["id_source"] = get_id_source(import_obj.id_import)
+        total_columns["id_dataset"] = import_obj.id_dataset
+        total_columns["id_module"] = get_id_module("IMPORT")
         # add key type info to value ('value::type')
         select_part = []
         for key, value in total_columns.items():
@@ -31,7 +35,7 @@ def load_data_to_synthese(schema_name, table_name, total_columns, import_id):
 
         # insert into synthese
         insert_into_synthese(
-            schema_name, table_name, select_part, total_columns, import_id
+            schema_name, table_name, select_part, total_columns, import_obj
         )
     except Exception:
         DB.session.rollback()

@@ -102,7 +102,11 @@ export class ImportComponent implements OnInit {
           this._commonService.regularToaster(
             "error",
             "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-          );
+          )
+        }
+        else if (error.status === 404) {
+          this._commonService.regularToaster("warning", "Aucun import trouvé");
+
         } else {
           // show error message if other server error
           this._commonService.regularToaster("error", error.error.message);
@@ -162,9 +166,17 @@ export class ImportComponent implements OnInit {
         break;
       }
     }
-    this._router.navigate([
-      `${ModuleConfig.MODULE_URL}/process/step/${row.step}`
-    ]);
+
+    if (row.step == 1) {
+      this._router.navigate([
+        `${ModuleConfig.MODULE_URL}/process/step/${row.step}`
+      ]);
+    } else {
+      this._router.navigate([
+        `${ModuleConfig.MODULE_URL}/process/id_import/${row.id_import}/step/${row.step}`
+      ]);
+    }
+
   }
 
   onViewDataset(row) {

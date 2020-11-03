@@ -71,6 +71,7 @@ def data_cleaning(
     missing_val,
     def_count_val,
     cd_nom_list,
+    cd_hab_list,
     file_srid,
     local_srid,
     is_generate_uuid,
@@ -204,12 +205,6 @@ def field_mapping_data_checking(import_id, id_mapping):
     High level function to perform all field mapping check and transformation
     """
     try:
-        is_running = True
-        is_temp_table_name = False
-        is_table_names = False
-
-        # INITIALIZE VARIABLES
-
         logger.info("*** START CORRESPONDANCE MAPPING")
 
         errors = []
@@ -243,7 +238,9 @@ def field_mapping_data_checking(import_id, id_mapping):
         logger.debug("DB table name = %s", table_names["imports_table_name"])
 
         # get synthese fields filled in the user form:
-        selected_columns = get_selected_columns(id_mapping)
+        selected_columns = get_selected_columns(
+            table_names["imports_table_name"], id_mapping
+        )
 
         importObject = ImportDescriptor(
             id_import=import_id,
@@ -256,18 +253,9 @@ def field_mapping_data_checking(import_id, id_mapping):
             import_srid=import_obj_dict["srid"],
         )
 
-        logger.debug("selected columns in correspondance mapping = %s", selected_columns)
-        # check if column names provided in the field form exists in the user table
-        for key, value in selected_columns.items():
-            if key not in ["unique_id_sinp_generate", "altitudes_generate"]:
-                if value not in column_names:
-                    raise GeonatureImportApiError(
-                        message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
-                        details="""La colonne '{}' n'existe pas. 
-                            Avez-vous sélectionné le bon mapping ?""".format(
-                            value
-                        ),
-                    )
+        logger.debug(
+            "selected columns in correspondance mapping = %s", selected_columns
+        )
 
         # check if required fields are not empty:
         missing_cols = []
@@ -305,7 +293,9 @@ def field_mapping_data_checking(import_id, id_mapping):
         if len(missing_cols) > 0:
             raise GeonatureImportApiError(
                 message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
-                details="Champs obligatoires manquants: {}".format(",".join(missing_cols)),
+                details="Champs obligatoires manquants: {}".format(
+                    ",".join(missing_cols)
+                ),
             )
 
         # DELETE USER ERRORS
@@ -320,13 +310,14 @@ def field_mapping_data_checking(import_id, id_mapping):
             import_id,
         )
         # HACK: add code_commune, code_maille, code_dep columns
-        #  TODO: conserver le formulaire dans le store !
+        #  TODO: conserver le formulaire dans le store !
         add_code_columns(selected_columns, df)
 
         logger.info("* END EXTRACT FROM DB TABLE TO PYTHON")
 
         # get cd_nom list
         cd_nom_list = get_cd_nom_list()
+        cd_hab_list = get_cd_hab_list()
 
         # TRANSFORM (data checking and cleaning)
         # start process (transform and load)
@@ -335,18 +326,19 @@ def field_mapping_data_checking(import_id, id_mapping):
             partition = df.get_partition(i)
             partition_df = compute_df(partition)
             data_cleaning(
-                partition_df,
-                import_id,
-                selected_columns,
-                MISSING_VALUES,
-                DEFAULT_COUNT_VALUE,
-                cd_nom_list,
-                import_obj_dict["srid"],
-                local_srid,
-                is_generate_uuid,
-                IMPORTS_SCHEMA_NAME,
-                is_generate_alt,
-                PREFIX,
+                df=partition_df,
+                import_id=import_id,
+                selected_columns=selected_columns,
+                missing_val=MISSING_VALUES,
+                def_count_val=DEFAULT_COUNT_VALUE,
+                cd_nom_list=cd_nom_list,
+                cd_hab_list=cd_hab_list,
+                file_srid=import_obj_dict["srid"],
+                local_srid=local_srid,
+                is_generate_uuid=is_generate_uuid,
+                schema_name=IMPORTS_SCHEMA_NAME,
+                is_generate_altitude=is_generate_alt,
+                prefix=PREFIX,
             )
 
             temp_cols = [
@@ -371,8 +363,23 @@ def field_mapping_data_checking(import_id, id_mapping):
 
             logger.info("* END DATA CLEANING partition %s", i)
 
+            # LOAD (from Dask dataframe to postgresql table, with d6tstack pd_to_psql function)
+            logger.info("* START LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
+            load(partition_df, i, IMPORTS_SCHEMA_NAME, temp_table_name, engine)
+            logger.info("* END LOAD PYTHON DATAFRAME TO DB TABLE partition %s", i)
+
+        # delete original table
+        delete_table(table_names["imports_full_table_name"])
+
+        # rename temp table with original table name
+        rename_table(
+            IMPORTS_SCHEMA_NAME, temp_table_name, table_names["imports_table_name"]
+        )
+
         # set primary key
-        set_primary_key(IMPORTS_SCHEMA_NAME, table_names["imports_table_name"], index_col)
+        set_primary_key(
+            IMPORTS_SCHEMA_NAME, table_names["imports_table_name"], index_col
+        )
 
         # alter primary key type into integer
         alter_column_type(
@@ -401,42 +408,13 @@ def field_mapping_data_checking(import_id, id_mapping):
             "gn_the_geom_local",
         )
 
-        # set primary key
-        set_primary_key(IMPORTS_SCHEMA_NAME,
-                        table_names["imports_table_name"], index_col)
-
-        # check if df is fully loaded in postgresql table :
-        is_nrows_ok = check_row_number(import_id, table_names["imports_full_table_name"])
-        if not is_nrows_ok:
-            logger.error("missing rows because of loading server error")
-            raise GeonatureImportApiError(
-                message='INTERNAL SERVER ERROR ("postMapping() error"): \
-                            lignes manquantes dans {} - refaire le matching'.format(
-                    table_names["imports_full_table_name"]
-                ),
-                details="",
-            )
-        # # # calculate geometries and altitudes
-        geometry_setter = GeometrySetter(
-            importObject,
-            local_srid=local_srid,
-            code_commune_col=selected_columns.get("codecommune", "codecommune"),
-            code_maille_col=selected_columns.get("codemaille", "codemaille"),
-            code_dep_col=selected_columns.get(
-                "codedepartement", "codedepartement"),
-        )
-        geometry_setter.set_geometry()
-
-        set_altitudes(df, selected_columns, import_id, IMPORTS_SCHEMA_NAME,
-                    table_names['imports_full_table_name'], table_names['imports_table_name'],
-                    index_col, is_generate_alt, 'gn_the_geom_local')
-
         DB.session.commit()
         DB.session.close()
 
         # check if df is fully loaded in postgresql table :
         is_nrows_ok = check_row_number(
-            import_id, table_names["imports_full_table_name"])
+            import_id, table_names["imports_full_table_name"]
+        )
         if not is_nrows_ok:
             logger.error("missing rows because of loading server error")
             raise GeonatureImportApiError(
@@ -478,8 +456,10 @@ def field_mapping_data_checking(import_id, id_mapping):
         logger.error("*** ERROR IN CORRESPONDANCE MAPPING")
         logger.exception(e)
         DB.session.rollback()
-        DB.session.query(TImports).filter(TImports.id_import == import_id).update({'processing' : False})
-    
+        DB.session.query(TImports).filter(TImports.id_import == import_id).update(
+            {"processing": False}
+        )
+
         if is_temp_table_name:
             DB.session.execute(
                 """
@@ -490,11 +470,10 @@ def field_mapping_data_checking(import_id, id_mapping):
             )
             DB.session.commit()
             DB.session.close()
-    
+
         if is_table_names:
-            n_loaded_rows = get_n_loaded_rows(
-                table_names["imports_full_table_name"])
-    
+            n_loaded_rows = get_n_loaded_rows(table_names["imports_full_table_name"])
+
         if is_table_names:
             if n_loaded_rows == 0:
                 logger.error(
@@ -509,7 +488,7 @@ def field_mapping_data_checking(import_id, id_mapping):
                     ),
                     details="",
                 )
-    
+
         raise GeonatureImportApiError(
             message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
             details=str(e),
@@ -535,8 +514,10 @@ def content_mapping_data_checking(import_id, id_mapping):
         import_object = TImports.query.get(import_id)
         if not import_object:
             raise
-        selected_columns = get_selected_columns(import_object.id_field_mapping)
         table_name = set_imports_table_name(get_table_name(import_id))
+        selected_columns = get_selected_columns(
+            table_name, import_object.id_field_mapping
+        )
         # build nomenclature_transformer service
         nomenclature_transformer = NomenclatureTransformer()
 
@@ -571,7 +552,9 @@ def content_mapping_data_checking(import_id, id_mapping):
 
     except Exception as e:
         DB.session.rollback()
-        DB.session.query(TImports).filter(TImports.id_import == import_id).update({'processing' : False})
+        DB.session.query(TImports).filter(TImports.id_import == import_id).update(
+            {"processing": False}
+        )
         DB.session.close()
         logger.error("*** SERVER ERROR DURING CONTENT MAPPING (user values to id_types")
         logger.exception(e)

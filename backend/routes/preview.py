@@ -31,13 +31,13 @@ def get_valid_data(info_role, import_id):
     IMPORTS_SCHEMA_NAME = blueprint.config["IMPORTS_SCHEMA_NAME"]
     MODULE_CODE = blueprint.config["MODULE_CODE"]
 
-   # get table name
+    # get table name
     table_name = set_imports_table_name(get_table_name(import_id))
 
     # set total user columns
     # form_data = request.form.to_dict(flat=False)
     id_mapping = get_id_field_mapping(import_id)
-    selected_cols = get_selected_columns(id_mapping)
+    selected_cols = get_selected_columns(table_name, id_mapping)
 
     # added_cols = get_added_columns(id_mapping)
     added_cols = {
@@ -47,9 +47,7 @@ def get_valid_data(info_role, import_id):
         "id_area_attachment": "id_area_attachment",
     }
 
-    total_columns = set_total_columns(
-        selected_cols, added_cols, import_id, MODULE_CODE
-    )
+    total_columns = set_total_columns(selected_cols, added_cols, import_id, MODULE_CODE)
 
     # get content mapping data
     id_content_mapping = get_id_mapping(import_id)
@@ -57,7 +55,13 @@ def get_valid_data(info_role, import_id):
 
     # get valid data preview
     valid_data_list = get_preview(
-        IMPORTS_SCHEMA_NAME, table_name, total_columns, selected_content, selected_cols
+        import_id,
+        MODULE_CODE,
+        IMPORTS_SCHEMA_NAME,
+        table_name,
+        total_columns,
+        selected_content,
+        selected_cols,
     )
 
     # get valid gejson

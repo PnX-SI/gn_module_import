@@ -191,7 +191,7 @@ def set_nomenclature_id(table_name, user_col, target_col, value, id_nomenclature
         schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table_name=table_name,
         user_col=user_col,
-        target_col=target_col
+        target_col=target_col,
     )
     DB.session.execute(
         text(query), {"id_nomenclature": id_nomenclature, "value": value}

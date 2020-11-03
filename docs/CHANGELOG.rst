@@ -6,6 +6,7 @@ CHANGELOG
 ------------------
 
 Voir https://github.com/PnX-SI/gn_module_import/compare/develop
+TODO: ajouter le champs statut_bio_geogéographique
 
 **🚀 Nouveautés**
 

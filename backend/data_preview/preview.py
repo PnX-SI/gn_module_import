@@ -23,7 +23,13 @@ from sqlalchemy import inspect
 
 
 def get_preview(
-    schema_name, table_name, total_columns, selected_content, selected_cols
+    import_id,
+    module_code,
+    schema_name,
+    table_name,
+    total_columns,
+    selected_content,
+    selected_cols,
 ):
     nomenclature_fields = NomenclatureTransformer().set_nomenclature_fields(
         selected_cols
@@ -32,11 +38,29 @@ def get_preview(
         total_columns[field["synthese_col"]] = field["transformed_col"]
     data_preview = get_valid_user_data(schema_name, table_name, total_columns, 100)
     valid_data_list = []
+
+    #  for source columns which are mapped to the same synthese target col
+    # build a dict like {'source_col': [target_col_1, target_col_2 ...]}
+    modified_dict = {}
+    for target, source in total_columns.items():
+        if source in modified_dict:
+            modified_dict[source].append(target)
+        else:
+            modified_dict[source] = [target]
+
+    # calculate fixed cols
+    id_module = get_id_module(module_code)
+    id_dataset = get_id_dataset(import_id)
     #  build a dict from rowProxy
     for row in data_preview:
         row_dict = {}
         key_to_remove = []
+        # add fixed synthese fields
+        row_dict["id_dataset"] = id_dataset
+        row_dict["id_module"] = id_module
+
         for key, value in row.items():
+            #  check if source field is twice or more
             nomenclature_col_dict = find_nomenclature_col(key, nomenclature_fields)
             #  build a key with source nomenclenture -> target nomenclature with decoded value
             if nomenclature_col_dict:
@@ -45,9 +69,12 @@ def get_preview(
                     source=user_file_col, target=nomenclature_col_dict["synthese_col"]
                 )
                 row_dict[new_dict_key] = get_nomenclature_label_from_id(value)
-                key_to_remove.append(nomenclature_col_dict["user_col"])
-            else:
-                row_dict[key] = value
+                key_to_remove.append(nomenclature_col_dict["synthese_col"])
+                # find target columns in the modified dict create bellow
+            syn_targets = modified_dict[key]
+            for syn_target in syn_targets:
+                row_dict[syn_target] = value
+
         #  remove untransformed nomenclatures for preview
         for key in key_to_remove:
             try:
@@ -122,10 +149,6 @@ def set_total_columns(selected_cols, added_cols, import_id, module_name):
     for source, target in total_columns.items():
         if source in sf_names or source.startswith("gn"):
             final_total_col[source] = target
-
-    # add fixed synthese fields :
-    final_total_col["id_module"] = get_id_module(module_name)
-    final_total_col["id_dataset"] = get_id_dataset(import_id)
 
     return final_total_col
 
