@@ -93,7 +93,7 @@ Le module permet de traiter un fichier CSV ou GeoJSON sous toute structure de do
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-02.jpg
 
-3. Chargez le fichier CSV ou GeoJSON à importer.
+3. Chargez le fichier CSV ou GeoJSON à importer. Le nom du fichier ne doit pas dépasser 50 charactères.
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-03.jpg
 
