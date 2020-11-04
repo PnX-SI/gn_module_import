@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { DataService } from "../../../services/data.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../../module.config";
-import { FormGroup, FormBuilder, Validators } from "@angular/forms";
+import { FormGroup, FormBuilder, Validators, AbstractControl, ValidatorFn } from "@angular/forms";
 import { StepsService, Step1Data, Step2Data } from "../steps.service";
 
 @Component({
@@ -36,7 +36,7 @@ export class UploadFileStepComponent implements OnInit {
   ) {
     this.uploadForm = this._fb.group({
       file: [null, Validators.required],
-      fileName: [null, [Validators.required, Validators.maxLength(50)]],
+      fileName: [null, [Validators.required, Validators.maxLength(50), this.startWithNumberValidator]],
       encodage: [null, Validators.required],
       srid: [null, Validators.required],
     });
@@ -64,11 +64,21 @@ export class UploadFileStepComponent implements OnInit {
       this.formListener();
     }
 
-
     this.isUserErrors = false;
     this.uploadFileErrors = null;
     this.isFileChanged = false;
   }
+
+
+  startWithNumberValidator(fileControl): { [key: string]: boolean } {
+    const fileName = fileControl.value
+    // if the first char is a number set error
+    if (fileName && /\d/.test(fileName[0])) {
+      return { startWithNumber: true }
+    }
+    return null
+  }
+
 
   isDisable() {
     if (this.uploadForm.invalid) {
@@ -81,6 +91,7 @@ export class UploadFileStepComponent implements OnInit {
   }
 
   onFileSelected(event: any) {
+    this.fileName
     this.uploadForm.patchValue({
       file: <File>event.target.files[0],
       fileName: event.target.files[0].name

@@ -26,6 +26,9 @@
                             Le nom du fichier doit faire au maximum 50 caractères 
                             ({{uploadForm.get('fileName').errors?.maxlength.actualLength}} actuellement)
                         </small>
+                        <small style="color: red;" *ngIf="uploadForm.get('fileName').errors?.startWithNumber">
+                            Le fichier ne doit pas commencer par une chiffre
+                        </small>
                         <label
                             *ngIf="fileName"
                             class="custom-file-label"
