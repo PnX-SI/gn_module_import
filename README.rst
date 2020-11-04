@@ -41,7 +41,15 @@ Après avoir regroupé les champs dans leurs "blocs" et leur avoir associé un o
 Droits du module
 ================
 
-Les mappings constituent un "objet" du module d'import disposant de droits paramétrables pour les différents rôles. Par défaut, les droits accordés sur les mappings sont identiques aux droits que les utilisateurs ont sur le module Import en lui-même. Le réglage des droits se fait dans le module "admin" de GeoNature ("Admin" -> "permissions")
+La gestions des droits dans le module d'import se fait via le réglage du CRUVED à deux niveaux: au niveau du module d'import lui même et au niveau de l'objet "mapping".
+
+- Le CRUVED du module d'import permet uniquement de gérer l'affichage des import. Un personne ayant un R = 3 verra tous les imports de la plateforme, un R = 2 seulement ceux de son organisme et un R = 1 seulement les siens. 
+Les jeux de données selectionnable par un utilisateur lors de la création d'un import sont eux controlés par les permissions globale de GeoNature (et non du module d'import).
+
+- Les mappings constituent un "objet" du module d'import disposant de droits paramétrables pour les différents rôles. Par défaut, les droits accordés sur les mappings sont identiques aux droits que les utilisateurs ont sur le module Import en lui-même. Le réglage des droits se fait dans le module "admin" de GeoNature ("Admin" -> "permissions").
+Avec un C = 1,  R = 3, U = 1  un utilisateur pourra par exemple créer des nouveaux mappings (des modèles d'imports), modifier ses propres mapping et voir l'ensemble des mappings de l'instance.
+Si vous modifier un mapping sur lequels vous n'avez pas les droits, un mapping temporaire sera créé en base en enregistrant les modifications que vous avez fait, mais sans modifier le mapping initial. Lorsqu'on a les droits de modification sur un mapping, il est également possible de ne pas enregistrer les modifications faite à celui-ci pour ne pas écraser le mapping inital (un mapping temporaire sera également créé pour votre import en cours).
+Si vous voulez conservez des mappings "types" que personne ne pourra modifier sauf les administrateurs, mettez le CRUVED suivant sur l'objet mapping à votre groupe d'utilisateur "non administrateur": C = 1,  R = 3, U = 1, D = 1
 
 
 Mise à jour du module
