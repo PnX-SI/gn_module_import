@@ -10,13 +10,15 @@ TODO: ajouter le champs statut_bio_geogéographique
 
 **🚀 Nouveautés**
 
+* Ajout des champs du standard Occtax V2 et ajout de champs rajoutés dans la synthèse
+* Ajouts et mises à jour de champs de la synthèse (modifiée depuis GeoNature 2.5.0)
 * Possibilité de supprimer un import (et les données associées) (#124)
 * Ajout de la possibilité de ne pas afficher l'étape "Mapping des contenus" en définissant un mapping par défaut (avec les paramètres ``ALLOW_VALUE_MAPPING`` et ``DEFAULT_VALUE_MAPPING_ID``) (#100)
 * Import possible des données sans géométrie en utilisant les colonnes ``codecommune``, ``codemaille`` ou ``codedepartement`` et en récupérant ``id_area`` et leur géométrie correspondantes dans la couche des zonages du ``ref_geo`` (#107)
-* Implémentation du CRUVED pour identifier si l'utilisateur peut modifier ou créer un mapping. Les mappings sont un objet dont le CRUVED est paramétrable (module admin->permissions) (#136)
-* Création de mappings temporaires supprimés automatiquement à la fin d'un import, pour les utilisateurs ne pouvant pas modifier ou créer des mappings (#136)
+* Implémentation du CRUVED pour identifier si l'utilisateur peut modifier ou créer un mapping. Les mappings sont un objet dont le CRUVED est paramétrable (module Admin -> Permissions) (#136)
+* Création de mappings temporaires supprimés automatiquement à la fin d'un import, pour les utilisateurs n'ayant pas les droits de modifier ou créer des mappings (#136)
 * Renommage des intitulés (#122). "Mapping" devient notamment "Modèle d'import" et "Correspondance"
-* Parallélisation des traitements et des contrôles à partir d'un seuil de nombre de lignes paramétrable (``MAX_LINE_LIMIT``) (#123)
+* Parallélisation des traitements et des contrôles à partir d'un seuil paramétrable de nombre de lignes dans le fichier importé (``MAX_LINE_LIMIT``) (#123)
 * Envoi d'un email à l'auteur d'un import quand les contrôles réalisés en parallèle sont terminés (#123)
 * Simplification des étapes d'import pour les non-administrateurs (#113)
 * Révision et complément des contrôles des données et amélioration des rapports d'erreurs (#114)
@@ -38,10 +40,7 @@ TODO: ajouter le champs statut_bio_geogéographique
 * Documentation de l'utilisation et du fonctionnement du module
 * Documentation de la mise à jour du module (#149)
 * Script de mise à jour de la BDD 1.0.0to1.1.0.sql 
-* Ajouts et mises à jour de champs de la synthèse (modifiée depuis GeoNature 2.5.0)
-* Ajout des champs du standard Octax V2 et ajout de champs rajoutés dans la synthèse
 * Ajout de la correspondance au standard sur l'ensemble des champs du mapping dans une tooltip
-
 
 **🐛 Corrections**
 
@@ -50,26 +49,27 @@ TODO: ajouter le champs statut_bio_geogéographique
 * Prévisualisation des données avant intégration : Affichage des labels des nomenclatures et non plus de leurs codes
 * Correction du modèle d'import "Synthèse GeoNature" fournis par défaut (#118)
 * Suppression du message d'erreur quand un champs défini dans un mapping n'est pas présent dans le fichier importé (#108)
-* Correction et amélioration des contrôles de dates (#128)
+* Correction et amélioration des contrôles de dates, pouvant être fournis dans différents formats (#128)
 * !!!!!!!!!! Suppression temporaire de la vérification des doublons dans le fichier source, trop lourde en performance et non fonctionnelle
 * Clarification de l'intitulé et masquage par défaut du champs "id_digitiser" (#159)
 * Correction de la génération des UUID SINP (#156)
 * Correction de la génération des altitudes (#155)
 * Correction de la vérification de la bounding box (#151)
-* Ajout d'une vérification sur la longueur des fichiers fournis (50 charactères)
+* Ajout d'une vérification sur la longueur des fichiers fournis (50 caractères)
 * Transformation des nomenclatures dans des colonnes séparées (#148)
 * Vérification que l'utilisateur a bien un email renseigné
 
-
 **Notes de version**
 
-* Exécuter le fichier de mise à jour du schéma de la BDD du module (``data/migration/1.0.0to1.1.0.sql``)
-* Vérifier les éventuelles nouveaux paramètres que vous souhaiteriez surcouchés dans le fichier ``config/conf_gn_module.toml`` à partir du fichier d'exemple ``config/conf_gn_module.toml.example``
-* Si vous activez la parallélisation des contrôles (``MAX_LINE_LIMIT``) (#123), assurez-vous d'avoir définit les paramètres d'envois de mails dans la configuration générique de geonature (geonature/config/geonature_config.toml)
+* Si vous mettez à jour depuis la version 1.0.0, exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.0.0to1.1.0.sql`` puis ``data/migration/1.1.0.rc2to1.1.0.sql``)
+* Si vous mettez à jour depuis la version 1.1.0.rc2, exécuter le fichier de mise à jour du schéma de la BDD du module (``data/migration/1.1.0.rc2to1.1.0.sql``)
+* Vérifier les éventuelles nouveaux paramètres que vous souhaiteriez surcoucher dans le fichier ``config/conf_gn_module.toml`` à partir du fichier d'exemple ``config/conf_gn_module.toml.example``
+* Si vous activez la parallélisation des contrôles (``MAX_LINE_LIMIT``) (#123), assurez-vous d'avoir défini les paramètres d'envoi d'email dans la configuration globale de GeoNature (``geonature/config/geonature_config.toml``)
 
-1.0.0 - A vos marques, prêts, importez ! (2020-02-26)
------------------------------------------------------
+1.0.0 (2020-02-26)
+------------------
 
+A vos marques, prêts, importez !
 
 **🚀 Nouveautés**
 
