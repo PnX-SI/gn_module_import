@@ -27,7 +27,7 @@
                             ({{uploadForm.get('fileName').errors?.maxlength.actualLength}} actuellement)
                         </small>
                         <small style="color: red;" *ngIf="uploadForm.get('fileName').errors?.startWithNumber">
-                            Le fichier ne doit pas commencer par une chiffre
+                            Le fichier ne doit pas commencer par un chiffre
                         </small>
                         <label
                             *ngIf="fileName"
@@ -102,7 +102,7 @@
                 id="errorList"
                 *ngIf="uploadFileErrors"
             >
-                <div> Attention, erreurs detectées dans le fichier soumis </div>
+                <div> Attention, erreurs détectées dans le fichier soumis </div>
                 <button
                     mat-raised-button
                     color="warn"
