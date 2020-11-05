@@ -178,9 +178,10 @@ DELETE FROM gn_imports.t_mappings_fields WHERE id_mapping = (
 INSERT INTO gn_imports.t_mappings (mapping_label, mapping_type, active)
 VALUES
 ('Format DEE (champs 10 char)', 'FIELD', true),
-('Synthese GeoNature', 'FIELD', true)
 ;
 
+DELETE FROM gn_imports.t_mappings_fields
+WHERE id_mapping = (SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature');
 
 INSERT INTO gn_imports.t_mappings_fields (id_mapping, source_field, target_field, is_selected, is_added)
 VALUES 
@@ -260,8 +261,8 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'uuid_perm_grp_sinp','unique_id_sinp_grp',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','unique_id_sinp_generate',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','meta_create_date',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','meta_v_taxref',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','meta_update_date',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'date_creation','meta_v_taxref',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'date_modification','meta_update_date',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'date_debut','date_min',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'date_fin','date_max',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'heure_debut','hour_min',true,false),
