@@ -7,6 +7,8 @@ SET client_min_messages = warning;
 SET search_path = gn_imports, pg_catalog;
 SET default_with_oids = false;
 
+-- Création d'un mapping de champs (modèle d'import) pour DEPOBIO
+-- A tester et mettre à jour
 
 --------------
 --INSERTIONS--
