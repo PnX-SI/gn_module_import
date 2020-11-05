@@ -20,21 +20,7 @@ VALUES
 ('Nomenclatures SINP (labels)', 'CONTENT', true),
 ('Nomenclatures SINP (codes)', 'CONTENT', true);
 
--- Donner des droits à tous les groupes GN pour tous les mappings 
-INSERT INTO gn_imports.cor_role_mapping (id_mapping, id_role)
-SELECT 
-tm.id_mapping,
-id_role
-FROM utilisateurs.t_roles, gn_imports.t_mappings tm
-WHERE groupe IS True 
-AND id_role IN (
-    SELECT id_role
-    FROM utilisateurs.cor_role_app_profil 
-    WHERE id_application IN (
-        SELECT id_application FROM utilisateurs.t_applications
-        WHERE code_application = 'GN'
-    )
-);
+
 
 -- Renseigner les correspondances de champs du mapping 'Format DEE'
 INSERT INTO gn_imports.t_mappings_fields (id_mapping, source_field, target_field, is_selected, is_added)
