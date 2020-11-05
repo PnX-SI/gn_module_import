@@ -177,7 +177,8 @@ DELETE FROM gn_imports.t_mappings_fields WHERE id_mapping = (
 
 INSERT INTO gn_imports.t_mappings (mapping_label, mapping_type, active)
 VALUES
-('Format DEE (champs 10 char)', 'FIELD', true)
+('Format DEE (champs 10 char)', 'FIELD', true),
+('Synthese GeoNature', 'FIELD', true)
 ;
 
 
@@ -250,7 +251,7 @@ VALUES
 
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codecommune','codecommune',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codemaille','codemaille',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codedepartement','codedepartement',true,false)
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codedepartement','codedepartement',true,false),
 
 -- mapping synthese
 
