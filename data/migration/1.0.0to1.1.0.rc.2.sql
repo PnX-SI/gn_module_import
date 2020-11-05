@@ -35,8 +35,11 @@ INSERT INTO gn_imports.dict_fields (name_field, fr_label, eng_label, desc_field,
   ),
 ('codemaille', 'Code maille', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, 
   (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 15, TRUE, NULL),
-	('codedepartement', 'Code département', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, 
-  (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 16, TRUE, NULL)
+	('codedepartement', 'Code département', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, ,
+  (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 16, TRUE, NULL),
+  ('reference_biblio', 'Référence bibliographique', '', '', 'character varying(255)', TRUE, FALSE, 
+  FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 
+  14, TRUE, 'Correspondance champs standard: referenceBiblio'
 ;
 
 
