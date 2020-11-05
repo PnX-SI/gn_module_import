@@ -79,7 +79,9 @@ comment='Correspondance champs standard: obsTechnique'
 WHERE name_field='id_nomenclature_obs_meth';
 
 INSERT INTO gn_imports.cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
-('OCC_COMPORTEMENT', 'id_nomenclature_behaviour');
+('OCC_COMPORTEMENT', 'id_nomenclature_behaviour'),
+('STAT_BIOGEO', 'id_nomenclature_biogeo_status')
+;
 
 UPDATE gn_imports.cor_synthese_nomenclature
 SET synthese_col='id_nomenclature_obs_technique'
@@ -222,6 +224,7 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'obstech','id_nomenclature_obs_technique',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'ocstatbio','id_nomenclature_bio_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'ocetatbio','id_nomenclature_bio_condition',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'ocetatbio','id_nomenclature_biogeo_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'occcomport','id_nomenclature_behaviour',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'ocnat','id_nomenclature_naturalness',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'obsctx','comment_context',true,false),
@@ -244,94 +247,88 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'validateur','validator',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'datectrl','meta_validation_date',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'validcom','validation_comment',true,false),
-
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'natobjgeo','id_nomenclature_geo_object_nature',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'obstech','id_nomenclature_obs_technique',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'statobs','id_nomenclature_observation_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'statsource','id_nomenclature_source_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'refbiblio','reference_biblio',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'cdhab','cd_hab',true,false),
-
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'geometrie','WKT',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'nomlieu','place_name',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'precisGeo','precision',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'gn_1_the_geom_point_2','the_geom_point',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'gn_1_the_geom_local_2','the_geom_local',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'gn_1_the_geom_4326_2','the_geom_4326',false,true),
-
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codecommune','codecommune',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codemaille','codemaille',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codedepartement','codedepartement',true,false),
 
--- mapping synthese
-
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'uuid_perm_sinp','unique_id_sinp',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'id_synthese','entity_source_pk_value',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'uuid_perm_grp_sinp','unique_id_sinp_grp',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','unique_id_sinp_generate',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','meta_create_date',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'date_creation','meta_v_taxref',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'date_modification','meta_update_date',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'date_debut','date_min',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'date_fin','date_max',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'heure_debut','hour_min',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'heure_fin','hour_max',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'alti_min','altitude_min',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'alti_max','altitude_max',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'prof_min','depth_min',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'prof_max','depth_max',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','altitudes_generate',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','longitude',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','latitude',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'observateurs','observers',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'comment_occurrence','comment_description',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'type_info_geo','id_nomenclature_info_geo_type',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'type_regroupement','id_nomenclature_grp_typ',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'methode_regroupement','grp_method',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'nom_cite','nom_cite',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'cd_nom','cd_nom',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'technique_observation','id_nomenclature_obs_technique',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'biologique_statut','id_nomenclature_bio_status',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'etat_biologique','id_nomenclature_bio_condition',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'comportement','id_nomenclature_behaviour',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'naturalite','id_nomenclature_naturalness',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'comment_releve','comment_context',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'niveau_sensibilite','id_nomenclature_sensitivity',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'niveau_precision_diffusion','id_nomenclature_diffusion_level',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'floutage_dee','id_nomenclature_blurring',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'stade_vie','id_nomenclature_life_stage',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'sexe','id_nomenclature_sex',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'type_denombrement','id_nomenclature_type_count',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'objet_denombrement','id_nomenclature_obj_count',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'nombre_min','count_min',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'nombre_max','count_max',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'methode_determination','id_nomenclature_determination_method',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'determinateur','determiner',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','id_digitiser',false,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'preuve_existante','id_nomenclature_exist_proof',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'preuve_numerique_url','digital_proof',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'preuve_non_numerique','non_digital_proof',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'niveau_validation','id_nomenclature_valid_status',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'validateur','validator',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'date_validation','meta_validation_date',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'comment_validation','validation_comment',true,false),
-
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'nature_objet_geo','id_nomenclature_geo_object_nature',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'statut_observation','id_nomenclature_observation_status',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'statut_source','id_nomenclature_source_status',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'reference_biblio','reference_biblio',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'cd_habref','cd_hab',true,false),
-
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'geometrie_wkt_4326','WKT',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'nom_lieu','place_name',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), 'precision_geographique','precision',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','the_geom_point',false,true),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','the_geom_local',false,true),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','the_geom_4326',false,true),
-
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','codecommune',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','codemaille',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthèse GeoNature'), '','codedepartement',true,false)
+-- Renseigner les correspondances de champs du mapping 'Synthese GeoNature'
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'uuid_perm_sinp','unique_id_sinp',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'id_synthese','entity_source_pk_value',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'uuid_perm_grp_sinp','unique_id_sinp_grp',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','unique_id_sinp_generate',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'date_creation','meta_create_date',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','meta_v_taxref',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'date_modification','meta_update_date',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'date_debut','date_min',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'date_fin','date_max',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'heure_debut','hour_min',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'heure_fin','hour_max',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'alti_min','altitude_min',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'alti_max','altitude_max',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'prof_min','depth_min',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'prof_max','depth_max',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','altitudes_generate',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','longitude',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','latitude',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'observateurs','observers',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'comment_occurrence','comment_description',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'type_info_geo','id_nomenclature_info_geo_type',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'type_regroupement','id_nomenclature_grp_typ',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'methode_regroupement','grp_method',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'nom_cite','nom_cite',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'cd_nom','cd_nom',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'technique_observation','id_nomenclature_obs_technique',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'biologique_statut','id_nomenclature_bio_status',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'etat_biologique','id_nomenclature_bio_condition',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'biogeographique_statut','id_nomenclature_biogeo_status',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'comportement','id_nomenclature_behaviour',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'naturalite','id_nomenclature_naturalness',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'comment_releve','comment_context',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'niveau_sensibilite','id_nomenclature_sensitivity',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'niveau_precision_diffusion','id_nomenclature_diffusion_level',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'floutage_dee','id_nomenclature_blurring',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'stade_vie','id_nomenclature_life_stage',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'sexe','id_nomenclature_sex',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'type_denombrement','id_nomenclature_type_count',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'objet_denombrement','id_nomenclature_obj_count',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'nombre_min','count_min',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'nombre_max','count_max',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'methode_determination','id_nomenclature_determination_method',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'determinateur','determiner',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','id_digitiser',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'preuve_existante','id_nomenclature_exist_proof',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'preuve_numerique_url','digital_proof',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'preuve_non_numerique','non_digital_proof',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'niveau_validation','id_nomenclature_valid_status',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'validateur','validator',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'date_validation','meta_validation_date',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'comment_validation','validation_comment',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'nature_objet_geo','id_nomenclature_geo_object_nature',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'statut_observation','id_nomenclature_observation_status',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'statut_source','id_nomenclature_source_status',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'reference_biblio','reference_biblio',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'cd_habref','cd_hab',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'geometrie_wkt_4326','WKT',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'nom_lieu','place_name',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'precision_geographique','precision',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','the_geom_point',false,true),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','the_geom_local',false,true),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','the_geom_4326',false,true),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','codecommune',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','codemaille',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','codedepartement',true,false)
 ;
 
 
@@ -344,7 +341,7 @@ n.label_default,
 n.id_nomenclature
 FROM gn_imports.t_mappings m, ref_nomenclatures.t_nomenclatures n
 JOIN ref_nomenclatures.bib_nomenclatures_types bnt ON bnt.id_type=n.id_type 
-WHERE m.mapping_label='Nomenclatures SINP (labels)' AND bnt.mnemonique='OCC_COMPORTEMENT';
+WHERE m.mapping_label='Nomenclatures SINP (labels)' AND bnt.mnemonique IN ('OCC_COMPORTEMENT', 'STAT_BIOGEO');
 
 INSERT INTO gn_imports.t_mappings_values (id_mapping, source_value, id_target_value)
 SELECT
@@ -353,7 +350,7 @@ n.cd_nomenclature,
 n.id_nomenclature
 FROM gn_imports.t_mappings m, ref_nomenclatures.t_nomenclatures n
 JOIN ref_nomenclatures.bib_nomenclatures_types bnt ON bnt.id_type=n.id_type 
-WHERE m.mapping_label='Nomenclatures SINP (codes)' AND bnt.mnemonique='OCC_COMPORTEMENT';
+WHERE m.mapping_label='Nomenclatures SINP (codes)' AND bnt.mnemonique IN ('OCC_COMPORTEMENT', 'STAT_BIOGEO');
 
 
 
