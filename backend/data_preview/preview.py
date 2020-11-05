@@ -102,7 +102,7 @@ def get_synthese_dict(synthese_fields):
         for field in synthese_fields:
             if field.column_name.startswith("id_nomenclature"):
                 synthese_dict[field.ordinal_position] = {
-                    "key": f"_transformed_{field.column_name}",
+                    "key": f"_tr_{field.column_name}",
                     "value": None,
                 }
             else:

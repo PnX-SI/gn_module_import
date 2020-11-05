@@ -51,7 +51,6 @@ class NomenclatureTransformer:
     def __init__(self):
         pass
 
-
     def init(self, id_mapping, selected_columns, table_name):
         """
         :params id_mapping int: the id_mapping
@@ -67,15 +66,15 @@ class NomenclatureTransformer:
         self.accepted_id_nomencatures = self.__set_accepted_id_nomencatures()
         self.__create_col_transformation(self.nomenclature_fields)
 
-    def set_nomenclature_fields(self, selected_columns)->list:
+    def set_nomenclature_fields(self, selected_columns) -> list:
         nomenclature_fields = []
         for row in get_SINP_synthese_cols_with_mnemonique():
             if row["synthese_name"] in selected_columns:
                 nomenclature_fields.append(
                     {
                         "synthese_col": row["synthese_name"],
-                        "user_col": selected_columns[row['synthese_name']],
-                        "transformed_col": f"_transformed_{row['synthese_name']}_{selected_columns[row['synthese_name']]}",
+                        "user_col": selected_columns[row["synthese_name"]],
+                        "transformed_col": f"_tr_{row['synthese_name']}_{selected_columns[row['synthese_name']]}",
                         "mnemonique_type": row["mnemonique_type"],
                     }
                 )
@@ -103,7 +102,7 @@ class NomenclatureTransformer:
                     "id_nomenclature": id_nomenclature,
                     "user_values": mapped_values,
                     "user_col": selected_columns[synthese_name],
-                    "transformed_col": f"_transformed_{synthese_name}_{selected_columns[synthese_name]}"
+                    "transformed_col": f"_tr_{synthese_name}_{selected_columns[synthese_name]}",
                 }
                 formated_mapping_content.append(d)
         return formated_mapping_content
@@ -237,7 +236,7 @@ class NomenclatureTransformer:
         # Proof checker
         row_with_errors_proof = exist_proof_check(
             self.table_name,
-            self.__find_transformed_col('PREUVE_EXIST'),
+            self.__find_transformed_col("PREUVE_EXIST"),
             self.selected_columns.get("digital_proof"),
             self.selected_columns.get("non_digital_proof"),
         )
@@ -252,16 +251,14 @@ class NomenclatureTransformer:
 
         # bluering checker
         row_with_errors_blurr = dee_bluring_check(
-            self.table_name,
-            id_import,
-            self.__find_transformed_col('DEE_FLOU'),
+            self.table_name, id_import, self.__find_transformed_col("DEE_FLOU"),
         )
         if row_with_errors_blurr and row_with_errors_blurr.id_rows:
             set_user_error(
                 id_import=id_import,
                 step="CONTENT_MAPPING",
                 error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
-                col_name= self.selected_columns.get("id_nomenclature_blurring"),
+                col_name=self.selected_columns.get("id_nomenclature_blurring"),
                 id_rows=row_with_errors_blurr.id_rows,
                 comment="Le champ dEEFloutage doit être remplit si le jeu de données est privé",
             )
@@ -269,7 +266,7 @@ class NomenclatureTransformer:
         #  literature checker
         row_with_errors_bib = ref_biblio_check(
             self.table_name,
-            field_statut_source=self.__find_transformed_col('STATUT_SOURCE'),
+            field_statut_source=self.__find_transformed_col("STATUT_SOURCE"),
             field_ref_biblio=self.selected_columns.get("reference_biblio"),
         )
         if row_with_errors_bib and row_with_errors_bib.id_rows:
