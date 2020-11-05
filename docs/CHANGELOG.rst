@@ -61,7 +61,7 @@ TODO: ajouter le champs statut_bio_geogéographique
 
 **Notes de version**
 
-* Si vous mettez à jour depuis la version 1.0.0, exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.0.0to1.1.0.sql`` puis ``data/migration/1.1.0.rc2to1.1.0.sql``)
+* Si vous mettez à jour depuis la version 1.0.0, exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.0.0to1.1.0.rc.2.sql`` puis ``data/migration/1.1.0.rc2to1.1.0.sql``)
 * Si vous mettez à jour depuis la version 1.1.0.rc2, exécuter le fichier de mise à jour du schéma de la BDD du module (``data/migration/1.1.0.rc2to1.1.0.sql``)
 * Vérifier les éventuelles nouveaux paramètres que vous souhaiteriez surcoucher dans le fichier ``config/conf_gn_module.toml`` à partir du fichier d'exemple ``config/conf_gn_module.toml.example``
 * Si vous activez la parallélisation des contrôles (``MAX_LINE_LIMIT``) (#123), assurez-vous d'avoir défini les paramètres d'envoi d'email dans la configuration globale de GeoNature (``geonature/config/geonature_config.toml``)
