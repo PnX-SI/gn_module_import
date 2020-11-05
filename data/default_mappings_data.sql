@@ -53,7 +53,7 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'obstech','id_nomenclature_obs_technique',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'ocstatbio','id_nomenclature_bio_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'ocetatbio','id_nomenclature_bio_condition',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'ocetatbio','id_nomenclature_biogeo_status',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'ocbiogeo','id_nomenclature_biogeo_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'occcomport','id_nomenclature_behaviour',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'ocnat','id_nomenclature_naturalness',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'obsctx','comment_context',true,false),
