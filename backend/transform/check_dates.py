@@ -39,20 +39,27 @@ def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
             for field in synthese_info
             if synthese_info[field]["data_type"] == "timestamp without time zone"
         ]
-
+        #  reset date_min and date_max if the controls are lauched twice
+        df[selected_columns["date_min"]]
         #  set hours in date cols
-        if "hour_min" in selected_columns:
+        if "hour_min" in selected_columns and not "concatened_date_min" in df:
             df[selected_columns["date_min"]] = (
                 df[selected_columns["date_min"]]
                 + " "
                 + df[selected_columns["hour_min"]]
             )
-        if "hour_max" in selected_columns and "date_max" in selected_columns:
+            df["concatened_date_min"] = True
+        if (
+            "hour_max" in selected_columns
+            and "date_max" in selected_columns
+            and not "concatened_date_max" in df
+        ):
             df[selected_columns["date_max"]] = (
                 df[selected_columns["date_max"]]
                 + " "
                 + df[selected_columns["hour_max"]]
             )
+            df["concatened_date_max"] = True
 
         # set date_max (=if data_max not existing, then set equal to date_min)
         if "date_max" not in date_fields:
