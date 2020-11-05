@@ -82,4 +82,3 @@ VALUES
 -- ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='DEPOBIO'), 'typInfGeoM','typeInfoGeoMaille',true,false), Il n'est pas prévu d'ajouter ce champs
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='DEPOBIO'), 'typgrp','id_nomenclature_grp_typ',true,false);
 -- ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='DEPOBIO'), 'vRefM10','versionRefMaille',true,false); Stocker dans « ref_geo.bib_area_types »
-
