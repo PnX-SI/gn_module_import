@@ -51,6 +51,16 @@ La gestions des droits dans le module d'import se fait via le réglage du CRUVED
 - Si vous voulez conserver des mappings "types" que personne ne pourra modifier sauf les administrateurs, mettez le CRUVED suivant sur l'objet mapping à votre groupe d'utilisateur "non administrateur" : C = 1,  R = 3, U = 1, D = 1
 
 
+Documentation developpeur
+=========================
+
+Procesus de vérification:
+
+- le fichier fourni par l'utilisateur est converti en deux tables postgreSQL: un table d'archives et une table de travail sur laquelle seront faites les modifications et contrôles
+- Pour les vérification, le fichier est transformé en dataframe Dask et traité avec la librairie Panda. Une fois les modifications et contrôles réalisés, le dataframe est rechargé dans la table de transformation (qui est au préalablement supprimée)
+- Pour chaque champs de nomenclature, une colonne est créée pour transformer les valeurs fournies en id_nomenclature GeoNature. La colonne fournie se nomme "tr_<id_nomenclature_destination>_<nom_colonne_source>"
+- la dernière étape de "prévisualisation" affiche l'ensemble des champs transformé tels qu'ils seront inserés dans GeoNature. Les nomenclatures sont affichées sous leur format décodé (label_fr), sous la forme "<champs_source>-><champ_destination>"
+
 Mise à jour du module
 =====================
 
