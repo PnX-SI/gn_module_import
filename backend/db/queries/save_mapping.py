@@ -1,6 +1,7 @@
 from geonature.utils.env import DB
 
 from ..models import TMappingsFields, TMappingsValues
+from ...db.queries.user_table_queries import get_table_info
 
 
 def save_field_mapping(form_data, id_mapping, select_type):
@@ -91,7 +92,8 @@ def create_mapping_value(id_mapping, source_value, id_target_value):
         raise
 
 
-def get_selected_columns(id_mapping):
+def get_selected_columns(table_name, id_mapping):
+    source_column_names = get_table_info(table_name, "column_name")
     data = (
         DB.session.query(TMappingsFields)
         .filter(TMappingsFields.id_mapping == id_mapping)
@@ -100,7 +102,8 @@ def get_selected_columns(id_mapping):
     )
     selected_columns = {}
     for field in data:
-        selected_columns[field.target_field] = field.source_field
+        if field.source_field in source_column_names:
+            selected_columns[field.target_field] = field.source_field
     return selected_columns
 
 

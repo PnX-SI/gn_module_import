@@ -21,17 +21,15 @@ def get_data_type(column_name):
 
 
 def insert_into_synthese(
-    schema_name, table_name, select_part, total_columns, import_id
+    schema_name, table_name, select_part, total_columns, import_obj
 ):
     try:
         id_source = DB.session.execute(
-            """
+            f"""
             SELECT id_source
             FROM gn_synthese.t_sources
-            WHERE name_source = 'Import(id={import_id})';
-            """.format(
-                import_id=import_id
-            )
+            WHERE name_source = 'Import(id={import_obj.id_import})';
+            """
         ).fetchone()[0]
         # insert user values in synthese
         query = """
@@ -55,14 +53,12 @@ def insert_into_synthese(
             select_part=",".join(select_part),
             schema_name=schema_name,
             table_name=table_name,
-            import_id=import_id,
-            id_source=id_source,
         )
         DB.session.execute(query)
 
         # update last_action in synthese
         DB.session.execute(
-            """
+            f"""
             -- restore trigger
             -- cor_area_synthese
             BEGIN;
@@ -100,9 +96,7 @@ def insert_into_synthese(
             SET last_action = 'I'
             WHERE id_source = {id_source};
             COMMIT;
-        """.format(
-                id_source=id_source
-            )
+        """
         )
 
         DB.session.flush()

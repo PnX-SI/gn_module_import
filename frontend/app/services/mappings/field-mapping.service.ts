@@ -221,8 +221,6 @@ export class FieldMappingService {
       this.setFormControlNotRequired(targetForm, "codemaille");
     }
     if (targetForm.get('WKT').value != "" && (targetForm.get("latitude").value != "" || targetForm.get("longitude").value != "")) {
-      console.log('passe la ?');
-
       this.setInvalid(targetForm, "WKT", 'geomError');
       this.setInvalid(targetForm, "longitude", 'geomError');
       this.setInvalid(targetForm, "latitude", 'geomError');

@@ -121,7 +121,15 @@ def post_user_file(info_role):
                 id_import = int(metadata["importId"])
                 DB.session.query(TImports).filter(
                     TImports.id_import == id_import
-                ).update({TImports.date_update_import: datetime.datetime.now()})
+                ).update(
+                    {
+                        TImports.date_update_import: datetime.datetime.now(),
+                        TImports.full_file_name: file_name,
+                        TImports.encoding: metadata["encodage"],
+                        TImports.format_source_file: extension,
+                        TImports.srid: metadata["srid"],
+                    }
+                )
 
             if isinstance(id_import, int):
                 is_id_import = True

@@ -1,3 +1,5 @@
+from geonature.utils.env import DB
+
 from ..db.queries.data_preview import (
     get_valid_user_data,
     get_synthese_fields,
@@ -5,6 +7,7 @@ from ..db.queries.data_preview import (
     get_id_dataset,
 )
 
+from ..db.models import TImports
 from ..db.queries.nomenclatures import (
     get_SINP_synthese_cols,
     get_mnemo,
@@ -13,69 +16,100 @@ from ..db.queries.nomenclatures import (
     get_nomenc_values,
     get_nomenclature_label_from_id,
 )
+from ..transform.nomenclatures.nomenclatures import NomenclatureTransformer
 
 
-def get_preview(schema_name, table_name, total_columns, selected_content):
+from sqlalchemy import inspect
 
-    try:
-        # get valid data in user table
-        preview = get_valid_user_data(schema_name, table_name, 100)
 
-        # get synthese fields
-        synthese_fields = get_synthese_fields()
+def get_preview(
+    import_id,
+    module_code,
+    schema_name,
+    table_name,
+    total_columns,
+    selected_content,
+    selected_cols,
+):
+    nomenclature_fields = NomenclatureTransformer().set_nomenclature_fields(
+        selected_cols
+    )
+    for field in nomenclature_fields:
+        total_columns[field["synthese_col"]] = field["transformed_col"]
+    data_preview = get_valid_user_data(schema_name, table_name, total_columns, 100)
+    valid_data_list = []
 
-        # fill synthese template
-        valid_data_list = []
-        nomenclature_synthese_cols = get_SINP_synthese_cols()
-        for row in preview:
-            synthese_dict = get_synthese_dict(synthese_fields)
-            for key, value in synthese_dict.items():
-                # if column was provided by user:
-                if value["key"] in total_columns.keys():
-                    if (
-                        value["key"] == "id_module"
-                        or value["key"] == "id_dataset"
-                        or value["key"] == "id_source"
-                    ):
-                        synthese_dict[key]["value"] = total_columns[value["key"]]
-                    else:
-                        # if this is a nomenclature column : replace user voc by nomenclature voc
-                        if value["key"] in nomenclature_synthese_cols:
-                            synthese_dict[key][
-                                "value"
-                            ] = get_nomenclature_label_from_id(
-                                id_nomenclature=row[total_columns[value["key"]]]
-                            )
-                        else:
-                            synthese_dict[key]["value"] = row[
-                                total_columns[value["key"]]
-                            ]
-                else:
-                    # if it is a nomenclature column and it is not provided by user : set default value
-                    if value["key"] in get_SINP_synthese_cols():
-                        synthese_dict[key]["value"] = get_mnemo(
-                            set_default_value(get_nomenc_abb_from_name(value["key"]))
-                        )
-                    if value["key"] == "last_action":
-                        synthese_dict[key]["value"] = "I"
-            if synthese_dict[4]["key"] == "id_source":
-                del synthese_dict[4]
-            valid_data_list.append(synthese_dict)
+    #  for source columns which are mapped to the same synthese target col
+    # build a dict like {'source_col': [target_col_1, target_col_2 ...]}
+    modified_dict = {}
+    for target, source in total_columns.items():
+        if source in modified_dict:
+            modified_dict[source].append(target)
+        else:
+            modified_dict[source] = [target]
 
-        return valid_data_list
+    # calculate fixed cols
+    id_module = get_id_module(module_code)
+    id_dataset = get_id_dataset(import_id)
+    #  build a dict from rowProxy
+    for row in data_preview:
+        row_dict = {}
+        key_to_remove = []
+        # add fixed synthese fields
+        row_dict["id_dataset"] = id_dataset
+        row_dict["id_module"] = id_module
 
-    except Exception:
-        raise
+        for key, value in row.items():
+            #  check if source field is twice or more
+            nomenclature_col_dict = find_nomenclature_col(key, nomenclature_fields)
+            #  build a key with source nomenclenture -> target nomenclature with decoded value
+            if nomenclature_col_dict:
+                user_file_col = nomenclature_col_dict["user_col"]
+                new_dict_key = "{source}->{target}".format(
+                    source=user_file_col, target=nomenclature_col_dict["synthese_col"]
+                )
+                row_dict[new_dict_key] = get_nomenclature_label_from_id(value)
+                key_to_remove.append(nomenclature_col_dict["synthese_col"])
+                # find target columns in the modified dict create bellow
+            syn_targets = modified_dict[key]
+            for syn_target in syn_targets:
+                row_dict[syn_target] = value
+
+        #  remove untransformed nomenclatures for preview
+        for key in key_to_remove:
+            try:
+                row_dict.pop(key)
+            except KeyError:
+                pass
+
+        valid_data_list.append(row_dict)
+
+    return valid_data_list
+
+
+def find_nomenclature_col(col_name: str, nomenclature_field: list) -> dict:
+    nomenclature_col_dict = None
+    for el in nomenclature_field:
+        if el["transformed_col"] == col_name:
+            nomenclature_col_dict = el
+            break
+    return nomenclature_col_dict
 
 
 def get_synthese_dict(synthese_fields):
     try:
         synthese_dict = {}
         for field in synthese_fields:
-            synthese_dict[field.ordinal_position] = {
-                "key": field.column_name,
-                "value": None,
-            }
+            if field.column_name.startswith("id_nomenclature"):
+                synthese_dict[field.ordinal_position] = {
+                    "key": f"_tr_{field.column_name}",
+                    "value": None,
+                }
+            else:
+                synthese_dict[field.ordinal_position] = {
+                    "key": field.column_name,
+                    "value": None,
+                }
         synthese_dict.pop(1)
         return synthese_dict
     except Exception:
@@ -87,23 +121,36 @@ def set_total_columns(selected_cols, added_cols, import_id, module_name):
     remove non synthese fields from dict 
     and set fixed synthese fields 
     """
+    import_obj = DB.session.query(TImports).get(import_id)
+
     total_columns = {
         **selected_cols,
         **added_cols,
     }
 
+    if import_obj.uuid_autogenerated is True:
+        total_columns["unique_id_sinp"] = selected_cols.get(
+            "unique_id_sinp", "gn_unique_id_sinp"
+        )
+
+    if import_obj.altitude_autogenerated is True:
+        total_columns["altitude_min"] = selected_cols.get(
+            "altitude_min", "gn_altitude_min"
+        )
+        total_columns["altitude_max"] = selected_cols.get(
+            "altitude_max", "gn_altitude_max"
+        )
+
     # remove non synthese fields from dict :
     sf = get_synthese_fields()
     sf_names = [f.column_name for f in sf]
-    for field in list(total_columns):
-        if field not in sf_names:
-            del total_columns[field]
+    final_total_col = {}
 
-    # add fixed synthese fields :
-    total_columns["id_module"] = get_id_module(module_name)
-    total_columns["id_dataset"] = get_id_dataset(import_id)
+    for source, target in total_columns.items():
+        if source in sf_names or source.startswith("gn"):
+            final_total_col[source] = target
 
-    return total_columns
+    return final_total_col
 
 
 def get_nomenc_name(synthese_col_name, user_value, selected_content):

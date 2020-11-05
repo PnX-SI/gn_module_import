@@ -78,13 +78,11 @@ def check_types(
         types = get_types(schema_name, selected_columns)
 
         # DATE TYPE COLUMNS :
-
         date_fields = [
-            field
-            for field in synthese_info
-            if synthese_info[field]["data_type"] == "timestamp without time zone"
+            source
+            for source, target in selected_columns.items()
+            if source in ("date_min", "date_max")
         ]
-
         for field in date_fields:
 
             logger.info(

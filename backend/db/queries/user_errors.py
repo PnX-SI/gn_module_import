@@ -3,6 +3,7 @@ from sqlalchemy import text
 
 from geonature.utils.env import DB
 from ..models import VUserImportsErrors
+from ...api_error import GeonatureImportApiError
 
 
 def get_error_from_code(error_code):
@@ -12,7 +13,9 @@ def get_error_from_code(error_code):
     """
     result = DB.session.execute(text(query), {"error_code": error_code}).fetchone()
     if result is None:
-        raise "No error found for error_code {}".format(error_code)
+        raise GeonatureImportApiError(
+            message="No error found for error_code {}".format(error_code),
+        )
     return result
 
 
@@ -54,12 +57,17 @@ def set_user_error(
     )
     try:
         #  set + 1 to id_rows error in order to not count the column line
+        ordered_id_rows = []
+        if type(id_rows) is list:
+            ordered_id_rows = sorted(list(map(lambda x: x + 1, id_rows)))
+        else:
+            ordered_id_rows = id_rows
         DB.session.execute(
             text(query),
             {
                 "id_import": id_import,
                 "col_name": col_name,
-                "id_rows": sorted(list(map(lambda x: x + 1, id_rows))),
+                "id_rows": ordered_id_rows,
                 "step": step,
                 "comment": comment,
             },

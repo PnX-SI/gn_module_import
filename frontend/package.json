@@ -9,7 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "file-saver": "^2.0.2",
-    "lodash": "^4.17.15"
+    "file-saver": "^2.0.2"
   }
 }

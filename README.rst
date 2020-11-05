@@ -1,7 +1,7 @@
 Installation du module d'imports
 ================================
 
-Télécharger puis renommer la version actuelle du module :
+Télécharger puis renommer la version souhaitée du module :
 
 ::
 
@@ -23,14 +23,12 @@ Le module doit ensuite être installé comme suit :
    
 Le module est installé et prêt à importer !
 
-⚠️ Les trois mappings par défaut sont associés à tous les groupes d'utilisateurs de GeoNature.
-
 Configuration du module
 =======================
 
-La configuration du module se fait pour partie via le fichier ``conf_gn_module.toml``. Voir le fichier ``conf_gn_module.toml.exemple`` pour voir la liste des paramètre disponible (champs affichés en interface à l'étape 1, préfixe des champs ajoutés par le module, répertoire d'upload des fichiers, SRID, encodage, séparateurs, etc). 
+La configuration du module se fait pour partie via le fichier ``conf_gn_module.toml``. Voir le fichier ``conf_gn_module.toml.example`` pour voir la liste des paramètres disponibles (champs affichés en interface à l'étape 1, préfixe des champs ajoutés par le module, répertoire d'upload des fichiers, SRID, encodage, séparateurs, etc). 
 
-Une autre partie se fait directement via la base de données, dans les tables ``dict_fields`` et ``dict_themes``, permettant de masquer, ajouter, ou rendre obligatoire certains champs à renseigner pour l'import. Un champs masqué sera traité comme un champs non rempli, et se verra associer des valeurs par défaut ou une information vide. Il est également possible de paramétrer l'ordonnancement des champs (ordre, regroupements dans des blocs) dans l'interface du mapping de champs. A l'instar des attributs gérés dans TaxHub, il est possible de définir des "blocs" dans la table ``gn_imports.dict_themes``, et d'y attribuer des champs (``dict_fields``) en y définissant leur ordre d'affichage.  
+Une autre partie se fait directement dans la base de données, dans les tables ``dict_fields`` et ``dict_themes``, permettant de masquer, ajouter, ou rendre obligatoire certains champs à renseigner pour l'import. Un champs masqué sera traité comme un champs non rempli, et se verra associer des valeurs par défaut ou une information vide. Il est également possible de paramétrer l'ordonnancement des champs (ordre, regroupements dans des blocs) dans l'interface du mapping de champs. A l'instar des attributs gérés dans TaxHub, il est possible de définir des "blocs" dans la table ``gn_imports.dict_themes``, et d'y attribuer des champs (``dict_fields``) en y définissant leur ordre d'affichage.  
 
 Après avoir regroupé les champs dans leurs "blocs" et leur avoir associé un ordre, vous devrez relancer le build de l'interface. 
 
@@ -43,7 +41,61 @@ Après avoir regroupé les champs dans leurs "blocs" et leur avoir associé un o
 Droits du module
 ================
 
-Les droits sur les "mappings" (possibilité d'éditer/créer des mappings) n'est pas fournie par défault. Le réglage des droits se fait dans le module "admin" de GeoNature ("Admin" -> "permissions")
+La gestions des droits dans le module d'import se fait via le réglage du CRUVED à deux niveaux : au niveau du module d'import lui-même et au niveau de l'objet "mapping".
+
+- Le CRUVED du module d'import permet uniquement de gérer l'affichage des imports. Une personne ayant un R = 3 verra tous les imports de la plateforme, un R = 2 seulement ceux de son organisme et un R = 1 seulement les siens. 
+- Les jeux de données selectionnables par un utilisateur lors de la création d'un import sont eux controlés par les permissions globales de GeoNature (et non du module d'import).
+- Les mappings constituent un "objet" du module d'import disposant de droits paramétrables pour les différents rôles. Par défaut, les droits accordés sur les mappings sont identiques aux droits que les utilisateurs ont sur le module Import en lui-même. Le réglage des droits se fait dans le module "Admin" de GeoNature ("Admin" -> "Permissions"). 
+- Avec un C = 1,  R = 3, U = 1  un utilisateur pourra par exemple créer des nouveaux mappings (des modèles d'imports), modifier ses propres mappings et voir l'ensemble des mappings de l'instance. 
+- Si vous modifiez un mapping sur lequel vous n'avez pas les droits, un mapping temporaire sera créé dans la BDD en enregistrant les modifications que vous avez faites, mais sans modifier le mapping initial. Lorsqu'on a les droits de modification sur un mapping, il est également possible de ne pas enregistrer les modifications faites à celui-ci pour ne pas écraser le mapping inital (un mapping temporaire sera également créé pour votre import en cours).
+- Si vous voulez conserver des mappings "types" que personne ne pourra modifier sauf les administrateurs, mettez le CRUVED suivant sur l'objet mapping à votre groupe d'utilisateur "non administrateur" : C = 1,  R = 3, U = 1, D = 1
+
+
+Documentation developpeur
+=========================
+
+Procesus de vérification:
+
+- le fichier fourni par l'utilisateur est converti en deux tables postgreSQL: un table d'archives et une table de travail sur laquelle seront faites les modifications et contrôles
+- Pour les vérification, le fichier est transformé en dataframe Dask et traité avec la librairie Panda. Une fois les modifications et contrôles réalisés, le dataframe est rechargé dans la table de transformation (qui est au préalablement supprimée)
+- Pour chaque champs de nomenclature, une colonne est créée pour transformer les valeurs fournies en id_nomenclature GeoNature. La colonne fournie se nomme "tr_<id_nomenclature_destination>_<nom_colonne_source>"
+- la dernière étape de "prévisualisation" affiche l'ensemble des champs transformé tels qu'ils seront inserés dans GeoNature. Les nomenclatures sont affichées sous leur format décodé (label_fr), sous la forme "<champs_source>-><champ_destination>"
+
+Mise à jour du module
+=====================
+
+- Téléchargez la nouvelle version du module
+
+::
+
+   wget https://github.com/PnX-SI/gn_module_import/archive/X.Y.Z.zip
+   unzip X.Y.Z.zip
+   rm X.Y.Z.zip
+
+
+- Renommez l'ancien et le nouveau répertoire
+
+::
+
+   mv /home/`whoami`/gn_module_import /home/`whoami`/gn_module_import_old
+   mv /home/`whoami`/gn_module_import-X.Y.Z /home/`whoami`/gn_module_import
+
+
+- Rapatriez le fichier de configuration
+
+::
+
+   cp /home/`whoami`/gn_module_import_old/config/conf_gn_module.toml  /home/`whoami`/gn_module_import/config/conf_gn_module.toml
+
+
+- Relancez la compilation en mettant à jour la configuration
+
+::
+
+   cd /home/`whoami`/geonature/backend
+   source venv/bin/activate
+   geonature update_module_configuration IMPORT
+
 
 Utilisation du module d'imports
 ===============================
@@ -58,7 +110,7 @@ Le module permet de traiter un fichier CSV ou GeoJSON sous toute structure de do
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-02.jpg
 
-3. Chargez le fichier CSV ou GeoJSON à importer.
+3. Chargez le fichier CSV ou GeoJSON à importer. Le nom du fichier ne doit pas dépasser 50 charactères.
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-03.jpg
 
@@ -101,7 +153,7 @@ Fonctionnement du module (serveur et BDD)
 - une fois dans le schéma ``gn_imports_archives`` : cette archive ne sera jamais modifiée, et permettra de garder une trace des données brutes telles qu'elles ont été transmises
 - une fois dans le schéma ``gn_imports`` : cette copie est la table d'imports
 
-3. La table créée dans le schéma gn_imports est la table de travail sur laquelle les différentes transformations et différents compléments seront effectués au cours du processus. Cette table se voit dotée de 3 champs "techniques" : ``gn_is_valid`` (booléen qui précise la validité de la ligne lors du processus d'import), ``gn_invalid_reason`` (ensemble des erreurs détectées rendant la donnée invalide), et ``gn_pk`` (clé primaire purement technique).
+3. La table créée dans le schéma ``gn_imports`` est la table de travail sur laquelle les différentes transformations et différents compléments seront effectués au cours du processus. Cette table se voit dotée de 3 champs "techniques" : ``gn_is_valid`` (booléen qui précise la validité de la ligne lors du processus d'import), ``gn_invalid_reason`` (ensemble des erreurs détectées rendant la donnée invalide), et ``gn_pk`` (clé primaire purement technique).
 
 A la fin du processus, seules les données ``gn_is_valid=true`` seront importées dans la synthèse. 
 

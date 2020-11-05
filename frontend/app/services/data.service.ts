@@ -17,7 +17,7 @@ export class DataService {
   }
 
   getOneImport(id_import) {
-    return this._http.get(`${urlApi}/${id_import}`);
+    return this._http.get<any>(`${urlApi}/${id_import}`);
   }
 
   updateImport(idImport, data) {

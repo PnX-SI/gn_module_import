@@ -63,6 +63,7 @@ export class ContentMappingStepComponent implements OnInit {
 
   ngOnInit() {
     this.stepData = this.stepService.getStepData(3);
+
     const step2: Step2Data = this.stepService.getStepData(2);
     this.idFieldMapping = step2.id_field_mapping;
     this.contentTargetForm = this._fb.group({});
@@ -210,6 +211,7 @@ export class ContentMappingStepComponent implements OnInit {
 
   onMappingName(): void {
     this.mappingListForm.valueChanges.subscribe(mapping => {
+
       if (mapping && mapping.id_mapping) {
         this.disabled = false;
         this.fillMapping(mapping.id_mapping);
@@ -233,7 +235,6 @@ export class ContentMappingStepComponent implements OnInit {
         }
       });
     });
-    // console.log(this.idInfo);
 
     return this.idInfo;
   }
@@ -241,13 +242,12 @@ export class ContentMappingStepComponent implements OnInit {
   fillMapping(id_mapping) {
     this.id_mapping = id_mapping;
     this._ds.getMappingContents(id_mapping).subscribe(mappingContents => {
-      // console.log(mappingContents);
       this.contentTargetForm.reset();
       if (mappingContents[0] != "empty") {
+
         this.n_mappes = 0;
         for (let content of mappingContents) {
           let arrayVal: any = [];
-          // console.log(content);
 
           for (let val of content) {
             if (val["source_value"] != "") {
@@ -261,10 +261,12 @@ export class ContentMappingStepComponent implements OnInit {
           const formControl = this.contentTargetForm.get(
             String(content[0]["id_target_value"])
           );
+
           if (formControl) {
-            formControl.setValue(arrayVal);
-            ++this.n_mappes;
+            formControl.setValue(arrayVal)
+            this.n_mappes = this.n_mappes + 1;
           }
+
         }
       } else {
         this.contentTargetForm.reset();
@@ -296,7 +298,7 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   onStepBack() {
-    this._router.navigate([`${ModuleConfig.MODULE_URL}/process/step/2`]);
+    this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.stepData.importId}/step/2`]);
   }
 
   onDataChecking() {
@@ -323,7 +325,7 @@ export class ContentMappingStepComponent implements OnInit {
           });
           if (import_obj.source_count < ModuleConfig.MAX_LINE_LIMIT) {
             this._router.navigate([
-              ModuleConfig.MODULE_URL + "/process/step/4"
+              `${ModuleConfig.MODULE_URL}/process/id_import/${this.stepData.importId}/step/4`
             ]);
           } else {
             this.nbLignes = import_obj.source_count;

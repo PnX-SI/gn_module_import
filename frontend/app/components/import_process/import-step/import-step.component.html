@@ -1,102 +1,174 @@
 <div class=container>
     <stepper [step]=4></stepper>
 
-    <div *ngIf="tableReady" >
-            <h3 class="title mb-0">
-                Récapitulatif avant import
-            </h3>
-            <div class="card">
-                <h4 class="card-header">
-                        <i class="icone-recap fa fa-wrench" aria-hidden="true"></i>
-                        Rapports
-                </h4> 
-                <div class="card-body card-margin">
-    
-                    <div>
-                        <div *ngIf="displayErrors" class="content-report card-margin">
-                            <button (click)="openErrorSheet(idImport)" class="btn btn-warning">
-                                    Rapport d'erreurs 
-                            </button>
-                        </div>
-                        <div *ngIf="nInvalidData > 0" class="content-report">
-                            <button class="btn btn-primary" (click)="_csvExport.onCSV(idImport)"> Exporter vos {{nInvalidData}} observations invalides </button>
-                        </div>
-                        <div *ngIf="nInvalidData==0 && !displayErrors" class="content-report">
-                            Aucune erreur à afficher
-                        </div>
+    <div *ngIf="tableReady">
+        <h3 class="title mb-0">
+            Récapitulatif avant import
+        </h3>
+        <div class="card">
+            <h4 class="card-header">
+                <mat-icon>build</mat-icon>
+
+                Rapports
+            </h4>
+            <div class="card-body card-margin">
+
+                <div>
+                    <div
+                        *ngIf="displayErrors"
+                        class="content-report card-margin"
+                    >
+                        <button
+                            (click)="openErrorSheet(idImport)"
+                            mat-raised-button
+                            color=accent
+                        >
+                            Rapport d'erreurs
+                        </button>
+                    </div>
+                    <div
+                        *ngIf="nInvalidData > 0"
+                        class="content-report"
+                    >
+                        <button
+                            mat-raised-button
+                            color=primary
+                            (click)="_csvExport.onCSV(idImport)"
+                        > Exporter vos {{nInvalidData}} observations invalides </button>
+                    </div>
+                    <div
+                        *ngIf="nInvalidData==0 && !displayErrors"
+                        class="content-report"
+                    >
+                        Aucune erreur à afficher
                     </div>
                 </div>
             </div>
+        </div>
 
 
-            <div class="card card-margin">
-                <h4 class="card-header"> 
-                    <i class="icone-recap fa fa-map-marker" aria-hidden="true"></i>
-                    Zone géographique
-                </h4>
-                <pnx-map height="40vh" searchBar="false">
-                    <pnx-geojson
+        <div class="card card-margin">
+            <h4 class="card-header">
+                <mat-icon>room</mat-icon>
+                Zone géographique
+            </h4>
+            <pnx-map
+                height="40vh"
+                searchBar="false"
+            >
+                <pnx-geojson
                     [geojson]="this.validBbox"
                     [zoomOnFirstTime]="true"
-                    >
-                    </pnx-geojson>
-                </pnx-map>
-            </div>
+                >
+                </pnx-geojson>
+            </pnx-map>
+        </div>
 
     </div>
 
-    <div *ngIf="tableReady" class="card">
+    <div
+        *ngIf="tableReady"
+        class="card"
+    >
         <div class="card-header">
             <h5 class="card-title mb-0">
-                <i class="icone-recap fa fa-list-alt" aria-hidden="true"></i>
+                <mat-icon>reorder</mat-icon>
                 Prévisualisation des observations valides prêtes à être importées
             </h5>
         </div>
         <div class="card-body">
 
-                <ngx-datatable *ngIf="tableReady" #table class="material striped" [rows]="rows" [columnMode]="'force'"
-                    [headerHeight]="35" [scrollbarH]="true" [footerHeight]="40" [rowHeight]="40" [limit]="15"
-                    [selectionType]='single'>
-                    <ngx-datatable-column *ngFor="let col of columns" name="{{col.name}}" prop="{{col.prop}}">
-                    </ngx-datatable-column>
-                </ngx-datatable>
+            <ngx-datatable
+                *ngIf="tableReady"
+                #table
+                class="material striped"
+                [rows]="validData"
+                [columns]="columns"
+                [columnMode]="'force'"
+                [headerHeight]="35"
+                [scrollbarH]="true"
+                [footerHeight]="40"
+                [rowHeight]="40"
+                [limit]="15"
+                [selectionType]='single'
+            >
+                <!-- <ngx-datatable-column
+                    *ngFor="let col of columns"
+                    name="{{col.name}}"
+                    prop="{{col.prop}}"
+                >
+                </ngx-datatable-column> -->
+            </ngx-datatable>
 
-                <br />
+            <br />
 
-                <div class="d-flex flex-row justify-content-between">
-                    <button (click)="onStepBack()"
-                        class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between">
-                        <i class="material-icons"> navigate_before </i>
-                        Précédent
-                    </button>
-                    <button *ngIf="nValidData > 0" class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        (click)="onImport()">
-                        <i class="material-icons"> done </i>
-                        Importer vos {{nValidData}} observations valides
-                    </button>
-                </div>
+            <div class="d-flex flex-row justify-content-between">
+                <button
+                    (click)="onStepBack()"
+                    class="d-flex justify-content-center align-content-between"
+                    mat-raised-button
+                    color="primary"
+                >
+                    <mat-icon>navigate_before</mat-icon>
+                    Précédent
+                </button>
+                <button
+                    *ngIf="nValidData > 0"
+                    class="d-flex justify-content-center align-content-between button-success"
+                    (click)="onImport()"
+                    mat-raised-button
+                >
+                    Importer vos {{nValidData}} observations valides
+                    <mat-icon>done</mat-icon>
+
+                </button>
+            </div>
         </div>
         <footer>
             <footer-stepper importId={{idImport}}></footer-stepper>
         </footer>
     </div>
 </div>
-<div *ngIf="spinner" class="spinner">
-    <mat-spinner class="upload-spinner" [color]="color" [diameter]="150" [strokeWidth]="12">
+<div
+    *ngIf="spinner"
+    class="spinner"
+>
+    <mat-spinner
+        class="upload-spinner"
+        [color]="color"
+        [diameter]="150"
+        [strokeWidth]="12"
+    >
     </mat-spinner>
 </div>
 
-<ng-template #modalRedir let-modal>
+<ng-template
+    #modalRedir
+    let-modal
+>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Import des données en cours...</h4>
-            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-                <span aria-hidden="true">&times;</span>
-            </button>
+        <h4
+            class="modal-title"
+            id="modal-basic-title"
+        >Import des données en cours...</h4>
+        <button
+            type="button"
+            class="close"
+            aria-label="Close"
+            (click)="modal.dismiss('Cross click')"
+        >
+            <span aria-hidden="true">&times;</span>
+        </button>
     </div>
     <div class="modal-body">
-        L'import des fichier dans la synthèse est en cours... Un mail de notification vous sera envoyé à la fin du traitement.
+        L'import des fichier dans la synthèse est en cours... Un mail de notification vous sera envoyé à la fin du
+        traitement.
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-warning" (click)="onRedirect(); modal.close()"> OK </button>
+        <button
+            type="button"
+            class="btn btn-warning"
+            (click)="onRedirect(); modal.close()"
+        > OK </button>
     </div>
 </ng-template>

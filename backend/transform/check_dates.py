@@ -20,8 +20,7 @@ def is_negative_date(value):
 
 def check_date_min_inf_date_max(row, selected_columns):
     """set true in check_dates if date_min <= date_max"""
-    interval = row[selected_columns["date_max"]] - \
-        row[selected_columns["date_min"]]
+    interval = row[selected_columns["date_max"]] - row[selected_columns["date_min"]]
     if interval.total_seconds() >= 0:
         row["check_dates"] = True
     else:
@@ -40,15 +39,33 @@ def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
             for field in synthese_info
             if synthese_info[field]["data_type"] == "timestamp without time zone"
         ]
-
-        # date_min and date_max :
+        #  reset date_min and date_max if the controls are lauched twice
+        df[selected_columns["date_min"]]
+        #  set hours in date cols
+        if "hour_min" in selected_columns and not "concatened_date_min" in df:
+            df[selected_columns["date_min"]] = (
+                df[selected_columns["date_min"]]
+                + " "
+                + df[selected_columns["hour_min"]]
+            )
+            df["concatened_date_min"] = True
+        if (
+            "hour_max" in selected_columns
+            and "date_max" in selected_columns
+            and not "concatened_date_max" in df
+        ):
+            df[selected_columns["date_max"]] = (
+                df[selected_columns["date_max"]]
+                + " "
+                + df[selected_columns["hour_max"]]
+            )
+            df["concatened_date_max"] = True
 
         # set date_max (=if data_max not existing, then set equal to date_min)
         if "date_max" not in date_fields:
             logger.info("- date_max not provided : set date_max = date_min")
             df["date_max"] = df[selected_columns["date_min"]]  # utile?
-            synthese_info.update(
-                {"date_max": synthese_info["date_min"]})  # utile?
+            synthese_info.update({"date_max": synthese_info["date_min"]})  # utile?
 
         # check date min <= date max
         if "date_min" in date_fields and "date_max" in date_fields:
@@ -62,8 +79,7 @@ def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
             df["temp"] = ""
             try:
                 df["interval"] = (
-                    df[selected_columns["date_max"]] -
-                    df[selected_columns["date_min"]]
+                    df[selected_columns["date_max"]] - df[selected_columns["date_min"]]
                 )
             except Exception:
                 logger.error("Error on date")
