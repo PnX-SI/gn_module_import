@@ -12,6 +12,7 @@ SET default_with_oids = false;
 --INSERTIONS--
 --------------
 
+-- Créer les mappings par défaut
 INSERT INTO gn_imports.t_mappings (mapping_label, mapping_type, active)
 VALUES
 ('Format DEE (champs 10 char)', 'FIELD', true),
@@ -19,8 +20,8 @@ VALUES
 ('Nomenclatures SINP (labels)', 'CONTENT', true),
 ('Nomenclatures SINP (codes)', 'CONTENT', true);
 
--- On donne des droits à tous les groupes GN pour tous les mappings 
-INSERT INTO gn_imports.cor_role_mapping(id_mapping, id_role)
+-- Donner des droits à tous les groupes GN pour tous les mappings 
+INSERT INTO gn_imports.cor_role_mapping (id_mapping, id_role)
 SELECT 
 tm.id_mapping,
 id_role
@@ -35,7 +36,7 @@ AND id_role IN (
     )
 );
 
-
+-- Renseigner les correspondances de champs du mapping 'Format DEE'
 INSERT INTO gn_imports.t_mappings_fields (id_mapping, source_field, target_field, is_selected, is_added)
 VALUES 
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'permid','unique_id_sinp',true,false),
@@ -88,27 +89,23 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'validateur','validator',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'datectrl','meta_validation_date',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'validcom','validation_comment',true,false),
-
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'natobjgeo','id_nomenclature_geo_object_nature',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'obstech','id_nomenclature_obs_technique',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'statobs','id_nomenclature_observation_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'statsource','id_nomenclature_source_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'refbiblio','reference_biblio',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'cdhab','cd_hab',true,false),
-
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'geometrie','WKT',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'nomlieu','place_name',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'precisGeo','precision',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'gn_1_the_geom_point_2','the_geom_point',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'gn_1_the_geom_local_2','the_geom_local',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'gn_1_the_geom_4326_2','the_geom_4326',false,true),
-
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codecommune','codecommune',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codemaille','codemaille',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codedepartement','codedepartement',true,false)
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codedepartement','codedepartement',true,false),
 
--- mapping synthese
-
+-- Renseigner les correspondances de champs du mapping 'Synthese GeoNature'
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'uuid_perm_sinp','unique_id_sinp',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'id_synthese','entity_source_pk_value',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'uuid_perm_grp_sinp','unique_id_sinp_grp',true,false),
@@ -159,25 +156,21 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'validateur','validator',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'date_validation','meta_validation_date',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'comment_validation','validation_comment',true,false),
-
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'nature_objet_geo','id_nomenclature_geo_object_nature',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'statut_observation','id_nomenclature_observation_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'statut_source','id_nomenclature_source_status',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'reference_biblio','reference_biblio',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'cd_habref','cd_hab',true,false),
-
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'geometrie_wkt_4326','WKT',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'nom_lieu','place_name',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'precision_geographique','precision',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','the_geom_point',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','the_geom_local',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','the_geom_4326',false,true),
-
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','codecommune',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','codemaille',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), '','codedepartement',true,false)
 ;
-
 
 -- Intégration du mapping de valeurs SINP (labels) par défaut pour les nomenclatures de la synthèse 
 INSERT INTO gn_imports.t_mappings_values (id_mapping, source_value, id_target_value)
@@ -188,7 +181,6 @@ n.id_nomenclature
 FROM gn_imports.t_mappings m, ref_nomenclatures.t_nomenclatures n
 JOIN ref_nomenclatures.bib_nomenclatures_types bnt ON bnt.id_type=n.id_type 
 WHERE m.mapping_label='Nomenclatures SINP (labels)' AND bnt.mnemonique IN (SELECT DISTINCT(mnemonique) FROM gn_imports.cor_synthese_nomenclature);
-
 
 -- Intégration du mapping de valeurs SINP (codes) par défaut pour les nomenclatures de la synthèse
 INSERT INTO gn_imports.t_mappings_values (id_mapping, source_value, id_target_value)
