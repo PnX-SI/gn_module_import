@@ -5,10 +5,13 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 
-
+--------------
 --------------
 --GN_IMPORTS--
 --------------
+--------------
+
+-- Créer le schéma du module IMPORT
 CREATE SCHEMA IF NOT EXISTS gn_imports;
 
 SET search_path = gn_imports, pg_catalog;
@@ -18,6 +21,7 @@ SET default_with_oids = false;
 --TABLES AND SEQUENCES--
 ------------------------
 
+-- Créer la table stockant la liste des imports
 CREATE TABLE t_imports(
     id_import serial NOT NULL,
     format_source_file character varying(10),
@@ -45,13 +49,13 @@ CREATE TABLE t_imports(
     in_error boolean DEFAULT FALSE
 );
 
-
+-- Créer la table stockant les auteurs des imports
 CREATE TABLE cor_role_import(
     id_role integer NOT NULL,
     id_import integer NOT NULL
 );
 
-
+-- Créer la table listant les erreurs
 CREATE TABLE t_user_errors(
     id_error serial NOT NULL,
     error_type character varying(100) NOT NULL,
@@ -60,13 +64,13 @@ CREATE TABLE t_user_errors(
     error_level character varying(25)
 );
 
-
+-- Créer la table stockant les auteurs des mappings
 CREATE TABLE cor_role_mapping(
     id_role integer NOT NULL,
     id_mapping integer NOT NULL
 );
 
-
+-- Créer la table stockant les champs des mappings
 CREATE TABLE t_mappings_fields(
     id_match_fields serial NOT NULL,
     id_mapping integer NOT NULL,
@@ -76,7 +80,7 @@ CREATE TABLE t_mappings_fields(
     is_added boolean NOT NULL
 );
 
-
+-- Créer la table stockant les valeurs des mappings
 CREATE TABLE t_mappings_values(
     id_match_values serial NOT NULL,
     id_mapping integer NOT NULL,
@@ -85,7 +89,7 @@ CREATE TABLE t_mappings_values(
     id_target_value integer NOT NULL
 );
 
-
+-- Créer la table des mappings
 CREATE TABLE t_mappings(
     id_mapping serial NOT NULL,
     mapping_label character varying(255) NOT NULL,
@@ -94,7 +98,7 @@ CREATE TABLE t_mappings(
     temporary boolean NOT NULL DEFAULT false
 );
 
-
+-- Créer la table des thèmes permettant de regroupant les champs à mapper
 CREATE TABLE dict_themes(
     id_theme serial,
     name_theme character varying(100) NOT NULL,
@@ -104,7 +108,7 @@ CREATE TABLE dict_themes(
     order_theme integer NOT NULL
 );
 
-
+-- Créer la table des champs à mapper
 CREATE TABLE dict_fields(
     id_field serial,
     name_field character varying(100) NOT NULL,
@@ -122,13 +126,13 @@ CREATE TABLE dict_fields(
     comment text
 );
 
-
+-- Créer la table associant les nomenclatures aux champs de la table Synthèse
 CREATE TABLE cor_synthese_nomenclature(
     mnemonique character varying(50) NOT NULL,
     synthese_col character varying(50) NOT NULL
 );
 
-
+-- Créer la table stockant les erreurs des imports
 CREATE TABLE t_user_error_list(
     id_user_error serial NOT NULL,
     id_import integer NOT NULL,
@@ -139,7 +143,7 @@ CREATE TABLE t_user_error_list(
     comment text
 );
 
-
+-- Créer une vue listant les erreurs des imports
 CREATE VIEW gn_imports.v_imports_errors AS 
 SELECT 
 id_user_error,
@@ -153,7 +157,6 @@ id_rows,
 comment
 FROM  gn_imports.t_user_error_list el 
 JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error;
-
 
 
 ----------------------------
@@ -194,7 +197,6 @@ ALTER TABLE ONLY dict_fields
 ALTER TABLE ONLY dict_fields
     ADD CONSTRAINT unicity_t_mappings_fields_name_field UNIQUE (name_field);
 
-
 ALTER TABLE ONLY cor_synthese_nomenclature
     ADD CONSTRAINT pk_cor_synthese_nomenclature PRIMARY KEY (mnemonique, synthese_col);
 
@@ -228,7 +230,6 @@ ALTER TABLE ONLY t_mappings_fields
 
 ALTER TABLE ONLY t_mappings_fields
     ADD CONSTRAINT fk_gn_imports_t_mappings_fields_target_field FOREIGN KEY (target_field) REFERENCES gn_imports.dict_fields(name_field) ON UPDATE CASCADE ON DELETE CASCADE;
-
 
 ALTER TABLE ONLY t_mappings_values
     ADD CONSTRAINT fk_gn_imports_t_mappings_id_mapping FOREIGN KEY (id_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE CASCADE;
@@ -275,30 +276,30 @@ ALTER TABLE ONLY dict_fields
 ------------
 --TRIGGERS--
 ------------
--- faire un trigger pour cor_role_mapping qui rempli quand create ou delete t_mappings.id_mapping?
 
-
+-- faire un trigger pour cor_role_mapping qui remplit quand create ou delete t_mappings.id_mapping ?
 
 -------------
 --FUNCTIONS--
 -------------
 
-                                                                           
+-----------------------
 -----------------------
 --GN_IMPORTS_ARCHIVES--
 -----------------------
+-----------------------
 
+-- Créer un schéma pour stocker les données sources des fichiers importés
 CREATE SCHEMA gn_import_archives;
-
 
 SET search_path = gn_import_archives, pg_catalog;
 SET default_with_oids = false;
-
 
 ----------
 --TABLES--
 ----------
 
+-- Créer la table stockant les données sources des fichiers importés
 CREATE TABLE cor_import_archives(
   id_import integer NOT NULL,
   table_archive character varying(255) NOT NULL
@@ -324,11 +325,10 @@ ALTER TABLE ONLY cor_import_archives
 --TRIGGERS--
 ------------
 
--- faire trigger pour rappatrier données dans cor_import_archives quand creation dun nouvel import?
+-- faire trigger pour rapatrier données dans cor_import_archives quand creation dun nouvel import?
 
 
 -------------
 --FUNCTIONS--
 -------------
-
 
