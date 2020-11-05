@@ -1,3 +1,6 @@
+-- Spécificité pour les instances SINP
+
+-- Masquer certains champs à mapper
 UPDATE gn_imports.dict_fields
 SET display = FALSE 
 WHERE name_field IN (
@@ -8,15 +11,17 @@ WHERE name_field IN (
     'meta_update_date'
 );
 
+-- Renommer le mapping 'Synthèse GeoNature'
 UPDATE gn_imports.t_mappings
 SET mapping_label = 'Synthèse GINCO'
 WHERE mapping_label = 'Synthèse GeoNature';
 
+-- Rendre certains champs obligatoires à mapper
 UPDATE gn_imports.dict_fields
 SET mandatory = TRUE
 WHERE name_field IN ('id_nomenclature_source_status', 'observers', 'id_nomenclature_observation_status');
 
-
+-- Supprimer certains champs à mapper
 DELETE FROM gn_imports.t_mappings_fields
 WHERE target_field in (
     'id_nomenclature_sensitivity',
@@ -42,7 +47,7 @@ WHERE target_field in (
 --     ((SELECT id_role FROM utilisateurs.t_roles WHERE nom_role = 'Grp_admin' AND groupe IS TRUE), 6, 4, (SELECT id_module FROM gn_commons.t_modules WHERE module_code='IMPORT'), 1)
 -- ;
 
--- Permissions groupe admin sur import
+-- Permissions groupe admin sur module import
 INSERT INTO gn_permissions.cor_role_action_filter_module_object
     (
     id_role,
@@ -58,9 +63,7 @@ VALUES
     ((SELECT id_role FROM utilisateurs.t_roles WHERE nom_role = 'Administrateur' AND groupe IS TRUE), 6, 4, (SELECT id_module FROM gn_commons.t_modules WHERE module_code='IMPORT'), 1)
 ;
 
-
-
--- groupe producteur import désactivé
+-- Groupe producteur - Module import désactivé
 INSERT INTO gn_permissions.cor_role_action_filter_module_object
     (
     id_role,
@@ -76,7 +79,8 @@ VALUES
     ((SELECT id_role FROM utilisateurs.t_roles WHERE nom_role = 'Producteur' AND groupe IS TRUE), 6, 1, (SELECT id_module FROM gn_commons.t_modules WHERE module_code='IMPORT'), 1)
 ;
 
--- Groupe Admin sur objet mapping
+-- Droits du Groupe Admin sur objet mapping
+-- Vérifier si c'est toujours utile ?
 INSERT INTO gn_permissions.cor_role_action_filter_module_object
     (
     id_role,
@@ -110,6 +114,8 @@ VALUES
 --     ((SELECT id_role FROM utilisateurs.t_roles WHERE nom_role = 'Grp_admin' AND groupe IS TRUE), 6, 4, (SELECT id_module FROM gn_commons.t_modules WHERE module_code='IMPORT'), (SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING'))
 -- ;
 
+-- Droits du Groupe Producteur sur objet mapping
+-- Vérifier si c'est toujours utile ?
 INSERT INTO gn_permissions.cor_role_action_filter_module_object
     (
     id_role,
