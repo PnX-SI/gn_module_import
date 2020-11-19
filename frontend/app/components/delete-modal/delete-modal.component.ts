@@ -15,9 +15,9 @@ export class ModalDeleteImport implements OnInit {
     private _commonService: CommonService,
     private _ds: DataService,
     private _router: Router
-  ) {}
+  ) { }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   deleteImport() {
     console.log("deleteImport");
@@ -27,7 +27,7 @@ export class ModalDeleteImport implements OnInit {
           // show error message if no connexion
           this._commonService.regularToaster(
             "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+            "Une erreur s'est produite : contactez l'administrateur du site"
           );
         } else {
           // show error message if other server error

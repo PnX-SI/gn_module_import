@@ -26,9 +26,9 @@ export class FooterStepperComponent implements OnInit {
     private _ds: DataService,
     private stepService: StepsService,
     private _commonService: CommonService
-  ) {}
+  ) { }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   cancelImport() {
     this._ds.cancelImport(this.importId).subscribe(
@@ -41,7 +41,7 @@ export class FooterStepperComponent implements OnInit {
           // show error message if no connexion
           this._commonService.regularToaster(
             "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+            "Une erreur s'est produite : contactez l'administrateur du site"
           );
         } else {
           if ((error.status = 400)) {
