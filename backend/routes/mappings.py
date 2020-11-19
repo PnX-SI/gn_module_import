@@ -60,7 +60,7 @@ def get_mappings(info_role, mapping_type):
         )
     except Exception as e:
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR - get_mapping_fields() error : contactez l'administrateur du site",
+            message="Une erreur s'est produite : contactez l'administrateur du site",
             details=str(e),
         )
 
@@ -119,7 +119,7 @@ def get_mapping_fields(info_role, id_mapping):
 
     except Exception as e:
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR - get_mapping_fields() error : contactez l'administrateur du site",
+            message="Une erreur s'est produite : contactez l'administrateur du site",
             details=str(e),
         )
 
@@ -138,7 +138,7 @@ def get_mapping_contents(info_role, id_mapping):
         return content_map, 200
     except Exception as e:
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR - get_mapping_contents() error : contactez l'administrateur du site",
+            message="Une erreur s'est produite : contactez l'administrateur du site",
             details=str(e),
         )
 
@@ -183,7 +183,7 @@ def updateMappingName(info_role):
         logger.exception(e)
         DB.session.rollback()
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR - posting mapping field name : contactez l'administrateur du site",
+            message="Une erreur s'est produite : contactez l'administrateur du site",
             details=str(e),
         )
     finally:
@@ -274,7 +274,7 @@ def postMappingName(info_role):
         logger.exception(e)
         DB.session.rollback()
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR - posting mapping field name : contactez l'administrateur du site",
+            message="Une erreur s'est produite : contactez l'administrateur du site",
             details=str(e),
         )
     finally:
@@ -337,7 +337,7 @@ def get_dict_fields(info_role):
         logger.error("*** SERVER ERROR WHEN GETTING DICT_FIELDS AND DICT_THEMES")
         logger.exception(e)
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR when getting dict_fields and dict_themes",
+            message="Une erreur s'est produite : contactez l'administrateur du site",
             details=str(e),
         )
 
@@ -374,8 +374,7 @@ def getNomencInfo(info_role, id_import, id_field_mapping):
         logger.exception(e)
         DB.session.rollback()
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR : Erreur pour obtenir les infos de nomenclature - \
-            contacter l'administrateur",
+            message="Une erreur s'est produite : contactez l'administrateur du site",
             details=str(e),
         )
     finally:
@@ -432,7 +431,7 @@ def postMetaToStep3(info_role):
         logger.exception(e)
         DB.session.rollback()
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR : Erreur pendant le passage vers l'étape 3 - contacter l'administrateur",
+            message="Une erreur s'est produite : contactez l'administrateur du site",
             details=str(e),
         )
     finally:
@@ -465,7 +464,7 @@ def r_save_field_mapping(info_role, id_mapping):
             )
     except Exception as e:
         raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR : Erreur pendant le mapping de correspondance - contacter l'administrateur",
+            message="Une erreur s'est produite : contactez l'administrateur du site",
             details=str(e),
         )
 

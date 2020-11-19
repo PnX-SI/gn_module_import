@@ -12,7 +12,7 @@ export class CsvExportService {
   constructor(
     private _ds: DataService,
     private _commonService: CommonService
-  ) {}
+  ) { }
 
   onCSV(id_import) {
     let filename = "invalid_data.csv";
@@ -24,12 +24,12 @@ export class CsvExportService {
         if (error.statusText === "Unknown Error")
           this._commonService.regularToaster(
             "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+            "Une erreur s'est produite : contactez l'administrateur du site"
           );
         else
           this._commonService.regularToaster(
             "error",
-            "INTERNAL SERVER ERROR when downloading csv file"
+            "Une erreur s'est produite : contactez l'administrateur du site"
           );
       }
     );

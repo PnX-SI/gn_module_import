@@ -161,7 +161,7 @@ export class UploadFileStepComponent implements OnInit {
               if (error.statusText === "Unknown Error") {
                 this._commonService.regularToaster(
                   "error",
-                  "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+                  "Une erreur s'est produite : contactez l'administrateur du site"
                 );
               } else {
                 if (error.status == 400) {

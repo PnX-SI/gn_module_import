@@ -127,7 +127,7 @@ export class FieldsMappingStepComponent implements OnInit {
           // show error message if no connexion
           this._commonService.regularToaster(
             "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+            "Une erreur s'est produite : contactez l'administrateur du site"
           );
         } else {
           this._commonService.regularToaster("error", error.error);

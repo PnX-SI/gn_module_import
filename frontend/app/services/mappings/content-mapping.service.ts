@@ -36,7 +36,7 @@ export class ContentMappingService {
           // show error message if no connexion
           this._commonService.regularToaster(
             "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+            "Une erreur s'est produite : contactez l'administrateur du site"
           );
         } else {
           console.log(error);
