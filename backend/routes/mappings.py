@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, send_file, current_app
 
-from utils_flask_sqla.response import json_resp
+from utils_flask_sqla.response import json_resp, json_resp_accept_empty_list
 from geonature.utils.env import DB
 from geonature.core.gn_permissions import decorators as permissions
 from pypnusershub.db.tools import InsufficientRightsError
@@ -48,7 +48,7 @@ from ..blueprint import blueprint
 
 @blueprint.route("/mappings/<mapping_type>", methods=["GET"])
 @permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="MAPPING")
-@json_resp
+@json_resp_accept_empty_list
 def get_mappings(info_role, mapping_type):
     """
         Load mapping names in frontend (select)
