@@ -3,6 +3,9 @@ Routes to manage import (import list, cancel import, import info...)
 """
 from flask import request, current_app
 from sqlalchemy.orm import exc as SQLAlchelyExc
+from sqlalchemy import or_
+
+from pypnusershub.db.models import User
 
 from utils_flask_sqla.response import json_resp
 from geonature.utils.env import DB
@@ -40,25 +43,24 @@ def get_import_list(info_role):
     """
         return import list
     """
-    try:
-        results = (
-            DB.session.query(TImports)
-            .order_by(TImports.id_import)
-            .all()
-        )
+    ors = []
+    print(info_role.value_filter)
+    q = DB.session.query(TImports).order_by(TImports.id_import)
+    if info_role.value_filter == "1":
+        ors.append(TImports.author.any(id_role=info_role.id_role))
+    if info_role.value_filter == "2":
+        ors.append(TImports.author.any(id_organisme=info_role.id_organisme))
+    if info_role.value_filter != "3":
+        q = q.filter(or_(*ors))
+    results = q.all()
+    print(q)
+    nrows = None
+    if not results:
+        return {"empty": True}, 200
+    else:
+        nrows = len(results)
 
-        nrows = DB.session.query(TImports).count()
-
-        if not results or nrows == 0:
-            return {"empty": True}, 200
-
-        return {"empty": False, "history": [r.to_dict() for r in results]}, 200
-
-    except Exception as e:
-        raise GeonatureImportApiError(
-            message="INTERNAL SERVER ERROR - affichage de l'historique : contactez l'administrateur du site",
-            details=str(e),
-        )
+    return {"empty": False, "history": [r.to_dict() for r in results]}, 200
 
 
 @blueprint.route("/update_import/<int:id_import>", methods=["POST"])
