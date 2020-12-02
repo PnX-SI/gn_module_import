@@ -22,7 +22,7 @@ SRID = [
 ALLOWED_EXTENSIONS = [".csv", ".geojson"]
 
 # Activer ou non l'étape du mapping des valeurs
-ALLOW_VALUE_MAPPING = True
+ALLOW_VALUE_MAPPING = true
 
 # Si le mapping des valeurs est désactive, specifier l'identifiant du mapping qui doit être utilisé
 DEFAULT_VALUE_MAPPING_ID = 3
