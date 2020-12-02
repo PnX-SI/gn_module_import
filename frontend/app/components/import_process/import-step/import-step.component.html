@@ -15,7 +15,7 @@
 
                 <div>
                     <div
-                        *ngIf="displayErrors"
+                        *ngIf="nbWarning > 0 || nbError > 0"
                         class="content-report card-margin"
                     >
                         <button
@@ -23,8 +23,17 @@
                             mat-raised-button
                             color=accent
                         >
-                            Rapport d'erreurs
+                            Rapport d'erreurs/avertissement
                         </button>
+                        <div
+                        *ngIf="nbError==0 && nbWarning == 0"
+                        class="content-report"
+                    >
+                        Aucune erreur à afficher
+                    </div>
+
+                    <div *ngIf="nbError > 0"> {{nbError}} erreur(s) </div>
+                    <div *ngIf="nbWarning > 0"> {{nbWarning}} avertissement(s) </div>
                     </div>
                     <div
                         *ngIf="nInvalidData > 0"
@@ -36,12 +45,7 @@
                             (click)="_csvExport.onCSV(idImport)"
                         > Exporter vos {{nInvalidData}} observations invalides </button>
                     </div>
-                    <div
-                        *ngIf="nInvalidData==0 && !displayErrors"
-                        class="content-report"
-                    >
-                        Aucune erreur à afficher
-                    </div>
+
                 </div>
             </div>
         </div>

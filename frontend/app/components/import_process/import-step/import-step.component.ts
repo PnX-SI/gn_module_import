@@ -25,9 +25,9 @@ export class ImportStepComponent implements OnInit {
     nInvalidData: number;
     validBbox: any;
     public spinner: boolean = false;
-    displayErrors: boolean = false;
-    displayWarnings: boolean = false;
     public nbLignes: string = "X";
+    public nbError: number;
+    public nbWarning: number;
 
     @ViewChild("modalRedir") modalRedir: any;
 
@@ -49,16 +49,8 @@ export class ImportStepComponent implements OnInit {
 
         this.getValidData();
         this._ds.getErrorList(this.idImport).subscribe(errorList => {
-            if (
-                errorList.errors.filter(error => error.error_level == "ERROR").length >
-                0
-            )
-                this.displayErrors = true;
-            if (
-                errorList.errors.filter(error => error.error_level == "WARNING")
-                    .length > 0
-            )
-                this.displayWarnings = true;
+            this.nbError = errorList.errors.filter(error => error.error_level == "ERROR").length
+            this.nbWarning = errorList.errors.filter(error => error.error_level == "WARNING").length
         });
 
     }

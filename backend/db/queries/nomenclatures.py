@@ -239,25 +239,23 @@ def set_default_value(abb):
     return str(default_value)
 
 
-def set_default_nomenclature_id(table_name, nomenc_abb, user_col, id_types):
+def set_default_nomenclature_id(table_name, nomenc_abb, tr_col):
     default_value = DB.session.execute(
         text("SELECT gn_synthese.get_default_nomenclature_value(:nomenc_abb)"),
         {"nomenc_abb": nomenc_abb},
     ).fetchone()[0]
 
-    if default_value is None:
-        default_value = "NULL"
     query = """
         UPDATE {schema_name}.{table_name}
-        SET {user_col} = :default_value
-        WHERE {user_col} NOT IN :id_types;
+        SET {tr_col} = :default_value
+        WHERE {tr_col} IS NULL;
         """.format(
         schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table_name=table_name,
-        user_col=user_col,
+        tr_col=tr_col,
     )
     DB.session.execute(
-        text(query), {"default_value": default_value, "id_types": tuple(id_types)}
+        text(query), {"default_value": default_value}
     )
 
 

@@ -80,6 +80,8 @@ class NomenclatureTransformer:
                 )
         return nomenclature_fields
 
+
+
     def __create_col_transformation(self, nomenclature_fields):
         """
         Create a column for tranformed nomenclature (id_nomenclature) from code or label
@@ -93,9 +95,14 @@ class NomenclatureTransformer:
         Set nomenclatures_field and formated_mapping_content attributes
         """
         formated_mapping_content = []
+        self.mapping_val_by_mnemo = {}
         raw_mapping_content = get_saved_content_mapping(self.id_mapping)
         for id_nomenclature, mapped_values in raw_mapping_content.items():
             mnemonique_type = get_nomenc_abb(id_nomenclature)
+            if not mnemonique_type in self.mapping_val_by_mnemo:
+                self.mapping_val_by_mnemo[mnemonique_type] = [*mapped_values]
+            else:
+                self.mapping_val_by_mnemo[mnemonique_type].append(*mapped_values)
             synthese_name = get_synthese_col(mnemonique_type)
             if synthese_name in selected_columns:
                 d = {
@@ -166,7 +173,6 @@ class NomenclatureTransformer:
                 el["user_col"]
             )
             for row in rows_with_err:
-                print(row)
                 # ou remplacer par un warning quand la valeur par défaut a été utilisée
 
                 if current_app.config["IMPORT"][
@@ -182,11 +188,11 @@ class NomenclatureTransformer:
                         error_code="INVALID_NOMENCLATURE_WARNING",
                         col_name=el["user_col"],
                         id_rows=row.gn_pk,
-                        comment="La valeur '{}' ne correspond à aucune des valeurs [{}] de la nomenclature {} et a ete remplacée par la valeur par défaut '{}'".format(
+                        comment="La valeur '{}' ne correspond à aucune des valeurs de la nomenclature {} et a ete remplacée par la valeur par défaut '{}'. \n Valeurs acceptées: {}".format(
                             row[1],
-                            ", ".join(nomenc_values_ids),
                             el["mnemonique_type"],
                             get_mnemo(set_default_value(el["mnemonique_type"])),
+                            self.mapping_val_by_mnemo.get(el["mnemonique_type"])
                         ),
                     )
                 else:
@@ -200,21 +206,21 @@ class NomenclatureTransformer:
                             row[1], el["mnemonique_type"]
                         ),
                     )
-                query = """
-                UPDATE {schema}.{table}
-                SET gn_is_valid = 'False',
-                gn_invalid_reason = 'INVALID_NOMENCLATURE'
-                WHERE gn_pk in :id_rows
-                """.format(
-                    schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
-                    table=self.table_name,
-                )
-                formated_rows_err = []
-                for r in rows_with_err:
-                    formated_rows_err = formated_rows_err + r.gn_pk
-                execute_query(
-                    query, commit=True, params={"id_rows": tuple(formated_rows_err)}
-                )
+                    query = """
+                    UPDATE {schema}.{table}
+                    SET gn_is_valid = 'False',
+                    gn_invalid_reason = 'INVALID_NOMENCLATURE'
+                    WHERE gn_pk in :id_rows
+                    """.format(
+                        schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
+                        table=self.table_name,
+                    )
+                    formated_rows_err = []
+                    for r in rows_with_err:
+                        formated_rows_err = formated_rows_err + r.gn_pk
+                    execute_query(
+                        query, commit=True, params={"id_rows": tuple(formated_rows_err)}
+                    )
 
     @checker("Set nomenclature default ids")
     def set_default_nomenclature_ids(self):
@@ -223,10 +229,7 @@ class NomenclatureTransformer:
                 set_default_nomenclature_id(
                     table_name=self.table_name,
                     nomenc_abb=el["mnemonique_type"],
-                    user_col=el["user_col"],
-                    id_types=list(
-                        map(lambda id: str(id), el["accepted_id_nomenclature"])
-                    ),
+                    tr_col=el["transformed_col"]
                 )
             DB.session.commit()
         except Exception:
