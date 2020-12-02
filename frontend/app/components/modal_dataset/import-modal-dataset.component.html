@@ -46,6 +46,7 @@
 
 
 <button
+    [disabled]="cruvedStore.cruved?.IMPORT?.cruved?.C == '0'"
     mat-fab
     color="primary"
     (click)="onOpenModal(content)"
