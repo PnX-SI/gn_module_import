@@ -198,21 +198,22 @@ def set_nomenclature_id(table_name, user_col, target_col, value, id_nomenclature
     )
 
 
-def find_row_with_nomenclatures_error(table_name, nomenclature_column, ids_accepted):
+def find_row_with_nomenclatures_error(table_name, tr_col, user_col):
     """
     Return all the rows where the nomenclatures has not be found
     """
     query = """
-    SELECT array_agg(gn_pk) as gn_pk, {nomenclature_column}
+    SELECT array_agg(gn_pk) as gn_pk, {user_col}
     FROM {schema_name}.{table_name}
-    WHERE {nomenclature_column} NOT IN :ids_accepted
-    GROUP BY {nomenclature_column}
+    WHERE {tr_col} IS NULL
+    GROUP BY {user_col}
     """.format(
         schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table_name=table_name,
-        nomenclature_column=nomenclature_column,
+        tr_col=tr_col,
+        user_col=user_col
     )
-    return DB.session.execute(query, {"ids_accepted": tuple(ids_accepted)}).fetchall()
+    return DB.session.execute(query).fetchall()
 
 
 def get_nomenc_abb_from_name(synthese_name):

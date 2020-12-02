@@ -159,13 +159,14 @@ class NomenclatureTransformer:
         """
         Detect nomenclature which not check with the given value mapping
         """
-        for el in self.accepted_id_nomencatures:
+        for el in self.nomenclature_fields:
             rows_with_err = find_row_with_nomenclatures_error(
                 self.table_name,
                 el["transformed_col"],
-                list(map(lambda id: str(id), el["accepted_id_nomenclature"])),
+                el["user_col"]
             )
             for row in rows_with_err:
+                print(row)
                 # ou remplacer par un warning quand la valeur par défaut a été utilisée
 
                 if current_app.config["IMPORT"][
