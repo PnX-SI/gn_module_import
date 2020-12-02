@@ -1,9 +1,11 @@
 from flask import Blueprint, request, jsonify, send_file, current_app
 
-from utils_flask_sqla.response import json_resp, json_resp_accept_empty_list
+from utils_flask_sqla.response import json_resp
 from geonature.utils.env import DB
 from geonature.core.gn_permissions import decorators as permissions
+from geonature.core.gn_permissions.tools import get_user_from_token_and_raise
 from pypnusershub.db.tools import InsufficientRightsError
+from pypnusershub.routes import check_auth
 
 
 from ..db.models import (
@@ -48,7 +50,7 @@ from ..blueprint import blueprint
 
 @blueprint.route("/mappings/<mapping_type>", methods=["GET"])
 @permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="MAPPING")
-@json_resp_accept_empty_list
+@json_resp
 def get_mappings(info_role, mapping_type):
     """
         Load mapping names in frontend (select)
@@ -60,7 +62,7 @@ def get_mappings(info_role, mapping_type):
         )
     except Exception as e:
         raise GeonatureImportApiError(
-            message="Une erreur s'est produite : contactez l'administrateur du site",
+            message="INTERNAL SERVER ERROR - get_mapping_fields() error : contactez l'administrateur du site",
             details=str(e),
         )
 
@@ -119,7 +121,7 @@ def get_mapping_fields(info_role, id_mapping):
 
     except Exception as e:
         raise GeonatureImportApiError(
-            message="Une erreur s'est produite : contactez l'administrateur du site",
+            message="INTERNAL SERVER ERROR - get_mapping_fields() error : contactez l'administrateur du site",
             details=str(e),
         )
 
@@ -138,7 +140,7 @@ def get_mapping_contents(info_role, id_mapping):
         return content_map, 200
     except Exception as e:
         raise GeonatureImportApiError(
-            message="Une erreur s'est produite : contactez l'administrateur du site",
+            message="INTERNAL SERVER ERROR - get_mapping_contents() error : contactez l'administrateur du site",
             details=str(e),
         )
 
@@ -183,7 +185,7 @@ def updateMappingName(info_role):
         logger.exception(e)
         DB.session.rollback()
         raise GeonatureImportApiError(
-            message="Une erreur s'est produite : contactez l'administrateur du site",
+            message="INTERNAL SERVER ERROR - posting mapping field name : contactez l'administrateur du site",
             details=str(e),
         )
     finally:
@@ -219,66 +221,53 @@ def delete_mapping(info_role, id_mapping):
 
     return mapping.as_dict()
 
-
+# only check if user is connected (no cruved check because anybody can crete temporary mapping)
 @blueprint.route("/mapping", methods=["POST"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT", object_code="MAPPING")
+@check_auth(1, True)
 @json_resp
-def postMappingName(info_role):
+def postMappingName(id_role):
     """
     Post a new mapping (value or content)
     """
-    try:
-        logger.info("Posting mapping field name")
+    data = request.get_json()
 
-        data = request.get_json()
+    if data["mappingName"] == "" or data["mappingName"] == "null":
+        return "Vous devez donner un nom au modèle", 400
 
-        if data["mappingName"] == "" or data["mappingName"] == "null":
-            return "Vous devez donner un nom au modèle", 400
+    # check if name already exists
+    names_request = DB.session.query(TMappings).all()
+    names = [name.mapping_label for name in names_request]
 
-        # check if name already exists
-        names_request = DB.session.query(TMappings).all()
-        names = [name.mapping_label for name in names_request]
+    if data["mappingName"] in names:
+        return "Ce nom de modèle existe déjà", 400
 
-        if data["mappingName"] in names:
-            return "Ce nom de modèle existe déjà", 400
+    # fill BibMapping
+    new_name = TMappings(
+        mapping_label=data["mappingName"],
+        mapping_type=data["mapping_type"],
+        active=True,
+        temporary=data.get("temporary", None),
+    )
 
-        # fill BibMapping
-        new_name = TMappings(
-            mapping_label=data["mappingName"],
-            mapping_type=data["mapping_type"],
-            active=True,
-            temporary=data.get("temporary", None),
-        )
+    DB.session.add(new_name)
+    DB.session.flush()
 
-        DB.session.add(new_name)
-        DB.session.flush()
+    # fill CorRoleMapping
+    id_mapping = (
+        DB.session.query(TMappings.id_mapping)
+        .filter(TMappings.mapping_label == data["mappingName"])
+        .one()[0]
+    )
 
-        # fill CorRoleMapping
-        id_mapping = (
-            DB.session.query(TMappings.id_mapping)
-            .filter(TMappings.mapping_label == data["mappingName"])
-            .one()[0]
-        )
+    new_map_role = CorRoleMapping(id_role=id_role, id_mapping=id_mapping)
 
-        new_map_role = CorRoleMapping(id_role=info_role.id_role, id_mapping=id_mapping)
+    DB.session.add(new_map_role)
+    DB.session.commit()
 
-        DB.session.add(new_map_role)
-        DB.session.commit()
+    logger.info("-> Mapping field name posted")
 
-        logger.info("-> Mapping field name posted")
+    return id_mapping, 200
 
-        return id_mapping, 200
-
-    except Exception as e:
-        logger.error("*** ERROR WHEN POSTING MAPPING FIELD NAME")
-        logger.exception(e)
-        DB.session.rollback()
-        raise GeonatureImportApiError(
-            message="Une erreur s'est produite : contactez l'administrateur du site",
-            details=str(e),
-        )
-    finally:
-        DB.session.close()
 
 
 @blueprint.route("/bibFields", methods=["GET"])
@@ -337,7 +326,7 @@ def get_dict_fields(info_role):
         logger.error("*** SERVER ERROR WHEN GETTING DICT_FIELDS AND DICT_THEMES")
         logger.exception(e)
         raise GeonatureImportApiError(
-            message="Une erreur s'est produite : contactez l'administrateur du site",
+            message="INTERNAL SERVER ERROR when getting dict_fields and dict_themes",
             details=str(e),
         )
 
@@ -374,7 +363,8 @@ def getNomencInfo(info_role, id_import, id_field_mapping):
         logger.exception(e)
         DB.session.rollback()
         raise GeonatureImportApiError(
-            message="Une erreur s'est produite : contactez l'administrateur du site",
+            message="INTERNAL SERVER ERROR : Erreur pour obtenir les infos de nomenclature - \
+            contacter l'administrateur",
             details=str(e),
         )
     finally:
@@ -431,42 +421,36 @@ def postMetaToStep3(info_role):
         logger.exception(e)
         DB.session.rollback()
         raise GeonatureImportApiError(
-            message="Une erreur s'est produite : contactez l'administrateur du site",
+            message="INTERNAL SERVER ERROR : Erreur pendant le passage vers l'étape 3 - contacter l'administrateur",
             details=str(e),
         )
     finally:
         DB.session.close()
 
 
+# only check if user is connected (no cruved check because anybody can crete temporary mapping)
 @blueprint.route("/create_or_update_field_mapping/<int:id_mapping>", methods=["POST"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT")
+@check_auth(1, True)
 @json_resp
-def r_save_field_mapping(info_role, id_mapping):
+def r_save_field_mapping(id_role, id_mapping):
     """
         Create or update a field_mapping
     """
-    try:
+    data = request.get_json()
+    # SAVE MAPPING
+    if id_mapping != "undefined":
+        logger.info("save field mapping")
+        save_field_mapping(data, id_mapping, select_type="selected")
 
-        data = request.get_json()
-        # SAVE MAPPING
-        if id_mapping != "undefined":
-            logger.info("save field mapping")
-            save_field_mapping(data, id_mapping, select_type="selected")
-
-            logger.info(" -> field mapping saved")
-            return "Done"
-        else:
-            return (
-                {
-                    "message": "Vous devez créer ou sélectionner un mapping pour le valider"
-                },
-                400,
+        logger.info(" -> field mapping saved")
+        return "Done"
+    else:
+        return (
+            {
+                "message": "Vous devez créer ou sélectionner un mapping pour le valider"
+            },
+            400,
             )
-    except Exception as e:
-        raise GeonatureImportApiError(
-            message="Une erreur s'est produite : contactez l'administrateur du site",
-            details=str(e),
-        )
 
 
 @blueprint.route("/update_content_mapping/<int:id_mapping>", methods=["GET", "POST"])
