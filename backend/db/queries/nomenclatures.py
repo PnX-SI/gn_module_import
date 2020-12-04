@@ -201,11 +201,12 @@ def set_nomenclature_id(table_name, user_col, target_col, value, id_nomenclature
 def find_row_with_nomenclatures_error(table_name, tr_col, user_col):
     """
     Return all the rows where the nomenclatures has not be found
+    Only check user col with values (null values will take default nomenclature)
     """
     query = """
     SELECT array_agg(gn_pk) as gn_pk, {user_col}
     FROM {schema_name}.{table_name}
-    WHERE {tr_col} IS NULL
+    WHERE {tr_col} IS NULL AND {user_col} IS NOT NULL
     GROUP BY {user_col}
     """.format(
         schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
@@ -239,7 +240,7 @@ def set_default_value(abb):
     return str(default_value)
 
 
-def set_default_nomenclature_id(table_name, nomenc_abb, tr_col):
+def set_default_nomenclature_id(table_name, nomenc_abb, tr_col, user_col = None, where_user_val_none = False):
     default_value = DB.session.execute(
         text("SELECT gn_synthese.get_default_nomenclature_value(:nomenc_abb)"),
         {"nomenc_abb": nomenc_abb},
@@ -248,12 +249,14 @@ def set_default_nomenclature_id(table_name, nomenc_abb, tr_col):
     query = """
         UPDATE {schema_name}.{table_name}
         SET {tr_col} = :default_value
-        WHERE {tr_col} IS NULL;
+        WHERE {tr_col} IS NULL
         """.format(
         schema_name=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table_name=table_name,
         tr_col=tr_col,
     )
+    if where_user_val_none:
+        query = query + " AND {user_col} IS NULL".format(user_col=user_col)
     DB.session.execute(
         text(query), {"default_value": default_value}
     )

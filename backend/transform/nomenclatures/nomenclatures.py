@@ -223,13 +223,15 @@ class NomenclatureTransformer:
                     )
 
     @checker("Set nomenclature default ids")
-    def set_default_nomenclature_ids(self):
+    def set_default_nomenclature_ids(self, where_user_val_none=False):
         try:
-            for el in self.accepted_id_nomencatures:
+            for el in self.nomenclature_fields:
                 set_default_nomenclature_id(
                     table_name=self.table_name,
                     nomenc_abb=el["mnemonique_type"],
-                    tr_col=el["transformed_col"]
+                    tr_col=el["transformed_col"],
+                    user_col=el["user_col"],
+                    where_user_val_none=where_user_val_none
                 )
             DB.session.commit()
         except Exception:

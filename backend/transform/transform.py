@@ -524,6 +524,9 @@ def content_mapping_data_checking(import_id, id_mapping):
         nomenclature_transformer.init(id_mapping, selected_columns, table_name)
         # with the mapping given, find all the corresponding nomenclatures
         nomenclature_transformer.set_nomenclature_ids()
+        # fill the user null values with default nomenclature
+        nomenclature_transformer.set_default_nomenclature_ids(where_user_val_none=True)
+
 
         logger.info("Find nomenclature with errors :")
         nomenclature_transformer.find_nomenclatures_errors(import_id)
