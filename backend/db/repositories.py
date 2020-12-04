@@ -6,7 +6,7 @@ from flask import session
 from sqlalchemy import or_
 
 from geonature.utils.env import DB
-from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
+from geonature.core.gn_permissions.tools import cruved_scope_for_user_in_module
 
 from pypnusershub.db.models import User
 
@@ -71,12 +71,13 @@ class TMappingsRepository:
             q = q.filter(TMappings.id_mapping.in_(users_mapping))
         data = q.all()
         if with_cruved:
-            user_cruved = get_or_fetch_user_cruved(
-                session=session,
-                id_role=info_role.id_role,
+            user_cruved = cruved_scope_for_user_in_module(
+            id_role=info_role.id_role,
                 module_code="IMPORT",
                 object_code="MAPPING",
-            )
+            )[0]
+            print("LAAA")
+            print(user_cruved)
             mapping_as_dict = []
             for d in data:
                 temp = d.as_dict()
@@ -93,12 +94,11 @@ class TMappingsRepository:
         if mapping:
             mapping_as_dict = mapping.as_dict()
             if with_cruved:
-                user_cruved = get_or_fetch_user_cruved(
-                    session=session,
+                user_cruved = cruved_scope_for_user_in_module(
                     id_role=info_role.id_role,
                     module_code="IMPORT",
                     object_code="MAPPING",
-                )
+                )[0]
                 mapping_as_dict["cruved"] = self.get_mapping_cruved(
                     user_cruved, id_mapping, users_mapping
                 )
