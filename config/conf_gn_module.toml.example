@@ -24,6 +24,10 @@ ALLOWED_EXTENSIONS = [".csv", ".geojson"]
 # Activer ou non l'étape du mapping des valeurs
 ALLOW_VALUE_MAPPING = true
 
+# rempli les valeurs de nomenclature erroné par la valeur par defaut 
+# Leve un warning et non une erreur sur les lignes concernées
+FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = false
+
 # Si le mapping des valeurs est désactive, specifier l'identifiant du mapping qui doit être utilisé
 DEFAULT_VALUE_MAPPING_ID = 3
 # Nombre de lignes à partir duquel l'import est fait en tâche de fond
@@ -34,3 +38,10 @@ ENCODAGE = ["UTF-8"]
 
 # Afficher le bouton pour afficher/masquer les champs déjà mappés
 DISPLAY_CHECK_BOX_MAPPED_FIELD = true
+
+# Active la vérification de l'existence du champs "floutage" si le JDD est privé
+CHECK_PRIVATE_JDD_BLURING = true
+# Active la vérification qu'une ref biblio est fournie si la valeur du champs source = "litterature"
+CHECK_REF_BIBLIO_LITTERATURE = true
+# Active la vérification qu'une preuve d'existance est fournie si preuve existance = "oui"
+CHECK_EXIST_PROOF = true

@@ -146,3 +146,6 @@ class GnModuleSchemaConf(Schema):
     DEFAULT_FIELD_MAPPING_ID = fields.Integer(missing=DEFAULT_FIELD_MAPPING_ID)
     DISPLAY_MAPPED_FIELD = fields.Boolean(missing=False)
     DISPLAY_CHECK_BOX_MAPPED_FIELD = fields.Boolean(missing=True)
+    CHECK_PRIVATE_JDD_BLURING = fields.Boolean(missing=True)
+    CHECK_REF_BIBLIO_LITTERATURE = fields.Boolean(missing=True)
+    CHECK_EXIST_PROOF = fields.Boolean(missing=True)

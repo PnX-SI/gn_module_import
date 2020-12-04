@@ -237,52 +237,56 @@ class NomenclatureTransformer:
             raise
 
     def check_conditionnal_values(self, id_import):
-        # Proof checker
-        row_with_errors_proof = exist_proof_check(
-            self.table_name,
-            self.__find_transformed_col("PREUVE_EXIST"),
-            self.selected_columns.get("digital_proof"),
-            self.selected_columns.get("non_digital_proof"),
-        )
-        if row_with_errors_proof and row_with_errors_proof.id_rows:
-            set_user_error(
-                id_import=id_import,
-                step="CONTENT_MAPPING",
-                error_code="INVALID_EXISTING_PROOF_VALUE",
-                col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
-                id_rows=row_with_errors_proof.id_rows,
+        if current_app.config['IMPORT']['CHECK_EXIST_PROOF']:
+            # Proof checker
+            row_with_errors_proof = exist_proof_check(
+                self.table_name,
+                self.__find_transformed_col("PREUVE_EXIST"),
+                self.selected_columns.get("digital_proof"),
+                self.selected_columns.get("non_digital_proof"),
             )
+            if row_with_errors_proof and row_with_errors_proof.id_rows:
+                set_user_error(
+                    id_import=id_import,
+                    step="CONTENT_MAPPING",
+                    error_code="INVALID_EXISTING_PROOF_VALUE",
+                    col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
+                    id_rows=row_with_errors_proof.id_rows,
+                )
 
-        # bluering checker
-        row_with_errors_blurr = dee_bluring_check(
-            self.table_name, id_import, self.__find_transformed_col("DEE_FLOU"),
-        )
-        if row_with_errors_blurr and row_with_errors_blurr.id_rows:
-            set_user_error(
-                id_import=id_import,
-                step="CONTENT_MAPPING",
-                error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
-                col_name=self.selected_columns.get("id_nomenclature_blurring"),
-                id_rows=row_with_errors_blurr.id_rows,
-                comment="Le champ dEEFloutage doit être remplit si le jeu de données est privé",
+        if current_app.config['IMPORT']['CHECK_PRIVATE_JDD_BLURING']:
+            # bluering checker
+            row_with_errors_blurr = dee_bluring_check(
+                self.table_name, id_import, self.__find_transformed_col("DEE_FLOU"),
             )
+            if row_with_errors_blurr and row_with_errors_blurr.id_rows:
+                set_user_error(
+                    id_import=id_import,
+                    step="CONTENT_MAPPING",
+                    error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
+                    col_name=self.selected_columns.get("id_nomenclature_blurring"),
+                    id_rows=row_with_errors_blurr.id_rows,
+                    comment="Le champ dEEFloutage doit être remplit si le jeu de données est privé",
+                )
 
-        #  literature checker
-        row_with_errors_bib = ref_biblio_check(
-            self.table_name,
-            field_statut_source=self.__find_transformed_col("STATUT_SOURCE"),
-            field_ref_biblio=self.selected_columns.get("reference_biblio"),
-        )
-        if row_with_errors_bib and row_with_errors_bib.id_rows:
-            set_user_error(
-                id_import=id_import,
-                step="CONTENT_MAPPING",
-                error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
-                col_name=self.selected_columns.get("reference_biblio")
-                or self.selected_columns.get("id_nomenclature_source_status"),
-                id_rows=row_with_errors_bib.id_rows,
-                comment="Le champ reference_biblio doit être remplit si le statut source est 'Littérature'",
+        if current_app.config['IMPORT']['CHECK_REF_BIBLIO_LITTERATURE']:
+            #  literature checker
+            
+            row_with_errors_bib = ref_biblio_check(
+                self.table_name,
+                field_statut_source=self.__find_transformed_col("STATUT_SOURCE"),
+                field_ref_biblio=self.selected_columns.get("reference_biblio"),
             )
+            if row_with_errors_bib and row_with_errors_bib.id_rows:
+                set_user_error(
+                    id_import=id_import,
+                    step="CONTENT_MAPPING",
+                    error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
+                    col_name=self.selected_columns.get("reference_biblio")
+                    or self.selected_columns.get("id_nomenclature_source_status"),
+                    id_rows=row_with_errors_bib.id_rows,
+                    comment="Le champ reference_biblio doit être remplit si le statut source est 'Littérature'",
+                )
 
 
 def get_nomenc_info(form_data, schema_name, table_name):
