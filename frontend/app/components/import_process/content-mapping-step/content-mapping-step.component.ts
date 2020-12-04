@@ -82,7 +82,11 @@ export class ContentMappingStepComponent implements OnInit {
       .getNomencInfo(this.stepData.importId, this.idFieldMapping)
       .subscribe(
         res => {
+          res["content_mapping_info"].forEach(user_col => {
+            user_col.user_values.values = user_col.user_values.values.filter(val => val.value !== null)
+          });
           this.stepData.contentMappingInfo = res["content_mapping_info"];
+          
           this.generateContentForm();
           // fill the form
           if (this.stepData.id_content_mapping) {
@@ -388,12 +392,9 @@ export class ContentMappingStepComponent implements OnInit {
     }
   }
 
-  goToPreview() {
-    // if the form has not be changed
-
-    if (this.contentTargetForm.pristine) {
-      this.createOrUpdateMapping(false);
-    } else {
+  goToPreview() {    
+    // if mapping change
+    if(!this.contentTargetForm.pristine) {
       // if the form mapping has been changed and the user has right to update it
       if (this.mappingListForm.value.cruved.U) {
         this._modalService.open(this.modalConfirm);
@@ -411,5 +412,9 @@ export class ContentMappingStepComponent implements OnInit {
           });
       }
     }
+    else {
+      this.onDataChecking();
+    }
+    
   }
 }
