@@ -12,6 +12,7 @@ ADD COLUMN error_level character varying(25)
 ALTER TABLE gn_imports.t_user_error_list
 ADD COLUMN id_rows integer[],
 ADD COLUMN comment text,
+ADD COLUMN step character varying(20),
 DROP COLUMN count_error;
 
 ALTER TABLE gn_imports.t_imports
@@ -33,16 +34,13 @@ INSERT INTO gn_imports.dict_fields (name_field, fr_label, eng_label, desc_field,
   ('codecommune', 'Code commune', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, 
     (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 14, TRUE, NULL
   ),
-('codemaille', 'Code maille', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, 
-  (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 15, TRUE, NULL),
-	('codedepartement', 'Code département', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, ,
-  (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 16, TRUE, NULL),
-  ('reference_biblio', 'Référence bibliographique', '', '', 'character varying(255)', TRUE, FALSE, 
-  FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 
-  14, TRUE, 'Correspondance champs standard: referenceBiblio'
+  ('codemaille', 'Code maille', '', '', 'integer', FALSE, TRUE, FALSE, FALSE, 
+   (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 15, TRUE, NULL
+  ),
+	('codedepartement', 'Code département', '', '', 'integer', FALSE, TRUE, FALSE, FALSE,
+    (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='statement_info'), 16, TRUE, NULL
+  )
 ;
-
-
 
 CREATE VIEW gn_imports.v_imports_errors AS 
 SELECT 
@@ -57,3 +55,83 @@ id_rows,
 comment
 FROM  gn_imports.t_user_error_list el 
 JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error;
+
+-----------------
+---PERMISSIONS---
+-----------------
+DELETE FROM gn_permissions.cor_role_action_filter_module_object
+WHERE id_object = (SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING');
+
+DELETE FROM gn_permissions.cor_object_module
+WHERE id_object = (SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING');
+
+DELETE FROM gn_permissions.t_objects
+WHERE code_object = 'MAPPING'; 
+
+INSERT INTO gn_permissions.t_objects
+(code_object, description_object)
+VALUES('MAPPING', 'Représente un mapping dans le module d''import');
+
+INSERT INTO gn_permissions.cor_object_module
+(id_object, id_module)
+VALUES(
+	(SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING'),
+	(SELECT id_module FROM gn_commons.t_modules WHERE module_code = 'IMPORT')
+);
+
+
+--------------------
+------- DATA -------
+--------------------
+DELETE FROM gn_imports.t_user_errors;
+
+INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level) VALUES 
+('Ouverture du fichier','NO_FILE_DETECTED','Aucun fichier détecté.','ERROR')
+,('Erreur de format','INVALID_INTEGER','Format numérique entier incorrect ou négatif dans une des colonnes de type Entier.','ERROR')
+,('Erreur de format','INVALID_DATE','Le format de date est incorrect dans une colonne de type Datetime. Le format attendu est YYYY-MM-DD ou DD-MM-YYYY (les heures sont acceptées sous ce format: HH:MM:SS) - Les séparateurs / . : sont également acceptés','ERROR')
+,('Erreur de format','INVALID_UUID','L''identifiant permanent doit être un UUID valide, ou sa valeur doit être vide.','ERROR')
+,('Erreur de format','INVALID_CHAR_LENGTH','Chaîne de caractères trop longue ; la longueur de la chaîne dépasse la longueur maximale autorisée.','ERROR')
+,('Champ obligatoire','MISSING_VALUE','Valeur manquante dans un champs obligatoire','ERROR')
+,('Incohérence','DATE_MIN_SUP_DATE_MAX','date_min > date_max','ERROR')
+,('Incohérence','COUNT_MIN_SUP_COUNT_MAX','Incohérence entre les champs dénombrement. La valeur de denombrement_min est supérieure à celle de denombrement _max ou la valeur de denombrement _max est inférieur à denombrement_min.','ERROR')
+,('Erreur de référentiel','CD_NOM_NOT_FOUND','Le cdNom indiqué n’est pas dans le référentiel TAXREF ; la valeur de cdNom n’a pu être trouvée dans la version courante du référentiel.','ERROR')
+,('Erreur d''incohérence','ALTI_MIN_SUP_ALTI_MAX','altitude min > altitude max','ERROR')
+,('Doublon','DUPLICATE_ENTITY_SOURCE_PK','Deux lignes du fichier ont la même clé primaire d’origine ; les clés primaires du fichier source ne peuvent pas être dupliquées.','ERROR')
+,('Erreur de format','INVALID_REAL','Le format numérique réel est incorrect ou négatif dans une des colonnes de type REEL.','ERROR')
+,('Géométrie','GEOMETRY_OUT_OF_BOX','Coordonnées géographiques en dehors du périmètre géographique de l''instance','ERROR')
+,('Géométrie','PROJECTION_ERROR','Erreur de projection pour les coordonnées fournies','ERROR')
+,('Doublon','EXISTING_UUID','L''identifiant SINP fourni existe déjà en base.  Il faut en fournir une autre ou laisser la valeur vide pour une attribution automatique.','ERROR')
+,('Erreur de référentiel','ID_DIGITISER_NOT_EXISITING','id_digitizer n''existe pas dans la table "t_roles"','ERROR')
+,('Erreur de référentiel','INVALID_GEOM_CODE','Le code (maille/département/commune) n''existe pas dans le réferentiel géographique actuel','ERROR')
+,('Nom du fichier','FILE_NAME_ERROR','Le nom de fichier ne comporte que des chiffres.','ERROR')
+,('Doublon','DUPLICATE_ROWS','Deux lignes du fichier sont identiques ; les lignes ne peuvent pas être dupliquées.','ERROR')
+,('Duplication','DUPLICATE_UUID','L''identificant sinp n''est pas unique dans le fichier fournis','ERROR')
+,('Erreur de format','MULTIPLE_CODE_ATTACHMENT','Plusieurs codes de rattachement fournis pour une même ligne. Une ligne doit avoir un seul code rattachement (code commune OU code maille OU code département)','ERROR')
+,('Ouverture du fichier','FILE_WITH_NO_DATA','Le fichier ne comporte aucune donnée.','ERROR')
+,('Format du fichier','FILE_EXTENSION_ERROR','L''extension de fichier fournie n''est pas correct','ERROR')
+,('Erreur de ligne sur le fichier','ROW_HAVE_LESS_COLUMN','Une ligne du fichier a moins de colonnes que l''en-tête.','ERROR')
+,('Nom du fichier','FILE_NAME_TOO_LONG','Nom de fichier trop long ; la longueur du nom de fichier ne doit pas être supérieure à 100 caractères','ERROR')
+,('Taille du fichier','FILE_OVERSIZE','La taille du fichier dépasse la taille du fichier autorisée ','ERROR')
+,('Lecture du fichier','FILE_FORMAT_ERROR','Erreur de lecture des données ; le format du fichier est incorrect.','ERROR')
+,('Lecture du fichier','ENCODING_ERROR','Erreur de lecture des données en raison d''un problème d''encodage.','ERROR')
+,('En-tête du fichier','HEADER_COLUMN_EMPTY','Un des noms de colonne de l’en-tête est vide ; tous les noms de colonne doivent avoir une valeur.','ERROR')
+,('En-tête du fichier','HEADER_SAME_COLUMN_NAME','Plusieurs colonnes de l''en-tête portent le même nom ; tous les noms de colonne de l''en-tête doivent être uniques.','ERROR')
+,('Erreur de ligne sur le fichier','EMPTY_ROW','Une ligne du fichier est vide ; les lignes doivent avoir au moins une cellule non vide.','ERROR')
+,('Erreur de ligne sur le fichier','ROW_HAVE_TOO_MUCH_COLUMN','Une ligne du fichier a plus de colonnes que l''en-tête.','ERROR')
+,('Erreur de nomenclature','INVALID_NOMENCLATURE','Code nomenclature erroné ; La valeur du champ n’est pas dans la liste des codes attendus pour ce champ. Pour connaître la liste des codes autorisés, reportez-vous au Standard en cours.','ERROR')
+,('Géométrie','INVALID_WKT','Géométrie invalide ; la valeur de la géométrie ne correspond pas au format WKT.','ERROR')
+,('Géoréférencement','MISSING_GEOM','Géoréférencement manquant ; un géoréférencement doit être fourni, c’est à dire qu’il faut livrer : soit une géométrie, soit une ou plusieurs commune(s), ou département(s), ou maille(s), dont le champ “typeInfoGeo” est indiqué à 1.','ERROR')
+,('Erreur de fichier','ERROR_WHILE_LOADING_FILE','Une erreur de chargement s''est produite, probablement à cause d''un mauvais séparateur dans le fichier.','ERROR')
+,('Erreur de format','INVALID_URL_PROOF','PreuveNumerique n’est pas une url ; le champ “preuveNumérique” indique l’adresse web à laquelle on pourra trouver la preuve numérique ou l’archive contenant toutes les preuves numériques. Il doit commencer par “http://”, “https://”, ou “ftp://”.','ERROR')
+,('Erreur de réferentiel','INVALID_ATTACHMENT_CODE','Le code commune/maille/département indiqué ne fait pas partie du référentiel des géographique; la valeur de codeCommune/codeMaille/codeDepartement n’a pu être trouvée dans la version courante du référentiel.','ERROR')
+,('Géométrie','INVALID_GEOMETRY','Géométrie invalide','ERROR')
+,('Géométrie','NO-GEOM','Aucune géometrie fournie (ni X/Y, WKT ou code)','ERROR')
+,('Géoréférencement','MULTIPLE_ATTACHMENT_TYPE_CODE','Plusieurs géoréférencements ; un seul géoréférencement doit être livré. Une seule des colonnes codeCommune/codeMaille/codeDépartement doit être remplie pour chaque ligne','ERROR')
+,('Ouverture du fichier','NO_FILE_SENDED','Aucun fichier envoyé','ERROR')
+,('Champ obligatoire conditionnel','CONDITIONAL_MANDATORY_FIELD_ERROR','Champs obligatoires conditionnels manquants. Il existe des ensembles de champs liés à un concept qui sont “obligatoires conditionnels”, c’est à dire que si l''un des champs du concept est utilisé, alors d''autres champs du concept deviennent obligatoires. ','ERROR')
+,('Incohérence','INVALID_EXISTING_PROOF_VALUE','Incohérence entre les champs de preuve ; si le champ “preuveExistante” vaut oui, alors l’un des deux champs “preuveNumérique” ou “preuveNonNumérique” doit être rempli. A l’inverse, si l’un de ces deux champs est rempli, alors “preuveExistante” ne doit pas prendre une autre valeur que “oui” (code 1).','ERROR')
+,('Incohérence','INVALID_STATUT_SOURCE_VALUE','Référence bibliographique manquante ; si le champ “statutSource” a la valeur “Li” (Littérature), alors une référence bibliographique doit être indiquée.','ERROR')
+,('Erreur','UNKNOWN_ERROR','','ERROR')
+,('Ouverture du fichier','EMPTY_FILE','Le fichier fournit est vide','ERROR')
+,('Avertissement de nomenclature','INVALID_NOMENCLATURE_WARNING','(Non bloquant) Code nomenclature erroné et remplacé par sa valeur par défaut ; La valeur du champ n’est pas dans la liste des codes attendus pour ce champ. Pour connaître la liste des codes autorisés, reportez-vous au Standard en cours.','WARNING')
+;
