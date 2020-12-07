@@ -24,12 +24,13 @@ ALLOWED_EXTENSIONS = [".csv", ".geojson"]
 # Activer ou non l'étape du mapping des valeurs
 ALLOW_VALUE_MAPPING = true
 
+# Si le mapping des valeurs est désactivé, specifier l'identifiant du mapping qui doit être utilisé
+DEFAULT_VALUE_MAPPING_ID = 3
+
 # rempli les valeurs de nomenclature erroné par la valeur par defaut 
 # Leve un warning et non une erreur sur les lignes concernées
 FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = false
 
-# Si le mapping des valeurs est désactive, specifier l'identifiant du mapping qui doit être utilisé
-DEFAULT_VALUE_MAPPING_ID = 3
 # Nombre de lignes à partir duquel l'import est fait en tâche de fond
 MAX_LINE_LIMIT = 10000
 
@@ -45,3 +46,5 @@ CHECK_PRIVATE_JDD_BLURING = true
 CHECK_REF_BIBLIO_LITTERATURE = true
 # Active la vérification qu'une preuve d'existance est fournie si preuve existance = "oui"
 CHECK_EXIST_PROOF = true
+# Active la vérification de cohérence entre le TypeInfoGeo et les éventuels rattachements géographiques fournis
+CHECK_TYPE_INFO_GEO = true
