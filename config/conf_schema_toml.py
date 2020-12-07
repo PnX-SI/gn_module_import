@@ -149,3 +149,4 @@ class GnModuleSchemaConf(Schema):
     CHECK_PRIVATE_JDD_BLURING = fields.Boolean(missing=True)
     CHECK_REF_BIBLIO_LITTERATURE = fields.Boolean(missing=True)
     CHECK_EXIST_PROOF = fields.Boolean(missing=True)
+    CHECK_TYPE_INFO_GEO = fields.Boolean(missing=True)

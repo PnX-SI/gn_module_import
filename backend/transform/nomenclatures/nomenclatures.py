@@ -22,6 +22,8 @@ from ...db.queries.nomenclatures import (
     get_mnemo,
     get_nomenc_values,
     add_nomenclature_transformed_col,
+    info_geo_attachment_check,
+    info_geo_attachment_check_2
 )
 from ...db.queries.user_errors import set_user_error
 from ...db.queries.utils import execute_query
@@ -289,6 +291,43 @@ class NomenclatureTransformer:
                     id_rows=row_with_errors_bib.id_rows,
                     comment="Le champ reference_biblio doit être remplit si le statut source est 'Littérature'",
                 )
+        if current_app.config['IMPORT']['CHECK_TYPE_INFO_GEO']:
+
+            # type info geo checker
+            row_with_error_info_geo = info_geo_attachment_check(
+                table_name=self.table_name,
+                tr_info_geo_col=self.__find_transformed_col("TYP_INF_GEO"),
+                grid_col=self.selected_columns.get("codemaille"),
+                dep_col=self.selected_columns.get("codedepartement"),
+                municipality_col=self.selected_columns.get("codecommune"),    
+            )
+            if row_with_error_info_geo:
+                set_user_error(
+                    id_import=id_import,
+                    step="CONTENT_MAPPING",
+                    error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
+                    col_name=self.selected_columns.get("id_nomenclature_info_geo_type"),
+                    id_rows=row_with_error_info_geo.id_rows,
+                    comment="Le champs TypeInfoGeo ne peut valoir géoréférencement si des rattachements sont fournis (code maille/département/commune). Ils seront calculés par la plateforme",
+                )
+
+            row_with_error_info_geo_2 = info_geo_attachment_check_2(
+                table_name=self.table_name,
+                tr_info_geo_col=self.__find_transformed_col("TYP_INF_GEO"),
+                grid_col=self.selected_columns.get("codemaille"),
+                dep_col=self.selected_columns.get("codedepartement"),
+                municipality_col=self.selected_columns.get("codecommune"),    
+            )
+            if row_with_error_info_geo_2:
+                set_user_error(
+                    id_import=id_import,
+                    step="CONTENT_MAPPING",
+                    error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
+                    col_name=self.selected_columns.get("id_nomenclature_info_geo_type") or 'TypeInfoGeo',
+                    id_rows=row_with_error_info_geo_2.id_rows,
+                    comment="Si une entité de rattachement est fournie (code maille/département/commune), alors la colonne TypeInfoGeo est obligatoire",
+                )
+
 
 
 def get_nomenc_info(form_data, schema_name, table_name):

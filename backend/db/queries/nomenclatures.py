@@ -428,3 +428,69 @@ def ref_biblio_check(table_name, field_statut_source, field_ref_biblio):
             query=query, field_ref_biblio=field_ref_biblio
         )
     return DB.session.execute(query).fetchone()
+
+
+def info_geo_attachment_check(table_name, tr_info_geo_col, grid_col, dep_col, municipality_col):
+    """
+    Vérifie que si type_info_geo = 1 alors aucun rattachement n'est fourni
+    """
+    if not tr_info_geo_col:
+        return None
+    if grid_col or dep_col or municipality_col:
+        query = f"""
+        SELECT array_agg(gn_pk) as id_rows
+        FROM {current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"]}.{table_name}
+        WHERE ref_nomenclatures.get_cd_nomenclature({tr_info_geo_col}::integer) = '1' 
+        """
+        first_where = True
+        if grid_col:
+            query = f"{query} AND {grid_col} IS NOT NULL"
+            first_where = False
+        if dep_col:
+            if first_where:
+                query = f"{query} AND {dep_col} IS NOT NULL"
+            else:
+                query = f"{query} OR {dep_col} IS NOT NULL"
+                first_where = False
+        if municipality_col:
+            if first_where:
+                query = f"{query} AND {municipality_col} IS NOT NULL"
+            else:
+
+                query = f"{query} OR {municipality_col} IS NOT NULL"
+                first_where = False
+
+        return DB.session.execute(query).fetchone()
+        
+    else:
+        return None
+
+def info_geo_attachment_check_2(table_name, tr_info_geo_col, grid_col, dep_col, municipality_col):
+    """
+    Si une entitié de rattachement est fourni alors le type_info_geo ne doit pas être null
+    """
+    if not tr_info_geo_col and (grid_col or dep_col or municipality_col):
+        return SimpleNamespace(id_rows="All")
+    elif tr_info_geo_col:
+        query = """       
+        SELECT array_agg(gn_pk) as id_rows
+        FROM {current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"]}.{table_name}
+        WHERE {tr_info_geo_col} IS NULL
+        """
+        first_where = True
+        if grid_col:
+            query = f"{query} AND {grid_col} IS NOT NULL"
+            first_where = False
+        if dep_col:
+            if first_where:
+                query = f"{query} AND {dep_col} IS NOT NULL"
+            else:
+                query = f"{query} OR {dep_col} IS NOT NULL"
+                first_where = False
+        if municipality_col:
+            if first_where:
+                query = f"{query} AND {municipality_col} IS NOT NULL"
+            else:
+
+                query = f"{query} OR {municipality_col} IS NOT NULL"
+                first_where = False
