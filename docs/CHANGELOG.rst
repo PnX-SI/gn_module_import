@@ -2,6 +2,32 @@
 CHANGELOG
 =========
 
+1.1.1 (unreleased)
+------------------
+
+**🚀 Nouveautés**
+
+* Création d'une documentation listant tous les contrôles - https://github.com/PnX-SI/gn_module_import/blob/develop/docs/controls.md (#17)
+* Ajout de contrôles conditionnels sur TypeInfoGeo et de paramètres permettant de désactiver les contrôles conditionnels (#176 et #171)
+* Clarification des paramètres du fichier d'exemple de configuration (``config/conf_gn_module.toml.example``)
+* Ajout de paramètres 
+
+**🐛 Corrections**
+
+* Correction des vérifications du CRUVED sur la liste des imports (#120). ???? Le R mais aussi D et U ?
+* Correction de la récupération du CRUVED sur les mappings
+* Si des lignes sont vides pour une colonne de nomenclature mappée, insérée la valeur par défaut déinie dans la BDD
+* Masquage du bouton d'import si l'action C du CRUVED de l'utilisateur est égale à zéro (#95)
+* Correction et clarification des messages d'erreurs affichés à l'utilisateur (#83)
+* Suppression de l'erreur 404 à l'étape 2 quand l'utilisateur n'a aucun mapping (#136)
+* ??? Fix display of nomenclature vocabulary error (https://github.com/PnX-SI/gn_module_import/commit/f456291894aa17591a92ab27164114c397e59335)
+* ??? Change decorator on route to post mapping (https://github.com/PnX-SI/gn_module_import/commit/1ecff258c162fcd58b1c709b2a315c04b294d3a9)
+* ??? Display warning and errors + display accepted values for nomencatures (https://github.com/PnX-SI/gn_module_import/commit/12b580a939611120786d677f9560067ca1e9825c)
+
+**Notes de version**
+
+* Si vous mettez à jour depuis la version 1.1.0, exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.0to1.1.1.sql``)
+
 1.1.0 (2020-11-05)
 ------------------
 
