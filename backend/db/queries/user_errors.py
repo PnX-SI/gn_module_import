@@ -61,7 +61,7 @@ def set_user_error(
         if type(id_rows) is list:
             ordered_id_rows = sorted(list(map(lambda x: x + 1, id_rows)))
         else:
-            ordered_id_rows = id_rows
+            ordered_id_rows = ['ALL']
         DB.session.execute(
             text(query),
             {

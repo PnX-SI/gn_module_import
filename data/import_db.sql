@@ -138,25 +138,25 @@ CREATE TABLE t_user_error_list(
     id_import integer NOT NULL,
     id_error integer NOT NULL,
     column_error character varying(100) NOT NULL,
-    id_rows integer[],
+    id_rows text[],
     step character varying(20),
     comment text
 );
 
 -- Créer une vue listant les erreurs des imports
-CREATE VIEW gn_imports.v_imports_errors AS 
-SELECT 
-id_user_error,
-id_import,
-error_type,
-name AS error_name,
-error_level,
-description AS error_description,
-column_error,
-id_rows,
-comment
-FROM  gn_imports.t_user_error_list el 
-JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error;
+    CREATE VIEW gn_imports.v_imports_errors AS 
+    SELECT 
+    id_user_error,
+    id_import,
+    error_type,
+    name AS error_name,
+    error_level,
+    description AS error_description,
+    column_error,
+    id_rows,
+    comment
+    FROM  gn_imports.t_user_error_list el 
+    JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error;
 
 
 ----------------------------
