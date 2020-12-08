@@ -71,7 +71,7 @@ export class ImportStepComponent implements OnInit {
         if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
             this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.idImport}/step/2`]);
         } else {
-            this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.idImport}step/3`]);
+            this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.idImport}/step/3`]);
         }
     }
 

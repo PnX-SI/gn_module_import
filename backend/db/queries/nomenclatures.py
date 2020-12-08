@@ -459,7 +459,6 @@ def info_geo_attachment_check(table_name, tr_info_geo_col, grid_col, dep_col, mu
 
                 query = f"{query} OR {municipality_col} IS NOT NULL"
                 first_where = False
-
         return DB.session.execute(query).fetchone()
         
     else:

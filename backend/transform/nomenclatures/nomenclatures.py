@@ -301,7 +301,7 @@ class NomenclatureTransformer:
                 dep_col=self.selected_columns.get("codedepartement"),
                 municipality_col=self.selected_columns.get("codecommune"),    
             )
-            if row_with_error_info_geo:
+            if row_with_error_info_geo and row_with_error_info_geo.id_rows:
                 set_user_error(
                     id_import=id_import,
                     step="CONTENT_MAPPING",
@@ -318,7 +318,7 @@ class NomenclatureTransformer:
                 dep_col=self.selected_columns.get("codedepartement"),
                 municipality_col=self.selected_columns.get("codecommune"),    
             )
-            if row_with_error_info_geo_2:
+            if row_with_error_info_geo_2 and row_with_error_info_geo_2.id_rows:
                 set_user_error(
                     id_import=id_import,
                     step="CONTENT_MAPPING",
