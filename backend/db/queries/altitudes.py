@@ -22,14 +22,18 @@ def generate_altitudes(
                 WHEN {alti_min_col} IS NOT NULL THEN {alti_min_col}
                 WHEN {alti_min_col} IS NULL AND (alti.alt->'altitude_min')::text != 'null' THEN (alti.alt->'altitude_min')::text
                 WHEN {alti_min_col} IS NULL AND (alti.alt->'altitude_min')::text = 'null' THEN NULL
-            END ,
-           {alti_max_col} = CASE 
-                WHEN {alti_max_col} IS NOT NULL THEN {alti_max_col}
-                WHEN {alti_max_col} IS NULL AND (alti.alt->'altitude_max')::text != 'null' THEN (alti.alt->'altitude_max')::text
-                WHEN {alti_max_col} IS NULL AND (alti.alt->'altitude_max')::text = 'null' THEN NULL
             END 
-        FROM alti 
-        WHERE alti.id = t2.{table_pk}
+        """
+        if alti_min_col != alti_max_col:
+            query = f"""{query} ,
+                {alti_max_col} = CASE 
+                        WHEN {alti_max_col} IS NOT NULL THEN {alti_max_col}
+                        WHEN {alti_max_col} IS NULL AND (alti.alt->'altitude_max')::text != 'null' THEN (alti.alt->'altitude_max')::text
+                        WHEN {alti_max_col} IS NULL AND (alti.alt->'altitude_max')::text = 'null' THEN NULL
+            END """
+        query = f"""{query} 
+                FROM alti 
+                WHERE alti.id = t2.{table_pk}
         """
         DB.session.execute(query)
         DB.session.commit()

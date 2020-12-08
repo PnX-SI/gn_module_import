@@ -55,19 +55,5 @@ def set_altitudes(
                 generate_type=generate_type,
             )
 
-            # altitude_max
-
-            # create_col_name(df, added_cols, "altitude_max", import_id)
-
-            # generate_altitudes(
-            #     type_alt="max",
-            #     schema=schema_name,
-            #     table=table_name,
-            #     alt_col=selected_columns.get("altitude_min", "gn_altitude_max"),
-            #     table_pk=index_col,
-            #     geom_col=the_geom_local_col,
-            #     generate_type=generate_type,
-            # )
-
     except Exception:
         raise
