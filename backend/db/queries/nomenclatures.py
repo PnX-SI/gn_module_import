@@ -494,26 +494,3 @@ def info_geo_attachment_check_2(table_name, tr_info_geo_col, grid_col, dep_col, 
 
                 query = f"{query} OR {municipality_col} IS NOT NULL"
                 first_where = False
-def info_geo_attachment_check_3(table_name, tr_info_geo_col,  wkt_col, x_col, y_col):
-    """
-    Erreur si type_info_geo = Rattachement et que WKT ou x/y not null
-    """
-    if not tr_info_geo_col:
-        return None
-    if wkt_col:
-        query = f"""
-        SELECT array_agg(gn_pk) as id_rows
-        FROM {current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"]}.{table_name}
-        WHERE ref_nomenclatures.get_cd_nomenclature({tr_info_geo_col}::integer) = '2'
-        AND {wkt_col} IS NOT NULL
-        """
-        return DB.session.execute(query).fetchone()
-
-    if x_col and y_col:
-        query = f"""
-        SELECT array_agg(gn_pk) as id_rows
-        FROM {current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"]}.{table_name}
-        WHERE ref_nomenclatures.get_cd_nomenclature({tr_info_geo_col}::integer) = '2'
-        AND {x_col} IS NOT NULL and {y_col} IS NOT NULL
-        """
-        return DB.session.execute(query).fetchone()

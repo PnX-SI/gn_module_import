@@ -24,7 +24,6 @@ from ...db.queries.nomenclatures import (
     add_nomenclature_transformed_col,
     info_geo_attachment_check,
     info_geo_attachment_check_2,
-    info_geo_attachment_check_3
 )
 from ...db.queries.user_errors import set_user_error
 from ...db.queries.utils import execute_query
@@ -327,23 +326,6 @@ class NomenclatureTransformer:
                     col_name=self.selected_columns.get("id_nomenclature_info_geo_type") or 'TypeInfoGeo',
                     id_rows=row_with_error_info_geo_2.id_rows,
                     comment="Si une entité de rattachement est fournie (code maille/département/commune), alors la colonne TypeInfoGeo est obligatoire",
-                )
-
-            row_with_error_info_geo_3 = info_geo_attachment_check_3(
-                table_name=self.table_name,
-                tr_info_geo_col=self.__find_transformed_col("TYP_INF_GEO"),
-                wkt_col=self.selected_columns.get("WKT"),
-                x_col=self.selected_columns.get("longitude"),
-                y_col=self.selected_columns.get("latitude"),    
-            )
-            if row_with_error_info_geo_3:
-                set_user_error(
-                    id_import=id_import,
-                    step="CONTENT_MAPPING",
-                    error_code="CONDITIONAL_INVALID_DATA",
-                    col_name=self.selected_columns.get("id_nomenclature_info_geo_type") or 'TypeInfoGeo',
-                    id_rows=row_with_error_info_geo_3.id_rows,
-                    comment="Si un X/Y ou un WKT est fourni alors TypeInfoGeo ne peut pas être égal à 'rattachement'",
                 )
 
 
