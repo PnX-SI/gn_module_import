@@ -316,10 +316,22 @@ def post_user_file(info_role):
                 },
                 200,
             )
+        # file not change
+        else:
+            DB.session.query(TImports).filter(TImports.id_import == metadata.get('importId')).update(
+                {
+                    TImports.step: 2,
+                    TImports.srid: metadata['srid'],
+                    TImports.encoding: metadata['encodage']
+                }
+            )
+
+            DB.session.commit()
 
         return (
             {
                 "importId": metadata["importId"],
+                "srid": metadata["srid"],
                 "fileName": metadata["fileName"],
                 "is_running": is_running,
             },
