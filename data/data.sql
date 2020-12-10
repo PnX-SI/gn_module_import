@@ -57,8 +57,8 @@ INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level)
 ,('Géométrie','NO-GEOM','Aucune géometrie fournie (ni X/Y, WKT ou code)','ERROR')
 ,('Géoréférencement','MULTIPLE_ATTACHMENT_TYPE_CODE','Plusieurs géoréférencements ; un seul géoréférencement doit être livré. Une seule des colonnes codeCommune/codeMaille/codeDépartement doit être remplie pour chaque ligne','ERROR')
 ,('Ouverture du fichier','NO_FILE_SENDED','Aucun fichier envoyé','ERROR')
-,('Champ obligatoire conditionnel','CONDITIONAL_MANDATORY_FIELD_ERROR','Champs obligatoires conditionnels manquants. Il existe des ensembles de champs liés à un concept qui sont “obligatoires conditionnels”, c’est à dire que si l''un des champs du concept est utilisé, alors d''autres champs du concept deviennent obligatoires. ','ERROR'),
-,('Incohérence','CONDITIONAL_INVALID_DATA','Erreur de valeur','ERROR'),
+,('Champ obligatoire conditionnel','CONDITIONAL_MANDATORY_FIELD_ERROR','Champs obligatoires conditionnels manquants. Il existe des ensembles de champs liés à un concept qui sont “obligatoires conditionnels”, c’est à dire que si l''un des champs du concept est utilisé, alors d''autres champs du concept deviennent obligatoires. ','ERROR')
+,('Incohérence','CONDITIONAL_INVALID_DATA','Erreur de valeur','ERROR')
 ,('Incohérence','INVALID_EXISTING_PROOF_VALUE','Incohérence entre les champs de preuve ; si le champ “preuveExistante” vaut oui, alors l’un des deux champs “preuveNumérique” ou “preuveNonNumérique” doit être rempli. A l’inverse, si l’un de ces deux champs est rempli, alors “preuveExistante” ne doit pas prendre une autre valeur que “oui” (code 1).','ERROR')
 ,('Incohérence','INVALID_STATUT_SOURCE_VALUE','Référence bibliographique manquante ; si le champ “statutSource” a la valeur “Li” (Littérature), alors une référence bibliographique doit être indiquée.','ERROR')
 ,('Erreur','UNKNOWN_ERROR','','ERROR')
