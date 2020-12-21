@@ -24,4 +24,6 @@ INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level)
 
 
 UPDATE gn_imports.dict_fields
-SET comment = 'Correspondance champs standard: idSINPOccTax';
+SET comment = 'Correspondance champs standard: idSINPOccTax'
+WHERE name_field = 'unique_id_sinp'
+;
