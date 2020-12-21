@@ -21,3 +21,7 @@ JOIN gn_imports.t_user_errors ue on ue.id_error = el.id_error;
 
 INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level) VALUES 
 ('Incohérence','CONDITIONAL_INVALID_DATA','Erreur de valeur','ERROR');
+
+
+UPDATE gn_imports.dict_fields
+SET comment = 'Correspondance champs standard: idSINPOccTax';

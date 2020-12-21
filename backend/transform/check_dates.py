@@ -43,10 +43,19 @@ def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
         df[selected_columns["date_min"]]
         #  set hours in date cols
         if "hour_min" in selected_columns and not "concatened_date_min" in df:
+            # set 00:00:00 where hour empty
+            hour_min_col = selected_columns["hour_min"]
+            # remove possibe null values
+            df[hour_min_col] = df[hour_min_col].where(df[hour_min_col].notnull(), other="")
+            # calculate hour length
+            df['hour_min_length'] = df[hour_min_col].apply(len)
+            # replace unfill hour with 00:00:00
+            df[hour_min_col] = df[hour_min_col].where(df['hour_min_length'] != 0, other='00:00:00')
+
             df[selected_columns["date_min"]] = (
                 df[selected_columns["date_min"]]
                 + " "
-                + df[selected_columns["hour_min"]]
+                + df[hour_min_col]
             )
             df["concatened_date_min"] = True
         if (
@@ -54,12 +63,21 @@ def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
             and "date_max" in selected_columns
             and not "concatened_date_max" in df
         ):
+            # set 00:00:00 where hour empty
+            hour_max_col = selected_columns["hour_max"]
+            # remove possibe null values
+            df[hour_max_col] = df[hour_max_col].where(df[hour_max_col].notnull(), other="")
+            # calculate hour length
+            df['hour_max_length'] = df[hour_max_col].apply(len)
+            # replace unfill hour with 00:00:00
+            df[hour_max_col] = df[hour_max_col].where(df['hour_max_length'] != 0, other='00:00:00')
             df[selected_columns["date_max"]] = (
                 df[selected_columns["date_max"]]
                 + " "
                 + df[selected_columns["hour_max"]]
             )
             df["concatened_date_max"] = True
+            print(df[selected_columns["date_max"]])
 
         # set date_max (=if data_max not existing, then set equal to date_min)
         if "date_max" not in date_fields:

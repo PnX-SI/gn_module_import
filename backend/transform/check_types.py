@@ -20,7 +20,11 @@ def convert_to_datetime(value):
     an error will be raise later if the returned value is not a Timestamp
     """
     try:
+        # print('init date')
+        # print(value)
         formated_date = re.sub("[/.: ]", "-", value)
+        # print('formagted date')
+        # print(formated_date)
         strftime_format = [
             "%Y-%m-%d",
             "%Y-%m-%d-%H-%M",
@@ -29,11 +33,12 @@ def convert_to_datetime(value):
             "%d-%m-%Y-%H-%M",
             "%d-%m-%Y-%H-%M-%S",
         ]
+        print(formated_date)
         for _format in strftime_format:
             try:
                 date = pd.to_datetime(formated_date, format=_format)
                 return date
-            except ValueError:
+            except ValueError as e:
                 pass
         return value
     except Exception:
