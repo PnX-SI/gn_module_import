@@ -1,3 +1,4 @@
+from flask import current_app
 from geonature.utils.env import DB
 
 from ...db.queries.load_to_synthese import (
@@ -24,7 +25,7 @@ def load_data_to_synthese(schema_name, table_name, total_columns, import_obj):
             elif key == "the_geom_point":
                 key_type = "geometry(Point,4326)"
             elif key == "the_geom_local":
-                key_type = "geometry(Geometry,2154)"
+                key_type = f"geometry(Geometry,{current_app.config['LOCAL_SRID']})"
             elif key == "gn_unique_id_sinp":
                 key_type = "uuid"
             elif key in ("gn_altitude_min", "gn_altitude_max"):
