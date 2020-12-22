@@ -103,10 +103,10 @@ def reg_match(element, regex):
         return True
     else:
         try:
-            element = str(e)
+            element = str(element)
             match = regex.match(element)
-            return match if match else False
-        except Exception:
+            return True if match else False
+        except Exception as e:
             return False
 
 
