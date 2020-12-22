@@ -26,7 +26,7 @@ VALUES
 INSERT INTO gn_imports.t_mappings_fields (id_mapping, source_field, target_field, is_selected, is_added)
 VALUES 
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'permid','unique_id_sinp',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'idsynthese','entity_source_pk_value',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'idorigine','entity_source_pk_value',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'permidgrp','unique_id_sinp_grp',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), '','unique_id_sinp_generate',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), '','meta_create_date',false,false),
@@ -84,13 +84,13 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'cdhab','cd_hab',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'geometrie','WKT',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'nomlieu','place_name',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'precisGeo','precision',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'precisgeo','precision',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'gn_1_the_geom_point_2','the_geom_point',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'gn_1_the_geom_local_2','the_geom_local',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'gn_1_the_geom_4326_2','the_geom_4326',false,true),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codecommune','codecommune',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codemaille','codemaille',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'codedepartement','codedepartement',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'cdcommune','codecommune',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'cdmaille','codemaille',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'cddept','codedepartement',true,false),
 
 -- Renseigner les correspondances de champs du mapping 'Synthese GeoNature'
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Synthese GeoNature'), 'uuid_perm_sinp','unique_id_sinp',true,false),

@@ -27,3 +27,34 @@ UPDATE gn_imports.dict_fields
 SET comment = 'Correspondance champs standard: idSINPOccTax'
 WHERE name_field = 'unique_id_sinp'
 ;
+
+UPDATE gn_imports.dict_fields
+SET comment = 'Correspondance champs standard: profondeurMin. Entier attendu'
+WHERE name_field = 'depth_min'
+;
+
+UPDATE gn_imports.dict_fields
+SET comment = 'Correspondance champs standard: profondeurMax. Entier attendu'
+WHERE name_field = 'depth_max'
+;
+
+UPDATE gn_imports.dict_fields
+SET comment = 'Correspondance champs standard: precisionGeometrie. Entier attendu'
+WHERE name_field = 'precision'
+;
+
+UPDATE gn_imports.dict_fields
+SET comment = 'Correspondance champs standard: CodeHabitatValue. Entier attendu'
+WHERE name_field = 'cd_hab'
+;
+
+UPDATE gn_imports.dict_fields
+SET comment = 'Correspondance champs standard: denombrementMin. Entier attendu'
+WHERE name_field = 'count_min'
+;
+
+UPDATE gn_imports.dict_fields
+SET comment = 'Correspondance champs standard: denombrementMax. Entier attendu'
+WHERE name_field = 'count_max'
+;
+
