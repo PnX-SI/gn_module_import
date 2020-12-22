@@ -33,7 +33,6 @@ def convert_to_datetime(value):
             "%d-%m-%Y-%H-%M",
             "%d-%m-%Y-%H-%M-%S",
         ]
-        print(formated_date)
         for _format in strftime_format:
             try:
                 date = pd.to_datetime(formated_date, format=_format)
