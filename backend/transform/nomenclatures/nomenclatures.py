@@ -268,7 +268,7 @@ class NomenclatureTransformer:
                     id_import=id_import,
                     step="CONTENT_MAPPING",
                     error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
-                    col_name=self.selected_columns.get("id_nomenclature_blurring"),
+                    col_name=self.selected_columns.get("id_nomenclature_blurring", ""),
                     id_rows=row_with_errors_blurr.id_rows,
                     comment="Le champ dEEFloutage doit être remplit si le jeu de données est privé",
                 )
