@@ -448,24 +448,27 @@ export class FieldsMappingStepComponent implements OnInit {
     this._ds.getMappingFields(this.id_mapping).subscribe(
       mappingFields => {
         this.mappedList = [];
+        
         this.enableMapping(this.syntheseForm);
         if (mappingFields[0] != "empty") {
           for (let field of mappingFields) {
+            
             if (field["target_field"] == 'unique_id_sinp_generate') {
-              this.syntheseForm
-                .get('unique_id_sinp_generate')
-                .setValue(field["source_field"])
-            }
-            // get value for uuid_generate
-            if (field["target_field"] == 'unique_id_sinp_generate') {
-              this.syntheseForm
-                .get('unique_id_sinp_generate')
-                .setValue(field["source_field"] == 'true')
+              const form = this.syntheseForm
+                .get('unique_id_sinp_generate');
+                if(form) {
+                  form.setValue(field["source_field"] == 'true')
+                  form.disable();
+                }
             }
             if (field["target_field"] == 'altitudes_generate') {
-              this.syntheseForm
+              const form = this.syntheseForm
                 .get('altitudes_generate')
-                .setValue(field["source_field"] == 'true')
+              if(form) {
+                form.setValue(field["source_field"] == 'true');
+                form.disable()
+              }
+                
             }
 
             if (columnsArray.includes(field["source_field"])) {

@@ -28,7 +28,7 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'permid','unique_id_sinp',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'idorigine','entity_source_pk_value',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'permidgrp','unique_id_sinp_grp',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), '','unique_id_sinp_generate',false,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'true','unique_id_sinp_generate',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), '','meta_create_date',false,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'vtaxref','meta_v_taxref',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), '','meta_update_date',false,false),
