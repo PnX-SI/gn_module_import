@@ -51,6 +51,17 @@ def is_datetime(value):
     except ValueError:
         return False
 
+def is_positive_date(x, date_min_col, date_max_col):
+    try:
+        delta = x[date_max_col] - x[date_min_col]
+        if delta.total_seconds() < 0:
+            return False
+        else:
+            return True
+    except Exception as e:
+        print("exepttt ?????")
+        print(e)
+        return True
 
 def is_uuid(value, version=4):
     try:
@@ -73,7 +84,7 @@ def is_wkt_valid(value):
 
 
 @checker("Data cleaning : type of values checked")
-def check_types(
+def check_types_and_date(
     df, selected_columns, synthese_info, missing_values, schema_name, import_id,
 ):
     try:
@@ -124,6 +135,31 @@ def check_types(
                     comment="Les dates suivantes ne sont pas au bon format: {}".format(
                         ", ".join(map(lambda x: str(x), values_error))
                     ),
+                )
+            # check date_min not > date min date
+            df["positive_date"] = df.apply(lambda x: is_positive_date(
+                x, 
+                selected_columns["date_min"],
+                selected_columns["date_max"]
+            ), axis=1 )
+
+            id_rows_errors_negativ = df.index[df["positive_date"] == False].to_list()
+
+            logger.info(
+                "%s date_min (= %s user column) > date_max (= %s user column) errors detected",
+                len(id_rows_errors_negativ),
+                selected_columns["date_min"],
+                selected_columns["date_max"],
+            )
+
+            if len(id_rows_errors_negativ) > 0:
+                set_error_and_invalid_reason(
+                    df=df,
+                    id_import=import_id,
+                    error_code="DATE_MIN_SUP_DATE_MAX",
+                    col_name_error=selected_columns["date_min"],
+                    df_col_name_valid="positive_date",
+                    id_rows_error=id_rows_errors_negativ,
                 )
 
         # UUID TYPE COLUMNS :

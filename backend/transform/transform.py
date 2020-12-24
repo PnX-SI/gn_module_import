@@ -6,10 +6,10 @@ from ..db.queries.load_to_synthese import get_synthese_info
 from ..db.queries.utils import is_cd_nom_required
 
 from .check_referential import check_referential
-from .check_dates import check_dates
+from .set_dates import set_dates
 from .check_missing import format_missing, check_missing
 from .check_uuid import check_uuid
-from .check_types import check_types
+from .check_types import check_types_and_date
 from .check_other_fields import check_entity_source, check_id_digitizer, check_url
 from .check_counts import check_counts
 from .check_min_max import check_min_max
@@ -120,10 +120,11 @@ def data_cleaning(
         check_missing(
             df, selected_columns, synthese_info, missing_val, import_id, schema_name
         )
-        check_types(
+        set_dates(df, selected_columns, synthese_info, import_id, schema_name)
+
+        check_types_and_date(
             df, selected_columns, synthese_info, missing_val, schema_name, import_id,
         )
-        check_dates(df, selected_columns, synthese_info, import_id, schema_name)
 
         # check cd_nom
         check_referential(
@@ -359,6 +360,7 @@ def field_mapping_data_checking(import_id, id_mapping):
                 "check_dates",
                 "interval",
                 "wkt_and_x_y",
+                "negativ_date"
             ]
             partition_df = remove_temp_columns(temp_cols, partition_df)
 

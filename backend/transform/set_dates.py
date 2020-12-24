@@ -6,28 +6,11 @@ from ..wrappers import checker
 from ..logs import logger
 
 
-def is_negative_date(x, date_min_col, date_max_col):
-    try:
-        delta = x[date_max_col] - x[date_min_col]
-        if delta.total_seconds() < 0:
-            return True
-        else:
-            return False
-    except Exception as e:
-        return True
 
-
-def check_date_min_inf_date_max(row, selected_columns):
-    """set true in check_dates if date_min <= date_max"""
-    interval = row[selected_columns["date_max"]] - row[selected_columns["date_min"]]
-    if interval.total_seconds() >= 0:
-        row["check_dates"] = True
-    else:
-        row["check_dates"] = False
 
 
 @checker("Data cleaning : dates checked")
-def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
+def set_dates(df, selected_columns, synthese_info, import_id, schema_name):
     try:
 
         logger.info("CHECKING DATES :")
@@ -94,31 +77,6 @@ def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
             )
             df["interval"] = ""
             df["temp"] = ""
-
-            df["temp"] = df.apply(lambda x: is_negative_date(
-                x, 
-                selected_columns["date_min"],
-                selected_columns["date_max"]
-            ), axis=1 )
-
-            id_rows_errors = df.index[df["temp"] == True].to_list()
-
-            logger.info(
-                "%s date_min (= %s user column) > date_max (= %s user column) errors detected",
-                len(id_rows_errors),
-                selected_columns["date_min"],
-                selected_columns["date_max"],
-            )
-
-            if len(id_rows_errors) > 0:
-                set_error_and_invalid_reason(
-                    df=df,
-                    id_import=import_id,
-                    error_code="DATE_MIN_SUP_DATE_MAX",
-                    col_name_error=selected_columns["date_min"],
-                    df_col_name_valid="temp",
-                    id_rows_error=id_rows_errors,
-                )
 
     except Exception:
         raise
