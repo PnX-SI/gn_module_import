@@ -1,3 +1,4 @@
+from datetime import datetime
 import pandas as pd
 
 from .utils import fill_col, fill_map, set_is_valid, set_error_and_invalid_reason
@@ -5,16 +6,14 @@ from ..wrappers import checker
 from ..logs import logger
 
 
-def is_negative_date(value):
+def is_negative_date(x, date_min_col, date_max_col):
     try:
-        if type(value) != pd.Timedelta:
+        delta = x[date_max_col] - x[date_min_col]
+        if delta.total_seconds() < 0:
             return True
         else:
-            if value.total_seconds() >= 0:
-                return True
-            else:
-                return False
-    except TypeError:
+            return False
+    except Exception as e:
         return True
 
 
@@ -95,15 +94,14 @@ def check_dates(df, selected_columns, synthese_info, import_id, schema_name):
             )
             df["interval"] = ""
             df["temp"] = ""
-            try:
-                df["interval"] = (
-                    df[selected_columns["date_max"]] - df[selected_columns["date_min"]]
-                )
-            except Exception:
-                logger.error("Error on date")
-            df["temp"] = df["interval"].apply(lambda x: is_negative_date(x))
 
-            id_rows_errors = df.index[df["temp"] == False].to_list()
+            df["temp"] = df.apply(lambda x: is_negative_date(
+                x, 
+                selected_columns["date_min"],
+                selected_columns["date_max"]
+            ), axis=1 )
+
+            id_rows_errors = df.index[df["temp"] == True].to_list()
 
             logger.info(
                 "%s date_min (= %s user column) > date_max (= %s user column) errors detected",
