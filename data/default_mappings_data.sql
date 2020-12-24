@@ -89,7 +89,7 @@ VALUES
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'gn_1_the_geom_local_2','the_geom_local',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'gn_1_the_geom_4326_2','the_geom_4326',false,true),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'cdcommune','codecommune',true,false),
-((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'cdmaille','codemaille',true,false),
+((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'cdmaille10','codemaille',true,false),
 ((SELECT id_mapping FROM gn_imports.t_mappings WHERE mapping_label='Format DEE (champs 10 char)'), 'cddept','codedepartement',true,false),
 
 -- Renseigner les correspondances de champs du mapping 'Synthese GeoNature'
