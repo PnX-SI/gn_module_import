@@ -44,7 +44,6 @@ def get_import_list(info_role):
         return import list
     """
     ors = []
-    print(info_role.value_filter)
     q = DB.session.query(TImports).order_by(TImports.id_import)
     if info_role.value_filter == "1":
         ors.append(TImports.author.any(id_role=info_role.id_role))
@@ -53,7 +52,6 @@ def get_import_list(info_role):
     if info_role.value_filter != "3":
         q = q.filter(or_(*ors))
     results = q.all()
-    print(q)
     nrows = None
     if not results:
         return {"empty": True}, 200

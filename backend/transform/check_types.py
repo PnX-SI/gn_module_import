@@ -136,6 +136,7 @@ def check_types_and_date(
                         ", ".join(map(lambda x: str(x), values_error))
                     ),
                 )
+        if "date_min" in selected_columns and "date_max" in selected_columns:
             # check date_min not > date min date
             df["positive_date"] = df.apply(lambda x: is_positive_date(
                 x, 
