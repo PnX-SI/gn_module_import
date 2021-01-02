@@ -47,11 +47,13 @@ def set_dates(df, selected_columns, synthese_info, import_id, schema_name):
         ):
             # set 00:00:00 where hour empty
             hour_max_col = selected_columns["hour_max"]
-            # remove possibe null values
-            df[hour_max_col] = df[hour_max_col].where(df[hour_max_col].notnull(), other="")
+            # fill hour max where hour_max is null and hour_min is fill
+            if "hour_min" in selected_columns:
+                df[hour_max_col].fillna(df[selected_columns["hour_min"]], inplace=True)
             # calculate hour length
             df['hour_max_length'] = df[hour_max_col].apply(len)
-            # replace unfill hour with 00:00:00
+            # replace unfill hour with hour min and with 00:00:00
+            df[hour_max_col] = df[hour_max_col].where(df['hour_max_length'] != 0, other=df[selected_columns['hour_min' ]])
             df[hour_max_col] = df[hour_max_col].where(df['hour_max_length'] != 0, other='00:00:00')
             df[selected_columns["date_max"]] = (
                 df[selected_columns["date_max"]]
