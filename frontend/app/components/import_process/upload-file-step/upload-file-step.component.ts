@@ -7,7 +7,6 @@ import { DataFormService } from "@geonature_common/form/data-form.service";
 import { ModuleConfig } from "../../../module.config";
 import { FormGroup, FormBuilder, Validators, AbstractControl, ValidatorFn } from "@angular/forms";
 import { StepsService, Step1Data, Step2Data } from "../steps.service";
-import {AppConfig} from "../../../../../../../frontend/src/conf/app.config";
 
 @Component({
   selector: "upload-file-step",
@@ -62,11 +61,7 @@ export class UploadFileStepComponent implements OnInit {
         if (error.status === 500) {
           this._commonService.translateToaster('error', 'MetaData.JddError');
         } else if (error.status === 404) {
-          if (AppConfig.CAS_PUBLIC.CAS_AUTHENTIFICATION) {
-            this._commonService.translateToaster('warning', 'MetaData.NoJDDMTD');
-          } else {
-            this._commonService.translateToaster('warning', 'MetaData.NoJDD');
-          }
+          this._commonService.translateToaster('warning', 'MetaData.NoJDD');
         }
       }
     );
