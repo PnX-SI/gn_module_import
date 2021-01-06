@@ -104,7 +104,7 @@ class NomenclatureTransformer:
             if not mnemonique_type in self.mapping_val_by_mnemo:
                 self.mapping_val_by_mnemo[mnemonique_type] = [*mapped_values]
             else:
-                self.mapping_val_by_mnemo[mnemonique_type].append(*mapped_values)
+                self.mapping_val_by_mnemo[mnemonique_type] = [*self.mapping_val_by_mnemo[mnemonique_type], *mapped_values]
             synthese_name = get_synthese_col(mnemonique_type)
             if synthese_name in selected_columns:
                 d = {
@@ -114,6 +114,7 @@ class NomenclatureTransformer:
                     "transformed_col": f"_tr_{synthese_name}_{selected_columns[synthese_name]}",
                 }
                 formated_mapping_content.append(d)
+        print(self.mapping_val_by_mnemo)
         return formated_mapping_content
 
     def __set_accepted_id_nomencatures(self):
