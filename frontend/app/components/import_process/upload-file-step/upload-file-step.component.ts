@@ -63,6 +63,7 @@ export class UploadFileStepComponent implements OnInit {
         } else if (error.status === 404) {
           this._commonService.translateToaster('warning', 'MetaData.NoJDD');
         }
+        this.location.back();
       }
     );
 
