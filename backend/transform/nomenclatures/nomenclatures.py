@@ -114,7 +114,6 @@ class NomenclatureTransformer:
                     "transformed_col": f"_tr_{synthese_name}_{selected_columns[synthese_name]}",
                 }
                 formated_mapping_content.append(d)
-        print(self.mapping_val_by_mnemo)
         return formated_mapping_content
 
     def __set_accepted_id_nomencatures(self):
