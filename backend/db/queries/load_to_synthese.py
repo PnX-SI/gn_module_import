@@ -36,7 +36,6 @@ def insert_into_synthese(
             BEGIN;
             ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_meta_dates_change_synthese;
             ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_insert_cor_area_synthese;
-            ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_update_cor_area_taxon_update_cd_nom;
 
             INSERT INTO gn_synthese.synthese ({into_part})
             SELECT {select_part}
@@ -45,7 +44,6 @@ def insert_into_synthese(
 
             ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_meta_dates_change_synthese;
             ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_insert_cor_area_synthese;
-            ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_update_cor_area_taxon_update_cd_nom;
             COMMIT;            
             
             """.format(
@@ -70,23 +68,13 @@ def insert_into_synthese(
             a.id_area
             FROM ref_geo.l_areas a
             JOIN gn_synthese.synthese s ON public.st_intersects(s.the_geom_local, a.geom)
-            WHERE a.enable = true AND s.id_source = {id_source}
+            WHERE a.enable = TRUE AND (
+                ST_GeometryType(s.the_geom_local) = 'ST_Point' OR NOT public.ST_TOUCHES(s.the_geom_local,a.geom)
+            )
+            AND s.id_source = {id_source}
             ;
             ALTER TABLE gn_synthese.cor_area_synthese ENABLE TRIGGER tri_maj_cor_area_taxon;
 
-            COMMIT;
-
-            BEGIN;
-            -- cor area_taxon
-            DELETE from gn_synthese.cor_area_taxon cat
-            WHERE cat.cd_nom in (SELECT DISTINCT cd_nom from gn_synthese.synthese where id_source ={id_source});
-
-            INSERT INTO gn_synthese.cor_area_taxon (cd_nom, nb_obs, id_area, last_date)
-            SELECT s.cd_nom, count(s.id_synthese), cor.id_area,  max(s.date_min)
-            FROM gn_synthese.cor_area_synthese cor
-            JOIN gn_synthese.synthese s ON s.id_synthese = cor.id_synthese
-            WHERE s.id_source = {id_source}
-            GROUP BY cor.id_area, s.cd_nom;
             COMMIT;
 
             BEGIN;
