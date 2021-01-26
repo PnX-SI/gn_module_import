@@ -147,6 +147,7 @@ class TMappings(DB.Model):
     mapping_type = DB.Column(DB.Unicode, nullable=False)
     active = DB.Column(DB.Boolean, nullable=False)
     temporary = DB.Column(DB.Boolean, nullable=False, default=False)
+    is_public = DB.Column(DB.Boolean, default=False)
 
 
 @serializable

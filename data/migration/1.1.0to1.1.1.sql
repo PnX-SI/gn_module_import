@@ -58,3 +58,6 @@ SET comment = 'Correspondance champs standard: denombrementMax. Entier attendu'
 WHERE name_field = 'count_max'
 ;
 
+
+ALTER TABLE gn_imports.t_mappings
+ADD COLUMN is_public boolean default false;

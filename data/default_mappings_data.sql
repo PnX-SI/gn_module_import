@@ -13,12 +13,12 @@ SET default_with_oids = false;
 --------------
 
 -- Créer les mappings par défaut
-INSERT INTO gn_imports.t_mappings (mapping_label, mapping_type, active)
+INSERT INTO gn_imports.t_mappings (mapping_label, mapping_type, active, is_public)
 VALUES
-('Format DEE (champs 10 char)', 'FIELD', true),
-('Synthese GeoNature', 'FIELD', true),
-('Nomenclatures SINP (labels)', 'CONTENT', true),
-('Nomenclatures SINP (codes)', 'CONTENT', true);
+('Format DEE (champs 10 char)', 'FIELD', true, true),
+('Synthese GeoNature', 'FIELD', true, true),
+('Nomenclatures SINP (labels)', 'CONTENT', true, true),
+('Nomenclatures SINP (codes)', 'CONTENT', true, true);
 
 
 
