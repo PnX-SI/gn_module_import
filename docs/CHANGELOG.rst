@@ -10,7 +10,7 @@ CHANGELOG
 * Création d'une documentation listant tous les contrôles - https://github.com/PnX-SI/gn_module_import/blob/develop/docs/controls.md (#17)
 * Ajout de contrôles conditionnels sur TypeInfoGeo et de paramètres permettant de désactiver les contrôles conditionnels (#176 et #171)
 * Clarification des paramètres du fichier d'exemple de configuration (``config/conf_gn_module.toml.example``)
-* Ajout de la notion de "public" sur les mappings (colonne `is_public boolean DEFAULT FALSE` de la table `t_mappings` ). Tous les utilisateurs veront ces mappings et ne seront modifiables que par les utilisateurs ayant des droits U = 3.
+* Ajout de la notion de "public" sur les mappings (colonne `is_public boolean DEFAULT FALSE` de la table `t_mappings` ). Tous les utilisateurs veront ces mappings et ne seront modifiables que par les utilisateurs ayant des droits U = 3 ainsi que leur créateurs.
 * Ajout de paramètres
 
 **🐛 Corrections**
