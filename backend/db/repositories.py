@@ -21,53 +21,39 @@ class TMappingsRepository:
     def __init__(self):
         pass
 
-    def get_user_mapping(self, info_role):
-        ors_filter = []
-        q = DB.session.query(TMappings.id_mapping, TMappings.is_public).outerjoin(
-            CorRoleMapping, CorRoleMapping.id_mapping == TMappings.id_mapping
-        )
+    def get_user_mapping(self, info_role, with_public_mapping=True):
+        q = DB.session.query(CorRoleMapping.id_mapping)
 
         if info_role.value_filter == "1" or (
-                info_role.value_filter == "2" and info_role.id_organisme is None
-            ):
-                ors_filter.append(CorRoleMapping.id_role == info_role.id_role)
+            info_role.value_filter == "2" and info_role.id_organisme is None
+        ):
+            q = q.filter(CorRoleMapping.id_role == info_role.id_role)
         elif info_role.value_filter == "2":
-            #  get id_role of the organism of the user
+            #  get id_role of the organism of the user
             subq_orga = (
                 DB.session.query(User.id_role)
                 .filter(User.id_organisme == info_role.id_organisme)
                 .subquery()
             )
-            ors_filter.append(CorRoleMapping.id_role == info_role.id_role)
-            ors_filter.append(CorRoleMapping.id_role.in_(subq_orga))
+            q = q.filter(
+                or_(
+                    CorRoleMapping.id_role == info_role.id_role,
+                    CorRoleMapping.id_role.in_(subq_orga),
+                )
+            )
+        return [m.id_mapping for m in q.distinct().all()]
 
-        if info_role.value_filter in ("1", "2"):
-            ors_filter.append(TMappings.is_public == True)
-
-            q = q.filter(or_(*ors_filter))
-        return [(m.id_mapping, m.is_public) for m in q.distinct().all()]
-
-    def user_is_allowed_to(self, level, id_mapping, user_mappings, action):
+    def user_is_allowed_to(self, level, id_mapping, user_mappings):
         if level == "0" or level not in ("1", "2", "3"):
             return False
         if level == "3":
             return True
         if level in ("1", "2"):
-            if action == 'U':
-                found_mapping = None
-                for m in user_mappings:
-                    if m[0] == id_mapping:
-                        found_mapping = m 
-                if found_mapping:
-                    return found_mapping[1] == False
-                else:
-                    return False
-            else:
-                return id_mapping in list(map(lambda m: m[0], user_mappings))
+            return id_mapping in (user_mappings)
 
     def get_mapping_cruved(self, user_cruved, id_mapping, user_mappings):
         return {
-            action: self.user_is_allowed_to(level, id_mapping, user_mappings, action)
+            action: self.user_is_allowed_to(level, id_mapping, user_mappings)
             for action, level in user_cruved.items()
         }
 
@@ -80,7 +66,13 @@ class TMappingsRepository:
         if mapping_type:
             q = q.filter(TMappings.mapping_type == mapping_type.upper())
         if info_role.value_filter in ("1", "2"):
-            q = q.filter(TMappings.id_mapping.in_(list(map(lambda m: m[0], users_mapping))))
+            q = q.filter(
+                or_(
+                    TMappings.id_mapping.in_(users_mapping),
+                    TMappings.is_public == True
+                )
+            )
+                
         data = q.all()
         if with_cruved:
             user_cruved = cruved_scope_for_user_in_module(
@@ -88,15 +80,12 @@ class TMappingsRepository:
                 module_code="IMPORT",
                 object_code="MAPPING",
             )[0]
-            print("USER MAPPINGS")
-            print(user_cruved)
             mapping_as_dict = []
             for d in data:
                 temp = d.as_dict()
                 temp["cruved"] = self.get_mapping_cruved(
                     user_cruved, d.id_mapping, users_mapping
                 )
-                print(temp)
                 mapping_as_dict.append(temp)
             return mapping_as_dict
         return [d.as_dict() for d in data]
