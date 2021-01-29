@@ -52,6 +52,7 @@ def insert_into_synthese(
             schema_name=schema_name,
             table_name=table_name,
         )
+
         DB.session.execute(query)
 
         # update last_action in synthese
@@ -60,7 +61,6 @@ def insert_into_synthese(
             -- restore trigger
             -- cor_area_synthese
             BEGIN;
-            ALTER TABLE gn_synthese.cor_area_synthese DISABLE TRIGGER tri_maj_cor_area_taxon;
 
             INSERT INTO gn_synthese.cor_area_synthese
             SELECT
@@ -73,7 +73,6 @@ def insert_into_synthese(
             )
             AND s.id_source = {id_source}
             ;
-            ALTER TABLE gn_synthese.cor_area_synthese ENABLE TRIGGER tri_maj_cor_area_taxon;
 
             COMMIT;
 
