@@ -95,7 +95,7 @@ CREATE TABLE t_mappings(
     mapping_label character varying(255) NOT NULL,
     mapping_type character varying(10) NOT NULL,
     active boolean NOT NULL,
-    temporary boolean NOT NULL DEFAULT false
+    temporary boolean NOT NULL DEFAULT false,
     is_public boolean default false
 );
 
