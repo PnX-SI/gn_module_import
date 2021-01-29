@@ -3,21 +3,29 @@ from ..models import TImports
 
 
 def get_valid_user_data(schema_name, table_name, selected_cols, limit):
-    try:
-        preview = DB.session.execute("""
-                SELECT {cols}
-                FROM {schema_name}.{table_name}
-                WHERE gn_is_valid = 'True'
-                LIMIT {limit};        
-                """.format(
-                    cols=",".join([str(target) for source, target in selected_cols.items()]),
-                    schema_name = schema_name,
-                    table_name = table_name,
-                    limit = limit
-                )).fetchall()
-        return preview
-    except Exception:
-        raise
+    cols = [str(target) for source, target in selected_cols.items()]
+    preview = DB.session.execute("""
+            SELECT {cols}
+            FROM {schema_name}.{table_name}
+            WHERE gn_is_valid = 'True'
+            LIMIT {limit};        
+            """.format(
+                cols=",".join(cols),
+                schema_name = schema_name,
+                table_name = table_name,
+                limit = limit
+            )).fetchall()
+    transformed_preview = []
+    # HACK : the nomenclature column could be too long for postgreSQL
+    # we can select it with the long column name, but the response give the truncated column name
+    # which cause a bug on preview.py when we want to access to the dict key
+    # here we recreate the original dict with the correct long column name/ley
+    for p in preview:
+        temp = {}
+        for i in range(len(cols)):
+            temp[cols[i]] = p[i]
+        transformed_preview.append(temp)
+    return transformed_preview
 
 
 def get_synthese_fields():

@@ -47,7 +47,6 @@ def get_preview(
             modified_dict[source].append(target)
         else:
             modified_dict[source] = [target]
-
     # calculate fixed cols
     id_module = get_id_module(module_code)
     id_dataset = get_id_dataset(import_id)
@@ -58,7 +57,6 @@ def get_preview(
         # add fixed synthese fields
         row_dict["id_dataset"] = id_dataset
         row_dict["id_module"] = id_module
-
         for key, value in row.items():
             #  check if source field is twice or more
             nomenclature_col_dict = find_nomenclature_col(key, nomenclature_fields)
@@ -71,9 +69,9 @@ def get_preview(
                 row_dict[new_dict_key] = get_nomenclature_label_from_id(value)
                 key_to_remove.append(nomenclature_col_dict["synthese_col"])
                 # find target columns in the modified dict create bellow
-            syn_targets = modified_dict[key]
-            for syn_target in syn_targets:
-                row_dict[syn_target] = value
+            # syn_targets = modified_dict[key]
+            # for syn_target in syn_targets:
+            #     row_dict[syn_target] = value
 
         #  remove untransformed nomenclatures for preview
         for key in key_to_remove:
