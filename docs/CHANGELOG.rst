@@ -13,6 +13,8 @@ CHANGELOG
 * Ajout de contrôles conditionnels sur ``TypeInfoGeo`` et de paramètres permettant de désactiver les contrôles conditionnels (#176 et #171)
 * Clarification des paramètres du fichier d'exemple de configuration (``config/conf_gn_module.toml.example``)
 * Ajout de paramètres
+* Rapport d'erreur : Affichage des vocabulaires de nomenclature en erreur
+* Etape 4 : Séparation des alertes et des erreurs
 
 **🐛 Corrections**
 
@@ -24,13 +26,10 @@ CHANGELOG
 * Correction et clarification des messages d'erreurs affichés à l'utilisateur (#83)
 * Suppression de l'erreur 404 à l'étape 2 quand l'utilisateur n'a aucun mapping (#136)
 * Correction de la modification du SRID (#180)
-* Correction des altitudes quand on utilise le même champs source pour les altitudes min et max (#194) ??? Corrigé ???
+* Correction des altitudes quand on utilise le même champs source pour les altitudes min et max (#194)
 * Correction de la vérification des dates
-* Correction des heures (https://github.com/PnX-SI/gn_module_import/commit/34b4039227f0f99e7c54fc5520ac819f756e907c) ???
+* Correction des imports des heures
 * Correction d'une erreur causée quand les noms des champs de nomenclatures sont trop longs (#198)
-* ??? Fix display of nomenclature vocabulary error (https://github.com/PnX-SI/gn_module_import/commit/f456291894aa17591a92ab27164114c397e59335)
-* ??? Change decorator on route to post mapping (https://github.com/PnX-SI/gn_module_import/commit/1ecff258c162fcd58b1c709b2a315c04b294d3a9)
-* ??? Display warning and errors + display accepted values for nomencatures (https://github.com/PnX-SI/gn_module_import/commit/12b580a939611120786d677f9560067ca1e9825c)
 
 **Notes de version**
 
