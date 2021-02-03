@@ -181,6 +181,7 @@ def finalize_import(id_import, table_name, total_columns):
     import_obj.date_end_import = datetime.datetime.now()
     import_obj.is_finished = True
     import_obj.processing = False
+    import_obj.in_error = False
 
     logger.info("-> t_imports updated on final step")
 
