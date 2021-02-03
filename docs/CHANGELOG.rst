@@ -27,6 +27,7 @@ CHANGELOG
 * Suppression de l'erreur 404 à l'étape 2 quand l'utilisateur n'a aucun mapping (#136)
 * Correction de la modification du SRID (#180)
 * Correction des altitudes quand on utilise le même champs source pour les altitudes min et max (#194)
+* Correction de l'affichage du message "Import en erreur" si l'import est corrigé (#195)
 * Correction de la vérification des dates
 * Correction des imports des heures
 * Correction d'une erreur causée quand les noms des champs de nomenclatures sont trop longs (#198)
