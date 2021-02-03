@@ -72,6 +72,7 @@
                             <ng-template #elseBlock>
                                 <div *ngIf="!row.is_finished">
                                     <button
+                                        [disabled]="!row?.cruved?.U"
                                         mat-raised-button
                                         color="primary"
                                         *ngIf="!row.processing"
@@ -125,14 +126,6 @@
                         </button>
                         </ng-template>
                     </ngx-datatable-column>
-                    <!-- <ngx-datatable-column maxWidth="120">
-                        <ng-template
-                            let-row="row"
-                            ngx-datatable-cell-template
-                        >
-
-                        </ng-template>
-                    </ngx-datatable-column> -->
                     <ngx-datatable-column
                         maxWidth="80"
                         name="Suppr."
@@ -142,6 +135,7 @@
                             ngx-datatable-cell-template
                         >
                             <button
+                                [disabled]="!row?.cruved?.D"
                                 mat-icon-button
                                 color=warn
                                 style="margin-top: -10px;"

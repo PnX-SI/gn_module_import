@@ -12,11 +12,20 @@
   <p *ngIf="row.is_finished">
     Attention : cela supprimera aussi les données importées.
   </p>
-  <button type="button" (click)="c()" class="btn btn-secondary">Annuler</button>
+  <button 
+    type="button" 
+    (click)="c()" 
+    mat-raised-button
+    class="mr-1"
+    >
+    Annuler
+  </button>
 
   <button type="button" 
     (click)="deleteImport(modalDelete)"
-    class="btn btn-danger">Supprimer</button>
+    mat-raised-button
+    color="warn"
+    >Supprimer</button>
 </div>
 
 

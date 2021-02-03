@@ -9,6 +9,7 @@ from utils_flask_sqla.serializers import serializable
 from utils_flask_sqla_geo.serializers import geoserializable
 
 from geonature.utils.env import DB
+from geonature.core.utils import ModelCruvedAutorization
 
 from geonature.core.gn_meta.models import TDatasets
 from geonature.core.gn_synthese.models import TSources
@@ -40,7 +41,7 @@ class CorRoleImport(DB.Model):
 
 
 @serializable
-class TImports(DB.Model):
+class TImports(ModelCruvedAutorization):
     __tablename__ = "t_imports"
     __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
@@ -81,8 +82,10 @@ class TImports(DB.Model):
     )
     dataset = DB.relationship("TDatasets", lazy="joined")
 
-    def to_dict(self):
+    def to_dict(self, user=None, user_cruved=None):
         import_as_dict = self.as_dict(True)
+        if user and user_cruved:
+            import_as_dict["cruved"] = self.get_model_cruved(user, user_cruved)
         if import_as_dict["date_end_import"] is None:
             import_as_dict["date_end_import"] = "En cours"
         import_as_dict["author_name"] = "; ".join(
@@ -102,6 +105,28 @@ class TImports(DB.Model):
             id_source = source[0]
         import_as_dict["id_source"] = id_source
         return import_as_dict
+
+
+    def user_is_allowed_to(self, user, level):
+        """"
+        Surcharge de la méthode user_is_allowed_to de la classe ModelCruvedAutorization
+
+        """
+        # Si l'utilisateur n'a pas de droit d'accès aux données
+        if level == "0" or level not in ("1", "2", "3"):
+            return False
+        if level == "1":
+            return user.id_role in [a.id_role for a in self.author]
+        if level == "2":
+            return user.id_organisme in [o.id_organisme for o in self.author]
+        if level == "3":
+            return True
+        return False
+
+
+        
+
+
 
 
 @serializable

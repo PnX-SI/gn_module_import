@@ -20,21 +20,25 @@ export class ModalDeleteImport implements OnInit {
   ngOnInit() { }
 
   deleteImport() {
-    console.log("deleteImport");
+    
     this._ds.cancelImport(this.row.id_import).subscribe(
+      data => {
+        this.onDelete.emit();
+        this._commonService.regularToaster("success", "L'import et ses données associés ont été supprimées");
+
+        this.c();
+      },
       error => {
+        if(error.status == 403) {          
+          this._commonService.regularToaster("error", "Vous n'avez pas les droits de supprmier cet import");
+        }        
         if (error.statusText === "Unknown Error") {
           // show error message if no connexion
           this._commonService.regularToaster(
             "error",
             "Une erreur s'est produite : contactez l'administrateur du site"
           );
-        } else {
-          // show error message if other server error
-          this._commonService.regularToaster("error", error.message);
         }
-        this.onDelete.emit();
-        this.c();
       }
     );
   }
