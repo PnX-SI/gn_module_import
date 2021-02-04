@@ -100,6 +100,7 @@ Mise à jour du module
 
    cd /home/`whoami`/geonature/backend
    source venv/bin/activate
+   pip install -r /home/`whoami`/gn_module_import/backend/requirements.txt
    geonature update_module_configuration IMPORT
 
 
