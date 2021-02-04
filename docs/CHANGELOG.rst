@@ -2,10 +2,17 @@
 CHANGELOG
 =========
 
+1.1.2 (unreleased)
+------------------
+
+**🐛 Corrections**
+
+* 
+
 1.1.1 (2020-02-04)
 ------------------
 
-Attention: le module d'import 1.1.1 necessite GeoNature 2.6.0. Faire la MAJ de GeoNature dans un premier temps.
+Attention : le module d'import 1.1.1 nécessite la version 2.6.0 de GeoNature. Faire la MAJ de GeoNature dans un premier temps.
 
 **🚀 Nouveautés**
 
@@ -21,7 +28,7 @@ Attention: le module d'import 1.1.1 necessite GeoNature 2.6.0. Faire la MAJ de G
 **🐛 Corrections**
 
 * Liste des imports : Retour du bouton permettant de télécharger les éventuelles lignes en erreur d'un import terminé (#169)
-* Correction des vérifications du CRUVED sur la liste des imports (#120). ???? Le R mais aussi D et U ?
+* Correction des vérifications du CRUVED sur la liste des imports (#120)
 * Correction de la récupération du CRUVED sur les mappings
 * Si des lignes sont vides pour une colonne de nomenclature mappée, alors on insère la valeur par défaut définie dans la BDD
 * Masquage du bouton d'import si l'action C du CRUVED de l'utilisateur est égale à zéro (#95)
@@ -36,7 +43,8 @@ Attention: le module d'import 1.1.1 necessite GeoNature 2.6.0. Faire la MAJ de G
 
 **Notes de version**
 
-* Si vous mettez à jour depuis la version 1.1.0, exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.0to1.1.1.sql``)
+* Si vous mettez à jour le module depuis sa version 1.1.0, exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.0to1.1.1.sql``) et suivez la procédure habituelle : https://github.com/PnX-SI/gn_module_import#mise-%C3%A0-jour-du-module
+* NB : la procédure de MAJ a été revue : bien exécuter la commande ``pip install -r /home/`whoami`/gn_module_import/backend/requirements.txt`` (depuis le virtualenv de GeoNature) comme indiqué
 
 1.1.0 (2020-11-05)
 ------------------
