@@ -2,8 +2,10 @@
 CHANGELOG
 =========
 
-1.1.1 (unreleased)
+1.1.1 (2020-02-04)
 ------------------
+
+Attention: le module d'import 1.1.1 necessite GeoNature 2.6.0. Faire la MAJ de GeoNature dans un premier temps.
 
 **🚀 Nouveautés**
 
