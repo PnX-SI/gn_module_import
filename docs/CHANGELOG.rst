@@ -7,7 +7,7 @@ CHANGELOG
 
 **🐛 Corrections**
 
-* 
+* Mise à jour du type "Reference_biblio" dans la table dict_fields (accepte 5.000 caractères depuis GeoNature 2.6.0)
 
 1.1.1 (2020-02-04)
 ------------------
