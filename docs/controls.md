@@ -54,7 +54,9 @@ Erreur de nomenclature | Code nomenclature erroné ; La valeur du champ n’est 
 Erreur de géometrie | Géométrie invalide ; la valeur de la géométrie ne correspond pas au format WKT. | data cleaning | error
 Géoréférencement manquant | Géoréférencement manquant ; un géoréférencement doit être fourni, c’est à dire qu’il faut livrer : soit une géométrie, soit une ou plusieurs commune(s), ou département(s), ou maille(s) | data cleaning | error
 Preuve numérique incorect | La preuve numérique fournie n'est pas une URL | data cleaning | error
-Erreur champs conditionnel | Le champ dEEFloutage doit être remplit si le jeu de données est privé | data cleaning | error
-Erreur champs conditionnel | Le champ reference_biblio doit être remplit si le statut source est 'Littérature' | data cleaning | error
-Erreur champs preuve | si le champ “preuveExistante” vaut oui, alors l’un des deux champs “preuveNumérique” ou “preuveNonNumérique” doit être rempli. A l’inverse, si l’un de ces deux champs est rempli, alors “preuveExistante” ne doit pas prendre une autre valeur que “oui” (code 1) | data cleaning | error
+Erreur champs conditionnel (désactivable)| Le champ dEEFloutage doit être remplit si le jeu de données est privé | data cleaning | error
+Erreur champs conditionnel (désactivable) | Le champ reference_biblio doit être remplit si le statut source est 'Littérature' | data cleaning | error
+Erreur champs preuve (désactivable) | si le champ “preuveExistante” vaut oui, alors l’un des deux champs “preuveNumérique” ou “preuveNonNumérique” doit être rempli. A l’inverse, si l’un de ces deux champs est rempli, alors “preuveExistante” ne doit pas prendre une autre valeur que “oui” (code 1) | data cleaning | error
+Erreur de rattachement(1) - désactivable | Vérifie que si type_info_geo = 1 (Géoréférencement) alors aucun rattachement n'est fourni | data cleaning | error
+Erreur de rattachement(2) - désactivable |  Si une entitié de rattachement est fourni alors le type_info_geo ne doit pas être null | data cleaning | error
 
