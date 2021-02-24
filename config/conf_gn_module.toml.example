@@ -2,7 +2,7 @@
 # Utilisé pour lever des warning lorsque les données sont en dehors. 
 # Format: [XMIN, YMIN, XMAX, YMAX]
 # Par défaut: France métropolitaine incluant la Corse
-INSTANCE_BOUNDING_BOX = [-5.0, 41, 10, 51.15]
+INSTANCE_BOUNDING_BOX = [-5.0, 41.0, 10.0, 51.15]
 # Est-ce que l'on vérifie que les données sont bien dans la bounding box
 ENABLE_BOUNDING_BOX_CHECK = true
 
@@ -15,7 +15,7 @@ MAX_FILE_SIZE=500
 # SRID autorisés pour les fichiers en entrée
 SRID = [
   {name = "WGS84", code = 4326}, 
-  {name = "Lambert93", code: 2154}
+  {name = "Lambert93", code = 2154}
 ]
 # Extensions autorisées (seul le csv et geojson sont acceptés)
 # On peut donc uniquement enlever un des deux formats
