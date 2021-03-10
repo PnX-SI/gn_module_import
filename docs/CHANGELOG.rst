@@ -8,6 +8,7 @@ CHANGELOG
 **🐛 Corrections**
 
 * Mise à jour du type "Reference_biblio" dans la table dict_fields (accepte 5.000 caractères depuis GeoNature 2.6.0)
+* Correction du bug de non génération des UUID et du grisement de la checkbox (#210 #211)
 
 1.1.1 (2020-02-04)
 ------------------
