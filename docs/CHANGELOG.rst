@@ -7,13 +7,13 @@ CHANGELOG
 
 **🐛 Corrections**
 
-* Mise à jour du type "Reference_biblio" dans la table dict_fields (accepte 5.000 caractères depuis GeoNature 2.6.0)
-* Correction du bug de non génération des UUID et du grisement de la checkbox (#210 #211)
+* Mise à jour du champs ``reference_biblio`` dans la table ``dict_fields`` (accepte 5.000 caractères depuis GeoNature 2.6.0)
+* Correction du bug de calcul des UUID et des altitudes, et de l'activation de leur checkbox (#210, #211)
 
 **Notes de version**
 
 * Exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.1.rc.2to1.1.2.sql``)
-* Si vous avez fait des import depuis la version 1.1.1, vous pouvez jouer le script `migration/generate_uuid.sql`. Attention, celui-ci regénère des nouveaux UUID dans la synthese pour toutes les données provenant du module d'import ou le champs `unique_id_sinp` est `NULL`
+* Si vous avez fait des imports depuis la version 1.1.1, vous pouvez jouer le script ``migration/generate_uuid.sql``. Attention, celui-ci regénère des nouveaux UUID dans la synthese pour toutes les données provenant du module Import où le champs ``unique_id_sinp`` est ``NULL``
 
 1.1.1 (2020-02-04)
 ------------------
