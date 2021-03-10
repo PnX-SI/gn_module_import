@@ -1,7 +1,9 @@
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
+import { Location } from "@angular/common";
 import { DataService } from "../../../services/data.service";
 import { CommonService } from "@geonature_common/service/common.service";
+import { DataFormService } from "@geonature_common/form/data-form.service";
 import { ModuleConfig } from "../../../module.config";
 import { FormGroup, FormBuilder, Validators, AbstractControl, ValidatorFn } from "@angular/forms";
 import { StepsService, Step1Data, Step2Data } from "../steps.service";
@@ -29,10 +31,12 @@ export class UploadFileStepComponent implements OnInit {
   constructor(
     private _activatedRoute: ActivatedRoute,
     private _ds: DataService,
+    private _dfs: DataFormService,
     private _commonService: CommonService,
     private _fb: FormBuilder,
     private stepService: StepsService,
-    private _router: Router
+    private _router: Router,
+    private location: Location
   ) {
     this.uploadForm = this._fb.group({
       file: [null, Validators.required],
@@ -44,6 +48,25 @@ export class UploadFileStepComponent implements OnInit {
 
   ngOnInit() {
     this.datasetId = this._activatedRoute.snapshot.queryParams["datasetId"];
+
+    this._dfs.getDatasets().subscribe
+    (
+      res => {
+        if (res.data.findIndex((dataset) => dataset.id_dataset == this.datasetId) < 0) {
+          this._commonService.regularToaster("error", "Vous n'avez pas les droits d'import sur ce jeu de données");
+          this.location.back();
+        }
+      },
+      error => {
+        if (error.status === 500) {
+          this._commonService.translateToaster('error', 'MetaData.JddError');
+        } else if (error.status === 404) {
+          this._commonService.translateToaster('warning', 'MetaData.NoJDD');
+        }
+        this.location.back();
+      }
+    );
+
     if (this._activatedRoute.snapshot.queryParams["resetStepper"])
       this.stepService.setStepData(1);
     this.stepData = this.stepService.getStepData(1);
