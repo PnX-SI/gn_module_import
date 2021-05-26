@@ -12,7 +12,7 @@ CHANGELOG
 
 **Notes de version**
 
-* Exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.1.rc.2to1.1.2.sql``)
+* Exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.1to1.1.2.sql``)
 * Si vous avez fait des imports depuis la version 1.1.1, vous pouvez jouer le script ``migration/generate_uuid.sql``. Attention, celui-ci regénère des nouveaux UUID dans la synthese pour toutes les données provenant du module Import où le champs ``unique_id_sinp`` est ``NULL``
 
 1.1.1 (2020-02-04)
