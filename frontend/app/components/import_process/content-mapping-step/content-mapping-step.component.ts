@@ -1,18 +1,24 @@
 import { Component, OnInit, ViewChild, ViewEncapsulation } from "@angular/core";
-import { Router } from "@angular/router";
+import { Router, ActivatedRoute } from "@angular/router";
+import { Validators } from "@angular/forms";
 import { FormControl, FormGroup, FormBuilder } from "@angular/forms";
-import {
-  StepsService,
-  Step3Data,
-  Step4Data,
-  Step2Data
-} from "../steps.service";
+import { HttpErrorResponse } from "@angular/common/http";
+
+import { Observable, of } from "rxjs";
+import { forkJoin } from "rxjs/observable/forkJoin";
+import { startWith, pairwise, concatMap, mapTo, finalize, tap } from "rxjs/operators";
+
 import { DataService } from "../../../services/data.service";
 import { ContentMappingService } from "../../../services/mappings/content-mapping.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
 import { ModuleConfig } from "../../../module.config";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { Mapping, MappingContent } from "../../../models/mapping.model";
+import { Step } from "../../../models/enums.model";
+import { Import, ImportValues, Nomenclature } from "../../../models/import.model";
+import { ImportProcessService } from "../import-process.service";
+
 
 @Component({
   selector: "content-mapping-step",
@@ -21,63 +27,165 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
   encapsulation: ViewEncapsulation.None
 })
 export class ContentMappingStepComponent implements OnInit {
-  public IMPORT_CONFIG = ModuleConfig;
-  public isCollapsed = false;
-  public userContentMapping;
-  public newMapping: boolean = false;
-  public id_mapping;
-  public idFieldMapping: number;
-  public columns;
-  public spinner: boolean = false;
-  public contentTargetForm: FormGroup;
-  public showForm: boolean = false;
-  public contentMapRes: any;
-  public stepData: Step3Data;
-  public nomencName;
-  public idInfo;
-  public disabled: boolean = true;
-  public disableNextStep = true;
-  public n_errors: number;
-  public n_warnings: number;
-  public n_aMapper: number = -1;
-  public n_mappes: number = -1;
-  public nbLignes: string = "X";
-  public showValidateMappingBtn = true;
-  public displayCheckBox = ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES;
-  public mappingListForm = new FormControl();
-  public newMappingNameForm = new FormControl();
+  private step: Step;
+  private selectMappingContentForm = new FormControl();
+  private importData: Import;
+  private userContentMappings: Array<Mapping>;
+  private importValues: ImportValues;
+  private showForm: boolean = false;
+  private contentTargetForm: FormGroup;
+  private spinner: boolean = false;
 
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
 
   constructor(
-    private stepService: StepsService,
+    //private stepService: StepsService,
     private _fb: FormBuilder,
     private _ds: DataService,
     public _cm: ContentMappingService,
     private _commonService: CommonService,
     private _router: Router,
+    private _route: ActivatedRoute,
     private _modalService: NgbModal,
-    public cruvedStore: CruvedStoreService
+    public cruvedStore: CruvedStoreService,
+    private importProcessService: ImportProcessService,
   ) { }
 
   ngOnInit() {
-    this.stepData = this.stepService.getStepData(3);
-
-    const step2: Step2Data = this.stepService.getStepData(2);
-    this.idFieldMapping = step2.id_field_mapping;
+    this.step = this._route.snapshot.data.step;
+    this.importData = this.importProcessService.getImportData();
     this.contentTargetForm = this._fb.group({});
 
-    // show list of user mappings
-    this._cm.getMappingNamesList();
+    forkJoin({
+        contentMappings: this._ds.getMappings('content'),
+        importValues: this._ds.getImportValues(this.importData.id_import),
+    }).subscribe(({contentMappings, importValues}) => {
+        this.userContentMappings = contentMappings;
 
-    this.getNomencInf();
-
-    // listen to change on mappingListForm select
-    this.onMappingName();
+        this.importValues = importValues;
+        this.contentTargetForm = this._fb.group({});
+        for (let targetField of Object.keys(this.importValues)) {
+            this.importValues[targetField].nomenclature_type.isCollapsed = false;
+            this.importValues[targetField].values.forEach((value, index) => {
+                let control = new FormControl(null, [Validators.required]);
+                let control_name = targetField + '-' + index;
+                this.contentTargetForm.addControl(control_name, control);
+                // Search for a nomenclature with a label equals to the user value.
+                for (let nomenclature of this.importValues[targetField].nomenclatures) {
+                    if (value == nomenclature.label_default) {
+                        control.setValue(nomenclature);
+                        break;
+                    }
+                }
+                // TODO: if value is null, select the default nomenclature!
+                // require to add default nomenclature in data returned by the API
+            });
+        }
+        this.showForm = true;
+    });
   }
 
-  getNomencInf() {
+   // Used by select component to compare content mappings
+  areMappingContentEqual(mc1: MappingContent, mc2: MappingContent): boolean {
+    return (mc1 == null && mc2 == null) || (mc1 != null && mc2 != null && mc1.id_mapping === mc2.id_mapping);
+  }
+
+  areNomenclaturesEqual(n1: Nomenclature, n2: Nomenclature): boolean {
+    return (n1 == null && n2 == null) || (n1 != null && n2 != null && n1.cd_nomenclature === n2.cd_nomenclature);
+  }
+
+  onSelectNomenclature(targetFieldValue: string) {
+    let formControl = this.contentTargetForm.controls[targetFieldValue];
+  }
+
+  onPreviousStep() {
+    this.importProcessService.navigateToPreviousStep(this.step);
+  }
+
+  isNextStepAvailable(): boolean {
+    return this.contentTargetForm.valid;
+  }
+
+  onNextStep() {
+    if (!this.contentTargetForm.pristine) {
+      // TODO: check cruved before updating mapping
+      // this.selectMappingContentForm.value.id_mapping
+      /*console.log("create mapping");
+      this._ds.createMapping('', 'content').subscribe(mapping => {
+        console.log("mapping created", mapping.id_mapping);
+        this.updateMappingContents(mapping.id_mapping).subscribe(mappingvalues => {
+          console.log("mapping updated, set import mapping");
+          this._ds.setImportContentMapping(this.importData.id_import, mapping.id_mapping).subscribe(importData => {
+            console.log("import updated");
+            this.importProcessService.setImportData(importData);
+            this.importProcessService.navigateToLastStep();
+          });
+        });
+      });*/
+      this.submit(false);
+    } else {
+      this.importProcessService.navigateToNextStep(this.step);
+    }
+  }
+
+  updateMappingContents(id_mapping: number): Observable<Array<MappingContent>> {
+    let data = []
+    for (let targetField of Object.keys(this.importValues)) {
+        this.importValues[targetField].values.forEach((value, index) => {
+            let control = this.contentTargetForm.controls[targetField + '-' + index];
+            data.push({'target_field_name': targetField, 'source_value': value, 'target_id_nomenclature': control.value.id_nomenclature});
+        });
+    }
+    return this._ds.updateMappingContents(id_mapping, data);
+  }
+
+  submit(save: boolean, mapping_name: string = '') {
+    console.log("save", save, "mapping_name", mapping_name);
+    this.spinner = true;
+    of(1).pipe(
+      concatMap(() => {
+        if (save) { // the mapping must be saved (non temporarly)
+          if (mapping_name) { // create a new mapping with the given name
+            console.log("create mapping " + mapping_name);
+            return this._ds.createMapping(mapping_name, 'content');
+          } else { // update the currently selected mapping
+            return of(this.selectMappingContentForm.value);
+          }
+        } else { // create a temporarly mapping
+          console.log("create temporary mapping ");
+          return this._ds.createMapping('', 'content');
+        }
+      }),
+      concatMap((mapping: Mapping) => {
+        console.log("mapping created (eventually) (id=" + mapping.id_mapping + "), updating mapping");
+        return this.updateMappingContents(mapping.id_mapping).pipe(mapTo(mapping));
+      }),
+      concatMap((mapping: Mapping) => {
+        console.log("mapping fields updated");
+        if (this.importData.id_content_mapping != mapping.id_mapping) {
+          console.log("set import content mapping");
+          return this._ds.setImportContentMapping(this.importData.id_import, mapping.id_mapping);
+        } else {
+          console.log("import field mapping not changed, nothing to do");
+          return of(this.importData);
+        }
+      }),
+      concatMap((importData: Import) => {
+        console.log("prepare import"); // TODO: skip if uneeded (mapping not changed & unmodified)
+        return this._ds.prepareImport(importData.id_import);
+      }),
+      finalize(() => this.spinner = false),
+    ).subscribe((importData: Import) => {
+      this.importProcessService.setImportData(importData);
+      this.importProcessService.navigateToLastStep();
+    }, (error: HttpErrorResponse) => {
+      this._commonService.regularToaster('error', error.error.description);
+    });
+  }
+
+
+  /*getNomencInf() {
     this._ds
       .getNomencInfo(this.stepData.importId, this.idFieldMapping)
       .subscribe(
@@ -86,12 +194,12 @@ export class ContentMappingStepComponent implements OnInit {
             user_col.user_values.values = user_col.user_values.values.filter(val => val.value !== null)
           });
           this.stepData.contentMappingInfo = res["content_mapping_info"];
-          
+
           this.generateContentForm();
           // fill the form
           if (this.stepData.id_content_mapping) {
 
-            this._ds.getOneBibMapping(this.stepData.id_content_mapping).subscribe(mapping => {
+            this._ds.getMapping(this.stepData.id_content_mapping).subscribe(mapping => {
               let mapping_already_there = false;
               this._cm.userContentMappings.forEach(curMapping => {
                 if (curMapping.id_mapping == this.stepData.id_content_mapping) {
@@ -164,10 +272,6 @@ export class ContentMappingStepComponent implements OnInit {
     this.showForm = true;
   }
 
-  compareFn(c1: any, c2: any): boolean {
-    return c1 && c2 ? c1.id_mapping === c2.id_mapping : c1 === c2;
-  }
-
   onSelectChange(selectedVal, group, formControlName) {
     this.stepData.contentMappingInfo.map(ele => {
       if (ele.nomenc_abbr === group.nomenc_abbr) {
@@ -195,23 +299,23 @@ export class ContentMappingStepComponent implements OnInit {
     this.contentTargetForm.controls[formControlName].setValue(values);
   }
 
-  isEnabled(value_def_id: string) {
-    return true;
-    /*(!this.contentTargetForm.controls[value_def_id].value)
-      || this.contentTargetForm.controls[value_def_id].value.length == 0;*/
-  }
+  //isEnabled(value_def_id: string) {
+  //  return true;
+  //  //(!this.contentTargetForm.controls[value_def_id].value)
+  //  //  || this.contentTargetForm.controls[value_def_id].value.length == 0;
+  //}
 
-  containsEnabled(contentMapping: any) {
-    //return contentMapping.nomenc_values_def.find(value_def => this.isEnabled(value_def.id));
-    return (
-      contentMapping.user_values.values.filter(val => val.value).length > 0
-    );
-  }
+  //containsEnabled(contentMapping: any) {
+  //  //return contentMapping.nomenc_values_def.find(value_def => this.isEnabled(value_def.id));
+  //  return (
+  //    contentMapping.user_values.values.filter(val => val.value).length > 0
+  //  );
+  //}
 
-  updateEnabled(e) {
-    // this.onMappingChange(this.id_mapping);
-    this._cm.displayMapped = !this._cm.displayMapped;
-  }
+  //updateEnabled(e) {
+  //  // this.onMappingChange(this.id_mapping);
+  //  this._cm.displayMapped = !this._cm.displayMapped;
+  //}
 
   onMappingName(): void {
     this.mappingListForm.valueChanges.subscribe(mapping => {
@@ -299,122 +403,5 @@ export class ContentMappingStepComponent implements OnInit {
           this._commonService.regularToaster("error", error.error.message);
         }
       };
-  }
-
-  onStepBack() {
-    this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.stepData.importId}/step/2`]);
-  }
-
-  onDataChecking() {
-    // perform all check on file
-    this.id_mapping = this.mappingListForm.value.id_mapping;
-    this.spinner = true;
-    this._ds
-      .dataChecker(this.stepData.importId, this.idFieldMapping, this.id_mapping)
-      .subscribe(
-        import_obj => {
-          this.spinner = false;
-          //this.contentMapRes = res;
-          this._ds.getErrorList(this.stepData.importId).subscribe(err => {
-            this.n_errors = err.errors.filter(
-              error => error.error_level == "ERROR"
-            ).length;
-            this.n_warnings = err.errors.filter(
-              error => error.error_level == "WARNING"
-            ).length;
-            if (this.n_errors == 0) {
-              this.disableNextStep = false;
-              this.showValidateMappingBtn = false;
-            }
-          });
-          if (import_obj.source_count < ModuleConfig.MAX_LINE_LIMIT) {
-            this._router.navigate([
-              `${ModuleConfig.MODULE_URL}/process/id_import/${this.stepData.importId}/step/4`
-            ]);
-          } else {
-            this.nbLignes = import_obj.source_count;
-            this._modalService.open(this.modalRedir);
-          }
-        },
-        error => {
-          this.spinner = false;
-          if (error.statusText === "Unknown Error") {
-            // show error message if no connexion
-            this._commonService.regularToaster(
-              "error",
-              "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-            );
-          } else {
-            // show error message if other server error
-            console.log(error);
-            this._commonService.regularToaster("error", error.error.message);
-          }
-        }
-      );
-  }
-
-  onRedirect() {
-    this._router.navigate([ModuleConfig.MODULE_URL]);
-  }
-
-  createOrUpdateMapping(temporary) {
-    this._ds
-      .updateContentMapping(this.id_mapping, this.contentTargetForm.value)
-      .subscribe(d => {
-        let step4Data: Step4Data = {
-          importId: this.stepData.importId
-        };
-        let step3Data: Step3Data = this.stepData;
-        step3Data.id_content_mapping = this.id_mapping;
-        step3Data.temporaryMapping = temporary;
-        this.stepService.setStepData(3, step3Data);
-        this.stepService.setStepData(4, step4Data);
-        this.onDataChecking();
-      });
-  }
-
-  // On close modal: ask if save the mapping or not
-  saveMappingUpdate(saveBoolean) {
-    if (saveBoolean) {
-      this.createOrUpdateMapping(true);
-    } else {
-      // create a temporary mapping
-      const mapping_value = {
-        mappingName: "mapping_temporaire_" + Date.now(),
-        temporary: true
-      };
-      this._ds
-        .postMappingName(mapping_value, "CONTENT")
-        .subscribe(id_mapping => {
-          this.id_mapping = id_mapping;
-          this.createOrUpdateMapping(false);
-        });
-    }
-  }
-
-  goToPreview() {    
-    // if mapping change
-    if(!this.contentTargetForm.pristine) {
-      // if the form mapping has been changed and the user has right to update it
-      if (this.mappingListForm.value.cruved.U) {
-        this._modalService.open(this.modalConfirm);
-      } else {
-        // the user don't has right to update the mapping -> temporary mapping
-        const mapping_value = {
-          mappingName: "mapping_temporaire_" + Date.now(),
-          temporary: true
-        };
-        this._ds
-          .postMappingName(mapping_value, "CONTENT")
-          .subscribe(id_mapping => {
-            this.id_mapping = id_mapping;
-            this.createOrUpdateMapping(true);
-          });
-      }
-    }
-    else {
-      this.onDataChecking();
-    }
-    
-  }
+  }*/
 }

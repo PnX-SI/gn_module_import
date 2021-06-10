@@ -1,57 +1,65 @@
-<div class=container>
-    <stepper [step]=2></stepper>
     <div class="card">
         <div class="card-header">
             <h5 class="card-title mb-0"> Correspondance des champs avec le modèle </h5>
         </div>
         <div
-            class="card-body"
             *ngIf="formReady"
+            class="card-body"
         >
-
             <!-- Choix de la liste des nomenclatures -->
-            <form class="was-validated">
+            <form>
                 <fieldset>
-                    <div *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.R != '0'">
+                    <div *ngIf="userFieldMappings.length > 0" class="form-group">
                         <legend class="px-1">
-                            Choix du modèle d'import
+                            Choix d’un modèle d'import prédéfini
                         </legend>
                         <select
-                            class="form-control form-control-sm"
+                            class="form-control"
                             id="mappingSelection"
                             [formControl]="fieldMappingForm"
-                            [compareWith]="compareFn"
-                            [disableControl]="userFieldMappings.length == 1"
+                            [compareWith]="areMappingFieldEqual"
+                            [disableControl]="userFieldMappings.length <= 1"
                         >
-                            <option [ngValue]="null"> - </option>
+                            <option [ngValue]="null"> </option>
                             <option
-                                *ngFor="let data of userFieldMappings"
-                                [ngValue]="data"
+                                *ngFor="let fieldMapping of userFieldMappings"
+                                [ngValue]="fieldMapping"
                             >
-                                {{data.mapping_label}}</option>
+                                {{fieldMapping.mapping_label}}</option>
                         </select>
                     </div>
+
                     <div class="d-flex flex-row justify-content-between mt-3">
 
                         <div class="d-flex justify-content-center align-content-between">
                             <button
-                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
+                                *ngIf="canCreateMapping"
                                 class="mb-3"
                                 mat-raised-button
                                 color="primary"
-                                (click)="createMapping()"
+                                (click)="showCreateMappingForm()"
                             >
                                 Nouveau modèle d'import
                             </button>
                             <button
-                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.U != '0' && fieldMappingForm?.value?.cruved.U"
+                                *ngIf="canRenameMapping"
                                 class="btn-sm mb-3 ml-1"
                                 mat-raised-button
                                 color="primary"
-                                (click)="renameMapping()"
-                                [disabled]="canUpdateMapping() || fieldMappingForm.value === '' || fieldMappingForm.value == null"
+                                (click)="showRenameMappingForm()"
+                                [disabled]="!renameMappingEnabled()"
                             >
-                                Modifier le nom du modèle d'import
+                                Renomer le modèle d'import
+                            </button>
+                            <button
+                                *ngIf="canDeleteMapping"
+                                class="btn-sm mb-3 ml-1"
+                                mat-raised-button
+                                color="warn"
+                                (click)="deleteMapping()"
+                                [disabled]="!deleteMappingEnabled()"
+                            >
+                                Supprimer le modèle d'import
                             </button>
                         </div>
 
@@ -68,8 +76,9 @@
                             Afficher les champs automatiquement associés
                         </div>
                     </div>
+
                     <div
-                        *ngIf="newMapping"
+                        *ngIf="createMappingFormVisible"
                         class="d-flex flex-row justify-content-between form_group"
                         id="newMap"
                     >
@@ -77,14 +86,14 @@
                             type="text"
                             class="form-control mr-2"
                             value="Inconnu"
-                            [formControl]="newMappingForm"
+                            [formControl]="createOrRenameMappingForm"
                         >
                         <button
                             class="d-flex justify-content-center align-content-between mr-2 button-success"
                             mat-raised-button
                             matTooltip="Créer un nouveau mapping"
-                            (click)="saveMappingName(newMappingForm.value, syntheseForm)"
-                            [disabled]="newMappingForm.value == null"
+                            (click)="createMapping(createOrUpdateMappingForm.value)"
+                            [disabled]="!createOrRenameMappingForm.valid"
                         >
                             <mat-icon>add</mat-icon>
                         </button>
@@ -92,14 +101,14 @@
                             class="d-flex justify-content-center align-content-between"
                             mat-raised-button
                             color=warn
-                            (click)="cancelMapping()"
+                            (click)="hideCreateOrRenameMappingForm()"
                         >
                             Annuler
                         </button>
                     </div>
 
                     <div
-                        *ngIf="updateMapping"
+                        *ngIf="renameMappingFormVisible"
                         class="d-flex flex-row justify-content-between form_group"
                         id="updateMap"
                     >
@@ -107,21 +116,21 @@
                             type="text"
                             class="form-control mr-2"
                             value="Inconnu"
-                            [formControl]="newMappingForm"
+                            [formControl]="createOrRenameMappingForm"
                         >
                         <button
                             class="d-flex justify-content-center align-content-between mr-2 button-success"
-                            (click)="updateMappingName(newMappingForm.value)"
+                            (click)="updateMappingName(createOrRenameMappingForm.value)"
                             mat-raised-button
                             matTooltip="Modifier le nom du modèle d'import"
-                            [disabled]="newMappingForm.value == null"
+                            [disabled]="!createOrRenameMappingForm.valid"
                         >
                             <mat-icon>check</mat-icon>
                         </button>
                         <button
                             matTooltip="Annuler la modification du nom du modèle d'import"
                             class="d-flex justify-content-center align-content-between"
-                            (click)="cancelMapping()"
+                            (click)="hideCreateOrRenameMappingForm()"
                             mat-raised-button
                             color="warn"
                         >
@@ -131,56 +140,49 @@
 
                     <div *ngIf="fieldMappingForm.value != null">
                         <div
-                            *ngIf="this.unmappedColCount == 0"
-                            class="alert alert-success mat-alert"
+                            *ngIf="mappedTargetFields.size > 0"
+                            class="alert alert-success"
                             role="alert"
                             style="text-align: center;"
                         >
-                            L'ensemble des champs du fichier ont été automatiquement associés aux champs du modèle
-                            d'import.
+                           {{ mappedTargetFields.size }} champs cibles ont été associé à un champs source.
                         </div>
                         <div
-                            *ngIf="this.mappedColCount == 1"
-                            class="alert alert-success mat-alert"
+                            *ngIf="unmappedSourceFields.size == 0"
+                            class="alert alert-success"
                             role="alert"
                             style="text-align: center;"
                         >
-                            1 seul champ du fichier a pu être automatiquement associé aux champs du modèle d'import.<br>
-                            {{this.unmappedColCount}} restent à associer manuellement.
+                            L'ensemble des {{ mappedSourceFields.size }} champs du fichier d’import ont été associés à un champs cible.
                         </div>
                         <div
-                            *ngIf="this.unmappedColCount > 0 && this.mappedColCount > 1"
-                            class="alert alert-success mat-alert"
+                            *ngIf="unmappedSourceFields.size > 0"
+                            class="alert alert-warning"
                             role="alert"
                             style="text-align: center;"
                         >
-                            {{this.mappedColCount}} champs du fichier ont été automatiquement associés aux champs du
-                            modèle d'import.<br>
-                            {{this.unmappedColCount}} restent à associer manuellement.
-                        </div>
-                        <div
-                            *ngIf="this.unmappedColCount == 0"
-                            class="alert alert-danger"
-                            role="alert"
-                            style="text-align: center;"
-                        >
-                            Aucun champ du fichier n'a pu être associé aux champs du modèle d'import.
+                            <a data-toggle="collapse" href="#unmappedSourceFields" aria-expanded="false" aria-controls="unmappedSourceFields">
+                              {{ unmappedSourceFields.size }} champs
+                            </a> du fichier d’import ne sont actuellement associé à aucun champs cible et seront donc ignorés.
+                            <div class="collapse" id="unmappedSourceFields">
+                              <ul style="text-align: left;">
+                                <li *ngFor="let sourceField of unmappedSourceFields">{{ sourceField }}</li>
+                              </ul>
+                            </div>
                         </div>
                     </div>
                 </fieldset>
             </form>
             <form [formGroup]="syntheseForm">
-                <div *ngFor="let theme of bibRes">
+                <div *ngFor="let theme of targetFields">
                     <fieldset>
                         <legend class="px-1">
-                            {{theme.theme_name}}
+                            {{theme.theme.fr_label_theme}}
                         </legend>
                         <div class="row m-0">
-                            <div *ngIf="displayAllValues; else elseBlock"></div>
                             <ng-container *ngFor="let field of theme.fields">
                                 <div
                                     class="col-6"
-                                    *ngIf="checkCondition(field.name_field)"
                                 >
                                     <div
                                         *ngIf="!field.autogenerated"
@@ -201,34 +203,28 @@
                                             id="{{field.name_field}}"
                                             placeholder="Open this select menu"
                                             formControlName="{{field.name_field}}"
-                                            (change)="onSelect(id_mapping, syntheseForm)"
                                         >
-                                            <option [value]=""></option>
+                                            <option [ngValue]="null"></option>
                                             <option
-                                                *ngFor="let column of columns"
-                                                [class.isSelected]="column.selected"
-                                                [value]="column.id"
+                                                *ngFor="let sourceField of sourceFields"
+                                                [value]="sourceField"
                                             >
-                                                {{column.id}}
+                                                {{ sourceField }}
                                             </option>
                                         </select>
-
-                                        <small
-                                            *ngIf="syntheseForm.controls[field.name_field].hasError('geomError')"
-                                            style="color:red"
-                                        >
-                                            Les champs WKT et latitude/longitude ne peuvent être remplis en même temps
-                                        </small>
-
                                         <div
-                                            *ngIf="field.required"
-                                            [class.d-block]="syntheseForm.controls[field.name_field].hasError('required')"
-                                            class="invalid-feedback"
+                                            *ngIf="syntheseForm.controls[field.name_field].hasError('required')"
+                                            class="invalid-feedback d-block"
                                         >Sélectionnez
                                             {{field.name_field}}</div>
                                         <div *ngIf="field.name_field=='WKT'">
                                             <small>*si pas de WKT, indiquez longitude et latitude.</small>
                                         </div>
+
+                                        <div
+                                            *ngIf="syntheseForm.controls[field.name_field].hasError('conflict')"
+                                            class="invalid-feedback d-block"
+                                        >{{ syntheseForm.controls[field.name_field].getError('conflict') }}</div>
                                     </div>
                                     <div
                                         *ngIf="field.autogenerated"
@@ -251,7 +247,7 @@
                     <button
                         mat-raised-button
                         class="d-flex justify-content-center align-content-between"
-                        (click)="onStepBack()"
+                        (click)="onPreviousStep()"
                         color="primary"
                     >
                         <mat-icon>navigate_before</mat-icon>
@@ -262,7 +258,7 @@
                         class="d-flex justify-content-center align-content-between"
                         mat-raised-button
                         color="primary"
-                        [disabled]="fieldMappingForm.value == null || syntheseForm.invalid"
+                        [disabled]="!isNextStepAvailable()"
                         (click)='onNextStep()'
                     >
                         Suivant
@@ -274,11 +270,6 @@
 
 
         </div>
-    </div>
-    <footer>
-        <footer-stepper importId={{stepData.importId}}></footer-stepper>
-    </footer>
-</div>
 <!-- Spinner -->
 <div
     *ngIf="spinner"
@@ -295,7 +286,7 @@
 
 
 <ng-template
-    #modalConfirm
+    #saveMappingModal
     let-modal
 >
 
@@ -314,51 +305,34 @@
         </button>
     </div>
     <div class="modal-body">
-        Attention, le modèle a été modifié, voulez-vous sauvegarder ces modifications
+        Attention, le modèle a été modifié, voulez-vous sauvegarder ces modifications ?
+        <form *ngIf="this.fieldMappingForm.value">
+          <div class="form-group">
+            <label for="mappingName">Nom du mapping</label>
+            <input [formControl]="modalCreateMappingForm" class="form-control" id="mappingName" placeholder="Nom du mapping">
+          </div>
+        </form>
     </div>
     <div class="modal-footer">
         <button
             type="button"
             mat-raised-button
             color="accent"
-            (click)="saveMappingUpdate(false); modal.close()"
-        >Ne pas enregistrer </button>
+            (click)="modal.close(); submitMapping(false)"
+        > Continuer sans enregistrer </button>
         <button
+            *ngIf="this.fieldMappingForm.value && this.createOrRenameMappingForm.value == ''"
             type="button"
             mat-raised-button
             color="primary"
-            (click)="saveMappingUpdate(true); modal.close()"
-        >Enregistrer les modifications du modèle d'import</button>
-    </div>
-</ng-template>
-
-<ng-template
-    #modalRedir
-    let-modal
->
-    <div class="modal-header">
-        <h4
-            class="modal-title"
-            id="modal-basic-title"
-        >Contrôle du fichier en cours...</h4>
+            (click)="modal.close(); submitMapping(true)"
+        > Mettre à jour le modèle existant </button>
         <button
+            *ngIf="this.fieldMappingForm.value == null || this.createOrRenameMappingForm.value != ''"
             type="button"
-            class="close"
-            aria-label="Close"
-            (click)="modal.dismiss('Cross click')"
-        >
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        Les contrôles sur votre fichier de {{nbLignes}} lignes ont bien été lancés ...
-        Un mail de notification vous sera envoyé à la fin du traitement.
-    </div>
-    <div class="modal-footer">
-        <button
-            type="button"
-            class="btn btn-warning"
-            (click)="onRedirect(); modal.close()"
-        > OK </button>
+            mat-raised-button
+            color="primary"
+            (click)="modal.close(); submitMapping(true, 'hop')"
+        > Enregistrer un nouveau modèle </button>
     </div>
 </ng-template>

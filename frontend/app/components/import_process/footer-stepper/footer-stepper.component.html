@@ -2,7 +2,7 @@
     <button
         type="button"
         id="cancelImport"
-        (click)="cancelImport()"
+        (click)="deleteImport()"
         mat-raised-button
         color="warn"
     >
@@ -12,7 +12,7 @@
         *ngIf="!isStep1"
         type="button"
         id="importListPage"
-        (click)="onImportList()"
+        (click)="saveAndLeaveImport()"
         mat-raised-button
         color="accent"
     >Enregistrer et quitter</button>

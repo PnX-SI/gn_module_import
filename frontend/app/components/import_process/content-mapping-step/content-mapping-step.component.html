@@ -1,5 +1,3 @@
-<div class=container>
-    <stepper [step]=3></stepper>
     <div class="card">
         <div class="card-header">
             <h5 class="card-title mb-0"> Correspondance des nomenclatures </h5>
@@ -16,17 +14,17 @@
                             <select
                                 class="form-control form-control-sm"
                                 id="contentMappingSelection"
-                                [compareWith]="compareFn"
-                                [formControl]="mappingListForm"
+                                [formControl]="selectMappingContentForm"
+                                [compareWith]="areMappingContentEqual"
                             >
                                 <option [ngValue]="null">
                                     -
                                 </option>
                                 <option
-                                    *ngFor="let data of _cm.userContentMappings"
-                                    [ngValue]="data"
+                                    *ngFor="let contentMapping of userContentMappings"
+                                    [ngValue]="contentMapping"
                                 >
-                                    {{data.mapping_label}}
+                                    {{contentMapping.mapping_label}}
                                 </option>
                             </select>
                         </div>
@@ -120,80 +118,70 @@
                 [formGroup]="contentTargetForm"
                 *ngIf="showForm"
             >
-                <div *ngFor="let contentMapping of stepData.contentMappingInfo">
+                <div *ngFor="let targetField of importValues | keyvalue">
                     <div
-                        [hidden]="(!containsEnabled(contentMapping) && !_cm.displayMapped)"
+                        [hidden]="false"
                         class="card field-card"
                     >
                         <div
                             class="field-header"
-                            (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed"
+                            (click)="targetField.value.nomenclature_type.isCollapsed = !targetField.value.nomenclature_type.isCollapsed"
                         >
                             <div class="card-title mb-0">
-                                {{contentMapping.nomenc_name}}
+                                {{targetField.value.nomenclature_type.label_default}}
                                 <i
-                                    matTooltip="{{contentMapping.nomenc_def}} |  Valeur par défaut: {{contentMapping.nomenc_default_value}}"
+                                    matTooltip="{{targetField.value.nomenclature_type.definition_default}} |  Valeur par défaut: TODO"
                                     matTooltipClass="custom-tooltip"
                                     class="fa fa-info-circle"
                                     aria-hidden="true"
                                 ></i>
                             </div>
                             <i
-                                *ngIf="contentMapping.isCollapsed"
+                                *ngIf="targetField.value.nomenclature_type.isCollapsed"
                                 class="material-icons"
                             >keyboard_arrow_down</i>
                             <i
-                                *ngIf="!contentMapping.isCollapsed"
+                                *ngIf="!targetField.value.nomenclature_type.isCollapsed"
                                 class="material-icons"
                             >keyboard_arrow_up</i>
                         </div>
                         <div
-                            [ngbCollapse]="contentMapping.isCollapsed"
+                            [ngbCollapse]="targetField.value.nomenclature_type.isCollapsed"
                             class="card-body"
                         >
-                            <div
-                                *ngIf="contentMapping.user_values.values.length > 0 && mappingListForm.value != null"
-                                class="alert alert-warning"
-                            >
-                                <b> Attention: </b> des valeurs du fichier n'ont trouvé aucune correspondance dans le
-                                modèle selectionné:
-                                <ul>
-                                    <li *ngFor="let item of contentMapping.user_values.values">
-                                            {{item.value }}
-                                    </li>
-                                </ul>
-                            </div>
-                            <div *ngFor="let value_def of contentMapping.nomenc_values_def">
+                            <div *ngFor="let value of targetField.value.values; let index = index;">
                                 <div
-                                    *ngIf="isEnabled(value_def.id) || _cm.displayMapped"
+                                    *ngIf="true"
                                     class="form-group row"
                                 >
-                                    <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
+                                    <label class="col-sm-4 col-form-label" [ngClass]="{'font-italic': value == null || value == ''}">{{value || "Pas de valeur"}} :</label>
                                     <div class="col-sm-8">
-                                        <pnx-multiselect
-                                            [values]="contentMapping.user_values.values"
-                                            [parentFormControl]="contentTargetForm.controls[value_def.id]"
-                                            keyLabel="value"
-                                            keyValue="value"
-                                            debounceTime="500"
-                                            [searchBar]="false"
-                                            [disabled]="disabled"
-                                            [bindAllItem]="true"
-                                            (onChange)="onSelectChange($event,contentMapping,value_def.id)"
-                                            (onDelete)="onSelectDelete($event,contentMapping,value_def.id)"
+                                        <select
+                                            class="form-control form-control-sm"
+                                            formControlName="{{targetField.key + '-' + index}}"
+                                            [compareWith]="areNomenclaturesEqual"
+                                            id="{{targetField.key + '-' + index}}"
+                                            (change)="onSelectNomenclature(targetField.key + '-' + index)"
                                         >
-                                        </pnx-multiselect>
+                                          <option [ngValue]="null"></option>
+                                          <option
+                                              *ngFor="let nomenclature of targetField.value.nomenclatures"
+                                              [ngValue]="nomenclature"
+                                          >
+                                            {{ nomenclature.label_default }}
+                                          </option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
 
                         </div>
                     </div>
-                </div>
+                </div><!-- endfor -->
                 <div class="d-flex flex-row justify-content-between">
                     <button
                         class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
-                        (click)="onStepBack()"
+                        (click)="onPreviousStep()"
                         mat-raised-button
                         color="primary"
                     >
@@ -202,8 +190,8 @@
                     </button>
                     <button
                         class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        [disabled]="disabled"
-                        (click)="goToPreview()"
+                        [disabled]="!isNextStepAvailable()"
+                        (click)="onNextStep()"
                         mat-raised-button
                         color="primary"
                     >
@@ -213,9 +201,6 @@
                 </div>
             </form>
         </div>
-        <footer>
-            <footer-stepper importId={{stepData.importId}}></footer-stepper>
-        </footer>
     </div>
     <!-- Spinner -->
     <div
