@@ -1,0 +1,10 @@
+goodtables
+pandas
+geopandas
+dask[dataframe]
+psutil
+toolz
+cloudpickle
+python-slugify
+pyproj<3  # v3 require PROJ 7.2.0 but Debian 10 provide PROJ 5.2.0
+utils-flask-sqlalchemy
