@@ -2,12 +2,25 @@
 CHANGELOG
 =========
 
-1.1.3 (unreleased)
+2.0.0 (unreleased)
 ------------------
 
-**🐛 Corrections**
+**Évolutions**
 
-*
+* Packaging du module pour être installé avec pip
+* Gestion des versions du schéma de BDD avec alembic
+* Corrections dans les modèles, ajout de relationships manquantes
+* Ajout de tests unitaires
+* Évolution de l’API vers les bonnes pratiques REST
+* Adaptation du frontend en conséquence
+* Ajout de typage sur le frontend
+  * Modèles TypeScript correspondant aux modèles Python
+* Suppression d’un grande nombre de requêtes SQL au profit de l’ORM
+* Refonte des contrôles s’executant sur la DataFrame
+  * Isolation du code de contrôle permettant de le tester
+  * Factorisation de la gestion des erreurs
+* Simplification de la logique du frontend en supprimant les données par étape au profit de l’utilisation des modèles Python.
+
 
 1.1.2 (2021-03-10)
 ------------------
