@@ -63,7 +63,7 @@ def is_positive_date(x, date_min_col, date_max_col):
         print(e)
         return True
 
-def is_uuid(value, version=4):
+def is_uuid(value, version=None):
     try:
         if pd.isnull(value):
             return True
