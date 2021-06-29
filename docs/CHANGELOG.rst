@@ -2,12 +2,12 @@
 CHANGELOG
 =========
 
-1.1.3 (unreleased)
+1.1.3 (2021-06-29)
 ------------------
 
 **🐛 Corrections**
 
-*
+* Correction du contrôle des UUID quand ils sont fournis dans le fichier source
 
 1.1.2 (2021-03-10)
 ------------------
