@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.1.4 (2021-06-30)
+------------------
+
+**🐛 Corrections**
+
+* Correction du parsing des dates dans le cas où il y a une date mais pas d'heure, alors qu’on a mappé un champs d'heure
+
 1.1.3 (2021-06-29)
 ------------------
 

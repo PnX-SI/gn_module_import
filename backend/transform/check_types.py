@@ -22,7 +22,7 @@ def convert_to_datetime(value):
     try:
         # print('init date')
         # print(value)
-        formated_date = re.sub("[/.: ]", "-", value)
+        formated_date = re.sub("[/.: ]", "-", value.strip())
         # print('formagted date')
         # print(formated_date)
         strftime_format = [
