@@ -14,6 +14,7 @@ export class ImportErrorsComponent implements OnInit, OnDestroy {
     private sub: any;
     public import: any;
     public formatedErrors: string;
+    public expansionPanelHeight: string = "60px";
     constructor(private _dataService: DataService, private _activedRoute: ActivatedRoute) { }
 
     ngOnInit() {
