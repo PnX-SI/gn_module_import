@@ -58,7 +58,7 @@ export class ImportStepComponent implements OnInit {
     openErrorSheet(idImport) {
         // this._router.navigate(["/import/errors", idImport]);
         const newRelativeUrl = this._router.createUrlTree([
-            "/import/errors",
+            "/import/report",
             idImport
         ]);
         let baseUrl = window.location.href.replace(this._router.url, "");
