@@ -27,7 +27,6 @@
                         </div>
                     </div>
                 </mat-expansion-panel>
-            
                 <mat-expansion-panel>
                     <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
                         <mat-panel-title>
@@ -38,7 +37,30 @@
                             </h3>
                         </mat-panel-title>
                     </mat-expansion-panel-header>
-                    <p> DATA </p>
+                    <div *ngIf="import?.taxa_count else elseBlock">
+                        Nombre de taxons : {{ import?.taxa_count }}
+                        
+                        <div class="card card-margin">
+                            <h4 class="card-header">
+                                <mat-icon>room</mat-icon>
+                                Zone géographique
+                            </h4>
+                            <pnx-map
+                                height="40vh"
+                                searchBar="false"
+                            >
+                                <pnx-geojson
+                                    [geojson]="this.validBbox"
+                                    [zoomOnFirstTime]="true"
+                                >
+                                </pnx-geojson>
+                            </pnx-map>
+                        </div>
+                    </div>
+                    <ng-template #elseBlock>
+                        <p> Aucune donnée à afficher </p>
+                    </ng-template>
+    
                 </mat-expansion-panel>
             
                 <mat-expansion-panel *ngIf="import?.errors.length">

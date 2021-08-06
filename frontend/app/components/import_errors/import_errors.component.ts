@@ -15,19 +15,33 @@ export class ImportErrorsComponent implements OnInit, OnDestroy {
     public import: any;
     public formatedErrors: string;
     public expansionPanelHeight: string = "60px";
+    public validBbox: Object;
+    public validData: Array<Object>;
     constructor(private _dataService: DataService, private _activedRoute: ActivatedRoute) { }
+
 
     ngOnInit() {
 
         this.sub = this._activedRoute.params.subscribe(params => {
-            this._dataService.getOneImport(
-                params["id_import"]
-            ).subscribe(data => {
-                console.log(data);
-
+            const idImport: number = params["id_import"];
+            this._dataService.getOneImport(idImport).subscribe(data => {
+                if (data.import_count) {
+                    // Load additionnal data if imported data
+                    this.loadValidData(idImport)
+                }
                 this.import = data;
             })
+        })
+    }
 
+    /** Gets the validBbox and validData (info about observations)
+     * @param {string}  idImport - id of the import to get the info from
+     */
+    loadValidData(idImport: number) {
+        this._dataService.getValidData(idImport
+        ).subscribe(data => {
+            this.validBbox = data.valid_bbox;
+            this.validData = data.valid_data;
         })
     }
 
