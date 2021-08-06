@@ -5,12 +5,12 @@ import { DataService } from '../../services/data.service'
 
 @Component({
     selector: 'pnx-import-errors',
-    templateUrl: 'import_errors.component.html',
-    styleUrls: ["import_errors.component.scss"],
+    templateUrl: 'import_report.component.html',
+    styleUrls: ["import_report.component.scss"],
 
 })
 
-export class ImportErrorsComponent implements OnInit, OnDestroy {
+export class ImportReportComponent implements OnInit, OnDestroy {
     private sub: any;
     public import: any;
     public formatedErrors: string;

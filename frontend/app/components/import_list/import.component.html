@@ -97,7 +97,7 @@
                     </ngx-datatable-column>
                     <ngx-datatable-column
                         maxWidth="200"
-                        name="Rapport d'erreur"
+                        name="Rapport"
                         [sortable]="true"
                     >
                         <ng-template
@@ -105,14 +105,17 @@
                             ngx-datatable-cell-template
                         >
                             <button
-                                *ngIf="row.errors.length > 0"
-                                matTooltip="Rapport d'erreur"
+                                matTooltip="Rapport"
                                 mat-icon-button
-                                color="warn"
+                                [color]="row.errors.length > 0 ? 'warn' : 'primary'"
                                 style="margin-top: -10px;"
-                                [routerLink]="['errors', row.id_import]"
+                                [routerLink]="['report', row.id_import]"
                             >
-                                <mat-icon>warning</mat-icon>
+                                <mat-icon
+                                *ngIf="row.errors.length > 0; else elseBlock">warning</mat-icon>
+                                <ng-template #elseBlock>
+                                    <mat-icon>info</mat-icon>
+                                </ng-template>
                             </button>
                             <button
                                 *ngIf="(row.is_finished) && ((row.source_count - row.import_count) > 0)"
