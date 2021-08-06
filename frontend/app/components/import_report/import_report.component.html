@@ -27,11 +27,12 @@
                         </div>
                     </div>
                 </mat-expansion-panel>
-                <mat-expansion-panel>
+                <mat-expansion-panel
+                  [expanded]="import?.import_count">
                     <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
                         <mat-panel-title>
-                            <h3> Données importées 
-                                ({{import?.import_count || 0}}
+                            <h3 class="data"> Données importées 
+                                ({{import?.import_count || 0}} ligne(s)
                                 /
                                 {{import?.source_count}}) 
                             </h3>
@@ -63,10 +64,12 @@
     
                 </mat-expansion-panel>
             
-                <mat-expansion-panel *ngIf="import?.errors.length">
+                <mat-expansion-panel 
+                    *ngIf="import?.errors.length"
+                    expanded>
                     <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
                         <mat-panel-title>
-                            <h3> Erreurs ({{import?.errors.length}})</h3>
+                            <h3 class="errors"> Erreurs ({{import?.errors.length}})</h3>
                         </mat-panel-title>
                     </mat-expansion-panel-header>
                     <table class="table table-striped table-bordered">
