@@ -107,15 +107,15 @@
                             <button
                                 matTooltip="Rapport"
                                 mat-icon-button
-                                [color]="row.errors.length > 0 ? 'warn' : 'primary'"
                                 style="margin-top: -10px;"
                                 [routerLink]="['report', row.id_import]"
                             >
-                                <mat-icon
-                                *ngIf="row.errors.length > 0; else elseBlock">warning</mat-icon>
-                                <ng-template #elseBlock>
-                                    <mat-icon>info</mat-icon>
-                                </ng-template>
+                                <mat-icon color="primary">info</mat-icon>
+                                <mat-icon 
+                                    *ngIf="row.errors.length > 0" 
+                                    color="warn">
+                                    warning
+                                </mat-icon>
                             </button>
                             <button
                                 *ngIf="(row.is_finished) && ((row.source_count - row.import_count) > 0)"
