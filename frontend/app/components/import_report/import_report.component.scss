@@ -1,6 +1,18 @@
-.card-body p {
-    margin-bottom: 5px;
+// .card-body p {
+//     margin-bottom: 5px;
+// }
+
+.card.main {
+    background-color: lightgray;
 }
+
+.card.content {
+    margin-bottom: 10px;
+    border-radius: 5px;
+    
+}
+
+.material-icons.md-60 { font-size: 60px; }
 
 h3.data {
     color: green;
