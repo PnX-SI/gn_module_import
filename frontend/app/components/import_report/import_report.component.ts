@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 
 import { DataService } from '../../services/data.service'
 import { CsvExportService } from "../../services/csv-export.service";
@@ -20,6 +20,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     public validData: Array<Object>;
     public fields: Array<Object>;
     public nomenclature: Array<Object>;
+    public maxTaxa: number = 10;
     public doughnutChartLabels: Array<String> = [];
     public doughnutChartData: Array<number> = [];
     public doughnutChartColors: Array<Object> = [{
@@ -30,9 +31,11 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         legend: { position: 'left' }
       }
 
-    constructor(private _dataService: DataService, private _csvExport: CsvExportService, private _activedRoute: ActivatedRoute) { }
-
-
+    constructor(
+        private _dataService: DataService, 
+        private _csvExport: CsvExportService, 
+        private _activedRoute: ActivatedRoute,
+        private _router: Router) { }
 
     ngOnInit() {
 
@@ -83,20 +86,22 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         const grouped = this.groupBy(this.validData, "nom_cite");
         console.log(grouped);
 
-        // Must do this otherwise the chart will not update
-        this.doughnutChartLabels.length = 0;
-        this.doughnutChartLabels.push(...Object.keys(grouped));
+        let labels = Object.keys(grouped)
         
         // Sorting by most viewed taxons
         let data = Object.values(grouped).map(e => e.length)
-        this.doughnutChartLabels.sort(function(a, b) {
+        labels.sort(function(a, b) {
             return grouped[b].length - grouped[a].length;
           });
-          
+        
         data = data.sort((a, b) => b - a);
         
+        this.doughnutChartLabels.length = 0;
+        // Must push here otherwise the chart will not update
+        this.doughnutChartLabels.push(...labels.slice(0, this.maxTaxa));
+
         this.doughnutChartData.length = 0;
-        this.doughnutChartData = data;
+        this.doughnutChartData = data.slice(0, this.maxTaxa);
 
         // Fill colors with random colors
         let colors = new Array(this.doughnutChartData.length)
@@ -106,6 +111,14 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         this.doughnutChartColors[0].backgroundColor.push(...colors);
     }
 
+    goToSynthese(idDataSet: number) {
+        let navigationExtras = {
+              queryParams: {
+                "id_dataset": idDataSet
+              }
+        };
+        this._router.navigate(['/synthese'], navigationExtras);
+    }
 
     groupBy(xs, key) {
         return xs.reduce(function(rv, x) {

@@ -1,7 +1,7 @@
 <div class="card main">
     <div class="card-body">
         <div class="row">
-            <div class="col-6">
+            <div class="col-12 col-lg-6">
                 <div class="card content">
                     <div class="card-body">
                         <h5 class="card-title">Rapport d'import : {{ import?.id_import }} </h5>
@@ -10,7 +10,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-12 col-lg-6">
                         <div class="card content">
                             <div class="card-body">
                                 <div class="row">
@@ -32,7 +32,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-12 col-lg-6">
                         <div class="card content">
                             <div class="card-body">
                                 <div class="row">
@@ -144,7 +144,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6">
+            <div class="col-12 col-lg-6">
                 <div class="card content">
                     <div class="card-body">
                         <div class="d-flex justify-content-center">
@@ -164,7 +164,8 @@
                                 des données importées</h5>
                             </div>
                             <div class="col-4">
-                                <button class="btn btn-secondary">Afficher dans la synthèse</button>
+                                <button class="btn btn-secondary"
+                                 (click)="goToSynthese(import?.id_dataset)">Afficher dans la synthèse</button>
                             </div>
                         </div>    
                     
@@ -183,7 +184,7 @@
                 <div class="card content">
                     <div class="card-body">
                         <h5 class="card-title">
-                            Répartition des taxons importés
+                            Répartition des taxons importés (Top {{ maxTaxa }})
                         </h5>
                         <div style="display: block">
                             <canvas baseChart
@@ -194,7 +195,6 @@
                                 [options]="options">
                             </canvas>
                           </div>
-
                     </div>
                 </div>
             </div>
