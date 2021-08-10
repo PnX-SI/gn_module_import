@@ -1,6 +1,18 @@
-// .card-body p {
-//     margin-bottom: 5px;
-// }
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
+@import '~bootstrap/scss/mixins';
+
+
+.card-columns {
+    -webkit-column-count: 2;
+    -moz-column-count: 2;
+    column-count: 2;
+    -webkit-column-gap: 1.25rem;
+    -moz-column-gap: 1.25rem;
+    column-gap: 1.25rem;
+    orphans: 1;
+    widows: 1;
+  }
 
 .card.main {
     background-color: lightgray;
@@ -25,12 +37,3 @@
     margin: 10px;
     border-radius: 10px;
 }
-
-h3.data {
-    color: green;
-}
-
-h3.errors {
-    color: red;
-}
-

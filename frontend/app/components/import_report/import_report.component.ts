@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from "@angular/router";
 
 import { DataService } from '../../services/data.service'
+import { CsvExportService } from "../../services/csv-export.service";
 
 @Component({
     selector: 'pnx-import-errors',
@@ -17,7 +18,9 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     public expansionPanelHeight: string = "60px";
     public validBbox: Object;
     public validData: Array<Object>;
-    constructor(private _dataService: DataService, private _activedRoute: ActivatedRoute) { }
+    public fields: Array<Object>;
+    public nomenclature: Array<Object>;
+    constructor(private _dataService: DataService, private _csvExport: CsvExportService, private _activedRoute: ActivatedRoute) { }
 
 
     ngOnInit() {
@@ -27,7 +30,10 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             this._dataService.getOneImport(idImport).subscribe(data => {
                 if (data.import_count) {
                     // Load additionnal data if imported data
-                    this.loadValidData(idImport)
+                    this.loadValidData(idImport);
+                    const fieldMapping = data.id_field_mapping;
+                    this.loadMapping(fieldMapping);
+                    this.loadNomenclature(idImport, fieldMapping);
                 }
                 this.import = data;
             })
@@ -43,6 +49,21 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             this.validBbox = data.valid_bbox;
             this.validData = data.valid_data;
         })
+    }
+
+    loadMapping(idMapping: number) {
+        this._dataService.getMappingFields(idMapping)
+            .subscribe(data => {
+                this.fields = data
+            })
+    }
+
+    loadNomenclature(idImport: number, idMapping: number) {
+        this._dataService.getNomencInfo(idImport, idMapping)
+            .subscribe(data => {
+                console.log(data)
+                this.nomenclature = data
+            })
     }
 
     ngOnDestroy() {
