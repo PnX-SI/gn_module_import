@@ -6,6 +6,8 @@ import { Routes, RouterModule } from "@angular/router";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatCheckboxModule } from "@angular/material/checkbox";
+import { ChartsModule } from 'ng2-charts';
+
 import { ImportModalDatasetComponent } from "./components/modal_dataset/import-modal-dataset.component";
 import { ModalDeleteImport } from "./components/delete-modal/delete-modal.component";
 import { DataService } from "./services/data.service";
@@ -73,6 +75,7 @@ const routes: Routes = [
     MatProgressSpinnerModule,
     MatStepperModule,
     MatCheckboxModule,
+    ChartsModule,
     NgbModule
   ],
   entryComponents: [ModalDeleteImport],

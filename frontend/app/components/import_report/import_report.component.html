@@ -105,20 +105,6 @@
                                     </h6>
                                 </mat-panel-title>
                             </mat-expansion-panel-header>
-                            <table class="table table-striped table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Champ source</th>
-                                        <th>Champ cible</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr *ngFor="let field of fields">
-                                        <td> {{ field.source_field }}</td>
-                                        <td> {{ field.target_field }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
                         </mat-expansion-panel>
                     </div>
                 </div>
@@ -192,6 +178,23 @@
                             >
                             </pnx-geojson>
                         </pnx-map>
+                    </div>
+                </div>
+                <div class="card content">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            Répartition des taxons importés
+                        </h5>
+                        <div style="display: block">
+                            <canvas baseChart
+                                [data]="doughnutChartData"
+                                [labels]="doughnutChartLabels"
+                                [chartType]="doughnutChartType"
+                                [colors]="doughnutChartColors"
+                                [options]="options">
+                            </canvas>
+                          </div>
+
                     </div>
                 </div>
             </div>
