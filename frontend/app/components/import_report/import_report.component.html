@@ -1,7 +1,7 @@
 <div class="card main">
     <div class="card-body">
-        <div class="row">
-            <div class="col-6">
+        <div class="row flex-row">
+            <div class="col-8">
                 <div class="card content">
                     <div class="card-body">
                         <h5 class="card-title">Rapport d'import : {{ import?.id_import }} </h5>
@@ -10,12 +10,22 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6">
-                <p> Export pdf ...</p>
+            <div class="col-4">
+                <div class="card content">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-center">
+                            <button class="btn btn-secondary">Export PDF</button>
+                            <button class="btn btn-secondary">Exporter les 
+                                correspondances</button>
+                            <button class="btn btn-secondary">Correspondances 
+                                d’identifiants</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-6">
+        <div class="row flex-row">
+            <div class="col-8">
                 <div class="row">
                     <div class="col-6">
                         <div class="card content">
@@ -60,31 +70,61 @@
                         </div>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card content">
+                            <div class="card-body">
+                                <h5 class="card-title">Description de l'import</h5>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <p> <b>Date de soumission de l'import :  </b> {{import?.date_create_import | date:'dd/MM/yyyy'}}  </p>
+                                        <p> <b>Auteur :  </b> {{import?.author_name}} </p>
+                                        <p> <b>Nombre de lignes importées :  </b>
+                                            ({{import?.import_count || 0}}
+                                            /
+                                            {{import?.source_count}}) </p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p> <b> SRID : </b>  {{import?.srid}} </p>
+                                        <p><b> Encodage :</b>  {{import?.encoding}} </p>
+                                        <p><b>  Format : </b>{{import?.format_source_file}} </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-4">
+                <div class="card content">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-8">
+                                <h5 class="card-title">Périmètre géographique 
+                                des données importées</h5>
+                            </div>
+                            <div class="col-4">
+                                <button class="btn btn-secondary">Afficher dans la synthèse</button>
+                            </div>
+                        </div>    
+                    
+                        <pnx-map
+                            height="40vh"
+                            searchBar="false"
+                        >
+                            <pnx-geojson
+                                [geojson]="this.validBbox"
+                                [zoomOnFirstTime]="true"
+                            >
+                            </pnx-geojson>
+                        </pnx-map>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="row">
-            <div class="col-6">
-                <div class="card content">
-                    <div class="card-body">
-                        <h5 class="card-title">Description de l'import</h5>
-                        <div class="row">
-                            <div class="col-6">
-                                <p> <b>Date de soumission de l'import :  </b> {{import?.date_create_import | date:'dd/MM/yyyy'}}  </p>
-                                <p> <b>Auteur :  </b> {{import?.author_name}} </p>
-                                <p> <b>Nombre de lignes importées :  </b>
-                                    ({{import?.import_count || 0}}
-                                    /
-                                    {{import?.source_count}}) </p>
-                            </div>
-                            <div class="col-6">
-                                <p> <b> SRID : </b>  {{import?.srid}} </p>
-                                <p><b> Encodage :</b>  {{import?.encoding}} </p>
-                                <p><b>  Format : </b>{{import?.format_source_file}} </p>
-                            </div>
-                        </div>
-                    </div>
-                </div> 
-            </div>
+            
         </div>
     </div>
 </div>
