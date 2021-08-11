@@ -32,6 +32,7 @@ export class ImportComponent implements OnInit {
   csvDownloadResp: any;
   public deleteOne: any;
   public interval: any;
+  public checked: boolean;
 
   public search = new FormControl()
 
@@ -88,12 +89,28 @@ export class ImportComponent implements OnInit {
     });
   }
 
+  errorsOnly(event: Event) {
+    this.filterErrors()
+  }
+
+  filterErrors() {
+    // filters the history variable to retains only
+    // errors if the checkbox is checked
+    this.filteredHistory = this.history.filter(
+      item => item.errors.length || !this.checked)
+  }
+
   private onImportList() {
 
     this._ds.getImportList().subscribe(
       res => {
         this.history = res.history;
-        this.filteredHistory = this.history;
+        // filterErrors will apply the "Error only" check box
+        // which will by the same way set the this.filteredHistory
+        // variable
+        // Since onImpportList is called multiple times (see setInterval)
+        // we need to do this here
+        this.filterErrors();
         this.empty = res.empty;
       },
       error => {
