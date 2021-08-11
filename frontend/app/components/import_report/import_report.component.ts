@@ -23,9 +23,9 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     public maxTaxa: number = 10;
     public doughnutChartLabels: Array<String> = [];
     public doughnutChartData: Array<number> = [];
-    public doughnutChartColors: Array<Object> = [{
+    public doughnutChartColors: Array<{ backgroundColor: Array<String>}> = [{
         backgroundColor: ['red', 'green', 'blue']
-      },];
+      }];
     public doughnutChartType = 'doughnut';
     private options: any = {
         legend: { position: 'left' }
@@ -83,10 +83,9 @@ export class ImportReportComponent implements OnInit, OnDestroy {
 
     updateChart() {
         // Chart:
-        const grouped = this.groupBy(this.validData, "nom_cite");
-        console.log(grouped);
+        const grouped: Object = this.groupBy(this.validData, "nom_cite");
 
-        let labels = Object.keys(grouped)
+        let labels = Object.keys(grouped);
         
         // Sorting by most viewed taxons
         let data = Object.values(grouped).map(e => e.length)
@@ -107,7 +106,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         let colors = new Array(this.doughnutChartData.length)
         for (let i=0; i < colors.length; i++) {
             colors[i] = "#" + ((1<<24)*Math.random() | 0).toString(16)
-        } 
+        }
         this.doughnutChartColors[0].backgroundColor.push(...colors);
     }
 
