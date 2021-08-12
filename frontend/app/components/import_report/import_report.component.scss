@@ -33,9 +33,10 @@ img {
     width: 60px;
 }
 
-.btn.btn-secondary {
-    background-color: #c05526;
-    border-color: #c05526;
+mat-icon {
+    margin-left: 10px;
+}
+
+.mat-raised-button {
     margin: 10px;
-    border-radius: 10px;
 }

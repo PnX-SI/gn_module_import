@@ -12,6 +12,9 @@ import { CsvExportService } from "../../services/csv-export.service";
 })
 
 export class ImportReportComponent implements OnInit, OnDestroy {
+    readonly maxTaxa: number = 10;
+    readonly maxErrorsLines: number = 10;
+
     private sub: any;
     public import: any;
     public formatedErrors: string;
@@ -20,7 +23,6 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     public validData: Array<Object>;
     public fields: Array<Object>;
     public nomenclature: Array<Object>;
-    public maxTaxa: number = 10;
     public doughnutChartLabels: Array<String> = [];
     public doughnutChartData: Array<number> = [];
     public doughnutChartColors: Array<{ backgroundColor: Array<String>}> = [{
@@ -49,6 +51,12 @@ export class ImportReportComponent implements OnInit, OnDestroy {
                     this.loadMapping(fieldMapping);
                     this.loadNomenclature(idImport, fieldMapping);
                 }
+                // Add property to show errors lines. Need to do this to
+                // show line per line...
+                data.errors.forEach(element => {
+                    element.show = false
+                });
+
                 this.import = data;
             })
         })
