@@ -7,6 +7,7 @@
                         <h5 class="card-title">Rapport d'import : {{ import?.id_import }} </h5>
                         <p class="card-text"><b>Jeu de données : </b><a
                             routerLink="/metadata/dataset_detail/{{import?.id_dataset}}"
+                            matTooltip="Voir dans le module Metadonnées"
                         >{{ import?.dataset_name }}</a></p>
                         <p class="card-text"><b>Fichier : </b>{{import?.full_file_name}} </p>
                     </div>
@@ -16,7 +17,7 @@
                         <div class="card content">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-9">
+                                    <div class="col-9 col-md-7">
                                         <h5 class="card-title">Observations importées</h5>
                                         <div class="d-flex justify-content-center">
                                             <h5>({{import?.import_count || 0}} ligne(s)
@@ -25,7 +26,7 @@
                                             </h5>
                                         </div>
                                     </div>
-                                    <div class="col-3">
+                                    <div class="col-3 col-md-5 text-center">
                                         <img src="./assets/images/Donnee_icon.svg">
                                     </div>
                                 </div>
@@ -36,14 +37,14 @@
                         <div class="card content">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-9">
+                                    <div class="col-9 col-md-7">
                                         <h5 class="card-title">Taxons importés</h5>
                                         <div class="d-flex justify-content-center">
                                             <h5>{{ import?.taxa_count }}
                                             </h5>
                                         </div>
                                     </div>
-                                    <div class="col-3">
+                                    <div class="col-3 col-md-5 text-center">
                                         <img src="./assets/images/Taxon_icon.svg">
                                     </div>
                                 </div>
@@ -141,13 +142,17 @@
                                     <td> <span *ngIf="i?.id_rows && i?.id_rows.length > 0">{{i?.id_rows.length}} </span>  </td>
                                     <td> 
                                         <span *ngIf="i.id_rows.length>=10 && !i.show">{{i.id_rows.slice(0, maxErrorsLines).join(', ')}} ...
-                                            <button mat-icon-button 
+                                            <button 
+                                                mat-icon-button 
+                                                matTooltip="Voir plus"
                                                 (click)="i.show=!i.show">
                                                 <mat-icon>expand_more</mat-icon>
                                             </button>
                                         </span>
                                         <span *ngIf="i.id_rows.length<=10 || i.show">{{i.id_rows.join(', ')}}
-                                            <button mat-icon-button 
+                                            <button 
+                                                mat-icon-button 
+                                                matTooltip="Voir moins"
                                                 *ngIf="i.id_rows.length>=10" 
                                                 (click)="i.show=!i.show">
                                                 <mat-icon>expand_less</mat-icon>
@@ -174,8 +179,12 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-center">
                             <button class="mat-raised-button mat-primary">Export PDF</button>
-                            <button class="mat-raised-button mat-primary">Exporter les 
-                                correspondances</button>
+                            <button 
+                                class="mat-raised-button mat-primary"
+                                (click)="exportCorrespondances()"
+                            >
+                                Exporter les correspondances
+                            </button>
                             <button class="mat-raised-button mat-primary">Correspondances 
                                 d’identifiants</button>
                         </div>

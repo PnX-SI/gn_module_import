@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from "@angular/router";
+import { saveAs } from "file-saver";
 
 import { DataService } from '../../services/data.service'
 import { CsvExportService } from "../../services/csv-export.service";
@@ -116,6 +117,15 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             colors[i] = "#" + ((1<<24)*Math.random() | 0).toString(16)
         }
         this.doughnutChartColors[0].backgroundColor.push(...colors);
+    }
+
+    exportCorrespondances() {
+        // this.fields can be null
+        if (this.fields) {
+            const blob = new Blob([JSON.stringify(this.fields, null, 4)], 
+                                {type : 'application/json'});
+            saveAs(blob, "correspondances.json");
+        }
     }
 
     goToSynthese(idDataSet: number) {
