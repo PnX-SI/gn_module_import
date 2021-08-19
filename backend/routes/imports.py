@@ -1,7 +1,8 @@
 """
 Routes to manage import (import list, cancel import, import info...)
 """
-from flask import request, current_app
+from pathlib import Path
+from flask import request, current_app, send_from_directory
 from sqlalchemy.orm import exc as SQLAlchelyExc
 from sqlalchemy import or_
 
@@ -18,6 +19,7 @@ from geonature.core.gn_synthese.models import (
     TSources,
 )
 from geonature.core.gn_meta.models import TDatasets
+import geonature.utils.filemanager as fm
 
 from ..api_error import GeonatureImportApiError
 
@@ -93,7 +95,7 @@ def get_one_import(import_id):
     return None
 
 
-@blueprint.route("/by_dataset/<int:id_dataset>", methods=["GET"])
+@blueprint.route("q/<int:id_dataset>", methods=["GET"])
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def get_imports_by_dataset(info_role, id_dataset):
@@ -256,3 +258,22 @@ def get_import_columns_name(id_import):
     col_names.remove(get_pk_name(blueprint.config["PREFIX"]))
 
     return col_names
+
+
+@blueprint.route("/export_pdf/<int:id_import>", methods=["GET"])
+@permissions.check_cruved_scope("R", module_code="IMPORT")
+@json_resp
+def download(id_import):
+    """
+    Downloads the report in pdf format
+    """
+
+    filename = "rapport.pdf"
+    dataset = {
+        'yolo': 3
+    }
+
+    pdf_file = fm.generate_pdf("import_template_pdf.html", dataset, filename)
+    pdf_file_posix = Path(pdf_file)
+    
+    return send_from_directory(str(pdf_file_posix.parent), pdf_file_posix.name, as_attachment=True)
