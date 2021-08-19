@@ -49,10 +49,17 @@ DEFAULT_LIST_COLUMN = [
     },
     {
         "prop": "import_count",
-        "name": "Nb de donnees",
+        "name": "Données importées",
+        "max_width": 125,
+        "show": True,
+        "filter": True,
+    },
+    {
+        "prop": "import_count",
+        "name": "Données totales",
         "max_width": 120,
         "show": True,
-        "filter": False,
+        "filter": True,
     },
     {
         "prop": "date_create_import",
