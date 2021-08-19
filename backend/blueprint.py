@@ -5,8 +5,8 @@ from .api_error import GeonatureImportApiError
 
 blueprint = Blueprint("import", 
                       __name__, 
-                      template_folder='templates',
-                      static_folder='static')
+                      template_folder='templates'
+                      )
 
 from .routes import (
     checks_and_transformations,

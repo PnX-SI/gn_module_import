@@ -4,20 +4,153 @@
   <head>
     <meta charset="utf-8" />
     <title>Jeu de données</title>
-    <!-- <link
+  </head>
+
+  <body>
+    <div class="header">
+      <link
       rel="stylesheet"
       type="text/css"
-      href="{{url_for('import.static', filename='css/import_pdf.css')}}"
+      href="{{url_for('static', filename='css/metadata_pdf.css')}}"
     >
     <link
       rel="stylesheet"
       type="text/css"
       href="{{url_for('static', filename='css/custom.css')}}"
-    > -->
-  </head>
+    >
+    <img
+      class="bandeau"
+      src="{{url_for('static', filename='images/Bandeau_pdf.png')}}"
+      alt="Bandeau"
+    >
+    <img
+      class="logo"
+      src="{{url_for('static', filename='images/logo_structure.jpg')}}"
+      alt="Logo"
+    >
+    </div>
+    <div class="titre">
+      <h5> Import ID {{ data.id_import }} </h5>
+      <label class="label-titre">Jeu de données</label>
+      <br>
+      <label class="label-titre">
+        {% if data.dataset_name: %}
+        {{ data.dataset_name }}
+        {% endif %}
+      </label>
+      <div class="ligne-titre ligne main-color"></div>
+    </div>
+    {% if data.taxa_count: %}
+    <div class="etiquettes">
+      <div class="etiquette">
+        <div class="etiquette-haut">
+          <img
+            class="logo-etiquette"
+            src="{{url_for('static', filename='images/Taxon_icon.svg')}}"
+            alt="taxon-icon"
+          >
+          <div class="etiquette-bas">
+            <small>Taxons</small>
+            </br>
+            {% if data.taxa_count: %}
+            {{ data.taxa_count }}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="etiquette">
+        <div class="etiquette-haut">
+          <img
+            class="logo-etiquette"
+            src="{{url_for('static', filename='images/Donnee_icon.svg')}}"
+            alt="donnee-icon"
+          >
+          <div class="etiquette-bas">
+            <small>Données</small>
+            </br>
+            {% if data.import_count: %}
+            {{ data.import_count }}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    <div class="description">
+      <div class="left-block">
+        <p class="fiche-descriptive">Fiche descriptive</p>
+        <div class="information">
+          <p class="info-titre">Identification</p>
+          <p class="info-contenu">
+            Fichier :
+            <br>
+            {% if data.full_file_name: %}
+            {{ data.full_file_name }}
+            {% endif %}
+            <br>
+            Date de soumission de l'import :
+            {% if data.date_end_import: %}
+            {{ data.date_end_import }}
+            {% endif %}
+            <br>
+            Auteur :
+            {% if data.author_name: %}
+            {{ data.author_name }}
+            {% endif %}
+            <br>
+            SRID :
+            {% if data.srid: %}
+            {{ data.srid }}
+            {% endif %}
+            <br>
+            Encodage :
+            {% if data.encoding: %}
+            {{ data.encoding }}
+            {% endif %}
+            <br>
+            Format :
+            {% if data.format_source_file: %}
+            {{ data.format_source_file }}
+            {% endif %}
+          </p>
+        </div>
 
-  <body>
-    <p>COUCOU {{ data }}</p>
+        <div class="information">
+          <p class="info-titre">Territoires</p>
+          <p class="info-contenu">
+            {% if data.terrestrial_domain: %}
+            Domaine continental
+            {% endif %}
+            <br>
+            {% if data.marine_domain: %}
+            Domaine marin
+            {% endif %}
+          </p>
+        </div>
+
+        {% if data.keywords: %}
+        <div class="information">
+          <p class="info-titre">Mots-clés</p>
+          <p class="info-contenu">
+            {{ data.keywords }}
+          </p>
+        </div>
+        {% endif %}
+
+      </div>
+
+      <div
+        class="right-block"
+        style="display:grid"
+      >
+        <!-- <div class="zone">
+                    <p class="zone-geographique">Zone géographique</p>
+                    <div class="map"></div>
+                </div> -->
+        <!-- A modifier lorsque la carte sera prete -->
+      </div>
+    </div>
+    
   </body>
 
 </html>

@@ -2,7 +2,7 @@
 Routes to manage import (import list, cancel import, import info...)
 """
 from pathlib import Path
-from flask import request, current_app, send_from_directory
+from flask import request, current_app, send_from_directory, send_file
 from sqlalchemy.orm import exc as SQLAlchelyExc
 from sqlalchemy import or_
 
@@ -89,10 +89,7 @@ def update_import(id_import):
 @permissions.check_cruved_scope("R", module_code="IMPORT")
 @json_resp
 def get_one_import(import_id):
-    import_obj = TImports.query.get(import_id)
-    if import_obj:
-        return import_obj.to_dict()
-    return None
+    return get_import(import_id)
 
 
 @blueprint.route("q/<int:id_dataset>", methods=["GET"])
@@ -260,20 +257,23 @@ def get_import_columns_name(id_import):
     return col_names
 
 
+def get_import(id_import:int):
+    import_obj = TImports.query.get(id_import)
+    if import_obj:
+        return import_obj.to_dict()
+    return None
+
 @blueprint.route("/export_pdf/<int:id_import>", methods=["GET"])
 @permissions.check_cruved_scope("R", module_code="IMPORT")
-@json_resp
 def download(id_import):
     """
     Downloads the report in pdf format
     """
 
     filename = "rapport.pdf"
-    dataset = {
-        'yolo': 3
-    }
-
+    dataset = get_import(id_import=id_import)
+    
     pdf_file = fm.generate_pdf("import_template_pdf.html", dataset, filename)
     pdf_file_posix = Path(pdf_file)
     
-    return send_from_directory(str(pdf_file_posix.parent), pdf_file_posix.name, as_attachment=True)
+    return send_file(pdf_file_posix, as_attachment=True)
