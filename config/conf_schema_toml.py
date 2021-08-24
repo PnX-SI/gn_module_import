@@ -150,3 +150,9 @@ class GnModuleSchemaConf(Schema):
     CHECK_REF_BIBLIO_LITTERATURE = fields.Boolean(missing=True)
     CHECK_EXIST_PROOF = fields.Boolean(missing=True)
     CHECK_TYPE_INFO_GEO = fields.Boolean(missing=True)
+    # If ID is provided (!=-1) will take the geometry in ref_geo.l_areas
+    # and checks if all imported points are inside it. Otherwise throws an error
+    RESTRICT_ID_TERRITORY = fields.Integer(missing=-1)
+    # If an id of taxhub list is provided will check if the imported taxons
+    # are in the list. Otherwise throws an error
+    RESTRICT_TAXON_LIST = fields.Integer(missing=-1)
