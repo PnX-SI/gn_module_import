@@ -34,7 +34,8 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     public doughnutChartType = 'doughnut';
     private options: any = {
         legend: { position: 'left' }
-      }
+      };
+    public loadingPdf = false 
 
     constructor(
         private _dataService: DataService, 
@@ -133,6 +134,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     
     exportAsPDF() {
         var img = document.createElement('img');
+        this.loadingPdf = true
         leafletImage(this._map.map, function(err, canvas) {
             img.width = 1;  // no impact
             img.height = 1;
@@ -140,6 +142,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             this._dataService.getPdf(this.import.id_import, img.src).
                 subscribe(
                     result => {
+                        this.loadingPdf = false;
                         saveAs(result, 'export.pdf');
                     }
                 );

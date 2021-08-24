@@ -180,9 +180,15 @@
                         <div class="d-flex justify-content-center">
                             <button 
                             class="mat-raised-button mat-primary"
+                            [class.spinner]="loading" 
+                            [disabled]="loadingPdf"
                             (click)="exportAsPDF()"
                             >
                             Export PDF
+                            <mat-icon *ngIf="loadingPdf">
+                                <mat-spinner color=warn diameter="35">
+                                </mat-spinner>
+                            </mat-icon>
                             </button>
                             <button 
                                 class="mat-raised-button mat-primary"
