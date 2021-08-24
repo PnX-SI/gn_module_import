@@ -1,10 +1,13 @@
 """
 Routes to manage import (import list, cancel import, import info...)
 """
+from os import path
 from pathlib import Path
-from flask import request, current_app, send_from_directory, send_file
+from flask import request, current_app, render_template, send_file
 from sqlalchemy.orm import exc as SQLAlchelyExc
 from sqlalchemy import or_
+from urllib.parse import urljoin
+from functools import reduce
 
 from pypnusershub.db.models import User
 from pypnusershub.db.tools import InsufficientRightsError
@@ -34,6 +37,8 @@ from ..db.queries.user_table_queries import (
     set_imports_table_name,
     get_table_info,
     get_table_names,
+    get_table_name,
+    get_valid_bbox,
 )
 from ..utils.clean_names import *
 from ..utils.utils import get_pk_name
@@ -263,17 +268,22 @@ def get_import(id_import:int):
         return import_obj.to_dict()
     return None
 
-@blueprint.route("/export_pdf/<int:id_import>", methods=["GET"])
+@blueprint.route("/export_pdf/<int:id_import>", methods=["POST"])
 @permissions.check_cruved_scope("R", module_code="IMPORT")
 def download(id_import):
     """
     Downloads the report in pdf format
     """
-
     filename = "rapport.pdf"
     dataset = get_import(id_import=id_import)
-    
+
+    dataset['map'] = request.data.decode('ascii')
+    url_list = [current_app.config['URL_APPLICATION'],
+                '#',
+                current_app.config['IMPORT'].get('MODULE_URL', "").replace('/',''),
+                'report',
+                str(dataset.get('id_import', 0))]
+    dataset['url'] = '/'.join(url_list)
     pdf_file = fm.generate_pdf("import_template_pdf.html", dataset, filename)
     pdf_file_posix = Path(pdf_file)
-    
     return send_file(pdf_file_posix, as_attachment=True)
