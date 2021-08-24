@@ -97,7 +97,7 @@ def get_one_import(import_id):
     return get_import(import_id)
 
 
-@blueprint.route("q/<int:id_dataset>", methods=["GET"])
+@blueprint.route("/by_dataset/<int:id_dataset>", methods=["GET"])
 @permissions.check_cruved_scope("C", True, module_code="IMPORT")
 @json_resp
 def get_imports_by_dataset(info_role, id_dataset):
