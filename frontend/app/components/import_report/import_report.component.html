@@ -178,7 +178,12 @@
                 <div class="card content">
                     <div class="card-body">
                         <div class="d-flex justify-content-center">
-                            <button class="mat-raised-button mat-primary">Export PDF</button>
+                            <button 
+                            class="mat-raised-button mat-primary"
+                            (click)="exportAsPDF()"
+                            >
+                            Export PDF
+                            </button>
                             <button 
                                 class="mat-raised-button mat-primary"
                                 (click)="exportCorrespondances()"

@@ -203,4 +203,9 @@ export class DataService {
   sendEmail(import_id) {
     return this._http.get<any>(`${urlApi}/sendemail`);
   }
+
+  getPdf(importId, img) {
+    var blob = new Blob([img], {type: 'image/png'});
+    return this._http.post(`${urlApi}/export_pdf/${importId}`, blob,  { responseType: 'blob' });
+  }
 }

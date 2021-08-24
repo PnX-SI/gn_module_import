@@ -1,8 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from "@angular/router";
 import { saveAs } from "file-saver";
+import  leafletImage from 'leaflet-image';
 
-import { DataService } from '../../services/data.service'
+import { MapService } from '@geonature_common/map/map.service';
+import { DataService } from '../../services/data.service';
 import { CsvExportService } from "../../services/csv-export.service";
 
 @Component({
@@ -38,7 +40,8 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         private _dataService: DataService, 
         private _csvExport: CsvExportService, 
         private _activedRoute: ActivatedRoute,
-        private _router: Router) { }
+        private _router: Router,
+        private _map: MapService) { }
 
     ngOnInit() {
 
@@ -126,6 +129,21 @@ export class ImportReportComponent implements OnInit, OnDestroy {
                                 {type : 'application/json'});
             saveAs(blob, "correspondances.json");
         }
+    }
+    
+    exportAsPDF() {
+        var img = document.createElement('img');
+        leafletImage(this._map.map, function(err, canvas) {
+            img.width = 1;  // no impact
+            img.height = 1;
+            img.src = canvas.toDataURL('image/png');
+            this._dataService.getPdf(this.import.id_import, img.src).
+                subscribe(
+                    result => {
+                        saveAs(result, 'export.pdf');
+                    }
+                );
+        }.bind(this));
     }
 
     goToSynthese(idDataSet: number) {
