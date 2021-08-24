@@ -103,11 +103,27 @@
                         </mat-expansion-panel>
                         <mat-expansion-panel>
                             <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
-                                <mat-panel-title>
-                                    <h6> Nomenclature ({{ nomenclature?.length || 0 }} correspondance(s))
-                                    </h6>
-                                </mat-panel-title>
+                            <mat-panel-title>
+                                <h6> Nomenclature ({{ matchedNomenclature?.length || 0 }} correspondance(s))
+                                </h6>
+                            </mat-panel-title>
                             </mat-expansion-panel-header>
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Champ source</th>
+                                        <th>Champ cible</th>
+                                        <th>Définition</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let field of matchedNomenclature">
+                                        <td> {{ field.source_value }}</td>
+                                        <td> {{ field.target_value }}</td>
+                                        <td> {{ field.definition }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </mat-expansion-panel>
                     </div>
                 </div>

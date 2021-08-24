@@ -23,7 +23,10 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     public validBbox: Object;
     public validData: Array<Object>;
     public fields: Array<Object>;
-    public nomenclature: Array<Object>;
+    public nomenclature: any;
+    public contentMapping: any;
+    public matchedNomenclature: any;
+
     public doughnutChartLabels: Array<String> = [];
     public doughnutChartData: Array<number> = [];
     public doughnutChartColors: Array<{ backgroundColor: Array<String>}> = [{
@@ -49,8 +52,9 @@ export class ImportReportComponent implements OnInit, OnDestroy {
                     // Load additionnal data if imported data
                     this.loadValidData(idImport);
                     const fieldMapping = data.id_field_mapping;
+                    const contentMapping = data.id_content_mapping;
                     this.loadMapping(fieldMapping);
-                    this.loadNomenclature(idImport, fieldMapping);
+                    this.loadNomenclature(idImport, fieldMapping, contentMapping);
                 }
                 // Add property to show errors lines. Need to do this to
                 // show line per line...
@@ -82,12 +86,47 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             })
     }
 
-    loadNomenclature(idImport: number, idMapping: number) {
+    loadNomenclature(idImport: number, idMapping: number, idContentMapping: number) {
         this._dataService.getNomencInfo(idImport, idMapping)
             .subscribe(data => {
-                console.log(data)
                 this.nomenclature = data
+                this.loadContentMapping(idContentMapping);
             })
+    }
+
+    loadContentMapping(idContentMapping: number) {
+        this._dataService.getMappingContents(idContentMapping)
+            .subscribe(data => {
+                console.log(data)
+                this.contentMapping = data
+                if (!data.includes("empty")) { 
+                    this.matchNomenclature()
+                }
+            })
+    }
+
+    matchNomenclature() {
+        this.matchedNomenclature = this.contentMapping.map(elm => elm[0])
+        let sourceValues = this.nomenclature.content_mapping_info.map(
+            elm => elm.nomenc_values_def).flat();
+        console.log(this.matchedNomenclature);
+        console.log(sourceValues);
+        // For each values in target_values (this.matchedNomenclature)
+        // filter with the id of target_values with the id of source
+        // values to get the actual value
+        // Then affect the target_value and the definition
+        this.matchedNomenclature.forEach(
+            val => sourceValues.filter(
+                elm => parseInt(elm.id) == val.id_target_value).map(
+                    function(elm) {
+                        // Carefull the target_value is actually the
+                        // source value, needs to rename
+                        val.target_value = val.source_value
+                        val.source_value = elm.value;
+                        val.definition = elm.definition}
+                        )[0]
+                )
+        console.log(this.matchedNomenclature)
     }
 
     updateChart() {
