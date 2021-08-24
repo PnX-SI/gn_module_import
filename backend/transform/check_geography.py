@@ -79,32 +79,26 @@ def x_y_to_wkt(x: float, y:float):
     return Point(float(x), float(y)).wkt
 
 
-def check_wkt_inside_l_areas(wkt):
+def check_wkt_inside_l_areas(wkt, id_area):
     """
-    Only if set in the configuration
     Check if the wkt is in the geometry provided as id of l_areas provided
-    Checks if the id provided exists
 
     Args:
         wkt(str): the well known text geometry
+        id_area(int): id of territory to check if wkt is inside
 
     Returns:
         bool: True or False if inside geometry
     """
-    id_area = get_config().get('RESTRICT_ID_TERRITORY', -1)
-    if id_area == -1:
-        logger.debug('RESTRICT_ID_TERRITORY absent de la configuration')
-        return True
-    logger.debug(f'Checking geometry {wkt} inside area: {id_area}')
     return check_inside_area_id(id_area=id_area, wkt=wkt)
 
 
-def check_x_y_inside_l_areas(x, y):
+def check_x_y_inside_l_areas(x, y, id_area):
     """
     Like check_wkt_inside_l_areas but with a conversion before
     """
     wkt = x_y_to_wkt(x, y)
-    return check_wkt_inside_l_areas(wkt=wkt)
+    return check_wkt_inside_l_areas(wkt=wkt, id_area=id_area)
 
 
 def calculate_bounding_box(given_srid):
@@ -148,8 +142,10 @@ def manage_erros_and_validity(
 def check_geography(
     df, import_id, added_cols, selected_columns, srid, local_srid, schema_name
 ):
+    # Need this for territory checks
+    id_area = get_config().get('RESTRICT_ID_TERRITORY', -1)
     try:
-
+        
         logger.info("CHECKING GEOGRAPHIC DATA:")
         file_srid_bounding_box = calculate_bounding_box(srid)
         line_with_codes = []
@@ -210,22 +206,24 @@ def check_geography(
                     id_rows_error=out_bound_errors.index.to_list(),
                 )
             
-            df['in_territory'] = df.apply(
-                lambda row: check_x_y_inside_l_areas(
-                    row[selected_columns["longitude"]],
-                    row[selected_columns["latitude"]]
-                    ), axis=1)
-            
-            out_bound_errors = df[df["in_territory"] == False]
-            if len(out_bound_errors) > 0:
-                set_error_and_invalid_reason(
-                    df=df,
-                    id_import=import_id,
-                    error_code="GEOMETRY_OUTSIDE",
-                    col_name_error="Colonnes géometriques",
-                    df_col_name_valid="in_territory",
-                    id_rows_error=out_bound_errors.index.to_list(),
-                )
+            if id_area != -1:
+                df['in_territory'] = df.apply(
+                    lambda row: check_x_y_inside_l_areas(
+                        x=row[selected_columns["longitude"]],
+                        y=row[selected_columns["latitude"]],
+                        id_area=id_area
+                        ), axis=1)
+                
+                out_bound_errors = df[df["in_territory"] == False]
+                if len(out_bound_errors) > 0:
+                    set_error_and_invalid_reason(
+                        df=df,
+                        id_import=import_id,
+                        error_code="GEOMETRY_OUTSIDE",
+                        col_name_error="Colonnes géometriques",
+                        df_col_name_valid="in_territory",
+                        id_rows_error=out_bound_errors.index.to_list(),
+                    )
             
         elif "WKT" in selected_columns:
             # load wkt
@@ -261,22 +259,24 @@ def check_geography(
                         df_col_name_valid="in_bounds",
                         id_rows_error=out_bound_errors.index.to_list(),
                     )
-                    
-                df['in_territory'] = df.apply(
-                lambda row: check_wkt_inside_l_areas(
-                    row[selected_columns["WKT"]]),
-                    axis=1)
-            
-                out_bound_errors = df[df["in_territory"] == False]
-                if len(out_bound_errors) > 0:
-                    set_error_and_invalid_reason(
-                        df=df,
-                        id_import=import_id,
-                        error_code="GEOMETRY_OUTSIDE",
-                        col_name_error="Colonnes géometriques",
-                        df_col_name_valid="in_territory",
-                        id_rows_error=out_bound_errors.index.to_list(),
-                    )
+                
+                if id_area != -1:    
+                    df['in_territory'] = df.apply(
+                    lambda row: check_wkt_inside_l_areas(
+                        wkt=row[selected_columns["WKT"]],
+                        id_area=id_area),
+                        axis=1)
+                
+                    out_bound_errors = df[df["in_territory"] == False]
+                    if len(out_bound_errors) > 0:
+                        set_error_and_invalid_reason(
+                            df=df,
+                            id_import=import_id,
+                            error_code="GEOMETRY_OUTSIDE",
+                            col_name_error="Colonnes géometriques",
+                            df_col_name_valid="in_territory",
+                            id_rows_error=out_bound_errors.index.to_list(),
+                        )
 
             # remove invalid where codecommune/maille or dep are fill
             df["valid_wkt"] = df.iloc[
