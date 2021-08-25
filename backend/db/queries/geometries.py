@@ -47,6 +47,7 @@ def check_inside_area_id(id_area: int, wkt: str):
     try:
         data = DB.session.execute(query).fetchall()
     except Exception:
+        # No logs here since it can be called a million times...
         return False
 
     # Ugly but ST_CONTAINS returns [(False,)] or [(True,)]

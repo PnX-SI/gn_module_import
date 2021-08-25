@@ -12,6 +12,10 @@ from ..wrappers import checker
 from ..utils.utils import get_config
 from ..db.queries.geometries import check_inside_area_id
 
+
+ID_AREA_RESTRICTION = 'ID_AREA_RESTRICTION'
+
+
 def set_wkb(value):
     try:
         return wkb.dumps(wkt.loads(value)).hex()
@@ -143,7 +147,7 @@ def check_geography(
     df, import_id, added_cols, selected_columns, srid, local_srid, schema_name
 ):
     # Need this for territory checks
-    id_area = get_config().get('RESTRICT_ID_TERRITORY', -1)
+    id_area = get_config().get(ID_AREA_RESTRICTION, -1)
     try:
         
         logger.info("CHECKING GEOGRAPHIC DATA:")
