@@ -5,15 +5,25 @@
         </div>
         <div class="card-body">
             <div *ngIf="!empty">
-                <input
-                    [formControl]="search"
-                    id="search"
-                    type="text"
-                    class="form-control"
-                    placeholder="Search"
-                    aria-label="Search"
-                    aria-describedby="basic-addon1"
-                />
+                <div class="row">
+                    <input
+                        [formControl]="search"
+                        id="search"
+                        type="text"
+                        class="form-control col-12 col-lg-9"
+                        placeholder="Search"
+                        aria-label="Search"
+                        aria-describedby="basic-addon1"
+                    />
+                    <mat-checkbox 
+                        class="col-3" 
+                        color="warn"
+                        matTooltip="Afficher seulement les imports en erreur"
+                        (change)="errorsOnly($event)" 
+                        [(ngModel)]="checked"
+                    
+                    >Afficher uniquement les imports comportant des erreurs</mat-checkbox>
+                </div>
                 <ngx-datatable
                     #table
                     class="material striped"
