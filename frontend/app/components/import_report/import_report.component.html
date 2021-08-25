@@ -202,7 +202,7 @@
                             >
                             Export PDF
                             <mat-icon *ngIf="loadingPdf">
-                                <mat-spinner color=warn diameter="35">
+                                <mat-spinner color=warn diameter="30">
                                 </mat-spinner>
                             </mat-icon>
                             </button>
@@ -248,7 +248,7 @@
                             Répartition des taxons importés (Top {{ maxTaxa }})
                         </h5>
                         <div style="display: block">
-                            <canvas baseChart
+                            <canvas id="chart" baseChart
                                 [data]="doughnutChartData"
                                 [labels]="doughnutChartLabels"
                                 [chartType]="doughnutChartType"

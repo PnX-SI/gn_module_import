@@ -3,7 +3,7 @@
 
   <head>
     <meta charset="utf-8" />
-    <title>Jeu de données</title>
+    <title>Export rapport d'import</title>
   </head>
 
   <body>
@@ -30,14 +30,9 @@
     >
     </div>
     <div class="titre">
-      <h5> Import ID {{ data.id_import }} </h5>
-      <label class="label-titre">Jeu de données</label>
-      <br>
-      <label class="label-titre">
-        {% if data.dataset_name: %}
-        {{ data.dataset_name }}
-        {% endif %}
-      </label>
+      <h5> Import ID : {{ data.id_import }} </h5>
+      <h5> Date d'import : {{ data.date_end_import.split(" ")[0] }} </h5>
+      <h5> Nom du fichier d'import : {{ data.full_file_name }} </h5>
       <div class="ligne-titre ligne main-color"></div>
     </div>
     {% if data.taxa_count: %}
@@ -58,7 +53,8 @@
           </div>
         </div>
       </div>
-      <div class="etiquette">
+      
+      <div class="etiquette data">
         <div class="etiquette-haut">
           <img
             class="logo-etiquette"
@@ -66,10 +62,10 @@
             alt="donnee-icon"
           >
           <div class="etiquette-bas">
-            <small>Données</small>
+            <small>Données importées/totales</small>
             </br>
             {% if data.import_count: %}
-            {{ data.import_count }}
+            {{ data.import_count }} / {{ data.source_count }}
             {% endif %}
           </div>
         </div>
@@ -82,16 +78,6 @@
         <div class="information">
           <p class="info-titre">Identification</p>
           <p class="info-contenu">
-            Fichier :
-            <br>
-            {% if data.full_file_name: %}
-            {{ data.full_file_name }}
-            {% endif %}
-            <br>
-            Date de soumission de l'import :
-            {% if data.date_end_import: %}
-            {{ data.date_end_import }}
-            {% endif %}
             <br>
             Auteur :
             {% if data.author_name: %}
@@ -112,6 +98,11 @@
             {% if data.format_source_file: %}
             {{ data.format_source_file }}
             {% endif %}
+            <br>
+            Jeux de données :
+            {% if data.dataset_name: %}
+              {{ data.dataset_name }}
+            {% endif %}
           </p>
         </div>
 
@@ -123,22 +114,10 @@
           </p>
         </div>
         {% endif %}
-
-      </div>
-
-      <div
-        class="right-block"
-        style="display:grid"
-      >
-        <div class="zone">
-          <p class="zone-geographique">Zone géographique</p>
-          
-          <img id="map" src="{{ data.map }}">
-        </div>
-        <div class="ca errors">
-          <hr class="ligne-titre main-color">
-          <h5>Erreurs</h5>
-          <div>
+        <div class="information">
+          <p class="info-titre">Erreurs</p>
+          <p class="info-contenu">
+          <div id="errors">
             <table id="error-table">
               <thead>
                 <tr>
@@ -158,6 +137,22 @@
               </tbody>
             </table>
           </div>
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="right-block"
+        style="display:grid"
+      >
+        <div class="zone">
+          <p class="zone-geographique">Zone géographique</p>
+          
+          <img id="map" src="{{ data.map }}">
+        </div>
+        <div class="zone">
+          <p class="zone-geographique">Répartition taxonomique (Top 10)</p>
+          <img id="chart" src="{{ data.chart }}">
         </div>
       </div>
     </div>
@@ -168,17 +163,24 @@
   </body>
 <style>
   /* Puts style here since I cannot make blueprint static files work...*/
+  #chart {
+    max-width: 450px;
+  }
   #map {
     margin-left: 5px;
-    width: 400px;
+    max-width: 400px;
   }
   h5 {
     text-align: center;
   }
+
+  #errors {
+    margin-right: 10px;
+  }
+
   #error-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin-left: 5px;
+    border-collapse: collapse;
+    width: 100%;
   }
 
   #error-table td, #error-table th {
@@ -187,8 +189,6 @@
   }
 
   #error-table tr:nth-child(even){background-color: #f2f2f2;}
-
-  #error-table tr:hover {background-color: #ddd;}
 
   #error-table td {
     font-size: 10px;
@@ -202,5 +202,13 @@
     font-size: 12px;
     
   }
+
+.etiquettes {
+  width: 480px;
+}
+
+.data {
+  width: 450px;
+}  
 </style>
 </html>

@@ -162,6 +162,13 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         this.doughnutChartColors[0].backgroundColor.push(...colors);
     }
 
+    getChartPNG() {
+        let chart = <HTMLCanvasElement>document.getElementById('chart')
+        let img = document.createElement('img');
+        img.src = chart.toDataURL()
+        return img
+    }
+
     exportCorrespondances() {
         // this.fields can be null
         if (this.fields) {
@@ -174,15 +181,20 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     exportAsPDF() {
         var img = document.createElement('img');
         this.loadingPdf = true
+        let chartImg = this.getChartPNG()
         leafletImage(this._map.map, function(err, canvas) {
-            img.width = 1;  // no impact
             img.height = 1;
+            img.width = 1;
             img.src = canvas.toDataURL('image/png');
-            this._dataService.getPdf(this.import.id_import, img.src).
-                subscribe(
+            this._dataService.getPdf(this.import.id_import, img.src, chartImg.src)
+                .subscribe(
                     result => {
                         this.loadingPdf = false;
                         saveAs(result, 'export.pdf');
+                    },
+                    error => {
+                        this.loadingPdf = false;
+                        console.log('Error getting pdf');
                     }
                 );
         }.bind(this));

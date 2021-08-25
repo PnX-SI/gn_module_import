@@ -276,8 +276,9 @@ def download(id_import):
     """
     filename = "rapport.pdf"
     dataset = get_import(id_import=id_import)
+    dataset['map'] = request.form.get('map')
+    dataset['chart'] = request.form.get('chart')
 
-    dataset['map'] = request.data.decode('ascii')
     url_list = [current_app.config['URL_APPLICATION'],
                 '#',
                 current_app.config['IMPORT'].get('MODULE_URL', "").replace('/',''),

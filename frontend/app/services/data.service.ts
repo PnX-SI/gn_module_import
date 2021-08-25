@@ -204,8 +204,14 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/sendemail`);
   }
 
-  getPdf(importId, img) {
-    var blob = new Blob([img], {type: 'image/png'});
-    return this._http.post(`${urlApi}/export_pdf/${importId}`, blob,  { responseType: 'blob' });
+  getPdf(importId, mapImg, chartImg) {
+    var formData = new FormData();
+    // formData.append("map", new Blob([mapImg], {type: 'image/png'}), "map");
+    // formData.append("chart", new Blob([chartImg], {type: 'image/png'}), "chart");
+    formData.append("map", mapImg);
+    formData.append("chart", chartImg);
+    console.log(formData)
+    return this._http.post(`${urlApi}/export_pdf/${importId}`, 
+                           formData, {responseType: 'blob'});
   }
 }
