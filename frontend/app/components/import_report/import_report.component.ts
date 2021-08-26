@@ -183,8 +183,6 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         this.loadingPdf = true
         let chartImg = this.getChartPNG()
         leafletImage(this._map.map, function(err, canvas) {
-            img.height = 1;
-            img.width = 1;
             img.src = canvas.toDataURL('image/png');
             this._dataService.getPdf(this.import.id_import, img.src, chartImg.src)
                 .subscribe(
