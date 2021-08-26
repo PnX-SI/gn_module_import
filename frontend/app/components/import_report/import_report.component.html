@@ -244,9 +244,21 @@
                 </div>
                 <div class="card content">
                     <div class="card-body">
-                        <h5 class="card-title">
-                            Répartition des taxons importés (Top {{ maxTaxa }})
-                        </h5>
+                        <div class="row">
+                            <div class="col-7">
+                                <h5 class="card-title">
+                                    Répartition des taxons importés
+                                </h5>
+                            </div>
+                            <div class="col-5">
+                                <mat-select [(ngModel)]="rank" (ngModelChange)="onRankChange($event)">
+                                    <mat-option *ngFor="let r of rankOptions" [value]="r">
+                                        {{r}}
+                                    </mat-option>
+                                </mat-select>
+                            </div>
+                        </div>
+                        
                         <div style="display: block">
                             <canvas id="chart" baseChart
                                 [data]="doughnutChartData"

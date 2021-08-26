@@ -15,9 +15,16 @@ import { CsvExportService } from "../../services/csv-export.service";
 })
 
 export class ImportReportComponent implements OnInit, OnDestroy {
-    readonly maxTaxa: number = 10;
     readonly maxErrorsLines: number = 10;
-
+    readonly rankOptions: string[] = ['regne', 
+                                      'phylum',
+                                      'classe',
+                                      'ordre',
+                                      'famille',
+                                      'sous_famille',
+                                      'tribu',
+                                      'group1_inpn',
+                                      'group2_inpn']
     private sub: any;
     public import: any;
     public formatedErrors: string;
@@ -25,10 +32,11 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     public validBbox: Object;
     public validData: Array<Object>;
     public fields: Array<Object>;
+    public taxaDistribution: Array<{ count: number, group: string }>;
     public nomenclature: any;
     public contentMapping: any;
     public matchedNomenclature: any;
-
+    public rank: string;
     public doughnutChartLabels: Array<String> = [];
     public doughnutChartData: Array<number> = [];
     public doughnutChartColors: Array<{ backgroundColor: Array<String>}> = [{
@@ -57,8 +65,10 @@ export class ImportReportComponent implements OnInit, OnDestroy {
                     this.loadValidData(idImport);
                     const fieldMapping = data.id_field_mapping;
                     const contentMapping = data.id_content_mapping;
+                    const idSource = data.id_source;
                     this.loadMapping(fieldMapping);
                     this.loadNomenclature(idImport, fieldMapping, contentMapping);
+                    this.loadTaxaDistribution(idSource)
                 }
                 // Add property to show errors lines. Need to do this to
                 // show line per line...
@@ -69,6 +79,8 @@ export class ImportReportComponent implements OnInit, OnDestroy {
                 this.import = data;
             })
         })
+
+        this.rank = this.rankOptions[0]  // default
     }
 
     /** Gets the validBbox and validData (info about observations)
@@ -79,7 +91,6 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         ).subscribe(data => {
             this.validBbox = data.valid_bbox;
             this.validData = data.valid_data;
-            this.updateChart();
         })
     }
 
@@ -108,6 +119,17 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             })
     }
 
+    loadTaxaDistribution(idSource) {
+        this._dataService.getTaxaRepartition(idSource, this.rank)
+            .subscribe(
+                data => {
+                    this.taxaDistribution = data
+                    this.updateChart();
+                }
+                )
+
+    }
+
     matchNomenclature() {
         this.matchedNomenclature = this.contentMapping.map(elm => elm[0])
         let sourceValues = this.nomenclature.content_mapping_info.map(
@@ -130,25 +152,15 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     }
 
     updateChart() {
-        // Chart:
-        const grouped: Object = this.groupBy(this.validData, "nom_cite");
-
-        let labels = Object.keys(grouped);
-        
-        // Sorting by most viewed taxons
-        let data = Object.values(grouped).map(e => e.length)
-        labels.sort(function(a, b) {
-            return grouped[b].length - grouped[a].length;
-          });
-        
-        data = data.sort((a, b) => b - a);
+        const labels = this.taxaDistribution.map(e => e.group)
+        const data = this.taxaDistribution.map(e => e.count)
         
         this.doughnutChartLabels.length = 0;
         // Must push here otherwise the chart will not update
-        this.doughnutChartLabels.push(...labels.slice(0, this.maxTaxa));
+        this.doughnutChartLabels.push(...labels);
 
         this.doughnutChartData.length = 0;
-        this.doughnutChartData = data.slice(0, this.maxTaxa);
+        this.doughnutChartData = data;
 
         // Fill colors with random colors
         let colors = new Array(this.doughnutChartData.length)
@@ -201,6 +213,10 @@ export class ImportReportComponent implements OnInit, OnDestroy {
               }
         };
         this._router.navigate(['/synthese'], navigationExtras);
+    }
+
+    onRankChange($event) {
+        this.loadTaxaDistribution(this.import.id_source)
     }
 
     groupBy(xs, key) {
