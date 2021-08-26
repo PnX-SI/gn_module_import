@@ -101,7 +101,6 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     loadContentMapping(idContentMapping: number) {
         this._dataService.getMappingContents(idContentMapping)
             .subscribe(data => {
-                console.log(data)
                 this.contentMapping = data
                 if (!data.includes("empty")) { 
                     this.matchNomenclature()
@@ -113,8 +112,6 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         this.matchedNomenclature = this.contentMapping.map(elm => elm[0])
         let sourceValues = this.nomenclature.content_mapping_info.map(
             elm => elm.nomenc_values_def).flat();
-        console.log(this.matchedNomenclature);
-        console.log(sourceValues);
         // For each values in target_values (this.matchedNomenclature)
         // filter with the id of target_values with the id of source
         // values to get the actual value
@@ -130,7 +127,6 @@ export class ImportReportComponent implements OnInit, OnDestroy {
                         val.definition = elm.definition}
                         )[0]
                 )
-        console.log(this.matchedNomenclature)
     }
 
     updateChart() {
