@@ -37,7 +37,7 @@
     </div>
     {% if data.taxa_count: %}
     <div class="etiquettes">
-      <div class="etiquette">
+      <div id="taxons" class="etiquette">
         <div class="etiquette-haut">
           <img
             class="logo-etiquette"
@@ -54,7 +54,7 @@
         </div>
       </div>
       
-      <div class="etiquette data">
+      <div id="data" class="etiquette">
         <div class="etiquette-haut">
           <img
             class="logo-etiquette"
@@ -70,6 +70,12 @@
           </div>
         </div>
       </div>
+      <div class="zone">
+        <!-- <p class="zone-geographique">Périmètre géographique</p> -->
+        <h5 class="zone-geographique">Zone géographique</h5>
+        <img id="map" src="{{ data.map }}">
+      </div>
+    </div>
     </div>
     {% endif %}
     <div class="description">
@@ -114,47 +120,36 @@
           </p>
         </div>
         {% endif %}
-        <div class="information">
-          <p class="info-titre">Erreurs</p>
-          <p class="info-contenu">
-          <div id="errors">
-            <table id="error-table">
-              <thead>
-                <tr>
-                    <th class="main-color">Type d'erreur</th>
-                    <th class="main-color">Champ</th>
-                    <th class="main-color">Nombre d'erreur(s)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for error in data.errors %}
-                <tr>
-                    <td>{{ error.error_type }}</td>
-                    <td>{{ error.column_error }}</td>
-                    <td>{{ error.id_rows | length }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          </p>
-        </div>
       </div>
-
-      <div
-        class="right-block"
-        style="display:grid"
-      >
-        <div class="zone">
-          <p class="zone-geographique">Zone géographique</p>
-          
-          <img id="map" src="{{ data.map }}">
-        </div>
-        <div class="zone">
-          <p class="zone-geographique">Répartition taxonomique (Top 10)</p>
-          <img id="chart" src="{{ data.chart }}">
-        </div>
+      <div id="chart" class="zone">
+        <p class="zone-geographique">Répartition taxonomique (Top 10)</p>
+        <img src="{{ data.chart }}">
       </div>
+    </div>
+    <div id="Error-block" class="information">
+      <p class="info-titre">Erreurs</p>
+      <p class="info-contenu">
+      <div id="errors">
+        <table id="error-table">
+          <thead>
+            <tr>
+                <th class="main-color">Type d'erreur</th>
+                <th class="main-color">Champ</th>
+                <th class="main-color">Nombre d'erreur(s)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for error in data.errors %}
+            <tr>
+                <td>{{ error.error_type }}</td>
+                <td>{{ error.column_error }}</td>
+                <td>{{ error.id_rows | length }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      </p>
     </div>
     <div class="footer">
       <a href="{{data.url}}">Voir le rapport dans le module d'import</a>
@@ -163,52 +158,81 @@
   </body>
 <style>
   /* Puts style here since I cannot make blueprint static files work...*/
-  #chart {
-    max-width: 450px;
-  }
-  #map {
-    margin-left: 5px;
-    max-width: 400px;
-  }
-  h5 {
-    text-align: center;
+.zone img {
+    max-width: 200px;
+    max-height: 100px;
   }
 
-  #errors {
-    margin-right: 10px;
-  }
-
-  #error-table {
-    border-collapse: collapse;
-    width: 100%;
-  }
-
-  #error-table td, #error-table th {
-    border: 1px solid #ddd;
-    padding: 8px;
-  }
-
-  #error-table tr:nth-child(even){background-color: #f2f2f2;}
-
-  #error-table td {
-    font-size: 10px;
-  }
-
-  #error-table th {
-    padding-top: 8px;
-    padding-bottom: 8px;
-    text-align: left;
-    color: white;
-    font-size: 12px;
-    
-  }
-
-.etiquettes {
-  width: 480px;
+.zone {
+  max-width: 400px;
+  max-height: 100px;
+  margin-left: 0px;
+  margin-top: 5px;
 }
 
-.data {
-  width: 450px;
-}  
+#chart {
+  margin-left: 30px;
+}
+
+h5 {
+  text-align: center;
+}
+
+#Error-block {
+  margin-top: 20px;
+  margin-left: 5px;
+}
+
+#errors {
+  margin-right: 10px;
+}
+
+#error-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#error-table td, #error-table th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+#error-table tr:nth-child(even){background-color: #f2f2f2;}
+
+#error-table td {
+  font-size: 10px;
+}
+
+#error-table th {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  text-align: left;
+  color: white;
+  font-size: 12px;
+  
+}
+
+#taxons {
+  width: 150px;
+  margin-top: 50px;
+}
+
+#data {
+  width: 350px;
+  margin-top: 50px;
+}
+
+.etiquettes {
+  display: contents;
+  margin: 0px 0px 0px 0px;
+}
+
+.left-block {
+  width: 700px;
+  margin-left: 5px;
+}
+.description {
+  margin-left: 0px;
+}
 </style>
 </html>
