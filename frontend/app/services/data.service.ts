@@ -176,6 +176,10 @@ export class DataService {
     );
   }
 
+  getNomencSynchronous(id_import, id_field_mapping) {
+    return this.getNomencInfo(id_import, id_field_mapping).toPromise();
+  }
+
   importData(import_id) {
     return this._http.get<any>(`${urlApi}/importData/${import_id}`);
   }

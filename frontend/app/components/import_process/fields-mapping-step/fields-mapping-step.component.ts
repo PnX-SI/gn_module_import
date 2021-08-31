@@ -56,6 +56,7 @@ export class FieldsMappingStepComponent implements OnInit {
   public unmappedColCount: number;
   public mappedList = [];
   public nbLignes: number;
+  public hasNomencValues: boolean;
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
   @ViewChild("modalNoNomenc") modalNoNomenc: any;
@@ -247,7 +248,7 @@ export class FieldsMappingStepComponent implements OnInit {
     
     this._ds
       .createOrUpdateFieldMapping(mappingData, this.id_mapping)
-      .subscribe(data => {
+      .subscribe(async data => {
         // update t_imports (set information about autogenerate values)
         this.spinner = true;
         const formValue = this.syntheseForm.getRawValue();
@@ -267,11 +268,13 @@ export class FieldsMappingStepComponent implements OnInit {
           });
         
         // Check if there are nomenclature that are mapped
-        const hasNomencValues = this.checkHasNomencValues(mappingData)
+        await this.checkHasNomencValues(mappingData, 
+                                  this.stepData.importId, 
+                                  this.id_mapping)
         // const hasNomencValues = this.checkHasNomencValues(
         //                       this.stepData.importId, this.id_mapping)
             
-        if (!ModuleConfig.ALLOW_VALUE_MAPPING || !hasNomencValues) {
+        if (!ModuleConfig.ALLOW_VALUE_MAPPING || !this.hasNomencValues) {
           this._ds
             .dataChecker(
               this.stepData.importId,
@@ -286,7 +289,7 @@ export class FieldsMappingStepComponent implements OnInit {
                 };
                 if (import_obj.source_count < ModuleConfig.MAX_LINE_LIMIT) {
                   // Show an info modal if no nomenclature has been mapped
-                  if (!hasNomencValues) {
+                  if (!this.hasNomencValues) {
                     this._modalService.open(this.modalNoNomenc);
                   }
                   this.stepService.setStepData(4, step4Data);
@@ -314,11 +317,13 @@ export class FieldsMappingStepComponent implements OnInit {
       });
   }
 
-  checkHasNomencValues(mappingData) {
+  async checkHasNomencValues(mappingData, idImport, idFieldMapping) {
+    const data = await this._ds.getNomencSynchronous(idImport, idFieldMapping);
+    this.hasNomencValues = data.content_mapping_info.length > 0  
     // TODO: make the startsWith check more robust
-    return Object.keys(mappingData)
-            .filter(key => key.startsWith('id_nomenclature'))
-            .reduce((_, key) => mappingData[key] != "", {})
+    // return Object.keys(mappingData)
+    //         .filter(key => key.startsWith('id_nomenclature'))
+    //         .reduce((_, key) => mappingData[key] != "", {})
   }
 
   // On close modal: ask if save the mapping or not
