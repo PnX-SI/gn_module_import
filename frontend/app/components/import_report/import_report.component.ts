@@ -155,7 +155,6 @@ export class ImportReportComponent implements OnInit, OnDestroy {
                             )[0]
                     )
         }
-        console.log(this.matchedNomenclature)
     }
 
     updateChart() {

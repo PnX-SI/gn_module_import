@@ -206,20 +206,21 @@
                                 </mat-spinner>
                             </mat-icon>
                             </button>
-                            <button 
-                                [attr.readonly]="matchedNomenclature"
+                            <button
+                                [attr.disabled]="fields === undefined || fields?.length == 0 ? true: null"
                                 class="mat-raised-button mat-primary"
                                 (click)="exportCorrespondances()"
                             >
                                 Exporter les correspondances
                             </button>
                             <button 
+                                [attr.disabled]="matchedNomenclature === undefined || matchedNomenclature?.length == 0 ? true: null"
                                 class="mat-raised-button mat-primary"
                                 (click)="exportNomenclatures()"
                             >
                                 Exporter les nomenclatures
                             </button>
-                            <button class="mat-raised-button mat-primary">Correspondances 
+                            <button class="mat-raised-button mat-primary" disabled> Correspondances 
                                 d’identifiants</button>
                         </div>
                     </div>
