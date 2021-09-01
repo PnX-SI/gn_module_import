@@ -4,6 +4,7 @@ import { saveAs } from "file-saver";
 import  leafletImage from 'leaflet-image';
 
 import { MapService } from '@geonature_common/map/map.service';
+import { ModuleConfig } from "../../module.config";
 import { DataService } from '../../services/data.service';
 import { CsvExportService } from "../../services/csv-export.service";
 
@@ -36,7 +37,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     public nomenclature: any;
     public contentMapping: any;
     public matchedNomenclature: any;
-    public rank: string;
+    public rank: string = ModuleConfig.DEFAULT_RANK;
     public doughnutChartLabels: Array<String> = [];
     public doughnutChartData: Array<number> = [];
     public doughnutChartColors: Array<{ backgroundColor: Array<String>}> = [{
@@ -80,7 +81,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             })
         })
 
-        this.rank = this.rankOptions[0]  // default
+        //this.rank = this.rankOptions[0]  // default
     }
 
     /** Gets the validBbox and validData (info about observations)
