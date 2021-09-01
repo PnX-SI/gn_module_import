@@ -320,7 +320,8 @@ export class FieldsMappingStepComponent implements OnInit {
                              idFieldMapping: number): Promise<boolean> {
     // checks by an API call that there is nomenclature mapped.
     // Returns a promise than must be awaited
-    const data = await this._ds.getNomencSynchronous(idImport, idFieldMapping);
+    const data = await this._ds.getNomencInfoSynchronous(idImport, 
+                                                         idFieldMapping);
     return data.content_mapping_info.length > 0
   }
 

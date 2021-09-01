@@ -176,7 +176,9 @@ export class DataService {
     );
   }
 
-  getNomencSynchronous(id_import, id_field_mapping) {
+  getNomencInfoSynchronous(id_import: number, 
+                           id_field_mapping: number): Promise<Object> {
+    // Same as NomencInfo but returns the Promise
     return this.getNomencInfo(id_import, id_field_mapping).toPromise();
   }
 
