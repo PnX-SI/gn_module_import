@@ -56,7 +56,6 @@ export class FieldsMappingStepComponent implements OnInit {
   public unmappedColCount: number;
   public mappedList = [];
   public nbLignes: number;
-  public hasNomencValues: boolean;
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
   @ViewChild("modalNoNomenc") modalNoNomenc: any;
@@ -268,13 +267,13 @@ export class FieldsMappingStepComponent implements OnInit {
           });
         
         // Check if there are nomenclature that are mapped
-        await this.checkHasNomencValues(mappingData, 
-                                  this.stepData.importId, 
-                                  this.id_mapping)
-        // const hasNomencValues = this.checkHasNomencValues(
-        //                       this.stepData.importId, this.id_mapping)
-            
-        if (!ModuleConfig.ALLOW_VALUE_MAPPING || !this.hasNomencValues) {
+        // Calls the import API
+        // Need this to be synchronous since we need the result just after
+        const hasNomencValues = await this.checkHasNomencValues(
+                                          this.stepData.importId, 
+                                          this.id_mapping)
+        
+        if (!ModuleConfig.ALLOW_VALUE_MAPPING || !hasNomencValues) {
           this._ds
             .dataChecker(
               this.stepData.importId,
@@ -289,7 +288,7 @@ export class FieldsMappingStepComponent implements OnInit {
                 };
                 if (import_obj.source_count < ModuleConfig.MAX_LINE_LIMIT) {
                   // Show an info modal if no nomenclature has been mapped
-                  if (!this.hasNomencValues) {
+                  if (!hasNomencValues) {
                     this._modalService.open(this.modalNoNomenc);
                   }
                   this.stepService.setStepData(4, step4Data);
@@ -317,13 +316,12 @@ export class FieldsMappingStepComponent implements OnInit {
       });
   }
 
-  async checkHasNomencValues(mappingData, idImport, idFieldMapping) {
+  async checkHasNomencValues(idImport: number, 
+                             idFieldMapping: number): Promise<boolean> {
+    // checks by an API call that there is nomenclature mapped.
+    // Returns a promise than must be awaited
     const data = await this._ds.getNomencSynchronous(idImport, idFieldMapping);
-    this.hasNomencValues = data.content_mapping_info.length > 0  
-    // TODO: make the startsWith check more robust
-    // return Object.keys(mappingData)
-    //         .filter(key => key.startsWith('id_nomenclature'))
-    //         .reduce((_, key) => mappingData[key] != "", {})
+    return data.content_mapping_info.length > 0
   }
 
   // On close modal: ask if save the mapping or not
