@@ -207,10 +207,17 @@
                             </mat-icon>
                             </button>
                             <button 
+                                [attr.readonly]="matchedNomenclature"
                                 class="mat-raised-button mat-primary"
                                 (click)="exportCorrespondances()"
                             >
                                 Exporter les correspondances
+                            </button>
+                            <button 
+                                class="mat-raised-button mat-primary"
+                                (click)="exportNomenclatures()"
+                            >
+                                Exporter les nomenclatures
                             </button>
                             <button class="mat-raised-button mat-primary">Correspondances 
                                 d’identifiants</button>

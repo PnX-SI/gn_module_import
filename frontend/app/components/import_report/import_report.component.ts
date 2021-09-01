@@ -132,24 +132,30 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     }
 
     matchNomenclature() {
-        this.matchedNomenclature = this.contentMapping.map(elm => elm[0])
+        this.matchedNomenclature = []
         let sourceValues = this.nomenclature.content_mapping_info.map(
             elm => elm.nomenc_values_def).flat();
-        // For each values in target_values (this.matchedNomenclature)
-        // filter with the id of target_values with the id of source
-        // values to get the actual value
-        // Then affect the target_value and the definition
-        this.matchedNomenclature.forEach(
-            val => sourceValues.filter(
-                elm => parseInt(elm.id) == val.id_target_value).map(
-                    function(elm) {
-                        // Carefull the target_value is actually the
-                        // source value, needs to rename
-                        val.target_value = val.source_value
-                        val.source_value = elm.value;
-                        val.definition = elm.definition}
-                        )[0]
-                )
+        
+        if (sourceValues.length > 0) {
+            this.matchedNomenclature = this.contentMapping.map(elm => elm[0])
+            
+            // For each values in target_values (this.matchedNomenclature)
+            // filter with the id of target_values with the id of source
+            // values to get the actual value
+            // Then affect the target_value and the definition
+            this.matchedNomenclature.forEach(
+                val => sourceValues.filter(
+                    elm => parseInt(elm.id) == val.id_target_value).map(
+                        function(elm) {
+                            // Carefull the target_value is actually the
+                            // source value, needs to rename
+                            val.target_value = val.source_value
+                            val.source_value = elm.value;
+                            val.definition = elm.definition}
+                            )[0]
+                    )
+        }
+        console.log(this.matchedNomenclature)
     }
 
     updateChart() {
@@ -180,10 +186,20 @@ export class ImportReportComponent implements OnInit, OnDestroy {
 
     exportCorrespondances() {
         // this.fields can be null
+        // 4 : tab size
         if (this.fields) {
             const blob = new Blob([JSON.stringify(this.fields, null, 4)], 
                                 {type : 'application/json'});
             saveAs(blob, "correspondances.json");
+        }
+    }
+
+    exportNomenclatures() {
+        // Exactly like the correspondances
+        if (this.matchedNomenclature) {
+            const blob = new Blob([JSON.stringify(this.matchedNomenclature, null, 4)], 
+                                {type : 'application/json'});
+            saveAs(blob, "nomenclatures.json");
         }
     }
     
