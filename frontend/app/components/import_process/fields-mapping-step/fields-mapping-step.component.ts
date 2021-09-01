@@ -58,6 +58,7 @@ export class FieldsMappingStepComponent implements OnInit {
   public nbLignes: number;
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
+  @ViewChild("modalNoNomenc") modalNoNomenc: any;
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
@@ -243,9 +244,10 @@ export class FieldsMappingStepComponent implements OnInit {
     this.stepService.setStepData(2, step2data);
 
     const mappingData = Object.assign({}, this.syntheseForm.value);
+    
     this._ds
       .createOrUpdateFieldMapping(mappingData, this.id_mapping)
-      .subscribe(data => {
+      .subscribe(async data => {
         // update t_imports (set information about autogenerate values)
         this.spinner = true;
         const formValue = this.syntheseForm.getRawValue();
@@ -263,8 +265,15 @@ export class FieldsMappingStepComponent implements OnInit {
           .subscribe(d => {
             console.log("Done");
           });
-
-        if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
+        
+        // Check if there are nomenclature that are mapped
+        // Calls the import API
+        // Need this to be synchronous since we need the result just after
+        const hasNomencValues = await this.checkHasNomencValues(
+                                          this.stepData.importId, 
+                                          this.id_mapping)
+        
+        if (!ModuleConfig.ALLOW_VALUE_MAPPING || !hasNomencValues) {
           this._ds
             .dataChecker(
               this.stepData.importId,
@@ -278,11 +287,16 @@ export class FieldsMappingStepComponent implements OnInit {
                   importId: this.stepData.importId
                 };
                 if (import_obj.source_count < ModuleConfig.MAX_LINE_LIMIT) {
+                  // Show an info modal if no nomenclature has been mapped
+                  if (!hasNomencValues) {
+                    this._modalService.open(this.modalNoNomenc);
+                  }
                   this.stepService.setStepData(4, step4Data);
                   this._router.navigate([
                     `${ModuleConfig.MODULE_URL}/process/id_import/${import_obj.id_import}/step/4`
                   ]);
-                } else {
+                } 
+                else {
                   this.nbLignes = import_obj.source_count;
                   this._modalService.open(this.modalRedir);
                 }
@@ -295,10 +309,20 @@ export class FieldsMappingStepComponent implements OnInit {
                 );
               }
             );
-        } else {
+        } 
+        else {
           this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.stepData.importId}/step/3`]);
         }
       });
+  }
+
+  async checkHasNomencValues(idImport: number, 
+                             idFieldMapping: number): Promise<boolean> {
+    // checks by an API call that there is nomenclature mapped.
+    // Returns a promise than must be awaited
+    const data = await this._ds.getNomencInfoSynchronous(idImport, 
+                                                         idFieldMapping);
+    return data.content_mapping_info.length > 0
   }
 
   // On close modal: ask if save the mapping or not
