@@ -116,6 +116,8 @@ DEFAULT_FIELD_MAPPING_ID = 1
 # Parameter to define if the checkbox allowing to change display mode is displayed or not.
 DISPLAY_CHECK_BOX_MAPPED_FIELD = True
 
+# Defines the default value for the graph in the import report page
+DEFAULT_RANK = "group2_inpn"
 
 class GnModuleSchemaConf(Schema):
     LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, missing=DEFAULT_LIST_COLUMN)

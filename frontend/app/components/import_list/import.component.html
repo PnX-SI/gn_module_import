@@ -107,7 +107,7 @@
                     </ngx-datatable-column>
                     <ngx-datatable-column
                         maxWidth="200"
-                        name="Rapport d'erreur"
+                        name="Rapport"
                         [sortable]="true"
                     >
                         <ng-template
@@ -115,24 +115,23 @@
                             ngx-datatable-cell-template
                         >
                             <button
-                                *ngIf="row.errors.length > 0"
-                                matTooltip="Rapport d'erreur"
-                                mat-icon-button
-                                color="warn"
-                                style="margin-top: -10px;"
-                                [routerLink]="['errors', row.id_import]"
+                                matTooltip="Rapport"
+                                mat-icon-button 
+                                [routerLink]="['report', row.id_import]"
                             >
-                                <mat-icon>warning</mat-icon>
+                                <mat-icon color="primary" style="text-align: center;">info</mat-icon>
                             </button>
+                            <mat-icon *ngIf="row.errors.length > 0"
+                                color="warn">
+                                warning
+                            </mat-icon>
                             <button
                                 *ngIf="(row.is_finished) && ((row.source_count - row.import_count) > 0)"
                                 mat-icon-button
-                                color="primary"
-                                style="margin-top: -10px;"
                                 (click)="_csvExport.onCSV(row.id_import)"
                                 matTooltip='Téléchargement des données invalides'
                             >
-                            <mat-icon>download</mat-icon>
+                            <mat-icon color="primary">download</mat-icon>
                         </button>
                         </ng-template>
                     </ngx-datatable-column>
@@ -147,12 +146,10 @@
                             <button
                                 [disabled]="!row?.cruved?.D"
                                 mat-icon-button
-                                color=warn
-                                style="margin-top: -10px;"
                                 (click)="openDeleteModal(row, deleteModal)"
                                 matTooltip="Supprimer l'import"
                             >
-                                <mat-icon>delete</mat-icon>
+                                <mat-icon color="warn">delete</mat-icon>
                             </button>
                         </ng-template>
                     </ngx-datatable-column>
