@@ -211,19 +211,7 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   loadMapping(data) {
-    console.log(data)
-    // Reset mapping
-    //this.fillEmptyMapping(this.syntheseForm);
-    // Fill mapping from data 
-    // (array of object with target_field and source_field)
-    //this.fillFormFromMappings(data)
-    // If no mapping had been done
-    // if (this.mappedList.length == 0) {
-    //   this._commonService.regularToaster(
-    //     "error",
-    //     "ERROR: Aucun champ n'a pu être mappé"
-    //   );
-    // }
+    this.fillFormFromMappings(data.map(e => [e]))
   }
 
 
@@ -278,47 +266,7 @@ export class ContentMappingStepComponent implements OnInit {
   fillMapping(id_mapping) {
     this.id_mapping = id_mapping;
     this._ds.getMappingContents(id_mapping).subscribe(mappingContents => {
-      this.contentTargetForm.reset();
-      if (mappingContents[0] != "empty") {
-
-        this.n_mappes = 0;
-        for (let content of mappingContents) {
-          let arrayVal: any = [];
-
-          for (let val of content) {
-            if (val["source_value"] != "") {
-              let id_info = this.getId(
-                val["source_value"],
-                val["id_target_value"]
-              );
-              arrayVal.push({ id: id_info, value: val["source_value"] });
-            }
-          }
-          const formControl = this.contentTargetForm.get(
-            String(content[0]["id_target_value"])
-          );
-
-          if (formControl) {
-            formControl.setValue(arrayVal)
-            this.n_mappes = this.n_mappes + 1;
-          }
-
-        }
-      } else {
-        this.contentTargetForm.reset();
-        this.n_mappes = -1;
-      }
-      this.n_aMapper = 0;
-      for (let contentMapping of this.stepData.contentMappingInfo) {
-        this.n_aMapper += contentMapping.user_values.values.filter(
-          val => val.value
-        ).length;
-        this.n_mappes -= contentMapping.user_values.values.filter(
-          val => val.value
-        ).length;
-      }
-      // at the end set the formgroup as pristine
-      this.contentTargetForm.markAsPristine();
+      this.fillFormFromMappings(mappingContents)
     }),
       error => {
         if (error.statusText === "Unknown Error") {
@@ -332,6 +280,50 @@ export class ContentMappingStepComponent implements OnInit {
         }
       };
   }
+
+  fillFormFromMappings(mappingContents) {
+    this.contentTargetForm.reset();
+    if (mappingContents[0] != "empty") {
+
+      this.n_mappes = 0;
+      for (let content of mappingContents) {
+        let arrayVal: any = [];
+
+        for (let val of content) {
+          if (val["source_value"] != "") {
+            let id_info = this.getId(
+              val["source_value"],
+              val["id_target_value"]
+            );
+            arrayVal.push({ id: id_info, value: val["source_value"] });
+          }
+        }
+        const formControl = this.contentTargetForm.get(
+          String(content[0]["id_target_value"])
+        );
+
+        if (formControl) {
+          formControl.setValue(arrayVal)
+          this.n_mappes = this.n_mappes + 1;
+        }
+
+      }
+    } else {
+      this.contentTargetForm.reset();
+      this.n_mappes = -1;
+    }
+    this.n_aMapper = 0;
+    for (let contentMapping of this.stepData.contentMappingInfo) {
+      this.n_aMapper += contentMapping.user_values.values.filter(
+        val => val.value
+      ).length;
+      this.n_mappes -= contentMapping.user_values.values.filter(
+        val => val.value
+      ).length;
+    }
+    // at the end set the formgroup as pristine
+    this.contentTargetForm.markAsPristine();
+    }
 
   onStepBack() {
     this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.stepData.importId}/step/2`]);
