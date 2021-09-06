@@ -53,6 +53,22 @@
                             >
                                 Modifier le nom du modèle d'import
                             </button>
+                            <button
+                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
+                                class="mb-3 ml-1"
+                                mat-raised-button
+                                color="primary"
+                                (click)="fileInput.click()"
+                            >
+                                Charger un modèle d'import
+                            </button>
+                            <input 
+                                hidden 
+                                (change)="onFileProvided($event)" 
+                                #fileInput 
+                                type="file"
+                                accept=".json" 
+                                id="file">
                         </div>
 
 

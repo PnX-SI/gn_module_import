@@ -446,48 +446,11 @@ export class FieldsMappingStepComponent implements OnInit {
   fillMapping(id_mapping, fileColumns) {
     this.id_mapping = id_mapping;
     // build an array from array of object
-    const columnsArray: Array<string> = this.columns.map(col => col.id);
     this._ds.getMappingFields(this.id_mapping).subscribe(
       mappingFields => {
-        this.mappedList = [];
-        
         this.enableMapping(this.syntheseForm);
-        if (mappingFields[0] != "empty") {
-          for (let field of mappingFields) {
-            
-            if (field["target_field"] == 'unique_id_sinp_generate') {
-              const form = this.syntheseForm
-                .get('unique_id_sinp_generate');
-                if(form) {
-                  form.setValue(field["source_field"] == 'true')
-                }
-            }
-            if (field["target_field"] == 'altitudes_generate') {
-              const form = this.syntheseForm
-                .get('altitudes_generate')
-              if(form) {
-                form.setValue(field["source_field"] == 'true');
-              }
-                
-            }
-
-            if (columnsArray.includes(field["source_field"])) {
-              const target_form = this.syntheseForm.get(field["target_field"])
-              if (target_form) {
-                target_form.setValue(field["source_field"]);
-                this.mappedList.push(field["target_field"]);
-              }
-
-            }
-          }
-          this.shadeSelectedColumns(this.syntheseForm);
-          this._fm.geoFormValidator(this.syntheseForm);
-        } else {
-          this.fillEmptyMapping(this.syntheseForm);
-        }
-        this.onFormMappingChange();
-        this.count(this.syntheseForm);
-        this.formReady = true;
+        this.fillFormFromMappings(mappingFields);
+        
       },
       error => {
         if (error.statusText === "Unknown Error") {
@@ -503,6 +466,47 @@ export class FieldsMappingStepComponent implements OnInit {
       }
     );
   }
+
+  fillFormFromMappings(fields) {
+    this.mappedList = [];
+    if (fields[0] != "empty") {
+      const columnsArray: Array<string> = this.columns.map(col => col.id);
+      for (let field of fields) {
+        
+        if (field["target_field"] == 'unique_id_sinp_generate') {
+          const form = this.syntheseForm
+            .get('unique_id_sinp_generate');
+            if(form) {
+              form.setValue(field["source_field"] == 'true')
+            }
+        }
+        if (field["target_field"] == 'altitudes_generate') {
+          const form = this.syntheseForm
+            .get('altitudes_generate')
+          if(form) {
+            form.setValue(field["source_field"] == 'true');
+          }
+            
+        }
+
+        if (columnsArray.includes(field["source_field"])) {
+          const target_form = this.syntheseForm.get(field["target_field"])
+          if (target_form) {
+            target_form.setValue(field["source_field"]);
+            this.mappedList.push(field["target_field"]);
+          }
+
+        }
+      }
+      this.shadeSelectedColumns(this.syntheseForm);
+      this._fm.geoFormValidator(this.syntheseForm);
+    } else {
+      this.fillEmptyMapping(this.syntheseForm);
+    }
+    this.onFormMappingChange();
+    this.count(this.syntheseForm);
+    this.formReady = true;
+    }
 
   createMapping() {
     this.fieldMappingForm.reset();
@@ -520,6 +524,36 @@ export class FieldsMappingStepComponent implements OnInit {
   renameMapping() {
     this.newMappingForm.setValue(this.fieldMappingForm.value.mapping_label);
     this.updateMapping = true;
+  }
+
+  onFileProvided(file) {
+      
+    if (typeof (FileReader) !== 'undefined') {
+      const reader = new FileReader();
+
+      // handlers
+      reader.onload = (e: any) => {
+        const result = e.target.result;
+        this.loadMapping(JSON.parse(result))
+        };
+      reader.onerror = (error: any) => {
+        console.log(error)
+      }
+
+      // Calls onload handler
+      reader.readAsText(file.target.files[0]);
+      }
+    }
+
+  loadMapping(data) {
+    this.fillFormFromMappings(data)
+    if (this.mappedList.length == 0) {
+      this._commonService.regularToaster(
+        "error",
+        "ERROR: Aucun champ n'a pu être mappé"
+      );
+    }
+    //this.saveMappingName('testupload', this.syntheseForm)
   }
 
   saveMappingName(mappingName, targetForm) {
