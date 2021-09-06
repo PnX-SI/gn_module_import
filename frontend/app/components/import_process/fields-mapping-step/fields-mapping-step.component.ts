@@ -537,7 +537,10 @@ export class FieldsMappingStepComponent implements OnInit {
         this.loadMapping(JSON.parse(result))
         };
       reader.onerror = (error: any) => {
-        console.log(error)
+        this._commonService.regularToaster(
+          "error",
+          `ERROR: ${error}`
+        );
       }
 
       // Calls onload handler
@@ -546,7 +549,12 @@ export class FieldsMappingStepComponent implements OnInit {
     }
 
   loadMapping(data) {
+    // Reset mapping
+    this.fillEmptyMapping(this.syntheseForm);
+    // Fill mapping from data 
+    // (array of object with target_field and source_field)
     this.fillFormFromMappings(data)
+    // If no mapping had been done
     if (this.mappedList.length == 0) {
       this._commonService.regularToaster(
         "error",
