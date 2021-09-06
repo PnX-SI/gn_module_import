@@ -20,6 +20,7 @@ import {
 } from "../steps.service";
 import { forkJoin } from "rxjs/observable/forkJoin";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { FileService } from "../../../services/file.service";
 
 @Component({
   selector: "fields-mapping-step",
@@ -61,6 +62,7 @@ export class FieldsMappingStepComponent implements OnInit {
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
+    private _fs: FileService,
     private _commonService: CommonService,
     private _fb: FormBuilder,
     private stepService: StepsService,
@@ -526,29 +528,21 @@ export class FieldsMappingStepComponent implements OnInit {
     this.updateMapping = true;
   }
 
-  onFileProvided(file) {
-      
-    if (typeof (FileReader) !== 'undefined') {
-      const reader = new FileReader();
+  displayError(message) {
+    this._commonService.regularToaster(
+      "error",
+      `ERROR: ${message}`
+    );
+  }
 
-      // handlers
-      reader.onload = (e: any) => {
-        const result = e.target.result;
-        this.loadMapping(JSON.parse(result))
-        };
-      reader.onerror = (error: any) => {
-        this._commonService.regularToaster(
-          "error",
-          `ERROR: ${error}`
-        );
-      }
-
-      // Calls onload handler
-      reader.readAsText(file.target.files[0]);
-      }
+  onFileProvided(file) { 
+      this._fs.readJson(file, 
+                        this.loadMapping.bind(this), 
+                        this.displayError.bind(this))
     }
 
   loadMapping(data) {
+    console.log(data)
     // Reset mapping
     this.fillEmptyMapping(this.syntheseForm);
     // Fill mapping from data 

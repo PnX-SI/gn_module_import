@@ -44,6 +44,24 @@
                                 Nouveau modèle d'import
                             </button>
                         </div>
+                        <div class="col">
+                            <button
+                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
+                                class="d-flex justify-content-center align-content-between mb-3"
+                                mat-raised-button
+                                color="primary"
+                                (click)="fileInput.click()"
+                            >
+                                Charger un modèle d'import
+                            </button>
+                            <input 
+                                hidden 
+                                (change)="onFileProvided($event)" 
+                                #fileInput 
+                                type="file"
+                                accept=".json" 
+                                id="file">
+                        </div>
                         <div
                             class="col"
                             *ngIf='displayCheckBox'

@@ -8,6 +8,7 @@ import {
   Step2Data
 } from "../steps.service";
 import { DataService } from "../../../services/data.service";
+import { FileService } from "../../../services/file.service";
 import { ContentMappingService } from "../../../services/mappings/content-mapping.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
@@ -55,6 +56,7 @@ export class ContentMappingStepComponent implements OnInit {
     private _fb: FormBuilder,
     private _ds: DataService,
     public _cm: ContentMappingService,
+    private _fs: FileService,
     private _commonService: CommonService,
     private _router: Router,
     private _modalService: NgbModal,
@@ -194,6 +196,36 @@ export class ContentMappingStepComponent implements OnInit {
     });
     this.contentTargetForm.controls[formControlName].setValue(values);
   }
+
+  displayError(message) {
+    this._commonService.regularToaster(
+      "error",
+      `ERROR: ${message}`
+    );
+  }
+  
+  onFileProvided(file) {     
+    this._fs.readJson(file, 
+                      this.loadMapping.bind(this), 
+                      this.displayError.bind(this))
+  }
+
+  loadMapping(data) {
+    console.log(data)
+    // Reset mapping
+    //this.fillEmptyMapping(this.syntheseForm);
+    // Fill mapping from data 
+    // (array of object with target_field and source_field)
+    //this.fillFormFromMappings(data)
+    // If no mapping had been done
+    // if (this.mappedList.length == 0) {
+    //   this._commonService.regularToaster(
+    //     "error",
+    //     "ERROR: Aucun champ n'a pu être mappé"
+    //   );
+    // }
+  }
+
 
   isEnabled(value_def_id: string) {
     return true;

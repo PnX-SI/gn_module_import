@@ -22,6 +22,7 @@ import { ContentMappingStepComponent } from "./components/import_process/content
 import { ImportStepComponent } from "./components/import_process/import-step/import-step.component";
 import { stepperComponent } from "./components/import_process/stepper/stepper.component";
 import { FooterStepperComponent } from "./components/import_process/footer-stepper/footer-stepper.component";
+import { FileService } from "./services/file.service";
 
 // my module routing
 const routes: Routes = [
@@ -80,6 +81,7 @@ const routes: Routes = [
     DataService,
     StepsService,
     CsvExportService,
+    FileService,
     FieldMappingService,
     StepperGuardService,
     ContentMappingService
