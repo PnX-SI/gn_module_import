@@ -50,7 +50,7 @@
                                 class="d-flex justify-content-center align-content-between mb-3"
                                 mat-raised-button
                                 color="primary"
-                                (click)="fileInput.click()"
+                                (click)="onImportModal()"
                             >
                                 Charger un modèle d'import
                             </button>
@@ -316,4 +316,50 @@
                 (click)="onRedirect(); modal.close()"
             > OK </button>
         </div>
+    </ng-template>
+
+    <ng-template
+        #modalImport
+        let-modal
+    >
+        <div class="modal-header">
+            <h4
+                class="modal-title"
+                id="modal-basic-title"
+            >Création d'un modèle à partir d'un fichier json</h4>
+            <button
+                type="button"
+                class="close"
+                aria-label="Close"
+                (click)="modal.dismiss('Cross click')"
+            >
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <form [formGroup]="importForm" (ngSubmit)="onFileProvided()">
+            <div class="modal-body">
+                <div class="modal-body">
+                    <input
+                        type="text"
+                        class="form-control mr-2"
+                        placeholder="Veuillez entrer le nom du nouveau modèle"
+                        formControlName="name" 
+                        >
+                    <input
+                        type="file"
+                        accept=".json"
+                        class="form-control mr-2"
+                        formControlName="file"
+                        (change)="onFileSelect($event)"
+                        >
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="submit"
+                    mat-raised-button
+                    color="primary"
+                >Importer un nouveau modèle</button>
+            </div>
+        </form>
     </ng-template>

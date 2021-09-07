@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ViewEncapsulation } from "@angular/core";
 import { Router } from "@angular/router";
-import { FormControl, FormGroup, FormBuilder } from "@angular/forms";
+import { FormControl, FormGroup, FormBuilder, Validators } from "@angular/forms";
 import {
   StepsService,
   Step3Data,
@@ -14,6 +14,8 @@ import { CommonService } from "@geonature_common/service/common.service";
 import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
 import { ModuleConfig } from "../../../module.config";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+
+import { forbiddenNameValidator } from "../forbiddenModelName.directive";
 
 @Component({
   selector: "content-mapping-step",
@@ -47,9 +49,11 @@ export class ContentMappingStepComponent implements OnInit {
   public displayCheckBox = ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES;
   public mappingListForm = new FormControl();
   public newMappingNameForm = new FormControl();
+  public importForm: FormGroup;
 
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
+  @ViewChild("modalImport") modalImport: any;
 
   constructor(
     private stepService: StepsService,
@@ -77,6 +81,7 @@ export class ContentMappingStepComponent implements OnInit {
 
     // listen to change on mappingListForm select
     this.onMappingName();
+    
   }
 
   getNomencInf() {
@@ -126,7 +131,7 @@ export class ContentMappingStepComponent implements OnInit {
       );
   }
 
-  saveMappingName(value) {
+  saveMappingName() {
     // save new mapping in bib_mapping
     // then select the mapping name in the select
     let mappingType = "CONTENT";
@@ -204,10 +209,33 @@ export class ContentMappingStepComponent implements OnInit {
     );
   }
   
-  onFileProvided(file) {     
+  onImportModal() {
+    this.importForm = this._fb.group({
+      name: ["", [Validators.required, forbiddenNameValidator(this._cm.userContentMappings.map(data => data.mapping_label))]],
+      file: ["", [Validators.required]]
+    });
+    this._modalService.open(this.modalImport);
+  }
+
+  onFileSelect(event: Event) {
+    this.importForm.patchValue({ file: event });
+    this.importForm.get('file').updateValueAndValidity();
+  }
+
+  onFileProvided() {   
+    // stop here if form is invalid
+    if (this.importForm.invalid) {
+      return;
+    }  
+    const name = this.importForm.get('name').value
+    const file = this.importForm.get('file').value
+    
+    this.newMappingNameForm.patchValue(name)
+    this.saveMappingName()
     this._fs.readJson(file, 
                       this.loadMapping.bind(this), 
                       this.displayError.bind(this))
+    this.modalImport.close()
   }
 
   loadMapping(data) {

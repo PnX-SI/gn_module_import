@@ -59,6 +59,7 @@ export class FieldsMappingStepComponent implements OnInit {
   public nbLignes: number;
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
+  @ViewChild("modalImport") modalImport: any;
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
