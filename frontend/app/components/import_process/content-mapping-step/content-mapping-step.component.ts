@@ -392,6 +392,14 @@ export class ContentMappingStepComponent implements OnInit {
     }
   }
 
+  removeModel() {
+    if (this.mappingListForm.value !== null) {
+      this._ds.deleteMapping(this.id_mapping).subscribe(
+        () => this._cm.getMappingNamesList()
+      )
+    }
+  }
+
   goToPreview() {    
     // if mapping change
     if(!this.contentTargetForm.pristine) {

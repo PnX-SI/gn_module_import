@@ -12,23 +12,34 @@
                         <legend class="px-1">
                             Choix du modèle d'import
                         </legend>
-                        <div class="form-group">
-                            <select
-                                class="form-control form-control-sm"
-                                id="contentMappingSelection"
-                                [compareWith]="compareFn"
-                                [formControl]="mappingListForm"
-                            >
-                                <option [ngValue]="null">
-                                    -
-                                </option>
-                                <option
-                                    *ngFor="let data of _cm.userContentMappings"
-                                    [ngValue]="data"
-                                >
-                                    {{data.mapping_label}}
-                                </option>
-                            </select>
+                        <div class="d-flex">
+                                <div class="form-group flex-fill">
+                                    <select
+                                        class="form-control form-control-sm"
+                                        id="contentMappingSelection"
+                                        [compareWith]="compareFn"
+                                        [formControl]="mappingListForm"
+                                    >
+                                        <option [ngValue]="null">
+                                            -
+                                        </option>
+                                        <option
+                                            *ngFor="let data of _cm.userContentMappings"
+                                            [ngValue]="data"
+                                        >
+                                            {{data.mapping_label}}
+                                        </option>
+                                    </select>
+                                </div>
+                                <button 
+                                    mat-icon-button
+                                    [disabled]="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.D == '0'"
+                                    (click)="removeModel()"
+                                    matTooltip="Supprimer l'import"
+                                    color=warn
+                                    >
+                                    <mat-icon>delete</mat-icon>
+                                </button>
                         </div>
                     </div>
 
