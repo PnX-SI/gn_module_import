@@ -21,6 +21,8 @@ import {
 import { forkJoin } from "rxjs/observable/forkJoin";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { FileService } from "../../../services/file.service";
+import { forbiddenNameValidator } from "../forbiddenModelName.directive";
+
 
 @Component({
   selector: "fields-mapping-step",
@@ -53,6 +55,7 @@ export class FieldsMappingStepComponent implements OnInit {
   public updateMapping: boolean = false;
   public fieldMappingForm = new FormControl();
   public newMappingForm = new FormControl();
+  public importForm: FormGroup;
   public mappedColCount: number;
   public unmappedColCount: number;
   public mappedList = [];
@@ -536,35 +539,57 @@ export class FieldsMappingStepComponent implements OnInit {
     );
   }
 
-  onFileProvided(file) { 
-      this._fs.readJson(file, 
-                        this.loadMapping.bind(this), 
-                        this.displayError.bind(this))
-    }
+  onImportModal() {
+    this.importForm = this._fb.group({
+      name: ["", [Validators.required, forbiddenNameValidator(this.userFieldMappings.map(data => data.mapping_label))]],
+      file: ["", [Validators.required]]
+    });
+    this._modalService.open(this.modalImport);
+  }
+
+  onFileSelect(event: Event) {
+    this.importForm.patchValue({ file: event });
+    this.importForm.get('file').updateValueAndValidity();
+  }
+
+  onFileProvided() {   
+    // stop here if form is invalid
+    if (this.importForm.invalid) {
+      return;
+    }  
+    const name = this.importForm.get('name').value
+    const jsonfile = this.importForm.get('file').value
+    
+    this.newMappingForm.patchValue(name)
+    this.saveMappingNameForJson(this.newMappingForm.value, 
+                                this.syntheseForm, 
+                                jsonfile)
+    
+    
+  }
 
   loadMapping(data) {
-    console.log(data)
     // Reset mapping
     this.fillEmptyMapping(this.syntheseForm);
     // Fill mapping from data 
     // (array of object with target_field and source_field)
     this.fillFormFromMappings(data)
     // If no mapping had been done
+    console.log(this.mappedList)
     if (this.mappedList.length == 0) {
       this._commonService.regularToaster(
         "error",
         "ERROR: Aucun champ n'a pu être mappé"
       );
     }
-    //this.saveMappingName('testupload', this.syntheseForm)
   }
 
-  saveMappingName(mappingName, targetForm) {
+  saveMappingNameForJson(mappingName, targetForm, jsonfile) {
     let mappingType = "FIELD";
     const value = {};
     value["mappingName"] = mappingName;
     this._ds.postMappingName(value, mappingType).subscribe(
-      new_id_mapping => {
+      new_id_mapping => {        
         this.stepData.id_field_mapping = new_id_mapping;
         this.newMapping = false;
         this.newMappingForm.reset();
@@ -573,10 +598,13 @@ export class FieldsMappingStepComponent implements OnInit {
           const newMapping = this.userFieldMappings.find(
             el => el.id_mapping == new_id_mapping
           );
-          this.fieldMappingForm.setValue(newMapping);
+          //this.fieldMappingForm.setValue(newMapping);
         });
 
         this.enableMapping(targetForm);
+        this._fs.readJson(jsonfile, 
+          this.loadMapping.bind(this), 
+          this.displayError.bind(this))
       },
       error => {
         if (error.statusText === "Unknown Error") {
