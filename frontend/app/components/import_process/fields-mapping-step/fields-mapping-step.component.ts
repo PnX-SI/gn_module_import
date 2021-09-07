@@ -654,4 +654,12 @@ export class FieldsMappingStepComponent implements OnInit {
       targetForm.get(key).setValue("");
     });
   }
+
+  removeModel() {
+    if (this.fieldMappingForm.value !== null) {
+      this._ds.deleteMapping(this.id_mapping).subscribe(
+        () => this.getMappingNamesList("field")
+      )
+    }
+  }
 }

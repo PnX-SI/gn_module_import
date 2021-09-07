@@ -16,20 +16,31 @@
                         <legend class="px-1">
                             Choix du modèle d'import
                         </legend>
-                        <select
-                            class="form-control form-control-sm"
-                            id="mappingSelection"
-                            [formControl]="fieldMappingForm"
-                            [compareWith]="compareFn"
-                            [disableControl]="userFieldMappings.length == 1"
-                        >
-                            <option [ngValue]="null"> - </option>
-                            <option
-                                *ngFor="let data of userFieldMappings"
-                                [ngValue]="data"
+                        <div class="d-flex">
+                            <select
+                                class="form-control form-control-sm flex-fill"
+                                id="mappingSelection"
+                                [formControl]="fieldMappingForm"
+                                [compareWith]="compareFn"
+                                [disableControl]="userFieldMappings.length == 1"
                             >
-                                {{data.mapping_label}}</option>
-                        </select>
+                                <option [ngValue]="null"> - </option>
+                                <option
+                                    *ngFor="let data of userFieldMappings"
+                                    [ngValue]="data"
+                                >
+                                    {{data.mapping_label}}</option>
+                            </select>
+                            <button 
+                                mat-icon-button
+                                [disabled]="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.D == '0'"
+                                (click)="removeModel()"
+                                matTooltip="Supprimer l'import"
+                                color=warn
+                            >
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
                     </div>
                     <div class="d-flex flex-row justify-content-between mt-3">
 
