@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import { Injectable, Observable} from "@angular/core";
 import { DataService } from "../data.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../module.config";
@@ -17,9 +17,9 @@ export class ContentMappingService {
     this.displayMapped = ModuleConfig.DISPLAY_MAPPED_VALUES;
   }
 
-  getMappingNamesList(newContentId?, formControl?) {
+  getMappingNamesListMap(newContentId?, formControl?): Observable<number | null>{
     // get list of existing content mapping in the select
-    this._ds.getMappings("content").subscribe(
+    return this._ds.getMappings("content").map(
       result => {
         this.userContentMappings = result
         if (newContentId) {

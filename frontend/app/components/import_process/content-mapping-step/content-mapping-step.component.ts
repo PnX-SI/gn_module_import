@@ -75,7 +75,7 @@ export class ContentMappingStepComponent implements OnInit {
     this.contentTargetForm = this._fb.group({});
 
     // show list of user mappings
-    this._cm.getMappingNamesList();
+    this._cm.getMappingNamesListMap().subscribe();
 
     this.getNomencInf();
 
@@ -141,12 +141,15 @@ export class ContentMappingStepComponent implements OnInit {
     this._ds.postMappingName(mappingForm, mappingType).subscribe(
       id_mapping => {
         this._cm.newMapping = false;
-        this._cm.getMappingNamesList(id_mapping, this.mappingListForm);
-        this.newMappingNameForm.reset();
+        this._cm.getMappingNamesListMap(id_mapping, this.mappingListForm).subscribe(
+          () => {
+            this.newMappingNameForm.reset();
+            this._fs.readJson(jsonfile, 
+              this.loadMapping.bind(this), 
+              this.displayError.bind(this))
+          }
+        );
         
-        this._fs.readJson(jsonfile, 
-          this.loadMapping.bind(this), 
-          this.displayError.bind(this))
         //this.enableMapping(targetForm);
       },
       error => {
