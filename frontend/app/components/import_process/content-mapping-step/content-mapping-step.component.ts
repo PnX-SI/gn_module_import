@@ -49,6 +49,8 @@ export class ContentMappingStepComponent implements OnInit {
 
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
+  @ViewChild("modalCreate") modalCreate: any;
+  public createModelModal: NgbModal;
 
   constructor(
     private stepService: StepsService,
@@ -124,6 +126,11 @@ export class ContentMappingStepComponent implements OnInit {
       );
   }
 
+  newModel() {
+    this._cm.createMapping(this.newMappingNameForm);
+    this.createModelModal = this._modalService.open(this.modalCreate);
+  }
+
   saveMappingName(value) {
     // save new mapping in bib_mapping
     // then select the mapping name in the select
@@ -136,6 +143,7 @@ export class ContentMappingStepComponent implements OnInit {
         this._cm.newMapping = false;
         this._cm.getMappingNamesList(id_mapping, this.mappingListForm);
         this.newMappingNameForm.reset();
+        this.createModelModal.close();
         //this.enableMapping(targetForm);
       },
       error => {

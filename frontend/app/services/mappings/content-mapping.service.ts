@@ -48,13 +48,6 @@ export class ContentMappingService {
 
   createMapping(mappingForm) {
     mappingForm.reset();
-    this.newMapping = true;
-    this.displayMapped = true;
-  }
-
-  cancelMapping(mappingForm) {
-    this.newMapping = false;
-    mappingForm.controls["mappingName"].setValue("");
   }
 
 }
