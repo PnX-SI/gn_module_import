@@ -48,8 +48,6 @@ export class FieldsMappingStepComponent implements OnInit {
   stepData: Step2Data;
   public userFieldMappings;
   public test: Array<any>;
-  public newMapping: boolean = false;
-  public updateMapping: boolean = false;
   public fieldMappingForm = new FormControl();
   public newMappingForm = new FormControl();
   public mappedColCount: number;
@@ -58,6 +56,10 @@ export class FieldsMappingStepComponent implements OnInit {
   public nbLignes: number;
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
+  @ViewChild("modalCreate") modalCreate: any;
+  @ViewChild("modalChange") modalChange: any;
+  public createMappingModal: NgbModal;
+  public changeMappingModal: NgbModal;
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
@@ -507,19 +509,17 @@ export class FieldsMappingStepComponent implements OnInit {
   createMapping() {
     this.fieldMappingForm.reset();
     this.newMappingForm.reset();
-    this.newMapping = true;
+    this.createMappingModal = this._modalService.open(this.modalCreate);
     this.displayAllValues = true;
   }
 
   cancelMapping() {
-    this.newMapping = false;
-    this.updateMapping = false;
     this.newMappingForm.reset();
   }
 
   renameMapping() {
     this.newMappingForm.setValue(this.fieldMappingForm.value.mapping_label);
-    this.updateMapping = true;
+    this.changeMappingModal = this._modalService.open(this.modalChange);
   }
 
   saveMappingName(mappingName, targetForm) {
@@ -529,7 +529,6 @@ export class FieldsMappingStepComponent implements OnInit {
     this._ds.postMappingName(value, mappingType).subscribe(
       new_id_mapping => {
         this.stepData.id_field_mapping = new_id_mapping;
-        this.newMapping = false;
         this.newMappingForm.reset();
         this._ds.getMappings("FIELD").subscribe(result => {
           this.userFieldMappings = result;
@@ -540,6 +539,7 @@ export class FieldsMappingStepComponent implements OnInit {
         });
 
         this.enableMapping(targetForm);
+        this.createMappingModal.close()
       },
       error => {
         if (error.statusText === "Unknown Error") {
@@ -562,8 +562,8 @@ export class FieldsMappingStepComponent implements OnInit {
     this._ds.updateMappingName(value, mappingType, this.id_mapping).subscribe(
       res => {
         this.stepData.id_field_mapping = res;
-        this.updateMapping = false;
         this.getMappingNamesList(mappingType);
+        this.changeMappingModal.close()
         // this.fieldMappingForm.controls["fieldMapping"].setValue(res);
         // this.fieldMappingForm.controls["mappingName"].setValue("");
         //this.enableMapping(targetForm);

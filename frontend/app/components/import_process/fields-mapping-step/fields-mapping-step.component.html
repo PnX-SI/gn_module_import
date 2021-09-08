@@ -68,67 +68,6 @@
                             Afficher les champs automatiquement associés
                         </div>
                     </div>
-                    <div
-                        *ngIf="newMapping"
-                        class="d-flex flex-row justify-content-between form_group"
-                        id="newMap"
-                    >
-                        <input
-                            type="text"
-                            class="form-control mr-2"
-                            value="Inconnu"
-                            [formControl]="newMappingForm"
-                        >
-                        <button
-                            class="d-flex justify-content-center align-content-between mr-2 button-success"
-                            mat-raised-button
-                            matTooltip="Créer un nouveau mapping"
-                            (click)="saveMappingName(newMappingForm.value, syntheseForm)"
-                            [disabled]="newMappingForm.value == null"
-                        >
-                            <mat-icon>add</mat-icon>
-                        </button>
-                        <button
-                            class="d-flex justify-content-center align-content-between"
-                            mat-raised-button
-                            color=warn
-                            (click)="cancelMapping()"
-                        >
-                            Annuler
-                        </button>
-                    </div>
-
-                    <div
-                        *ngIf="updateMapping"
-                        class="d-flex flex-row justify-content-between form_group"
-                        id="updateMap"
-                    >
-                        <input
-                            type="text"
-                            class="form-control mr-2"
-                            value="Inconnu"
-                            [formControl]="newMappingForm"
-                        >
-                        <button
-                            class="d-flex justify-content-center align-content-between mr-2 button-success"
-                            (click)="updateMappingName(newMappingForm.value)"
-                            mat-raised-button
-                            matTooltip="Modifier le nom du modèle d'import"
-                            [disabled]="newMappingForm.value == null"
-                        >
-                            <mat-icon>check</mat-icon>
-                        </button>
-                        <button
-                            matTooltip="Annuler la modification du nom du modèle d'import"
-                            class="d-flex justify-content-center align-content-between"
-                            (click)="cancelMapping()"
-                            mat-raised-button
-                            color="warn"
-                        >
-                            Annuler
-                        </button>
-                    </div>
-
                     <div *ngIf="fieldMappingForm.value != null">
                         <div
                             *ngIf="this.unmappedColCount == 0"
@@ -361,4 +300,95 @@
             (click)="onRedirect(); modal.close()"
         > OK </button>
     </div>
+</ng-template>
+
+
+<ng-template
+#modalCreate
+let-modal
+>
+    <div class="modal-header">
+        <h4
+            class="modal-title"
+            id="modal-basic-title"
+        >Création d'un modèle de mapping de champs</h4>
+        <button
+            type="button"
+            class="close"
+            aria-label="Close"
+            (click)="modal.dismiss('Cross click')"
+        >
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <form (ngSubmit)="saveMappingName(newMappingForm.value, syntheseForm)">
+        <div class="modal-body">
+            <div class="modal-body">
+                <input
+                    type="text"
+                    class="form-control mr-2"
+                    placeholder="Veuillez entrer le nom du nouveau modèle"
+                    [formControl]="newMappingForm"
+                    >
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button
+                type="button"
+                mat-raised-button
+                color="warn"
+                (click)="modal.close()"
+            >Annuler</button>
+            <button
+                type="submit"
+                mat-raised-button
+                color="primary"
+            >Créer un nouveau modèle</button>
+        </div>
+    </form>
+</ng-template>
+
+<ng-template
+#modalChange
+let-modal
+>
+    <div class="modal-header">
+        <h4
+            class="modal-title"
+            id="modal-basic-title"
+        >Modification du nom du modèle de mapping de champs</h4>
+        <button
+            type="button"
+            class="close"
+            aria-label="Close"
+            (click)="modal.dismiss('Cross click')"
+        >
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <form (ngSubmit)="updateMappingName(newMappingForm.value)">
+        <div class="modal-body">
+            <div class="modal-body">
+                <input
+                    type="text"
+                    class="form-control mr-2"
+                    placeholder="Veuillez entrer le nouveau nom du modèle"
+                    [formControl]="newMappingForm"
+                    >
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button
+                type="button"
+                mat-raised-button
+                color="warn"
+                (click)="modal.close()"
+            >Annuler</button>
+            <button
+                type="submit"
+                mat-raised-button
+                color="primary"
+            >Modifier le nom du modèle</button>
+        </div>
+    </form>
 </ng-template>
