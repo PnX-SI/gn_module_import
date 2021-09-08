@@ -131,7 +131,7 @@ export class ContentMappingStepComponent implements OnInit {
       );
   }
 
-  saveMappingName() {
+  saveMappingNameForJson(jsonfile) {
     // save new mapping in bib_mapping
     // then select the mapping name in the select
     let mappingType = "CONTENT";
@@ -143,6 +143,10 @@ export class ContentMappingStepComponent implements OnInit {
         this._cm.newMapping = false;
         this._cm.getMappingNamesList(id_mapping, this.mappingListForm);
         this.newMappingNameForm.reset();
+        
+        this._fs.readJson(jsonfile, 
+          this.loadMapping.bind(this), 
+          this.displayError.bind(this))
         //this.enableMapping(targetForm);
       },
       error => {
@@ -228,14 +232,10 @@ export class ContentMappingStepComponent implements OnInit {
       return;
     }  
     const name = this.importForm.get('name').value
-    const file = this.importForm.get('file').value
+    const jsonfile = this.importForm.get('file').value
     
     this.newMappingNameForm.patchValue(name)
-    this.saveMappingName()
-    this._fs.readJson(file, 
-                      this.loadMapping.bind(this), 
-                      this.displayError.bind(this))
-    this.modalImport.close()
+    this.saveMappingNameForJson(jsonfile)
   }
 
   loadMapping(data) {

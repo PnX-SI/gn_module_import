@@ -564,18 +564,16 @@ export class FieldsMappingStepComponent implements OnInit {
     this.saveMappingNameForJson(this.newMappingForm.value, 
                                 this.syntheseForm, 
                                 jsonfile)
-    
-    
   }
 
   loadMapping(data) {
     // Reset mapping
     this.fillEmptyMapping(this.syntheseForm);
+    this.enableMapping(this.syntheseForm);
     // Fill mapping from data 
     // (array of object with target_field and source_field)
     this.fillFormFromMappings(data)
     // If no mapping had been done
-    console.log(this.mappedList)
     if (this.mappedList.length == 0) {
       this._commonService.regularToaster(
         "error",
@@ -591,20 +589,21 @@ export class FieldsMappingStepComponent implements OnInit {
     this._ds.postMappingName(value, mappingType).subscribe(
       new_id_mapping => {        
         this.stepData.id_field_mapping = new_id_mapping;
-        this.newMapping = false;
-        this.newMappingForm.reset();
+        // this.newMapping = false;
+        // this.newMappingForm.reset();
         this._ds.getMappings("FIELD").subscribe(result => {
           this.userFieldMappings = result;
           const newMapping = this.userFieldMappings.find(
             el => el.id_mapping == new_id_mapping
           );
-          //this.fieldMappingForm.setValue(newMapping);
+          this.fieldMappingForm.setValue(newMapping);
+          this._fs.readJson(jsonfile,
+            this.loadMapping.bind(this),
+            this.displayError.bind(this))
         });
 
         this.enableMapping(targetForm);
-        this._fs.readJson(jsonfile, 
-          this.loadMapping.bind(this), 
-          this.displayError.bind(this))
+
       },
       error => {
         if (error.statusText === "Unknown Error") {
