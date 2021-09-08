@@ -15,7 +15,6 @@ import { CruvedStoreService } from "@geonature_common/service/cruved-store.servi
 import { ModuleConfig } from "../../../module.config";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 
-import { forbiddenNameValidator } from "../forbiddenModelName.directive";
 
 @Component({
   selector: "content-mapping-step",
@@ -50,6 +49,7 @@ export class ContentMappingStepComponent implements OnInit {
   public mappingListForm = new FormControl();
   public newMappingNameForm = new FormControl();
   public importForm: FormGroup;
+  public importJsonFile: File;
 
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
@@ -215,33 +215,35 @@ export class ContentMappingStepComponent implements OnInit {
   
   onImportModal() {
     this.importForm = this._fb.group({
-      name: ["", [Validators.required, forbiddenNameValidator(this._cm.userContentMappings.map(data => data.mapping_label))]],
+      // The validator for the name is done via the API Call
+      name: ["", [Validators.required]],
       file: ["", [Validators.required]]
     });
     this._modalService.open(this.modalImport);
   }
 
   onFileSelect(event: Event) {
-    this.importForm.patchValue({ file: event });
-    this.importForm.get('file').updateValueAndValidity();
+    this.importJsonFile = (event.target as HTMLInputElement).files[0];
   }
 
-  onFileProvided() {   
+  onFileProvided() {
     // stop here if form is invalid
     if (this.importForm.invalid) {
       return;
-    }  
+    }
     const name = this.importForm.get('name').value
-    const jsonfile = this.importForm.get('file').value
+    const jsonfile = this.importJsonFile
     
     this.newMappingNameForm.patchValue(name)
     this.saveMappingNameForJson(jsonfile)
   }
 
   loadMapping(data) {
+    // Since the exported json is of the same format
+    // as the field one, we need to transform it to the correct format
+    // (see API calls)
     this.fillFormFromMappings(data.map(e => [e]))
   }
-
 
   isEnabled(value_def_id: string) {
     return true;
