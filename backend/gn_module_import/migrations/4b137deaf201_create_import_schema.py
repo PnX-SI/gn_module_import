@@ -23,25 +23,6 @@ archive_schema = 'gn_import_archives'
 
 
 def upgrade():
-    op.execute("""
-        INSERT INTO gn_commons.t_modules (
-            module_code,
-            module_label,
-            module_path,
-            module_target,
-            module_picto,
-            active_frontend,
-            active_backend
-        ) VALUES (
-            'IMPORT',
-            'import',
-            'import',
-            '_self',
-            'fa-upload ',
-            TRUE,
-            TRUE
-        )
-    """)
     sql_files = ['schema.sql', 'data.sql']
     if strtobool(context.get_x_argument(as_dictionary=True).get('default-mappings', "true")):
         sql_files += ['default_mappings_data.sql']
@@ -68,4 +49,3 @@ def downgrade():
             'dict_themes',
             ]:
         op.execute(f'DROP TABLE IF EXISTS {schema}.{table}')
-    op.execute("DELETE FROM gn_commons.t_modules WHERE module_code = 'IMPORT'")
