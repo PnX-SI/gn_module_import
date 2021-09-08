@@ -63,6 +63,7 @@ export class FieldsMappingStepComponent implements OnInit {
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
   @ViewChild("modalImport") modalImport: any;
+  public modalImportVar: NgbModal;
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
@@ -547,7 +548,7 @@ export class FieldsMappingStepComponent implements OnInit {
       file: ["", [Validators.required]],
       edit: [false]
     });
-    this._modalService.open(this.modalImport);
+    this.modalImportVar = this._modalService.open(this.modalImport);
   }
 
   onFileSelect(event: Event) {
@@ -562,8 +563,8 @@ export class FieldsMappingStepComponent implements OnInit {
     const edit = this.importForm.get('edit').value
     const jsonfile = this.importJsonFile
     // stop here if form is invalid
-    console.log(edit)
     this.newMappingForm.patchValue(name)
+    // If edit deactivated : create model and fill the fields
     if (!edit) {
       this.saveMappingNameForJson(this.newMappingForm.value, 
                                   this.syntheseForm, 
@@ -574,6 +575,7 @@ export class FieldsMappingStepComponent implements OnInit {
       this._fs.readJson(jsonfile,
         this.loadMapping.bind(this),
         this.displayError.bind(this))
+      this.modalImportVar.close()
     }
   }
 
@@ -583,7 +585,6 @@ export class FieldsMappingStepComponent implements OnInit {
     // Fill mapping from data 
     // (array of object with target_field and source_field)
     this.fillFormFromMappings(data)
-    console.log(data)
     // If no mapping had been done
     if (this.mappedList.length == 0) {
       this._commonService.regularToaster(
@@ -603,10 +604,15 @@ export class FieldsMappingStepComponent implements OnInit {
         // this.newMapping = false;
         // this.newMappingForm.reset();
         this._ds.getMappings("FIELD").subscribe(result => {
-          this.userFieldMappings = result;
           this._fs.readJson(jsonfile,
             this.loadMapping.bind(this),
             this.displayError.bind(this))
+          this.userFieldMappings = result;
+          const newMapping = this.userFieldMappings.find(
+              el => el.id_mapping == new_id_mapping
+            );
+          this.fieldMappingForm.setValue(newMapping);
+          this.modalImportVar.close()
         });
 
         this.enableMapping(targetForm);
