@@ -6,6 +6,8 @@ import { Routes, RouterModule } from "@angular/router";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatCheckboxModule } from "@angular/material/checkbox";
+import { ChartsModule } from 'ng2-charts';
+
 import { ImportModalDatasetComponent } from "./components/modal_dataset/import-modal-dataset.component";
 import { ModalDeleteImport } from "./components/delete-modal/delete-modal.component";
 import { DataService } from "./services/data.service";
@@ -14,7 +16,7 @@ import { StepperGuardService } from "./services/stepper-guard";
 import { FieldMappingService } from "./services/mappings/field-mapping.service";
 import { ContentMappingService } from "./services/mappings/content-mapping.service";
 import { ImportComponent } from "./components/import_list/import.component";
-import { ImportErrorsComponent } from "./components/import_errors/import_errors.component";
+import { ImportReportComponent } from "./components/import_report/import_report.component";
 import { StepsService } from "./components/import_process/steps.service";
 import { UploadFileStepComponent } from "./components/import_process/upload-file-step/upload-file-step.component";
 import { FieldsMappingStepComponent } from "./components/import_process/fields-mapping-step/fields-mapping-step.component";
@@ -27,7 +29,7 @@ import { FileService } from "./services/file.service";
 // my module routing
 const routes: Routes = [
   { path: "", component: ImportComponent },
-  { path: "errors/:id_import", component: ImportErrorsComponent },
+  { path: "report/:id_import", component: ImportReportComponent },
   {
     path: "process/step/1",
     component: UploadFileStepComponent,
@@ -57,7 +59,7 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     ImportComponent,
-    ImportErrorsComponent,
+    ImportReportComponent,
     ImportModalDatasetComponent,
     ModalDeleteImport,
     UploadFileStepComponent,
@@ -74,6 +76,7 @@ const routes: Routes = [
     MatProgressSpinnerModule,
     MatStepperModule,
     MatCheckboxModule,
+    ChartsModule,
     NgbModule
   ],
   entryComponents: [ModalDeleteImport],

@@ -1,9 +1,13 @@
 """
 Routes to manage import (import list, cancel import, import info...)
 """
-from flask import request, current_app
+from os import path
+from pathlib import Path
+from flask import request, current_app, render_template, send_file
 from sqlalchemy.orm import exc as SQLAlchelyExc
 from sqlalchemy import or_
+from urllib.parse import urljoin
+from functools import reduce
 
 from pypnusershub.db.models import User
 from pypnusershub.db.tools import InsufficientRightsError
@@ -18,6 +22,7 @@ from geonature.core.gn_synthese.models import (
     TSources,
 )
 from geonature.core.gn_meta.models import TDatasets
+import geonature.utils.filemanager as fm
 
 from ..api_error import GeonatureImportApiError
 
@@ -32,6 +37,8 @@ from ..db.queries.user_table_queries import (
     set_imports_table_name,
     get_table_info,
     get_table_names,
+    get_table_name,
+    get_valid_bbox,
 )
 from ..utils.clean_names import *
 from ..utils.utils import get_pk_name
@@ -87,10 +94,7 @@ def update_import(id_import):
 @permissions.check_cruved_scope("R", module_code="IMPORT")
 @json_resp
 def get_one_import(import_id):
-    import_obj = TImports.query.get(import_id)
-    if import_obj:
-        return import_obj.to_dict()
-    return None
+    return get_import(import_id)
 
 
 @blueprint.route("/by_dataset/<int:id_dataset>", methods=["GET"])
@@ -256,3 +260,31 @@ def get_import_columns_name(id_import):
     col_names.remove(get_pk_name(blueprint.config["PREFIX"]))
 
     return col_names
+
+
+def get_import(id_import:int):
+    import_obj = TImports.query.get(id_import)
+    if import_obj:
+        return import_obj.to_dict()
+    return None
+
+@blueprint.route("/export_pdf/<int:id_import>", methods=["POST"])
+@permissions.check_cruved_scope("R", module_code="IMPORT")
+def download(id_import):
+    """
+    Downloads the report in pdf format
+    """
+    filename = "rapport.pdf"
+    dataset = get_import(id_import=id_import)
+    dataset['map'] = request.form.get('map')
+    dataset['chart'] = request.form.get('chart')
+
+    url_list = [current_app.config['URL_APPLICATION'],
+                '#',
+                current_app.config['IMPORT'].get('MODULE_URL', "").replace('/',''),
+                'report',
+                str(dataset.get('id_import', 0))]
+    dataset['url'] = '/'.join(url_list)
+    pdf_file = fm.generate_pdf("import_template_pdf.html", dataset, filename)
+    pdf_file_posix = Path(pdf_file)
+    return send_file(pdf_file_posix, as_attachment=True)
