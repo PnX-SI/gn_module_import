@@ -564,6 +564,9 @@ export class FieldsMappingStepComponent implements OnInit {
         this.stepData.id_field_mapping = res;
         this.getMappingNamesList(mappingType);
         this.changeMappingModal.close()
+        // Update the value so that when the user reopens the modal
+        // it does not display the old value!
+        this.fieldMappingForm.value.mapping_label = value;
         // this.fieldMappingForm.controls["fieldMapping"].setValue(res);
         // this.fieldMappingForm.controls["mappingName"].setValue("");
         //this.enableMapping(targetForm);
