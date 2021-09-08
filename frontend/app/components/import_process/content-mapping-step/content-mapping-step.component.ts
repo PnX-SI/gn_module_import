@@ -54,6 +54,7 @@ export class ContentMappingStepComponent implements OnInit {
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
   @ViewChild("modalImport") modalImport: any;
+  public modalImportVar: NgbModal;
 
   constructor(
     private stepService: StepsService,
@@ -222,7 +223,7 @@ export class ContentMappingStepComponent implements OnInit {
       name: ["", [Validators.required]],
       file: ["", [Validators.required]]
     });
-    this._modalService.open(this.modalImport);
+    this.modalImportVar = this._modalService.open(this.modalImport);
   }
 
   onFileSelect(event: Event) {
@@ -239,6 +240,7 @@ export class ContentMappingStepComponent implements OnInit {
     
     this.newMappingNameForm.patchValue(name)
     this.saveMappingNameForJson(jsonfile)
+    this.modalImportVar.close()
   }
 
   loadMapping(data) {
