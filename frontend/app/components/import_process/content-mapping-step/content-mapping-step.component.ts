@@ -142,9 +142,12 @@ export class ContentMappingStepComponent implements OnInit {
     this._ds.postMappingName(mappingForm, mappingType).subscribe(
       id_mapping => {
         this._cm.newMapping = false;
+        // We can subscribe here because getMappingNamesListMap returns
+        // an Observable (thanks to map)
         this._cm.getMappingNamesListMap(id_mapping, this.mappingListForm).subscribe(
           () => {
             this.newMappingNameForm.reset();
+            // Need to read the json here so that our form does not get reset
             this._fs.readJson(jsonfile, 
               this.loadMapping.bind(this), 
               this.displayError.bind(this))
@@ -218,15 +221,20 @@ export class ContentMappingStepComponent implements OnInit {
   }
   
   onImportModal() {
+    //Creates the form and opens the import modal
     this.importForm = this._fb.group({
       // The validator for the name is done via the API Call
       name: ["", [Validators.required]],
       file: ["", [Validators.required]]
     });
+    // Store this in a property to be able to close it later
     this.modalImportVar = this._modalService.open(this.modalImport);
   }
 
   onFileSelect(event: Event) {
+    // Need to do this so that the provided file can be readable.
+    // The counterpart is that we need to store this in a property
+    // and not in the form directly otherwise => DOMException...
     this.importJsonFile = (event.target as HTMLInputElement).files[0];
   }
 
@@ -236,11 +244,12 @@ export class ContentMappingStepComponent implements OnInit {
       return;
     }
     const name = this.importForm.get('name').value
+    // Get the jsonfile from the property NOT FROM THE FORM ! See onFileSelect
     const jsonfile = this.importJsonFile
     
     this.newMappingNameForm.patchValue(name)
     this.saveMappingNameForJson(jsonfile)
-    this.modalImportVar.close()
+    this.modalImportVar.close()  // See this.onFileSelect
   }
 
   loadMapping(data) {

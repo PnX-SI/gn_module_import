@@ -543,6 +543,7 @@ export class FieldsMappingStepComponent implements OnInit {
   onImportModal() {
     // No need of forbiddenName validator since the API
     // is taking care of that
+    // Same as content-mapping
     this.importForm = this._fb.group({
       name: ["", [Validators.required]],
       file: ["", [Validators.required]]
@@ -562,6 +563,7 @@ export class FieldsMappingStepComponent implements OnInit {
     const jsonfile = this.importJsonFile
     // stop here if form is invalid
     this.newMappingForm.patchValue(name)
+    // Save a new mapping name and load the json to fill in the fields
     this.saveMappingNameForJson(this.newMappingForm.value, 
                                 this.syntheseForm, 
                                 jsonfile)
@@ -583,6 +585,7 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   saveMappingNameForJson(mappingName, targetForm, jsonfile) {
+    // Only used to import a mapping from a json
     let mappingType = "FIELD";
     const value = {};
     value["mappingName"] = mappingName;
@@ -592,14 +595,17 @@ export class FieldsMappingStepComponent implements OnInit {
         // this.newMapping = false;
         // this.newMappingForm.reset();
         this._ds.getMappings("FIELD").subscribe(result => {
+          // Reads here the json not to be raced by the emptying of the fields
           this._fs.readJson(jsonfile,
             this.loadMapping.bind(this),
             this.displayError.bind(this))
+          // Updates the select box with the new model
           this.userFieldMappings = result;
           const newMapping = this.userFieldMappings.find(
               el => el.id_mapping == new_id_mapping
             );
           this.fieldMappingForm.setValue(newMapping);
+          // Close the modal when everything has been done
           this.modalImportVar.close()
         });
 
