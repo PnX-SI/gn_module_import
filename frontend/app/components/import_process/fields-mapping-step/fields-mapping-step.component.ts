@@ -21,7 +21,6 @@ import {
 import { forkJoin } from "rxjs/observable/forkJoin";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { FileService } from "../../../services/file.service";
-import { forbiddenNameValidator } from "../forbiddenModelName.directive";
 
 
 @Component({
@@ -56,6 +55,7 @@ export class FieldsMappingStepComponent implements OnInit {
   public fieldMappingForm = new FormControl();
   public newMappingForm = new FormControl();
   public importForm: FormGroup;
+  public importJsonFile: File;  // json import to create model
   public mappedColCount: number;
   public unmappedColCount: number;
   public mappedList = [];
@@ -540,39 +540,50 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   onImportModal() {
+    // No need of forbiddenName validator since the API
+    // is taking care of that
     this.importForm = this._fb.group({
-      name: ["", [Validators.required, forbiddenNameValidator(this.userFieldMappings.map(data => data.mapping_label))]],
-      file: ["", [Validators.required]]
+      name: ["", [Validators.required]],
+      file: ["", [Validators.required]],
+      edit: [false]
     });
     this._modalService.open(this.modalImport);
   }
 
   onFileSelect(event: Event) {
-    this.importForm.patchValue({ file: event });
-    this.importForm.get('file').updateValueAndValidity();
+    this.importJsonFile = (event.target as HTMLInputElement).files[0];
+    // We could patch a value to the importForm
+    // like: this.importForm.patchValue({file: jsonfile})
+    // BUT DOMException...
   }
 
-  onFileProvided() {   
-    // stop here if form is invalid
-    if (this.importForm.invalid) {
-      return;
-    }  
+  onFileProvided() {
     const name = this.importForm.get('name').value
-    const jsonfile = this.importForm.get('file').value
-    
+    const edit = this.importForm.get('edit').value
+    const jsonfile = this.importJsonFile
+    // stop here if form is invalid
+    console.log(edit)
     this.newMappingForm.patchValue(name)
-    this.saveMappingNameForJson(this.newMappingForm.value, 
-                                this.syntheseForm, 
-                                jsonfile)
+    if (!edit) {
+      this.saveMappingNameForJson(this.newMappingForm.value, 
+                                  this.syntheseForm, 
+                                  jsonfile)
+    }
+    else {
+      // No choice to do this because the saveMappingName is async
+      this._fs.readJson(jsonfile,
+        this.loadMapping.bind(this),
+        this.displayError.bind(this))
+    }
   }
 
   loadMapping(data) {
     // Reset mapping
     this.fillEmptyMapping(this.syntheseForm);
-    this.enableMapping(this.syntheseForm);
     // Fill mapping from data 
     // (array of object with target_field and source_field)
     this.fillFormFromMappings(data)
+    console.log(data)
     // If no mapping had been done
     if (this.mappedList.length == 0) {
       this._commonService.regularToaster(
@@ -593,10 +604,6 @@ export class FieldsMappingStepComponent implements OnInit {
         // this.newMappingForm.reset();
         this._ds.getMappings("FIELD").subscribe(result => {
           this.userFieldMappings = result;
-          const newMapping = this.userFieldMappings.find(
-            el => el.id_mapping == new_id_mapping
-          );
-          this.fieldMappingForm.setValue(newMapping);
           this._fs.readJson(jsonfile,
             this.loadMapping.bind(this),
             this.displayError.bind(this))

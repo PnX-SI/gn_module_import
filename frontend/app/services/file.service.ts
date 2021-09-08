@@ -19,7 +19,7 @@ export class FileService {
             }
       
             // Calls onload handler
-            reader.readAsText(file.target.files[0]);
+            reader.readAsText(file);
             }
     }
 }
