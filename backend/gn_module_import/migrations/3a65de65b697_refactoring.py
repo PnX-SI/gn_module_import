@@ -1,4 +1,4 @@
-"""
+"""Refactoring of database structure
 
 Revision ID: 3a65de65b697
 Revises: 4b137deaf201

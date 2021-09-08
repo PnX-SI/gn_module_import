@@ -1,4 +1,4 @@
-"""
+"""Add two columns
 
 Revision ID: 2ed6a7ee5250
 Revises: 3a65de65b697
