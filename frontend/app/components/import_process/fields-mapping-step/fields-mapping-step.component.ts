@@ -545,8 +545,7 @@ export class FieldsMappingStepComponent implements OnInit {
     // is taking care of that
     this.importForm = this._fb.group({
       name: ["", [Validators.required]],
-      file: ["", [Validators.required]],
-      edit: [false]
+      file: ["", [Validators.required]]
     });
     this.modalImportVar = this._modalService.open(this.modalImport);
   }
@@ -560,23 +559,12 @@ export class FieldsMappingStepComponent implements OnInit {
 
   onFileProvided() {
     const name = this.importForm.get('name').value
-    const edit = this.importForm.get('edit').value
     const jsonfile = this.importJsonFile
     // stop here if form is invalid
     this.newMappingForm.patchValue(name)
-    // If edit deactivated : create model and fill the fields
-    if (!edit) {
-      this.saveMappingNameForJson(this.newMappingForm.value, 
-                                  this.syntheseForm, 
-                                  jsonfile)
-    }
-    else {
-      // No choice to do this because the saveMappingName is async
-      this._fs.readJson(jsonfile,
-        this.loadMapping.bind(this),
-        this.displayError.bind(this))
-      this.modalImportVar.close()
-    }
+    this.saveMappingNameForJson(this.newMappingForm.value, 
+                                this.syntheseForm, 
+                                jsonfile)
   }
 
   loadMapping(data) {
