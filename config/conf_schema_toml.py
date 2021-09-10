@@ -123,8 +123,7 @@ DEFAULT_FIELD_MAPPING_ID = 1
 # Parameter to define if the checkbox allowing to change display mode is displayed or not.
 DISPLAY_CHECK_BOX_MAPPED_FIELD = True
 
-# Defines the default value for the graph in the import report page
-DEFAULT_RANK = "group2_inpn"
+DEFAULT_RANK_VALUE = "group2_inpn"
 
 class GnModuleSchemaConf(Schema):
     LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, missing=DEFAULT_LIST_COLUMN)
@@ -159,6 +158,8 @@ class GnModuleSchemaConf(Schema):
     CHECK_REF_BIBLIO_LITTERATURE = fields.Boolean(missing=True)
     CHECK_EXIST_PROOF = fields.Boolean(missing=True)
     CHECK_TYPE_INFO_GEO = fields.Boolean(missing=True)
+    # Defines the default value for the graph in the import report page
+    DEFAULT_RANK = fields.String(missing=DEFAULT_RANK_VALUE)
     # If ID is provided (!=-1) will take the geometry in ref_geo.l_areas
     # and checks if all imported points are inside it. Otherwise throws an error
     ID_AREA_RESTRICTION = fields.Integer(missing=-1)
