@@ -12,7 +12,7 @@
             <!-- Choix de la liste des nomenclatures -->
             <form class="was-validated">
                 <fieldset>
-                    <div *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.R != '0'">
+                    <div *ngIf="cruvedStore?.cruved?.IMPORT?.module_objects.MAPPING.cruved.R != '0'">
                         <legend class="px-1">
                             Choix du modèle d'import
                         </legend>
@@ -33,7 +33,7 @@
                             </select>
                             <button 
                                 mat-icon-button
-                                [disabled]="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.D == '0'"
+                                [disabled]="!isRemovable()"
                                 (click)="removeModel()"
                                 matTooltip="Supprimer l'import"
                                 color=warn
@@ -46,7 +46,7 @@
 
                         <div class="d-flex justify-content-center align-content-between">
                             <button
-                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
+                                *ngIf="cruvedStore?.cruved?.IMPORT?.module_objects.MAPPING.cruved.C != '0'"
                                 class="mb-3"
                                 mat-raised-button
                                 color="primary"
@@ -55,7 +55,7 @@
                                 Nouveau modèle d'import
                             </button>
                             <button
-                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.U != '0' && fieldMappingForm?.value?.cruved.U"
+                                *ngIf="cruvedStore?.cruved?.IMPORT?.module_objects.MAPPING.cruved.U != '0' && fieldMappingForm?.value?.cruved.U"
                                 class="btn-sm mb-3 ml-1"
                                 mat-raised-button
                                 color="primary"

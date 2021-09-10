@@ -392,6 +392,11 @@ export class ContentMappingStepComponent implements OnInit {
     }
   }
 
+  isRemovable() {
+    const val = this.mappingListForm.value
+    return val === null ? false: val.cruved.D
+  }
+
   removeModel() {
     if (this.mappingListForm.value !== null) {
       this._ds.deleteMapping(this.id_mapping).subscribe(

@@ -81,10 +81,19 @@ class TMappingsRepository:
                 object_code="MAPPING",
             )[0]
             mapping_as_dict = []
+
+            user_owned_mappings_res = (
+                        DB.session.query(CorRoleMapping.id_mapping)
+                        .filter(CorRoleMapping.id_role == info_role.id_role)
+                        .all()
+                    )
+            user_owned_mappings = [t.id_mapping for t in
+                                   user_owned_mappings_res]
+
             for d in data:
                 temp = d.as_dict()
                 temp["cruved"] = self.get_mapping_cruved(
-                    user_cruved, d.id_mapping, users_mapping
+                    user_cruved, d.id_mapping, user_owned_mappings
                 )
                 mapping_as_dict.append(temp)
             return mapping_as_dict

@@ -655,6 +655,11 @@ export class FieldsMappingStepComponent implements OnInit {
     });
   }
 
+  isRemovable() {
+    const val = this.fieldMappingForm.value
+    return val === null ? false: val.cruved.D
+  }
+
   removeModel() {
     if (this.fieldMappingForm.value !== null) {
       this._ds.deleteMapping(this.id_mapping).subscribe(
