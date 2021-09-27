@@ -46,6 +46,7 @@ class TImports(ModelCruvedAutorization):
     __table_args__ = {"schema": "gn_imports", "extend_existing": True}
 
     id_import = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
+    id_source_synthese = DB.Column(DB.Integer, ForeignKey("gn_synthese.t_sources.id_source"), nullable=True)
     format_source_file = DB.Column(DB.Unicode, nullable=True)
     srid = DB.Column(DB.Integer, nullable=True)
     separator = DB.Column(DB.Unicode, nullable=True)
@@ -94,16 +95,16 @@ class TImports(ModelCruvedAutorization):
         import_as_dict["dataset_name"] = import_as_dict["dataset"]["dataset_name"]
         import_as_dict.pop("dataset")
         import_as_dict["errors"] = import_as_dict.get("errors", [])
-        name_source = "Import(id=" + str(self.id_import) + ")"
-        id_source = None
-        source = (
-            DB.session.query(TSources.id_source)
-            .filter(TSources.name_source == name_source)
-            .first()
-        )
-        if source:
-            id_source = source[0]
-        import_as_dict["id_source"] = id_source
+        # name_source = "Import(id=" + str(self.id_import) + ")"
+        # id_source = None
+        # source = (
+        #     DB.session.query(TSources.id_source)
+        #     .filter(TSources.name_source == name_source)
+        #     .first()
+        # )
+        # if source:
+        #     id_source = source[0]
+        # import_as_dict["id_source"] = id_source
         return import_as_dict
 
 
