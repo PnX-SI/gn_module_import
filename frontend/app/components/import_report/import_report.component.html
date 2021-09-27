@@ -4,7 +4,11 @@
             <div class="col-12 col-lg-6">
                 <div class="card content">
                     <div class="card-body">
-                        <h5 class="card-title">Rapport d'import : {{ import?.id_import }} </h5>
+                        <div class="d-flex display justify-content-between">
+                            <h5 class="card-title">Rapport d'import : {{ import?.id_import }}</h5>
+                            <h5 class="card-title unfinished">{{ import?.is_finished ? '' : 'NON TERMINE'}}
+                            </h5>
+                        </div>
                         <p class="card-text"><b>Jeu de données : </b><a
                             routerLink="/metadata/dataset_detail/{{import?.id_dataset}}"
                             matTooltip="Voir dans le module Metadonnées"
@@ -13,7 +17,8 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-12 col-lg-6">
+                    <div [ngClass]="{'col-12 col-lg-6': import?.is_finished,
+                                     'col-12': !import?.is_finished}">
                         <div class="card content">
                             <div class="card-body">
                                 <div class="row">
@@ -33,7 +38,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-lg-6">
+                    <div *ngIf="import?.is_finished" class="col-12 col-lg-6">
                         <div class="card content">
                             <div class="card-body">
                                 <div class="row">
@@ -74,7 +79,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card content">
+                <div *ngIf="import?.is_finished" class="card content">
                     <div class="card-header">
                         <h5 class="card-title">Correspondances</h5>
                     </div>
@@ -250,7 +255,7 @@
                         </pnx-map>
                     </div>
                 </div>
-                <div class="card content">
+                <div *ngIf="import?.is_finished" class="card content">
                     <div class="card-body">
                         <div class="row">
                             <div class="col-7">

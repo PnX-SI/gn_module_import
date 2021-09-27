@@ -61,9 +61,9 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         this.sub = this._activedRoute.params.subscribe(params => {
             const idImport: number = params["id_import"];
             this._dataService.getOneImport(idImport).subscribe(data => {
+                this.loadValidData(idImport);
                 if (data.import_count) {
                     // Load additionnal data if imported data
-                    this.loadValidData(idImport);
                     const fieldMapping = data.id_field_mapping;
                     const contentMapping = data.id_content_mapping;
                     const idSource = data.id_source;
