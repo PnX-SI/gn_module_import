@@ -121,10 +121,12 @@
         </div>
         {% endif %}
       </div>
+      {% if data.chart %}
       <div id="chart" class="zone">
         <p class="zone-geographique">Répartition taxonomique</p>
         <img src="{{ data.chart }}">
       </div>
+      {% endif %}
     </div>
     <div id="Error-block" class="information">
       <p class="info-titre">Erreurs</p>

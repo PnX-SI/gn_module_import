@@ -205,7 +205,12 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     exportAsPDF() {
         var img = document.createElement('img');
         this.loadingPdf = true
-        let chartImg = this.getChartPNG()
+        // Init chartImg
+        let chartImg = document.createElement('img');
+        // Check if the chart exists
+        if  (<HTMLCanvasElement>document.getElementById('chart')) {
+            let chartImg = this.getChartPNG();
+        }
         leafletImage(this._map.map, function(err, canvas) {
             img.src = canvas.toDataURL('image/png');
             this._dataService.getPdf(this.import.id_import, img.src, chartImg.src)
