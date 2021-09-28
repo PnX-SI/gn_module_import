@@ -62,13 +62,13 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             const idImport: number = params["id_import"];
             this._dataService.getOneImport(idImport).subscribe(data => {
                 this.loadValidData(idImport);
+                const fieldMapping = data.id_field_mapping;
+                const contentMapping = data.id_content_mapping;
+                this.loadMapping(fieldMapping);
+                this.loadNomenclature(idImport, fieldMapping, contentMapping);
                 if (data.import_count) {
-                    // Load additionnal data if imported data
-                    const fieldMapping = data.id_field_mapping;
-                    const contentMapping = data.id_content_mapping;
                     const idSource = data.id_source;
-                    this.loadMapping(fieldMapping);
-                    this.loadNomenclature(idImport, fieldMapping, contentMapping);
+                    // Load additionnal data if imported data
                     this.loadTaxaDistribution(idSource)
                 }
                 // Add property to show errors lines. Need to do this to
