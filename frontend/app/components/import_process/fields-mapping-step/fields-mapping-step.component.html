@@ -197,11 +197,12 @@
 
                                         </small>
                                         <select
+                                            *ngIf="field.name_field != 'additionnal_data'"
                                             class="form-control form-control-sm"
                                             id="{{field.name_field}}"
                                             placeholder="Open this select menu"
                                             formControlName="{{field.name_field}}"
-                                            (change)="onSelect(id_mapping, syntheseForm)"
+                                            (change)="onSelect(id_mapping, syntheseForm, $event)"
                                         >
                                             <option [value]=""></option>
                                             <option
@@ -212,6 +213,12 @@
                                                 {{column.id}}
                                             </option>
                                         </select>
+                                        <mat-form-field *ngIf="field.name_field == 'additionnal_data'">
+                                            <mat-select formControlName="{{field.name_field}}" multiple>
+                                              <mat-option *ngFor="let column of columns" [value]="column.id">{{column.id}}</mat-option>
+                                            </mat-select>
+                                          </mat-form-field>
+                                          
 
                                         <small
                                             *ngIf="syntheseForm.controls[field.name_field].hasError('geomError')"
@@ -246,6 +253,7 @@
                         </div>
                     </fieldset>
                 </div>
+                <pre>{{ syntheseForm.value | json }}</pre>
                 <br>
                 <div class="d-flex flex-row justify-content-between">
                     <button
