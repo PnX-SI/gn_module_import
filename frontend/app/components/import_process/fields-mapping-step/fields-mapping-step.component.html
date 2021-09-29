@@ -197,7 +197,7 @@
 
                                         </small>
                                         <select
-                                            *ngIf="field.name_field != 'additionnal_data'"
+                                            *ngIf="field.name_field != 'additional_data'"
                                             class="form-control form-control-sm"
                                             id="{{field.name_field}}"
                                             placeholder="Open this select menu"
@@ -213,7 +213,7 @@
                                                 {{column.id}}
                                             </option>
                                         </select>
-                                        <mat-form-field *ngIf="field.name_field == 'additionnal_data'">
+                                        <mat-form-field *ngIf="field.name_field == 'additional_data'">
                                             <mat-select formControlName="{{field.name_field}}" multiple>
                                               <mat-option *ngFor="let column of columns" [value]="column.id">{{column.id}}</mat-option>
                                             </mat-select>

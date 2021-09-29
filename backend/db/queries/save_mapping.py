@@ -106,6 +106,16 @@ def get_selected_columns(table_name, id_mapping):
             selected_columns[field.target_field] = field.source_field
     return selected_columns
 
+def get_additional_data(id_mapping):
+    data = (
+        DB.session.query(TMappingsFields)
+        .filter(TMappingsFields.id_mapping == id_mapping)
+        .filter(TMappingsFields.is_selected)
+        .filter(TMappingsFields.target_field == "additional_data")
+        .all()
+    )
+
+    return data[0].source_field.replace('{', '').replace('}', '').split(',')
 
 def get_added_columns(id_mapping):
     try:

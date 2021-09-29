@@ -160,7 +160,7 @@ export class FieldsMappingStepComponent implements OnInit {
                 .get(field.name_field)
                 .setValidators([Validators.required]);
             } else {
-              if (field.name_field == 'additionnal_data') {
+              if (field.name_field == 'additional_data') {
                 this.syntheseForm.addControl(
                   field.name_field,
                   new FormControl({ value: [], disabled: true })
@@ -659,7 +659,7 @@ export class FieldsMappingStepComponent implements OnInit {
   fillEmptyMapping(targetForm) {
     Object.keys(targetForm.controls).forEach(key => {
       let val:string | Array<string> = ""
-      if (key == 'additionnal_data') {
+      if (key == 'additional_data') {
         val = []
       }
       targetForm.get(key).setValue(val);
