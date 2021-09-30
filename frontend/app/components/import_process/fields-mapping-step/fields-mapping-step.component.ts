@@ -462,7 +462,6 @@ export class FieldsMappingStepComponent implements OnInit {
         this.enableMapping(this.syntheseForm);
         if (mappingFields[0] != "empty") {
           for (let field of mappingFields) {
-            
             if (field["target_field"] == 'unique_id_sinp_generate') {
               const form = this.syntheseForm
                 .get('unique_id_sinp_generate');
@@ -478,7 +477,14 @@ export class FieldsMappingStepComponent implements OnInit {
               }
                 
             }
-            else if (columnsArray.includes(field["source_field"]) || field["source_field"].every(val => columnsArray.includes(val))) {
+            else if (columnsArray.includes(field["source_field"])) {
+              const target_form = this.syntheseForm.get(field["target_field"])
+              if (target_form) {
+                target_form.setValue(field["source_field"]);
+                this.mappedList.push(field["target_field"]);
+              }
+            }
+            else if (Array.isArray(field["source_field"]) && field["source_field"].every(val => columnsArray.includes(val))) {
               const target_form = this.syntheseForm.get(field["target_field"])
               if (target_form) {
                 target_form.setValue(field["source_field"]);
