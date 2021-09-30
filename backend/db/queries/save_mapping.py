@@ -13,7 +13,6 @@ def save_field_mapping(form_data, id_mapping, select_type):
                 .filter(TMappingsFields.target_field == col)
                 .all()
             )
-
             if select_type == "selected":
                 if form_data[col] != "":
                     is_selected = True
@@ -22,7 +21,7 @@ def save_field_mapping(form_data, id_mapping, select_type):
                     is_selected = False
                     is_added = False
             else:
-                if form_data[col] != "":
+                if form_data[col] not in "":
                     is_selected = False
                     is_added = True
 
@@ -112,10 +111,12 @@ def get_additional_data(id_mapping):
         .filter(TMappingsFields.id_mapping == id_mapping)
         .filter(TMappingsFields.is_selected)
         .filter(TMappingsFields.target_field == "additional_data")
-        .all()
+        .one()
     )
-
-    return data[0].source_field.replace('{', '').replace('}', '').split(',')
+    if data.source_field not in ['{}', '']:
+        return data.source_field.replace('{', '').replace('}', '').split(',')
+    else:
+        return []
 
 def get_added_columns(id_mapping):
     try:

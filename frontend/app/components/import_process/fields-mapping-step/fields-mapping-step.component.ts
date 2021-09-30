@@ -470,7 +470,7 @@ export class FieldsMappingStepComponent implements OnInit {
                   form.setValue(field["source_field"] == 'true')
                 }
             }
-            if (field["target_field"] == 'altitudes_generate') {
+            else if (field["target_field"] == 'altitudes_generate') {
               const form = this.syntheseForm
                 .get('altitudes_generate')
               if(form) {
@@ -478,7 +478,7 @@ export class FieldsMappingStepComponent implements OnInit {
               }
                 
             }
-            if (columnsArray.includes(field["source_field"]) || field["source_field"].every(val => columnsArray.includes(val))) {
+            else if (columnsArray.includes(field["source_field"]) || field["source_field"].every(val => columnsArray.includes(val))) {
               const target_form = this.syntheseForm.get(field["target_field"])
               if (target_form) {
                 target_form.setValue(field["source_field"]);
