@@ -39,6 +39,7 @@ def insert_into_synthese(
             json_build_object({select_part})
             """.format(
                 select_part=','.join([f"'{a}',{a}" for a in additional_data]))
+        
         query = """
             BEGIN;
             ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_meta_dates_change_synthese;
