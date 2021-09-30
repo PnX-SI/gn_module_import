@@ -214,8 +214,8 @@
                                             </option>
                                         </select>
                                         <mat-form-field *ngIf="field.name_field == 'additional_data'">
-                                            <mat-select formControlName="{{field.name_field}}" multiple>
-                                              <mat-option *ngFor="let column of columns" [value]="column.id">{{column.id}}</mat-option>
+                                            <mat-select class="form-control form-control-sm" formControlName="{{field.name_field}}" multiple >
+                                              <mat-option *ngFor="let column of columns" [class.isSelected]="column.selected" [value]="column.id">{{column.id}}</mat-option>
                                             </mat-select>
                                           </mat-form-field>
                                           
