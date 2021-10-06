@@ -61,14 +61,14 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         this.sub = this._activedRoute.params.subscribe(params => {
             const idImport: number = params["id_import"];
             this._dataService.getOneImport(idImport).subscribe(data => {
+                this.loadValidData(idImport);
+                const fieldMapping = data.id_field_mapping;
+                const contentMapping = data.id_content_mapping;
+                this.loadMapping(fieldMapping);
+                this.loadNomenclature(idImport, fieldMapping, contentMapping);
                 if (data.import_count) {
-                    // Load additionnal data if imported data
-                    this.loadValidData(idImport);
-                    const fieldMapping = data.id_field_mapping;
-                    const contentMapping = data.id_content_mapping;
                     const idSource = data.id_source;
-                    this.loadMapping(fieldMapping);
-                    this.loadNomenclature(idImport, fieldMapping, contentMapping);
+                    // Load additionnal data if imported data
                     this.loadTaxaDistribution(idSource)
                 }
                 // Add property to show errors lines. Need to do this to
@@ -205,7 +205,12 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     exportAsPDF() {
         var img = document.createElement('img');
         this.loadingPdf = true
-        let chartImg = this.getChartPNG()
+        // Init chartImg
+        let chartImg = document.createElement('img');
+        // Check if the chart exists
+        if  (<HTMLCanvasElement>document.getElementById('chart')) {
+            let chartImg = this.getChartPNG();
+        }
         leafletImage(this._map.map, function(err, canvas) {
             img.src = canvas.toDataURL('image/png');
             this._dataService.getPdf(this.import.id_import, img.src, chartImg.src)
