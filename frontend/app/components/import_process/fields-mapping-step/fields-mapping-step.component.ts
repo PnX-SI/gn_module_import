@@ -20,6 +20,8 @@ import {
 } from "../steps.service";
 import { forkJoin } from "rxjs/observable/forkJoin";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { FileService } from "../../../services/file.service";
+
 
 @Component({
   selector: "fields-mapping-step",
@@ -52,16 +54,22 @@ export class FieldsMappingStepComponent implements OnInit {
   public updateMapping: boolean = false;
   public fieldMappingForm = new FormControl();
   public newMappingForm = new FormControl();
+  public importForm: FormGroup;
+  public importJsonFile: File;  // json import to create model
   public mappedColCount: number;
   public unmappedColCount: number;
   public mappedList = [];
   public nbLignes: number;
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
+  @ViewChild("modalImport") modalImport: any;
+  public modalImportVar: NgbModal;
   @ViewChild("modalNoNomenc") modalNoNomenc: any;
+  
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
+    private _fs: FileService,
     private _commonService: CommonService,
     private _fb: FormBuilder,
     private stepService: StepsService,
@@ -470,48 +478,11 @@ export class FieldsMappingStepComponent implements OnInit {
   fillMapping(id_mapping, fileColumns) {
     this.id_mapping = id_mapping;
     // build an array from array of object
-    const columnsArray: Array<string> = this.columns.map(col => col.id);
     this._ds.getMappingFields(this.id_mapping).subscribe(
       mappingFields => {
-        this.mappedList = [];
-        
         this.enableMapping(this.syntheseForm);
-        if (mappingFields[0] != "empty") {
-          for (let field of mappingFields) {
-            
-            if (field["target_field"] == 'unique_id_sinp_generate') {
-              const form = this.syntheseForm
-                .get('unique_id_sinp_generate');
-                if(form) {
-                  form.setValue(field["source_field"] == 'true')
-                }
-            }
-            if (field["target_field"] == 'altitudes_generate') {
-              const form = this.syntheseForm
-                .get('altitudes_generate')
-              if(form) {
-                form.setValue(field["source_field"] == 'true');
-              }
-                
-            }
-
-            if (columnsArray.includes(field["source_field"])) {
-              const target_form = this.syntheseForm.get(field["target_field"])
-              if (target_form) {
-                target_form.setValue(field["source_field"]);
-                this.mappedList.push(field["target_field"]);
-              }
-
-            }
-          }
-          this.shadeSelectedColumns(this.syntheseForm);
-          this._fm.geoFormValidator(this.syntheseForm);
-        } else {
-          this.fillEmptyMapping(this.syntheseForm);
-        }
-        this.onFormMappingChange();
-        this.count(this.syntheseForm);
-        this.formReady = true;
+        this.fillFormFromMappings(mappingFields);
+        
       },
       error => {
         if (error.statusText === "Unknown Error") {
@@ -527,6 +498,47 @@ export class FieldsMappingStepComponent implements OnInit {
       }
     );
   }
+
+  fillFormFromMappings(fields) {
+    this.mappedList = [];
+    if (fields[0] != "empty") {
+      const columnsArray: Array<string> = this.columns.map(col => col.id);
+      for (let field of fields) {
+        
+        if (field["target_field"] == 'unique_id_sinp_generate') {
+          const form = this.syntheseForm
+            .get('unique_id_sinp_generate');
+            if(form) {
+              form.setValue(field["source_field"] == 'true')
+            }
+        }
+        if (field["target_field"] == 'altitudes_generate') {
+          const form = this.syntheseForm
+            .get('altitudes_generate')
+          if(form) {
+            form.setValue(field["source_field"] == 'true');
+          }
+            
+        }
+
+        if (columnsArray.includes(field["source_field"])) {
+          const target_form = this.syntheseForm.get(field["target_field"])
+          if (target_form) {
+            target_form.setValue(field["source_field"]);
+            this.mappedList.push(field["target_field"]);
+          }
+
+        }
+      }
+      this.shadeSelectedColumns(this.syntheseForm);
+      this._fm.geoFormValidator(this.syntheseForm);
+    } else {
+      this.fillEmptyMapping(this.syntheseForm);
+    }
+    this.onFormMappingChange();
+    this.count(this.syntheseForm);
+    this.formReady = true;
+    }
 
   createMapping() {
     this.fieldMappingForm.reset();
@@ -546,24 +558,84 @@ export class FieldsMappingStepComponent implements OnInit {
     this.updateMapping = true;
   }
 
-  saveMappingName(mappingName, targetForm) {
+  displayError(message) {
+    this._commonService.regularToaster(
+      "error",
+      `ERROR: ${message}`
+    );
+  }
+
+  onImportModal() {
+    // No need of forbiddenName validator since the API
+    // is taking care of that
+    // Same as content-mapping
+    this.importForm = this._fb.group({
+      name: ["", [Validators.required]],
+      file: ["", [Validators.required]]
+    });
+    this.modalImportVar = this._modalService.open(this.modalImport);
+  }
+
+  onFileSelect(event: Event) {
+    this.importJsonFile = (event.target as HTMLInputElement).files[0];
+    // We could patch a value to the importForm
+    // like: this.importForm.patchValue({file: jsonfile})
+    // BUT DOMException...
+  }
+
+  onFileProvided() {
+    const name = this.importForm.get('name').value
+    const jsonfile = this.importJsonFile
+    // stop here if form is invalid
+    this.newMappingForm.patchValue(name)
+    // Save a new mapping name and load the json to fill in the fields
+    this.saveMappingNameForJson(this.newMappingForm.value, 
+                                this.syntheseForm, 
+                                jsonfile)
+  }
+
+  loadMapping(data) {
+    // Reset mapping
+    this.fillEmptyMapping(this.syntheseForm);
+    // Fill mapping from data 
+    // (array of object with target_field and source_field)
+    this.fillFormFromMappings(data)
+    // If no mapping had been done
+    if (this.mappedList.length == 0) {
+      this._commonService.regularToaster(
+        "error",
+        "ERROR: Aucun champ n'a pu être mappé"
+      );
+    }
+  }
+
+  saveMappingNameForJson(mappingName, targetForm, jsonfile) {
+    // Only used to import a mapping from a json
     let mappingType = "FIELD";
     const value = {};
     value["mappingName"] = mappingName;
     this._ds.postMappingName(value, mappingType).subscribe(
-      new_id_mapping => {
+      new_id_mapping => {        
         this.stepData.id_field_mapping = new_id_mapping;
-        this.newMapping = false;
-        this.newMappingForm.reset();
+        // this.newMapping = false;
+        // this.newMappingForm.reset();
         this._ds.getMappings("FIELD").subscribe(result => {
+          // Reads here the json not to be raced by the emptying of the fields
+          this._fs.readJson(jsonfile,
+            this.loadMapping.bind(this),
+            this.displayError.bind(this))
+          // Updates the select box with the new model
           this.userFieldMappings = result;
           const newMapping = this.userFieldMappings.find(
-            el => el.id_mapping == new_id_mapping
-          );
+              el => el.id_mapping == new_id_mapping
+            );
           this.fieldMappingForm.setValue(newMapping);
+          // Close the modal when everything has been done
+          this.modalImportVar.close()
         });
 
         this.enableMapping(targetForm);
+
       },
       error => {
         if (error.statusText === "Unknown Error") {
