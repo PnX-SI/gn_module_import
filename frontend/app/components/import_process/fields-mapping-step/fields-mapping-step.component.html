@@ -53,9 +53,16 @@
                             >
                                 Modifier le nom du modèle d'import
                             </button>
+                            <button
+                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
+                                class="mb-3 ml-1"
+                                mat-raised-button
+                                color="primary"
+                                (click)="onImportModal()"
+                            >
+                                Charger un modèle d'import
+                            </button>
                         </div>
-
-
                         <div
                             *ngIf="this.IMPORT_CONFIG.DISPLAY_CHECK_BOX_MAPPED_FIELD"
                             class="form-check"
@@ -369,3 +376,81 @@
         > OK </button>
     </div>
 </ng-template>
+
+<ng-template
+        #modalImport
+        let-modal
+    >
+        <div class="modal-header">
+            <h4
+                class="modal-title"
+                id="modal-basic-title"
+            >Création d'un modèle de champs à partir d'un fichier json</h4>
+            <button
+                type="button"
+                class="close"
+                aria-label="Close"
+                (click)="modal.dismiss('Cross click')"
+            >
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <form [formGroup]="importForm" (ngSubmit)="onFileProvided()">
+            <div class="modal-body">
+                <div class="modal-body">
+                    <input
+                        type="text"
+                        class="form-control mr-2"
+                        placeholder="Veuillez entrer le nom du nouveau modèle"
+                        formControlName="name" 
+                        >
+                    <input
+                        type="file"
+                        accept=".json"
+                        class="form-control mr-2"
+                        (change)="onFileSelect($event)"
+                        formControlName="file" 
+                        >
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="submit"
+                    mat-raised-button
+                    color="primary"
+                >Importer un nouveau modèle</button>
+            </div>
+        </form>
+    </ng-template>
+
+<ng-template
+    #modalNoNomenc
+    let-modal
+>
+    <div class="modal-header">
+        <h4
+            class="modal-title"
+            id="modal-basic-title"
+        >Aucune nomenclature n'a pu être mappée</h4>
+        <button
+            type="button"
+            class="close"
+            aria-label="Close"
+            (click)="modal.dismiss('Cross click')"
+        >
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        Puisqu'aucune correspondance de nomenclature n'a pu
+        être trouvée, l'étape 3 a été passée.
+    </div>
+    <div class="modal-footer">
+        <button
+            type="button"
+            class="btn btn-info"
+            (click)="modal.dismiss('Cross click')"
+        > OK </button>
+    </div>
+</ng-template>
+

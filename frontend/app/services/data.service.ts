@@ -2,15 +2,17 @@ import { Injectable } from "@angular/core";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { AppConfig } from "@geonature_config/app.config";
 import { ModuleConfig } from "../module.config";
+import { DataFormService } from "@geonature_common/form/data-form.service";
 
 const HttpUploadOptions = {
   headers: new HttpHeaders({ Accept: "application/json" })
 };
 const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
+const GNAPI: string = AppConfig.API_ENDPOINT;
 
 @Injectable()
 export class DataService {
-  constructor(private _http: HttpClient) { }
+  constructor(private _http: HttpClient, private _gnFormService: DataFormService) { }
 
   getImportList() {
     return this._http.get<any>(urlApi);
@@ -176,6 +178,12 @@ export class DataService {
     );
   }
 
+  getNomencInfoSynchronous(id_import: number, 
+                           id_field_mapping: number): Promise<{content_mapping_info: Array<Object>}> {
+    // Same as NomencInfo but returns the Promise
+    return this.getNomencInfo(id_import, id_field_mapping).toPromise();
+  }
+
   importData(import_id) {
     return this._http.get<any>(`${urlApi}/importData/${import_id}`);
   }
@@ -202,5 +210,23 @@ export class DataService {
 
   sendEmail(import_id) {
     return this._http.get<any>(`${urlApi}/sendemail`);
+  }
+
+  getTaxaRepartition(idSource, taxaRank) {
+    let params = {
+      id_source: idSource
+    }
+    return this._gnFormService.getTaxaDistribution(taxaRank, params)
+  }
+
+  getPdf(importId, mapImg, chartImg) {
+    var formData = new FormData();
+    // formData.append("map", new Blob([mapImg], {type: 'image/png'}), "map");
+    // formData.append("chart", new Blob([chartImg], {type: 'image/png'}), "chart");
+    formData.append("map", mapImg);
+    formData.append("chart", chartImg);
+    console.log(formData)
+    return this._http.post(`${urlApi}/export_pdf/${importId}`, 
+                           formData, {responseType: 'blob'});
   }
 }

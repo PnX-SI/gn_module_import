@@ -15,7 +15,6 @@
 
                 <div>
                     <div
-                        *ngIf="nbWarning > 0 || nbError > 0"
                         class="content-report card-margin"
                     >
                         <button
@@ -23,7 +22,7 @@
                             mat-raised-button
                             color=accent
                         >
-                            Rapport d'erreurs/avertissement
+                            Rapport d'import/erreurs/avertissement
                         </button>
                         <div
                         *ngIf="nbError==0 && nbWarning == 0"
