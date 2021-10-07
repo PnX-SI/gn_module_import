@@ -1,7 +1,7 @@
 <div class="card main">
     <div class="card-body">
         <div class="row">
-            <div class="col-12 col-lg-6">
+            <div class="col-12 col-lg-7">
                 <div class="card content">
                     <div class="card-body">
                         <div class="d-flex display justify-content-between">
@@ -195,8 +195,11 @@
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-lg-6">
-                <div class="card content">
+            <div class="col-12 col-lg-5">
+                <div class="card content"> 
+                    <div class="card-header">
+                        <h5 class="card-title">Export</h5>
+                    </div>
                     <div class="card-body">
                         <div class="d-flex justify-content-center">
                             <button 
@@ -205,27 +208,27 @@
                             [disabled]="loadingPdf"
                             (click)="exportAsPDF()"
                             >
-                            Export PDF
+                            Synthèse PDF
                             <mat-icon *ngIf="loadingPdf">
                                 <mat-spinner color=warn diameter="30">
                                 </mat-spinner>
                             </mat-icon>
                             </button>
                             <button
-                                [attr.disabled]="fields === undefined || fields?.length == 0 ? true: null"
+                                [attr.hidden]="fields === undefined || fields?.length == 0 ? true: null"
                                 class="mat-raised-button mat-primary"
                                 (click)="exportCorrespondances()"
                             >
-                                Exporter les correspondances
+                                Correspondances de champs
                             </button>
                             <button 
-                                [attr.disabled]="matchedNomenclature === undefined || matchedNomenclature?.length == 0 ? true: null"
+                                [attr.hidden]="matchedNomenclature === undefined || matchedNomenclature?.length == 0 ? true: null"
                                 class="mat-raised-button mat-primary"
                                 (click)="exportNomenclatures()"
                             >
-                                Exporter les nomenclatures
+                                Correspondances de nomenclatures
                             </button>
-                            <button class="mat-raised-button mat-primary" disabled> Correspondances 
+                            <button class="mat-raised-button mat-primary" hidden> Correspondances 
                                 d’identifiants</button>
                         </div>
                     </div>
