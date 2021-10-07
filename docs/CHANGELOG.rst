@@ -2,12 +2,12 @@
 CHANGELOG
 =========
 
-1.1.5 (unreleased)
+1.1.5 (2021-10-07)
 ------------------
 
-**🐛 Corrections**
+**🚀 Nouveautés**
 
-* 
+* Compatibilité Marshmallow 3 / GeoNature 2.8.0
 
 1.1.4 (2021-06-30)
 ------------------
