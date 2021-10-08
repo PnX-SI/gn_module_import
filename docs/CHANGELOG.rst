@@ -7,7 +7,7 @@ CHANGELOG
 
 **🚀 Nouveautés**
 
-* Compatibilité Marshmallow 3 / GeoNature 2.8.0
+* Compatibilité avec Marshmallow 3 / GeoNature 2.8.0 (et plus)
 
 1.1.4 (2021-06-30)
 ------------------
