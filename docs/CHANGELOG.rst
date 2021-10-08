@@ -5,9 +5,11 @@ CHANGELOG
 1.1.5 (2021-10-07)
 ------------------
 
+Nécessite la version 2.8.0 (ou plus) de GeoNature
+
 **🚀 Nouveautés**
 
-* Compatibilité avec Marshmallow 3 / GeoNature 2.8.0 (et plus)
+* Compatibilité avec Marshmallow 3 / GeoNature 2.8.0
 
 1.1.4 (2021-06-30)
 ------------------
