@@ -1,0 +1,10 @@
+goodtables>=2.1.4,<2.2.0
+numpy>=1.19.4,<1.20.0
+pandas>=0.24.2,<0.25.0
+dask>=2.0.0,<2.1.0
+dask[dataframe]>=2.0.0,<2.1.0
+geopandas>=0.5.1,<0.6.0
+psutil>=5.4.7,<5.5.0
+toolz>=0.10.0,<0.11.0
+cloudpickle>=1.3.0,<1.4.0
+geonature>=2.7.5

@@ -14,7 +14,7 @@ SET client_min_messages = warning;
 -- Créer le schéma du module IMPORT
 CREATE SCHEMA IF NOT EXISTS gn_imports;
 
-SET search_path = gn_imports, pg_catalog;
+SET search_path = gn_imports, pg_catalog, public;
 SET default_with_oids = false;
 
 ------------------------

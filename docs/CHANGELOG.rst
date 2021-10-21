@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+1.2.0 (unreleased)
+------------------
+
+**🚀 Nouveautés**
+
+* Packaging du module
+
+
 1.1.5 (2021-10-07)
 ------------------
 
