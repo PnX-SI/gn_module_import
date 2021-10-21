@@ -173,23 +173,23 @@ INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
 -----------------
 ---PERMISSIONS---
 -----------------
-DELETE FROM gn_permissions.cor_role_action_filter_module_object
-WHERE id_object = (SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING');
-
-DELETE FROM gn_permissions.cor_object_module
-WHERE id_object = (SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING');
-
-DELETE FROM gn_permissions.t_objects
-WHERE code_object = 'MAPPING'; 
-
 INSERT INTO gn_permissions.t_objects
-(code_object, description_object)
-VALUES('MAPPING', 'Représente un mapping dans le module d''import');
+    (code_object, description_object)
+VALUES
+    ('MAPPING', 'Représente un mapping dans le module d''import');
 
-INSERT INTO gn_permissions.cor_object_module
-(id_object, id_module)
-VALUES(
-	(SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING'),
-	(SELECT id_module FROM gn_commons.t_modules WHERE module_code = 'IMPORT')
-);
+DO $$ BEGIN
+    IF EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE  table_schema = 'gn_permissions'
+        AND    table_name   = 'cor_object_module'
+    ) THEN
+        INSERT INTO gn_permissions.cor_object_module
+            (id_object, id_module)
+        VALUES(
+            (SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING'),
+            (SELECT id_module FROM gn_commons.t_modules WHERE module_code = 'IMPORT')
+        );
+    END IF;
+END $$;
 
