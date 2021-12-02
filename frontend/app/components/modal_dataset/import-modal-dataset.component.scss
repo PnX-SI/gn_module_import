@@ -2,13 +2,13 @@
   color: red;
 }
 
-/deep/ngb-modal-window {
+::ng-deep ngb-modal-window {
   display: flex !important;
   justify-content: space-around;
   flex-direction: column;
 }
 
-/deep/.modal-content {
+::ng-deep .modal-content {
   min-width: 500px;
 }
 
