@@ -8,7 +8,7 @@
             <!-- Choix de la liste des nomenclatures -->
             <form class="was-validated">
                 <fieldset>
-                    <div *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.R != '0'">
+                    <div *ngIf="cruvedStore?.cruved?.IMPORT?.module_objects.MAPPING.cruved.R != '0'">
                         <legend class="px-1">
                             Choix du modèle d'import
                         </legend>
@@ -35,7 +35,7 @@
                     <div class="row">
                         <div class="col">
                             <button
-                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
+                                *ngIf="cruvedStore?.cruved?.IMPORT?.module_objects.MAPPING.cruved.C != '0'"
                                 class="d-flex justify-content-center align-content-between mb-3"
                                 mat-raised-button
                                 color="primary"
@@ -46,7 +46,7 @@
                         </div>
                         <div class="col">
                             <button
-                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
+                                *ngIf="cruvedStore?.cruved?.IMPORT?.module_objects.MAPPING.cruved.C != '0'"
                                 class="d-flex justify-content-center align-content-between mb-3"
                                 mat-raised-button
                                 color="primary"
