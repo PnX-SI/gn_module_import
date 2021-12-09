@@ -19,7 +19,7 @@ import {
   Step4Data
 } from "../steps.service";
 import { forkJoin } from "rxjs/observable/forkJoin";
-import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { NgbModal, NgbModalRef } from "@ng-bootstrap/ng-bootstrap";
 import { FileService } from "../../../services/file.service";
 
 
@@ -63,7 +63,7 @@ export class FieldsMappingStepComponent implements OnInit {
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
   @ViewChild("modalImport") modalImport: any;
-  public modalImportVar: NgbModal;
+  public modalImportVar: NgbModalRef;
   @ViewChild("modalNoNomenc") modalNoNomenc: any;
   
   constructor(

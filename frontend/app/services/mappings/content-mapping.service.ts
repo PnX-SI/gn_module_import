@@ -1,7 +1,9 @@
-import { Injectable, Observable} from "@angular/core";
+import { Injectable } from "@angular/core";
 import { DataService } from "../data.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../module.config";
+import { Observable } from "rxjs";
+
 
 @Injectable()
 export class ContentMappingService {
@@ -17,7 +19,7 @@ export class ContentMappingService {
     this.displayMapped = ModuleConfig.DISPLAY_MAPPED_VALUES;
   }
 
-  getMappingNamesListMap(newContentId?, formControl?): Observable<number | null>{
+  getMappingNamesListMap(newContentId?, formControl?): Observable<number | void>{
     // get list of existing content mapping in the select
     return this._ds.getMappings("content").map(
       result => {

@@ -13,7 +13,7 @@ import { ContentMappingService } from "../../../services/mappings/content-mappin
 import { CommonService } from "@geonature_common/service/common.service";
 import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
 import { ModuleConfig } from "../../../module.config";
-import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { NgbModal, NgbModalRef } from "@ng-bootstrap/ng-bootstrap";
 
 
 @Component({
@@ -54,7 +54,7 @@ export class ContentMappingStepComponent implements OnInit {
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
   @ViewChild("modalImport") modalImport: any;
-  public modalImportVar: NgbModal;
+  public modalImportVar: NgbModalRef;
 
   constructor(
     private stepService: StepsService,
