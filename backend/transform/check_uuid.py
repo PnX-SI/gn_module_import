@@ -9,7 +9,6 @@ from geonature.utils.env import DB
 from .utils import (
     fill_col,
     fill_map,
-    set_is_valid,
     set_error_and_invalid_reason,
     set_warning_reason,
 )
@@ -82,7 +81,6 @@ def check_uuid(
                     )
                     df["temp2"] = ~df["temp"].astype("bool")
 
-                    set_is_valid(df, "temp2")
                     id_rows_errors = df.index[df["temp2"] == False].to_list()
 
                     logger.info(
@@ -115,7 +113,6 @@ def check_uuid(
                         )
                         df["temp"] = ~df["temp"]
 
-                        set_is_valid(df, "temp")
                         id_rows_errors = df.index[df["temp"] == False].to_list()
 
                         logger.info(

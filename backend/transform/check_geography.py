@@ -7,7 +7,7 @@ import numpy as np
 from pyproj import CRS, Transformer, Proj
 
 from ..logs import logger
-from .utils import fill_map, set_is_valid, set_error_and_invalid_reason
+from .utils import fill_map, set_error_and_invalid_reason
 from ..wrappers import checker
 from ..utils.utils import get_config
 from ..db.queries.geometries import check_inside_area_id
@@ -130,7 +130,6 @@ def manage_erros_and_validity(
         High level function to set column which are valid in the dataframe
         and to write in database the errors
     """
-    set_is_valid(df, df_temp_col)
     if len(id_rows_error) > 0:
         set_error_and_invalid_reason(
             df=df,
@@ -286,7 +285,6 @@ def check_geography(
             df["valid_wkt"] = df.iloc[
                 line_with_codes, df.columns.get_loc("valid_wkt")
             ] = True
-            set_is_valid(df, "valid_wkt")
             id_rows_errors = df.index[df["valid_wkt"] == False].to_list()
 
             logger.info(
@@ -339,7 +337,6 @@ def check_geography(
             )
             # set gn_is_valid where not is_multiple_type_code = true (~ invert a boolean)
             df["line_with_one_code"] = ~df["is_multiple_type_code"]
-            set_is_valid(df, "line_with_one_code")
             id_rows_errors = df.index[df["line_with_one_code"] == False].to_list()
 
             if len(id_rows_errors) > 0:

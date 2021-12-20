@@ -84,8 +84,7 @@ def data_cleaning(
         # user_error = []
         added_cols = {}
 
-        # set gn_is_valid and gn_invalid_reason:
-        df["gn_is_valid"] = True
+        # set gn_invalid_reason:
         df["gn_invalid_reason"] = ""
 
         # get synthese column info:

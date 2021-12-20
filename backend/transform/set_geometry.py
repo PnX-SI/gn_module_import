@@ -163,8 +163,7 @@ class GeometrySetter:
         """
         query = """
         UPDATE {table}
-        SET gn_is_valid = 'False',
-        gn_invalid_reason = 'INVALID_GEOMETRY'
+        SET gn_invalid_reason = 'INVALID_GEOMETRY'
         WHERE ST_IsValid(gn_the_geom_4326) IS FALSE
         RETURNING gn_pk;
         """.format(
@@ -300,14 +299,13 @@ class GeometrySetter:
 
     def set_attachment_referential_errors(self):
         """
-        Method who update the import table to set gn_is_valid=false
+        Method who update the import table to set the invalid reason
         where the code attachement given is not correct
         Take only the row where its valid to not take raise twice error for the same line
         """
         query = """
         UPDATE {table} as i
-        SET gn_is_valid = 'False',
-        gn_invalid_reason = 'INVALID_GEOM_CODE'
+        SET gn_invalid_reason = 'INVALID_GEOM_CODE'
         FROM (
             SELECT gn_pk
             FROM {table}
@@ -343,8 +341,7 @@ class GeometrySetter:
 
         query = """
         UPDATE {table} as i
-        SET gn_is_valid = 'False',
-        gn_invalid_reason = 'GEOMETRY_OUT_OF_BOX'
+        SET gn_invalid_reason = 'GEOMETRY_OUT_OF_BOX'
         WHERE gn_pk IN (
         SELECT gn_pk as id_rows
         FROM {table}
