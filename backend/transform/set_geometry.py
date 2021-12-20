@@ -208,7 +208,7 @@ class GeometrySetter:
         query = """
                 UPDATE {table_name} 
                 SET {target_colmun} = ST_SetSRID(given_geom, {srid})
-                WHERE gn_is_valid = 'True' AND given_geom IS NOT NULL;
+                WHERE gn_invalid_reason IS NULL AND given_geom IS NOT NULL;
                 """.format(
             table_name=self.table_name, target_colmun=target_colmun, srid=srid,
         )
@@ -224,7 +224,7 @@ class GeometrySetter:
             ST_SetSRID(given_geom, {origin_srid}), 
             {target_srid}
             )
-        WHERE gn_is_valid = 'True';
+        WHERE gn_invalid_reason IS NULL;
         """.format(
             table_name=self.table_name,
             target_geom_col=target_geom_col,
@@ -241,7 +241,7 @@ class GeometrySetter:
         query = """
             UPDATE {table_name}
             SET {target_geom_column} = ST_centroid({source_geom_column})
-            WHERE gn_is_valid = 'True'
+            WHERE gn_invalid_reason IS NULL
             ;
             """.format(
             table_name=self.table_name,
@@ -317,7 +317,7 @@ class GeometrySetter:
             {code_dep_col} IS NOT NULL
             )
         ) as sub 
-        WHERE sub.gn_pk = i.gn_pk AND i.gn_is_valid = 'True'
+        WHERE sub.gn_pk = i.gn_pk AND i.gn_invalid_reason IS NULL
         RETURNING i.gn_pk, 
         {code_commune_col} as code_com,
         {code_maille_col} as code_maille,
