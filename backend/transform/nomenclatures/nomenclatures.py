@@ -354,6 +354,7 @@ def get_nomenc_info(form_data, schema_name, table_name):
                     "definition": val.nomenc_definitions,
                     "name": clean_string(val.nomenc_values),
                     "cd_nomenclature": str(val.nomenc_cd),
+                    "mnemonique": str(val.nomenc_mnemo),
                 }
                 val_def_list.append(d)
 
