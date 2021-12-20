@@ -78,6 +78,7 @@ def get_nomenclature_values(mnemoniques_type: list):
 def get_nomenc_values(nommenclature_abb):
     query = """SELECT
             nom.id_nomenclature AS nomenc_id,
+            nom.cd_nomenclature AS nomenc_cd,
             nom.label_default AS nomenc_values, 
             nom.definition_default AS nomenc_definitions
         FROM ref_nomenclatures.bib_nomenclatures_types AS bib
