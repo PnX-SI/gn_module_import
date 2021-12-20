@@ -81,6 +81,8 @@ class TImports(ModelCruvedAutorization):
         "VUserImportsErrors", lazy="joined", order_by="VUserImportsErrors.error_type"
     )
     dataset = DB.relationship("TDatasets", lazy="joined")
+    need_fix = DB.Column(DB.Boolean, default=False)
+    fix_comment = DB.Column(DB.TEXT, nullable=True)
 
     def to_dict(self, user=None, user_cruved=None):
         import_as_dict = self.as_dict(True)
