@@ -151,7 +151,10 @@ export class ImportReportComponent implements OnInit, OnDestroy {
                             // source value, needs to rename
                             val.target_value = val.source_value
                             val.source_value = elm.value;
-                            val.definition = elm.definition}
+                            val.definition = elm.definition;
+                            val.cd_nomenclature = elm.cd_nomenclature;
+                            val.mnemonique = elm.mnemonique;
+                        }
                             )[0]
                     )
         }
