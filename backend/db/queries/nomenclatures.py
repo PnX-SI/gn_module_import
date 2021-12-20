@@ -80,7 +80,8 @@ def get_nomenc_values(nommenclature_abb):
             nom.id_nomenclature AS nomenc_id,
             nom.cd_nomenclature AS nomenc_cd,
             nom.label_default AS nomenc_values, 
-            nom.definition_default AS nomenc_definitions
+            nom.definition_default AS nomenc_definitions,
+            bib.mnemonique AS nomenc_mnemo
         FROM ref_nomenclatures.bib_nomenclatures_types AS bib
         JOIN ref_nomenclatures.t_nomenclatures AS nom ON nom.id_type = bib.id_type
         WHERE bib.mnemonique = :nomenc
