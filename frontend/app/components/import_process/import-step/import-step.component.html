@@ -11,9 +11,9 @@
 
                 Rapports
             </h4>
-            <div class="card-body card-margin">
+            <div class="card-body card-margin row">
 
-                <div>
+                <div class="col-12 col-lg-6">
                     <div
                         class="content-report card-margin"
                     >
@@ -44,8 +44,31 @@
                             (click)="_csvExport.onCSV(idImport)"
                         > Exporter vos {{nInvalidData}} observations invalides </button>
                     </div>
-
                 </div>
+                <div class="col-12 col-lg-6 mt-2 vl">
+                    <div class="d-flex justify-content-between">
+                        <span class="mr-1">Cet import nécessite-t-il des corrections ?</span>
+                        <mat-slide-toggle
+                        [(ngModel)]="needFix">
+                        {{ needFix ? 'Oui' : 'Non'}}
+                        </mat-slide-toggle>
+                    </div>
+                    
+                    <mat-form-field class="d-block">
+                        <textarea matInput 
+                        [(ngModel)]="fixComment"
+                        placeholder="Commentaire"
+                        ></textarea>
+                    </mat-form-field>
+                    <div class="d-flex justify-content-end">
+                    <button 
+                            mat-raised-button
+                            color=primary
+                            (click)="setFix()"
+                        >Mettre à jour</button>
+                    </div>
+            </div>
+
             </div>
         </div>
 
