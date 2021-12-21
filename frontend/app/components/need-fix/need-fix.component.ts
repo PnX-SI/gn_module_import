@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from "@angular/core";
+import { Component, AfterViewInit, Input, Output, EventEmitter } from "@angular/core";
 import { CommonService } from "@geonature_common/service/common.service";
 
 import { DataService } from "../../services/data.service";
@@ -10,7 +10,7 @@ import FixModel from "./need-fix.models";
   templateUrl: "need-fix.component.html",
   styleUrls: ["./need-fix.component.scss"],
 })
-export class NeedFixComponent implements OnInit {
+export class NeedFixComponent implements AfterViewInit {
   @Input() fix: FixModel;
   @Input() importId: number;
 
@@ -22,7 +22,7 @@ export class NeedFixComponent implements OnInit {
     private _commonService: CommonService
   ) {}
 
-  ngOnInit() {
+  ngAfterViewInit() {
     this._permissionsService
       .canUserUpdate(this.importId)
       .toPromise()
