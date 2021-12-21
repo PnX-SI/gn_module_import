@@ -192,6 +192,20 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/getValidData/${importId}`);
   }
 
+  setNeedFix(importId: number, 
+             needFix?: boolean, 
+             fixComment?: string) {
+    let json: {need_fix?: boolean, fix_comment?: string} = {}
+    if (needFix != undefined) {
+      json.need_fix = needFix
+    }
+    if (fixComment != undefined) {
+      json.fix_comment = fixComment
+    }
+
+    return this._http.put(`${urlApi}/setFix/${importId}`, json)
+  }
+
   getErrorCSV(importId: number) {
     let fd = new FormData();
     return this._http.post(`${urlApi}/get_errors/${importId}`, fd, {
