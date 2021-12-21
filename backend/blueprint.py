@@ -16,6 +16,7 @@ from .routes import (
     mappings,
     preview,
     uploads,
+    permissions,
 )
 
 

@@ -233,6 +233,10 @@ export class DataService {
     return this._gnFormService.getTaxaDistribution(taxaRank, params)
   }
 
+  canUpdateImport(importId) {
+    return this._http.get(`${urlApi}/permissions/U/${importId}`)
+  }
+
   getPdf(importId, mapImg, chartImg) {
     var formData = new FormData();
     // formData.append("map", new Blob([mapImg], {type: 'image/png'}), "map");
