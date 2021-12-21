@@ -1,4 +1,10 @@
-import { Component, AfterViewInit, Input, Output, EventEmitter } from "@angular/core";
+import {
+  Component,
+  AfterViewInit,
+  Input,
+  Output,
+  EventEmitter,
+} from "@angular/core";
 import { CommonService } from "@geonature_common/service/common.service";
 
 import { DataService } from "../../services/data.service";
@@ -11,10 +17,18 @@ import FixModel from "./need-fix.models";
   styleUrls: ["./need-fix.component.scss"],
 })
 export class NeedFixComponent implements AfterViewInit {
-  @Input() fix: FixModel;
-  @Input() importId: number;
-
   public hasRights: boolean = false;
+
+  @Input() fix: FixModel;
+  @Input()
+  get importId(): number {
+    return this._importId;
+  }
+  set importId(value: number) {
+    this._importId = value;
+    this.updateImportId(value);
+  }
+  private _importId: number;
 
   constructor(
     private _permissionsService: PermissionsService,
@@ -22,11 +36,15 @@ export class NeedFixComponent implements AfterViewInit {
     private _commonService: CommonService
   ) {}
 
-  ngAfterViewInit() {
-    this._permissionsService
-      .canUserUpdate(this.importId)
-      .toPromise()
-      .then((res) => (this.hasRights = res));
+  ngAfterViewInit() {}
+
+  updateImportId(value: number) {
+    if (value) {
+      this._permissionsService
+        .canUserUpdate(value)
+        .toPromise()
+        .then((res) => (this.hasRights = res));
+    }
   }
 
   setFix() {
