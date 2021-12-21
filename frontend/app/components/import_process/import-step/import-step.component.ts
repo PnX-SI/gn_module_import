@@ -6,6 +6,7 @@ import { CsvExportService } from "../../../services/csv-export.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../../module.config";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import FixModel from "../../need-fix/need-fix.models";
 
 @Component({
     selector: "import-step",
@@ -24,8 +25,7 @@ export class ImportStepComponent implements OnInit {
     nValidData: number;
     nInvalidData: number;
     validBbox: any;
-    public needFix: boolean;
-    public fixComment: string;
+    public fix: FixModel
     public spinner: boolean = false;
     public nbLignes: string = "X";
     public nbError: number;
@@ -115,23 +115,6 @@ export class ImportStepComponent implements OnInit {
         this._router.navigate([ModuleConfig.MODULE_URL]);
     }
 
-    setFix() {
-        this._ds
-          .setNeedFix(this.idImport, this.needFix, this.fixComment)
-          .toPromise()
-          .then(() => {this._commonService.regularToaster(
-            "info",
-            `Import mis à jour`
-          );})
-          .catch((err) => {
-            console.log(err);
-            this._commonService.regularToaster(
-              "error",
-              `Une erreur s'est produite : ${err.error}`
-            );
-          });
-    }
-
     getValidData() {
         this.spinner = true;
         this._ds.getValidData(this.idImport).subscribe(
@@ -142,8 +125,7 @@ export class ImportStepComponent implements OnInit {
                 this.nInvalidData = res.n_invalid_data;
                 this.validData = res.valid_data;
                 this.validBbox = res.valid_bbox;
-                this.needFix = res.fix.need;
-                this.fixComment = res.fix.comment;
+                this.fix = res.fix;
                 this.columns = [];
 
                 if (this.validData.length > 0) {
