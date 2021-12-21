@@ -452,24 +452,24 @@ def get_delimiter(schema_name, import_id):
 
 
 def get_db_need_fix_and_comment(import_id):
-    return (DB.session.query(TImports.need_fix, TImports.fix_comment)
-            .filter(TImports.id_import == import_id)
-            .one())
+    return DB.session.query(TImports.need_fix, TImports.fix_comment)\
+        .filter(TImports.id_import == import_id)
 
 
 def get_need_fix_and_comment(import_id):
-    results = get_db_need_fix_and_comment(import_id)
+    table = get_db_need_fix_and_comment(import_id)
+    results = table.one()
     return results.need_fix, results.fix_comment 
 
 
 def set_need_fix_and_comment(import_id, 
                              need_fix: bool=None, 
                              fix_comment: str=None):
-    results = get_db_need_fix_and_comment(import_id)
+    table = get_db_need_fix_and_comment(import_id)
     if need_fix is not None:
-        results.need_fix = need_fix
+        table.update({TImports.need_fix: need_fix})
     if fix_comment is not None:
-        results.fix_comment = fix_comment
+        table.update({TImports.fix_comment: fix_comment})
     try:
         DB.session.commit()
     except Exception:
