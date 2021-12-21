@@ -7,6 +7,7 @@ import { MapService } from '@geonature_common/map/map.service';
 import { ModuleConfig } from "../../module.config";
 import { DataService } from '../../services/data.service';
 import { CsvExportService } from "../../services/csv-export.service";
+import FixModel from '../need-fix/need-fix.models';
 
 @Component({
     selector: 'pnx-import-errors',
@@ -32,6 +33,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     public expansionPanelHeight: string = "60px";
     public validBbox: Object;
     public validData: Array<Object>;
+    public fix: FixModel;
     public fields: Array<Object>;
     public taxaDistribution: Array<{ count: number, group: string }>;
     public nomenclature: any;
@@ -92,6 +94,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         ).subscribe(data => {
             this.validBbox = data.valid_bbox;
             this.validData = data.valid_data;
+            this.fix = data.fix;
         })
     }
 

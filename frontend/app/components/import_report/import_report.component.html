@@ -194,6 +194,21 @@
                     </div>
                     </div>
                 </div>
+                <div class="card content">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-start">
+                            <h5 class="card-title">
+                                Requiert une correction/commentaires
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <need-fix 
+                            [fix]="fix"
+                            [importId]="import?.id_import">
+                        </need-fix>
+                    </div>
+                </div>
             </div>
             <div class="col-12 col-lg-5">
                 <div class="card content"> 
