@@ -91,8 +91,7 @@ class TImports(ModelCruvedAutorization):
         import_as_dict["author_name"] = "; ".join(
             [a.nom_role + " " + a.prenom_role for a in self.author]
         )
-        import_as_dict["dataset_name"] = import_as_dict["dataset"]["dataset_name"]
-        import_as_dict.pop("dataset")
+        import_as_dict["dataset_name"] = self.dataset.dataset_name
         import_as_dict["errors"] = import_as_dict.get("errors", [])
         name_source = "Import(id=" + str(self.id_import) + ")"
         id_source = None
