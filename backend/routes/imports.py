@@ -102,7 +102,7 @@ def update_import(id_import):
 def get_one_import(import_id):
     import_obj = TImports.query.get(import_id)
     if import_obj:
-        return import_obj.to_dict()
+        return import_obj.to_dict(fields=['errors'])
     return None
 
 
