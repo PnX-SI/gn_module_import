@@ -72,8 +72,8 @@ def get_import_list(info_role):
     )[0]
 
     fields = [
-        'errors',
-        'dataset',
+        'errors.id_user_error',
+        'dataset.dataset_name',
         'author',
     ]
 
