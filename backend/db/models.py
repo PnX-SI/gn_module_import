@@ -82,8 +82,8 @@ class TImports(ModelCruvedAutorization):
     )
     dataset = DB.relationship("TDatasets", lazy="joined")
 
-    def to_dict(self, user=None, user_cruved=None):
-        import_as_dict = self.as_dict(True)
+    def to_dict(self, user=None, user_cruved=None, fields=None):
+        import_as_dict = self.as_dict(fields=fields)
         if user and user_cruved:
             import_as_dict["cruved"] = self.get_model_cruved(user, user_cruved)
         if import_as_dict["date_end_import"] is None:
