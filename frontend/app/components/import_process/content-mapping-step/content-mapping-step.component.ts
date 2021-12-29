@@ -253,10 +253,28 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   loadMapping(data) {
+    // Set the proper ids by matching mnemonique and cd_nomenclature
+    // between data and content_mapping_info
+    data = this.correctMapping(data)
     // Since the exported json is of the same format
     // as the field one, we need to transform it to the correct format
     // (see API calls)
     this.fillFormFromMappings(data.map(e => [e]))
+  }
+
+  correctMapping(data) {
+    return data.map((element) => {
+      const nomenc = this.stepData.contentMappingInfo.filter(
+        (content) => content.nomenc_abbr == element.mnemonique
+      )[0];
+      if (nomenc) {
+        const _id = nomenc.nomenc_values_def.filter(
+          (val) => val.cd_nomenclature == element.cd_nomenclature
+        )[0];
+        element.id_target_value = _id.id;
+      }
+      return element
+    });
   }
 
   isEnabled(value_def_id: string) {
