@@ -138,7 +138,6 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         
         if (sourceValues.length > 0) {
             this.matchedNomenclature = this.contentMapping.map(elm => elm[0])
-            
             // For each values in target_values (this.matchedNomenclature)
             // filter with the id of target_values with the id of source
             // values to get the actual value
@@ -146,7 +145,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             this.matchedNomenclature.forEach(
                 val => sourceValues.filter(
                     elm => parseInt(elm.id) == val.id_target_value).map(
-                        function(elm) {
+                        elm => {
                             // Carefull the target_value is actually the
                             // source value, needs to rename
                             val.target_value = val.source_value
@@ -154,8 +153,8 @@ export class ImportReportComponent implements OnInit, OnDestroy {
                             val.definition = elm.definition;
                             val.cd_nomenclature = elm.cd_nomenclature;
                             val.mnemonique = elm.mnemonique;
-                        }
-                            )[0]
+                            }
+                        )[0]
                     )
         }
     }
