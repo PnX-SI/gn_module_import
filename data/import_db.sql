@@ -259,6 +259,9 @@ ALTER TABLE ONLY cor_role_import
  ALTER TABLE ONLY cor_role_import
  ADD CONSTRAINT fk_cor_role_import_import FOREIGN KEY (id_import) REFERENCES gn_imports.t_imports(id_import) ON UPDATE CASCADE ON DELETE CASCADE;
 
+ALTER table gn_imports.t_imports add column id_source_synthese int4 default null;
+ALTER TABLE only gn_imports.t_imports
+    ADD CONSTRAINT fk_gn_imports_t_import_id_source_synthese FOREIGN KEY (id_source_synthese) REFERENCES gn_synthese.t_sources(id_source) ON UPDATE SET NULL ON DELETE CASCADE;
 ---------------------
 --OTHER CONSTRAINTS--
 ---------------------
