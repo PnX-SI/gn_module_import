@@ -142,7 +142,7 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE, 'Correspondance champs standard: statutSource'),
 	('reference_biblio', 'Référence bibliographique', '', '', 'character varying(5000)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE, 'Correspondance champs standard: referenceBiblio'),
 	('id_nomenclature_behaviour', 'Comportement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 14, TRUE, 'Correspondance champs standard: occComportement'),
-	('additionnal_data', 'Champs additionnels', '', '', 'jsonb', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 15, FALSE, 'Attributs additionnels') 
+	('additional_data', 'Champs additionnels', '', '', 'jsonb', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 15, FALSE, 'Attributs additionnels') 
 ;
 	-- Ajouter un thème dédié à terme et prévoir un widget multiselect qui concatène les infos sous format jsonb ?
 
