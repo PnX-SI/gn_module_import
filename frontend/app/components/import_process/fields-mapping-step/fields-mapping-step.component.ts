@@ -169,10 +169,18 @@ export class FieldsMappingStepComponent implements OnInit {
                 .get(field.name_field)
                 .setValidators([Validators.required]);
             } else {
-              this.syntheseForm.addControl(
-                field.name_field,
-                new FormControl({ value: "", disabled: true })
-              );
+              if (field.name_field == 'additional_data') {
+                this.syntheseForm.addControl(
+                  field.name_field,
+                  new FormControl({ value: [], disabled: true })
+                );
+              }
+              else {
+                this.syntheseForm.addControl(
+                  field.name_field,
+                  new FormControl({ value: "", disabled: true })
+                );
+              }
             }
           }
         }
@@ -482,7 +490,6 @@ export class FieldsMappingStepComponent implements OnInit {
       mappingFields => {
         this.enableMapping(this.syntheseForm);
         this.fillFormFromMappings(mappingFields);
-        
       },
       error => {
         if (error.statusText === "Unknown Error") {
@@ -512,7 +519,7 @@ export class FieldsMappingStepComponent implements OnInit {
               form.setValue(field["source_field"] == 'true')
             }
         }
-        if (field["target_field"] == 'altitudes_generate') {
+        else if (field["target_field"] == 'altitudes_generate') {
           const form = this.syntheseForm
             .get('altitudes_generate')
           if(form) {
@@ -521,13 +528,21 @@ export class FieldsMappingStepComponent implements OnInit {
             
         }
 
-        if (columnsArray.includes(field["source_field"])) {
+        else if (columnsArray.includes(field["source_field"])) {
           const target_form = this.syntheseForm.get(field["target_field"])
           if (target_form) {
             target_form.setValue(field["source_field"]);
             this.mappedList.push(field["target_field"]);
           }
 
+        }
+        
+        else if (Array.isArray(field["source_field"]) && field["source_field"].every(val => columnsArray.includes(val))) {
+          const target_form = this.syntheseForm.get(field["target_field"])
+          if (target_form) {
+            target_form.setValue(field["source_field"]);
+            this.mappedList.push(field["target_field"]);
+          }
         }
       }
       this.shadeSelectedColumns(this.syntheseForm);
@@ -726,7 +741,8 @@ export class FieldsMappingStepComponent implements OnInit {
     }
   }
 
-  onSelect(id_mapping, targetForm) {
+  onSelect(id_mapping, targetForm, e) {
+    console.log(e)
     this.count(targetForm);
     this.id_mapping = id_mapping;
     this.shadeSelectedColumns(targetForm);
@@ -747,7 +763,11 @@ export class FieldsMappingStepComponent implements OnInit {
 
   fillEmptyMapping(targetForm) {
     Object.keys(targetForm.controls).forEach(key => {
-      targetForm.get(key).setValue("");
+      let val:string | Array<string> = ""
+      if (key == 'additional_data') {
+        val = []
+      }
+      targetForm.get(key).setValue(val);
     });
   }
 }

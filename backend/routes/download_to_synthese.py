@@ -9,7 +9,7 @@ from geonature.core.gn_permissions import decorators as permissions
 
 from ..db.models import TImports, TMappings
 
-from ..db.queries.save_mapping import get_selected_columns
+from ..db.queries.save_mapping import get_selected_columns, get_additional_data
 from ..db.queries.load_to_synthese import (insert_into_t_sources, 
                                            check_id_source,
                                            get_id_source)
@@ -46,6 +46,7 @@ def import_data(info_role, import_id):
     table_name = set_imports_table_name(get_table_name(import_obj.id_import))
     # set total user columns
     selected_cols = get_selected_columns(table_name, import_obj.id_field_mapping)
+    additional_data = get_additional_data(import_obj.id_field_mapping)
 
     added_cols = {
         "the_geom_4326": "gn_the_geom_4326",
@@ -69,7 +70,7 @@ def import_data(info_role, import_id):
         def data_import_task(import_as_dict):
             recipients = list((map(lambda a: a["email"], import_as_dict.get("author"))))
             try:
-                res = import_in_synthese(import_obj, table_name, total_columns)
+                res = import_in_synthese(import_obj, table_name, total_columns, additional_data)
                 import_send_mail(
                     id_import=import_as_dict["id_import"],
                     mail_to=recipients,
@@ -111,7 +112,7 @@ def import_data(info_role, import_id):
         return import_as_dict
     else:
         try:
-            return import_in_synthese(import_obj, table_name, total_columns)
+            return import_in_synthese(import_obj, table_name, total_columns, additional_data)
         except Exception as e:
             DB.session.query(TImports).filter(TImports.id_import == import_id).update(
                 {"in_error": True}
@@ -121,7 +122,7 @@ def import_data(info_role, import_id):
             raise GeonatureImportApiError(message=str(e), details="", status_code=500)
 
 
-def import_in_synthese(import_obj, table_name, total_columns):
+def import_in_synthese(import_obj, table_name, total_columns, additional_data=[]):
     """"Import data in synthese"""
     try:
         IMPORTS_SCHEMA_NAME = blueprint.config["IMPORTS_SCHEMA_NAME"]
@@ -144,7 +145,7 @@ def import_in_synthese(import_obj, table_name, total_columns):
         logger.info("#### Start insert in Synthese")
         # insert into synthese
         load_data_to_synthese(
-            IMPORTS_SCHEMA_NAME, table_name, total_columns, import_obj
+            IMPORTS_SCHEMA_NAME, table_name, total_columns, import_obj, additional_data
         )
 
         logger.info("-> Data imported in gn_synthese.synthese table")

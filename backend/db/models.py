@@ -216,7 +216,7 @@ def generate_user_table_class(schema_name, table_name, pk_name, user_columns, id
         - schema_name, table_name, pk_name = string
         - user_columns : list of strings (strings = csv column names)
         - id : integer id_import
-        - schema_type : = 'archives' or 't_imports' (because the table containing user data in t_imports schema has additionnal fields)
+        - schema_type : = 'archives' or 't_imports' (because the table containing user data in t_imports schema has additional fields)
     """
 
     # create dict in order to create dynamically the user file class
