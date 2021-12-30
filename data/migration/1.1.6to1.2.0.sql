@@ -16,3 +16,18 @@ WHERE s.name_source='Import(id='||id_import||')';
 ALTER TABLE gn_imports.t_imports 
 ADD need_fix boolean default false,
 ADD fix_comment text;
+
+--------------------------------------------------------
+-- ENABLE ADDITIONNAL DATA FIELD IN A DEDICATED THEME --
+--------------------------------------------------------
+INSERT INTO gn_imports.dict_themes (name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme)
+VALUES ('additionnal_data', 'Champs additionnels', '', '', 6);
+
+-- Enable additionnal field in form
+UPDATE gn_imports.dict_fields
+SET id_theme = t.id_theme,
+order_field = 1,
+display = TRUE
+FROM gn_imports.dict_themes t 
+WHERE t.name_theme='additionnal_data'
+AND name_field='additionnal_data';
