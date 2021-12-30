@@ -132,6 +132,38 @@ export class ContentMappingStepComponent implements OnInit {
       );
   }
 
+  saveMappingName(value) {
+    // save new mapping in bib_mapping
+    // then select the mapping name in the select
+    let mappingType = "CONTENT";
+    const mappingForm = {
+      mappingName: this.newMappingNameForm.value
+    };
+    this._ds.postMappingName(mappingForm, mappingType).subscribe(
+        (id_mapping) => {
+            this._cm.newMapping = false;
+            this._cm
+                .getMappingNamesListMap(id_mapping, this.mappingListForm)
+                .toPromise()
+                .then(() => {});
+            this.newMappingNameForm.reset();
+            //this.enableMapping(targetForm);
+        },
+      (error) => {
+        if (error.statusText === "Unknown Error") {
+          // show error message if no connexion
+          this._commonService.regularToaster(
+            "error",
+            "Une erreur s'est produite : contactez l'administrateur du site"
+          );
+        } else {
+          console.log(error);
+          this._commonService.regularToaster("error", error.error);
+        }
+      }
+    );
+  }
+
   saveMappingNameForJson(jsonfile) {
     // save new mapping in bib_mapping
     // then select the mapping name in the select
@@ -260,6 +292,13 @@ export class ContentMappingStepComponent implements OnInit {
     // as the field one, we need to transform it to the correct format
     // (see API calls)
     this.fillFormFromMappings(data.map(e => [e]))
+    this._ds
+        .updateContentMapping(this.id_mapping, this.contentTargetForm.value)
+        .toPromise()
+        .then(() => {})
+        .catch((error) =>
+          this._commonService.regularToaster("error", error.error.message)
+        );
   }
 
   correctMapping(data) {
@@ -271,7 +310,7 @@ export class ContentMappingStepComponent implements OnInit {
         const _id = nomenc.nomenc_values_def.filter(
           (val) => val.cd_nomenclature == element.cd_nomenclature
         )[0];
-        element.id_target_value = _id.id;
+        element.id_target_value = parseInt(_id.id);
       }
       return element
     });
