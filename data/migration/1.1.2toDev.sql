@@ -8,3 +8,10 @@ UPDATE gn_imports.t_imports
 SET id_source_synthese = s.id_source
 FROM gn_synthese.t_sources s
 WHERE s.name_source='Import(id='||id_import||')'
+
+--------------------------------------
+-- Add need_fix and fix_comment column
+--------------------------------------
+ALTER TABLE gn_imports.t_imports 
+ADD need_fix boolean default false,
+add fix_comment text;

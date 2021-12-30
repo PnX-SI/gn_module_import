@@ -105,15 +105,15 @@ export class ImportComponent implements OnInit {
     });
   }
 
-  errorsOnly(event: Event) {
-    this.filterErrors()
+  fixOnly(event: Event) {
+    this.filterFix()
   }
 
-  filterErrors() {
+  filterFix() {
     // filters the history variable to retains only
     // errors if the checkbox is checked
     this.filteredHistory = this.history.filter(
-      item => item.errors.length || !this.checked)
+      item => item.need_fix || !this.checked)
   }
 
   private onImportList() {
@@ -126,7 +126,7 @@ export class ImportComponent implements OnInit {
         // variable
         // Since onImpportList is called multiple times (see setInterval)
         // we need to do this here
-        this.filterErrors();
+        this.filterFix();
         this.empty = res.empty;
       },
       error => {

@@ -48,7 +48,7 @@ def insert_into_synthese(
             INSERT INTO gn_synthese.synthese ({into_part},additional_data)
             SELECT {select_part},{subquery}
             FROM {schema_name}.{table_name}
-            WHERE gn_is_valid='True';
+            WHERE gn_invalid_reason IS NULL;
 
             ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_meta_dates_change_synthese;
             ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_insert_cor_area_synthese;

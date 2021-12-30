@@ -6,6 +6,7 @@ import { CsvExportService } from "../../../services/csv-export.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../../module.config";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import FixModel from "../../need-fix/need-fix.models";
 
 @Component({
     selector: "import-step",
@@ -24,6 +25,7 @@ export class ImportStepComponent implements OnInit {
     nValidData: number;
     nInvalidData: number;
     validBbox: any;
+    public fix: FixModel
     public spinner: boolean = false;
     public nbLignes: string = "X";
     public nbError: number;
@@ -123,6 +125,7 @@ export class ImportStepComponent implements OnInit {
                 this.nInvalidData = res.n_invalid_data;
                 this.validData = res.valid_data;
                 this.validBbox = res.valid_bbox;
+                this.fix = res.fix;
                 this.columns = [];
 
                 if (this.validData.length > 0) {

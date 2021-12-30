@@ -18,11 +18,11 @@
                     <mat-checkbox 
                         class="col-3" 
                         color="warn"
-                        matTooltip="Afficher seulement les imports en erreur"
-                        (change)="errorsOnly($event)" 
+                        matTooltip="Afficher uniquement les imports nécessitant des corrections"
+                        (change)="fixOnly($event)" 
                         [(ngModel)]="checked"
                     
-                    >Afficher uniquement les imports comportant des erreurs</mat-checkbox>
+                    >Afficher uniquement les imports nécessitant des corrections</mat-checkbox>
                 </div>
                 <ngx-datatable
                     #table
@@ -121,7 +121,7 @@
                             >
                                 <mat-icon color="primary" style="text-align: center;">info</mat-icon>
                             </button>
-                            <mat-icon *ngIf="row.errors.length > 0"
+                            <mat-icon *ngIf="row.need_fix"
                                 color="warn">
                                 warning
                             </mat-icon>

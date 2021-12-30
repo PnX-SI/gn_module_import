@@ -139,7 +139,7 @@
                                 Données non importées - Erreurs
                             </h5>
                             <mat-icon color="warn">
-                                warning
+                                priority_high
                             </mat-icon>
                         </div>
                     </div>
@@ -192,6 +192,21 @@
                             (click)="_csvExport.onCSV(import?.id_import)"
                         > Exporter vos {{ import?.errors.length }} observations invalides </button>
                     </div>
+                    </div>
+                </div>
+                <div class="card content">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-start">
+                            <h5 class="card-title">
+                                Notes & corrections
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <need-fix 
+                            [fix]="fix"
+                            [importId]="import?.id_import">
+                        </need-fix>
                     </div>
                 </div>
             </div>

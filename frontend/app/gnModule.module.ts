@@ -25,6 +25,8 @@ import { ImportStepComponent } from "./components/import_process/import-step/imp
 import { stepperComponent } from "./components/import_process/stepper/stepper.component";
 import { FooterStepperComponent } from "./components/import_process/footer-stepper/footer-stepper.component";
 import { FileService } from "./services/file.service";
+import { PermissionsService } from "./services/permissions.service";
+import { NeedFixComponent } from "./components/need-fix/need-fix.component";
 
 // my module routing
 const routes: Routes = [
@@ -67,7 +69,8 @@ const routes: Routes = [
     ContentMappingStepComponent,
     ImportStepComponent,
     stepperComponent,
-    FooterStepperComponent
+    FooterStepperComponent,
+    NeedFixComponent
   ],
   imports: [
     GN2CommonModule,
@@ -87,7 +90,8 @@ const routes: Routes = [
     FileService,
     FieldMappingService,
     StepperGuardService,
-    ContentMappingService
+    ContentMappingService,
+    PermissionsService
   ],
 
   bootstrap: []

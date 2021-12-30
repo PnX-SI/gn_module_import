@@ -82,6 +82,8 @@ class TImports(ModelCruvedAutorization):
         "VUserImportsErrors", lazy="joined", order_by="VUserImportsErrors.error_type"
     )
     dataset = DB.relationship("TDatasets", lazy="joined")
+    need_fix = DB.Column(DB.Boolean, default=False)
+    fix_comment = DB.Column(DB.TEXT, nullable=True)
 
     def to_dict(self, user=None, user_cruved=None):
         import_as_dict = self.as_dict(True)
@@ -234,7 +236,6 @@ def generate_user_table_class(schema_name, table_name, pk_name, user_columns, id
     }
 
     if schema_type == "gn_imports":
-        user_table.update({"gn_is_valid": DB.Column(DB.Text, nullable=True)})
         user_table.update({"gn_invalid_reason": DB.Column(DB.Text, nullable=True)})
 
     user_table.update({pk_name: DB.Column(DB.Integer, autoincrement=True)})
