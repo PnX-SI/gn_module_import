@@ -137,6 +137,8 @@ Le module permet de traiter un fichier CSV ou GeoJSON sous toute structure de do
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-07.jpg
 
+10. Depuis la liste des imports, vous pourrez consulter un rapport d'import fournissant une description des données importées, le détail des erreurs rencontrées, permettant également de télécharger les données invalides ainsi que l'ensemble des correspondances effectuées au format JSON en vue de partager les mappings entre plusieurs instances de GeoNature. Le rapport d'import PDF est exportable au format PDF pour en faciliter la diffusion auprès de partenaires fournisseurs de données notamment. 
+
 Pour chaque fichier importé, les données brutes sont importées et stockées tel quel dans une table portant le nom du fichier, dans le schéma ``gn_import_archives``. Elles sont aussi stockées dans une table intermédiaire, enrichie au fur et à mesure des étapes de l'import pour transformer les données vers les formats du SINP.
 
 Liste des contrôles réalisés sur le fichier importé et ses données : https://github.com/PnX-SI/gn_module_import/issues/17
