@@ -12,10 +12,6 @@ def fill_col(value):
         return False
 
 
-def set_is_valid(df, column_name):
-    df["gn_is_valid"] = df["gn_is_valid"].where(cond=df[column_name], other=False)
-
-
 fill_map = {"": True, False: False}
 
 
@@ -54,7 +50,6 @@ def set_error_and_invalid_reason(
         id_rows=id_rows_error,
         comment=comment,
     )
-    set_is_valid(df, df_col_name_valid)
     message = "{}: {}".format(error_obj.name, col_name_error)
     set_invalid_reason(df=df, source_col_name=df_col_name_valid, message=message)
 

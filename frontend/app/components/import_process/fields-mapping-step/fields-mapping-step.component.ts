@@ -20,6 +20,8 @@ import {
 } from "../steps.service";
 import { forkJoin } from "rxjs/observable/forkJoin";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { FileService } from "../../../services/file.service";
+
 
 @Component({
   selector: "fields-mapping-step",
@@ -52,15 +54,22 @@ export class FieldsMappingStepComponent implements OnInit {
   public updateMapping: boolean = false;
   public fieldMappingForm = new FormControl();
   public newMappingForm = new FormControl();
+  public importForm: FormGroup;
+  public importJsonFile: File;  // json import to create model
   public mappedColCount: number;
   public unmappedColCount: number;
   public mappedList = [];
   public nbLignes: number;
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
+  @ViewChild("modalImport") modalImport: any;
+  public modalImportVar: NgbModal;
+  @ViewChild("modalNoNomenc") modalNoNomenc: any;
+  
   constructor(
     private _ds: DataService,
     private _fm: FieldMappingService,
+    private _fs: FileService,
     private _commonService: CommonService,
     private _fb: FormBuilder,
     private stepService: StepsService,
@@ -160,10 +169,18 @@ export class FieldsMappingStepComponent implements OnInit {
                 .get(field.name_field)
                 .setValidators([Validators.required]);
             } else {
-              this.syntheseForm.addControl(
-                field.name_field,
-                new FormControl({ value: "", disabled: true })
-              );
+              if (field.name_field == 'additional_data') {
+                this.syntheseForm.addControl(
+                  field.name_field,
+                  new FormControl({ value: [], disabled: true })
+                );
+              }
+              else {
+                this.syntheseForm.addControl(
+                  field.name_field,
+                  new FormControl({ value: "", disabled: true })
+                );
+              }
             }
           }
         }
@@ -243,9 +260,10 @@ export class FieldsMappingStepComponent implements OnInit {
     this.stepService.setStepData(2, step2data);
 
     const mappingData = Object.assign({}, this.syntheseForm.value);
+    
     this._ds
       .createOrUpdateFieldMapping(mappingData, this.id_mapping)
-      .subscribe(data => {
+      .subscribe(async data => {
         // update t_imports (set information about autogenerate values)
         this.spinner = true;
         const formValue = this.syntheseForm.getRawValue();
@@ -263,8 +281,15 @@ export class FieldsMappingStepComponent implements OnInit {
           .subscribe(d => {
             console.log("Done");
           });
-
-        if (!ModuleConfig.ALLOW_VALUE_MAPPING) {
+        
+        // Check if there are nomenclature that are mapped
+        // Calls the import API
+        // Need this to be synchronous since we need the result just after
+        const hasNomencValues = await this.checkHasNomencValues(
+                                          this.stepData.importId, 
+                                          this.id_mapping)
+        
+        if (!ModuleConfig.ALLOW_VALUE_MAPPING || !hasNomencValues) {
           this._ds
             .dataChecker(
               this.stepData.importId,
@@ -278,11 +303,16 @@ export class FieldsMappingStepComponent implements OnInit {
                   importId: this.stepData.importId
                 };
                 if (import_obj.source_count < ModuleConfig.MAX_LINE_LIMIT) {
+                  // Show an info modal if no nomenclature has been mapped
+                  if (!hasNomencValues) {
+                    this._modalService.open(this.modalNoNomenc);
+                  }
                   this.stepService.setStepData(4, step4Data);
                   this._router.navigate([
                     `${ModuleConfig.MODULE_URL}/process/id_import/${import_obj.id_import}/step/4`
                   ]);
-                } else {
+                } 
+                else {
                   this.nbLignes = import_obj.source_count;
                   this._modalService.open(this.modalRedir);
                 }
@@ -295,10 +325,20 @@ export class FieldsMappingStepComponent implements OnInit {
                 );
               }
             );
-        } else {
+        } 
+        else {
           this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.stepData.importId}/step/3`]);
         }
       });
+  }
+
+  async checkHasNomencValues(idImport: number, 
+                             idFieldMapping: number): Promise<boolean> {
+    // checks by an API call that there is nomenclature mapped.
+    // Returns a promise than must be awaited
+    const data = await this._ds.getNomencInfoSynchronous(idImport, 
+                                                         idFieldMapping);
+    return data.content_mapping_info.length > 0
   }
 
   // On close modal: ask if save the mapping or not
@@ -446,48 +486,10 @@ export class FieldsMappingStepComponent implements OnInit {
   fillMapping(id_mapping, fileColumns) {
     this.id_mapping = id_mapping;
     // build an array from array of object
-    const columnsArray: Array<string> = this.columns.map(col => col.id);
     this._ds.getMappingFields(this.id_mapping).subscribe(
       mappingFields => {
-        this.mappedList = [];
-        
         this.enableMapping(this.syntheseForm);
-        if (mappingFields[0] != "empty") {
-          for (let field of mappingFields) {
-            
-            if (field["target_field"] == 'unique_id_sinp_generate') {
-              const form = this.syntheseForm
-                .get('unique_id_sinp_generate');
-                if(form) {
-                  form.setValue(field["source_field"] == 'true')
-                }
-            }
-            if (field["target_field"] == 'altitudes_generate') {
-              const form = this.syntheseForm
-                .get('altitudes_generate')
-              if(form) {
-                form.setValue(field["source_field"] == 'true');
-              }
-                
-            }
-
-            if (columnsArray.includes(field["source_field"])) {
-              const target_form = this.syntheseForm.get(field["target_field"])
-              if (target_form) {
-                target_form.setValue(field["source_field"]);
-                this.mappedList.push(field["target_field"]);
-              }
-
-            }
-          }
-          this.shadeSelectedColumns(this.syntheseForm);
-          this._fm.geoFormValidator(this.syntheseForm);
-        } else {
-          this.fillEmptyMapping(this.syntheseForm);
-        }
-        this.onFormMappingChange();
-        this.count(this.syntheseForm);
-        this.formReady = true;
+        this.fillFormFromMappings(mappingFields);
       },
       error => {
         if (error.statusText === "Unknown Error") {
@@ -503,6 +505,55 @@ export class FieldsMappingStepComponent implements OnInit {
       }
     );
   }
+
+  fillFormFromMappings(fields) {
+    this.mappedList = [];
+    if (fields[0] != "empty") {
+      const columnsArray: Array<string> = this.columns.map(col => col.id);
+      for (let field of fields) {
+        
+        if (field["target_field"] == 'unique_id_sinp_generate') {
+          const form = this.syntheseForm
+            .get('unique_id_sinp_generate');
+            if(form) {
+              form.setValue(field["source_field"] == 'true')
+            }
+        }
+        else if (field["target_field"] == 'altitudes_generate') {
+          const form = this.syntheseForm
+            .get('altitudes_generate')
+          if(form) {
+            form.setValue(field["source_field"] == 'true');
+          }
+            
+        }
+
+        else if (columnsArray.includes(field["source_field"])) {
+          const target_form = this.syntheseForm.get(field["target_field"])
+          if (target_form) {
+            target_form.setValue(field["source_field"]);
+            this.mappedList.push(field["target_field"]);
+          }
+
+        }
+        
+        else if (Array.isArray(field["source_field"]) && field["source_field"].every(val => columnsArray.includes(val))) {
+          const target_form = this.syntheseForm.get(field["target_field"])
+          if (target_form) {
+            target_form.setValue(field["source_field"]);
+            this.mappedList.push(field["target_field"]);
+          }
+        }
+      }
+      this.shadeSelectedColumns(this.syntheseForm);
+      this._fm.geoFormValidator(this.syntheseForm);
+    } else {
+      this.fillEmptyMapping(this.syntheseForm);
+    }
+    this.onFormMappingChange();
+    this.count(this.syntheseForm);
+    this.formReady = true;
+    }
 
   createMapping() {
     this.fieldMappingForm.reset();
@@ -522,24 +573,84 @@ export class FieldsMappingStepComponent implements OnInit {
     this.updateMapping = true;
   }
 
-  saveMappingName(mappingName, targetForm) {
+  displayError(message) {
+    this._commonService.regularToaster(
+      "error",
+      `ERROR: ${message}`
+    );
+  }
+
+  onImportModal() {
+    // No need of forbiddenName validator since the API
+    // is taking care of that
+    // Same as content-mapping
+    this.importForm = this._fb.group({
+      name: ["", [Validators.required]],
+      file: ["", [Validators.required]]
+    });
+    this.modalImportVar = this._modalService.open(this.modalImport);
+  }
+
+  onFileSelect(event: Event) {
+    this.importJsonFile = (event.target as HTMLInputElement).files[0];
+    // We could patch a value to the importForm
+    // like: this.importForm.patchValue({file: jsonfile})
+    // BUT DOMException...
+  }
+
+  onFileProvided() {
+    const name = this.importForm.get('name').value
+    const jsonfile = this.importJsonFile
+    // stop here if form is invalid
+    this.newMappingForm.patchValue(name)
+    // Save a new mapping name and load the json to fill in the fields
+    this.saveMappingNameForJson(this.newMappingForm.value, 
+                                this.syntheseForm, 
+                                jsonfile)
+  }
+
+  loadMapping(data) {
+    // Reset mapping
+    this.fillEmptyMapping(this.syntheseForm);
+    // Fill mapping from data 
+    // (array of object with target_field and source_field)
+    this.fillFormFromMappings(data)
+    // If no mapping had been done
+    if (this.mappedList.length == 0) {
+      this._commonService.regularToaster(
+        "error",
+        "ERROR: Aucun champ n'a pu être mappé"
+      );
+    }
+  }
+
+  saveMappingNameForJson(mappingName, targetForm, jsonfile) {
+    // Only used to import a mapping from a json
     let mappingType = "FIELD";
     const value = {};
     value["mappingName"] = mappingName;
     this._ds.postMappingName(value, mappingType).subscribe(
-      new_id_mapping => {
+      new_id_mapping => {        
         this.stepData.id_field_mapping = new_id_mapping;
-        this.newMapping = false;
-        this.newMappingForm.reset();
+        // this.newMapping = false;
+        // this.newMappingForm.reset();
         this._ds.getMappings("FIELD").subscribe(result => {
+          // Reads here the json not to be raced by the emptying of the fields
+          this._fs.readJson(jsonfile,
+            this.loadMapping.bind(this),
+            this.displayError.bind(this))
+          // Updates the select box with the new model
           this.userFieldMappings = result;
           const newMapping = this.userFieldMappings.find(
-            el => el.id_mapping == new_id_mapping
-          );
+              el => el.id_mapping == new_id_mapping
+            );
           this.fieldMappingForm.setValue(newMapping);
+          // Close the modal when everything has been done
+          this.modalImportVar.close()
         });
 
         this.enableMapping(targetForm);
+
       },
       error => {
         if (error.statusText === "Unknown Error") {
@@ -630,7 +741,8 @@ export class FieldsMappingStepComponent implements OnInit {
     }
   }
 
-  onSelect(id_mapping, targetForm) {
+  onSelect(id_mapping, targetForm, e) {
+    console.log(e)
     this.count(targetForm);
     this.id_mapping = id_mapping;
     this.shadeSelectedColumns(targetForm);
@@ -651,7 +763,11 @@ export class FieldsMappingStepComponent implements OnInit {
 
   fillEmptyMapping(targetForm) {
     Object.keys(targetForm.controls).forEach(key => {
-      targetForm.get(key).setValue("");
+      let val:string | Array<string> = ""
+      if (key == 'additional_data') {
+        val = []
+      }
+      targetForm.get(key).setValue(val);
     });
   }
 }

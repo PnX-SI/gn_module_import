@@ -1,0 +1,28 @@
+<ng-container *ngIf="fix">
+  <div class="d-flex justify-content-between">
+    <span class="mr-1">Cet import nécessite-t-il des corrections ?</span>
+    <mat-slide-toggle [(ngModel)]="fix.need" [disabled]="!hasRights">
+      {{ fix.need ? "Oui" : "Non" }}
+    </mat-slide-toggle>
+  </div>
+
+  <mat-form-field class="d-block mt-2">
+    <textarea
+      matInput
+      [(ngModel)]="fix.comment"
+      placeholder="Commentaire"
+      [disabled]="!hasRights"
+    ></textarea>
+  </mat-form-field>
+
+  <div class="d-flex justify-content-end">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="setFix()"
+      [disabled]="!hasRights"
+    >
+      Mettre à jour
+    </button>
+  </div>
+</ng-container>

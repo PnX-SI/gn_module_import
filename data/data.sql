@@ -21,7 +21,7 @@ INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level)
 ,('Champ obligatoire','MISSING_VALUE','Valeur manquante dans un champs obligatoire','ERROR')
 ,('Incohérence','DATE_MIN_SUP_DATE_MAX','date_min > date_max','ERROR')
 ,('Incohérence','COUNT_MIN_SUP_COUNT_MAX','Incohérence entre les champs dénombrement. La valeur de denombrement_min est supérieure à celle de denombrement _max ou la valeur de denombrement _max est inférieur à denombrement_min.','ERROR')
-,('Erreur de référentiel','CD_NOM_NOT_FOUND','Le cdNom indiqué n’est pas dans le référentiel TAXREF ; la valeur de cdNom n’a pu être trouvée dans la version courante du référentiel.','ERROR')
+,('Erreur de référentiel','CD_NOM_NOT_FOUND','Le Cd_nom renseigné ne peut être importé car il est absent du référentiel TAXREF ou de la liste de taxons importables configurée par l''administrateur','ERROR')
 ,('Erreur de référentiel','CD_HAB_NOT_FOUND','Le cdHab indiqué n’est pas dans le référentiel HABREF ; la valeur de cdHab n’a pu être trouvée dans la version courante du référentiel.','ERROR')
 ,('Erreur d''incohérence','ALTI_MIN_SUP_ALTI_MAX','altitude min > altitude max','ERROR')
 ,('Erreur d''incohérence','DEPTH_MIN_SUP_ALTI_MAX','profondeur min > profondeur max','ERROR')
@@ -55,6 +55,7 @@ INSERT INTO gn_imports.t_user_errors (error_type,"name",description,error_level)
 ,('Erreur de réferentiel','INVALID_ATTACHMENT_CODE','Le code commune/maille/département indiqué ne fait pas partie du référentiel des géographique; la valeur de codeCommune/codeMaille/codeDepartement n’a pu être trouvée dans la version courante du référentiel.','ERROR')
 ,('Géométrie','INVALID_GEOMETRY','Géométrie invalide','ERROR')
 ,('Géométrie','NO-GEOM','Aucune géometrie fournie (ni X/Y, WKT ou code)','ERROR')
+,('Géométrie','GEOMETRY_OUTSIDE','La géométrie se trouve à l''extérieur du territoire renseigné','ERROR')
 ,('Géoréférencement','MULTIPLE_ATTACHMENT_TYPE_CODE','Plusieurs géoréférencements ; un seul géoréférencement doit être livré. Une seule des colonnes codeCommune/codeMaille/codeDépartement doit être remplie pour chaque ligne','ERROR')
 ,('Ouverture du fichier','NO_FILE_SENDED','Aucun fichier envoyé','ERROR')
 ,('Champ obligatoire conditionnel','CONDITIONAL_MANDATORY_FIELD_ERROR','Champs obligatoires conditionnels manquants. Il existe des ensembles de champs liés à un concept qui sont “obligatoires conditionnels”, c’est à dire que si l''un des champs du concept est utilisé, alors d''autres champs du concept deviennent obligatoires. ','ERROR')
@@ -141,7 +142,7 @@ INSERT INTO dict_fields (name_field, fr_label, eng_label, desc_field, type_field
 	('id_nomenclature_source_status', 'Statut de la source', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 12, TRUE, 'Correspondance champs standard: statutSource'),
 	('reference_biblio', 'Référence bibliographique', '', '', 'character varying(5000)', TRUE, FALSE, FALSE, FALSE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 13, TRUE, 'Correspondance champs standard: referenceBiblio'),
 	('id_nomenclature_behaviour', 'Comportement', '', '', 'integer', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 14, TRUE, 'Correspondance champs standard: occComportement'),
-	('additionnal_data', 'Champs additionnels', '', '', 'jsonb', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 15, FALSE, 'Attributs additionnels') 
+	('additional_data', 'Champs additionnels', '', '', 'jsonb', TRUE, FALSE, FALSE, TRUE, (SELECT id_theme FROM gn_imports.dict_themes WHERE name_theme='occurrence_sensitivity'), 15, FALSE, 'Attributs additionnels') 
 ;
 	-- Ajouter un thème dédié à terme et prévoir un widget multiselect qui concatène les infos sous format jsonb ?
 

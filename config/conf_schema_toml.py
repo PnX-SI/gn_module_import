@@ -49,10 +49,17 @@ DEFAULT_LIST_COLUMN = [
     },
     {
         "prop": "import_count",
-        "name": "Nb de donnees",
+        "name": "Données importées",
+        "max_width": 125,
+        "show": True,
+        "filter": True,
+    },
+    {
+        "prop": "import_count",
+        "name": "Données totales",
         "max_width": 120,
         "show": True,
-        "filter": False,
+        "filter": True,
     },
     {
         "prop": "date_create_import",
@@ -116,6 +123,7 @@ DEFAULT_FIELD_MAPPING_ID = 1
 # Parameter to define if the checkbox allowing to change display mode is displayed or not.
 DISPLAY_CHECK_BOX_MAPPED_FIELD = True
 
+DEFAULT_RANK_VALUE = "group2_inpn"
 
 class GnModuleSchemaConf(Schema):
     LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, load_default=DEFAULT_LIST_COLUMN)

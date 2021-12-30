@@ -5,15 +5,25 @@
         </div>
         <div class="card-body">
             <div *ngIf="!empty">
-                <input
-                    [formControl]="search"
-                    id="search"
-                    type="text"
-                    class="form-control"
-                    placeholder="Search"
-                    aria-label="Search"
-                    aria-describedby="basic-addon1"
-                />
+                <div class="row">
+                    <input
+                        [formControl]="search"
+                        id="search"
+                        type="text"
+                        class="form-control col-12 col-lg-9"
+                        placeholder="Search"
+                        aria-label="Search"
+                        aria-describedby="basic-addon1"
+                    />
+                    <mat-checkbox 
+                        class="col-3" 
+                        color="warn"
+                        matTooltip="Afficher uniquement les imports nécessitant des corrections"
+                        (change)="fixOnly($event)" 
+                        [(ngModel)]="checked"
+                    
+                    >Afficher uniquement les imports nécessitant des corrections</mat-checkbox>
+                </div>
                 <ngx-datatable
                     #table
                     class="material striped"
@@ -53,7 +63,7 @@
                         </div>
                     </ngx-datatable-column>
                     <ngx-datatable-column
-                        maxWidth="200"
+                        maxWidth="100"
                         name="Fin import"
                         [sortable]="true"
                         prop="date_end_import"
@@ -97,7 +107,7 @@
                     </ngx-datatable-column>
                     <ngx-datatable-column
                         maxWidth="200"
-                        name="Rapport d'erreur"
+                        name="Rapport"
                         [sortable]="true"
                     >
                         <ng-template
@@ -105,24 +115,23 @@
                             ngx-datatable-cell-template
                         >
                             <button
-                                *ngIf="row.errors.length > 0"
-                                matTooltip="Rapport d'erreur"
-                                mat-icon-button
-                                color="warn"
-                                style="margin-top: -10px;"
-                                [routerLink]="['errors', row.id_import]"
+                                matTooltip="Rapport"
+                                mat-icon-button 
+                                [routerLink]="['report', row.id_import]"
                             >
-                                <mat-icon>warning</mat-icon>
+                                <mat-icon color="primary" style="text-align: center;">info</mat-icon>
                             </button>
+                            <mat-icon *ngIf="row.need_fix"
+                                color="warn">
+                                warning
+                            </mat-icon>
                             <button
                                 *ngIf="(row.is_finished) && ((row.source_count - row.import_count) > 0)"
                                 mat-icon-button
-                                color="primary"
-                                style="margin-top: -10px;"
                                 (click)="_csvExport.onCSV(row.id_import)"
                                 matTooltip='Téléchargement des données invalides'
                             >
-                            <mat-icon>download</mat-icon>
+                            <mat-icon color="primary">download</mat-icon>
                         </button>
                         </ng-template>
                     </ngx-datatable-column>
@@ -137,12 +146,10 @@
                             <button
                                 [disabled]="!row?.cruved?.D"
                                 mat-icon-button
-                                color=warn
-                                style="margin-top: -10px;"
                                 (click)="openDeleteModal(row, deleteModal)"
                                 matTooltip="Supprimer l'import"
                             >
-                                <mat-icon>delete</mat-icon>
+                                <mat-icon color="warn">delete</mat-icon>
                             </button>
                         </ng-template>
                     </ngx-datatable-column>

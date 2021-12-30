@@ -32,6 +32,8 @@ export class ImportComponent implements OnInit {
   csvDownloadResp: any;
   public deleteOne: any;
   public interval: any;
+  public refreshTime: number = 15000;
+  public checked: boolean;
 
   public search = new FormControl()
 
@@ -49,19 +51,34 @@ export class ImportComponent implements OnInit {
 
     this.onImportList();
 
-    clearInterval(this.interval)
-    this.interval = setInterval(() => {
-      this.onImportList();
-    }, 15000);
+    // Clears the setInterval
+    clearInterval(this.interval);
+    // Sets the interval: activate the refresh functionality
+    this.setRefresh();
 
     this.search.valueChanges.subscribe(value => {
       this.updateFilter(value);
+      // Checks if the value in the search bar is not empty
+      if (value) {
+        // If there is a value, deactivate the refresh
+        clearInterval(this.interval);
+      }
+      else {
+        // If the search bar is empty, activate the refresh
+        this.setRefresh();
+      }
     });
   }
 
   ngOnDestroy() {
     this._ds.getImportList().subscribe().unsubscribe();
     clearInterval(this.interval)
+  }
+
+  setRefresh() {
+    this.interval = setInterval(() => {
+      this.onImportList();
+    }, this.refreshTime);
   }
 
   updateFilter(val: any) {
@@ -88,12 +105,28 @@ export class ImportComponent implements OnInit {
     });
   }
 
+  fixOnly(event: Event) {
+    this.filterFix()
+  }
+
+  filterFix() {
+    // filters the history variable to retains only
+    // errors if the checkbox is checked
+    this.filteredHistory = this.history.filter(
+      item => item.need_fix || !this.checked)
+  }
+
   private onImportList() {
 
     this._ds.getImportList().subscribe(
       res => {
         this.history = res.history;
-        this.filteredHistory = this.history;
+        // filterErrors will apply the "Error only" check box
+        // which will by the same way set the this.filteredHistory
+        // variable
+        // Since onImpportList is called multiple times (see setInterval)
+        // we need to do this here
+        this.filterFix();
         this.empty = res.empty;
       },
       error => {

@@ -1,4 +1,8 @@
+from flask import request
+
 from geonature.core.gn_permissions import decorators as permissions
+from pypnusershub.db.tools import InsufficientRightsError
+from geonature.core.gn_permissions.tools import cruved_scope_for_user_in_module
 from utils_flask_sqla.response import json_resp
 
 from ..api_error import GeonatureImportApiError
@@ -9,7 +13,10 @@ from ..db.queries.user_table_queries import (
     get_n_valid_rows,
     get_n_invalid_rows,
     get_valid_bbox,
+    get_need_fix_and_comment,
+    set_need_fix_and_comment
 )
+from ..db.queries.rights import get_user_rights
 
 from ..db.queries.metadata import get_id_field_mapping, get_id_mapping
 from ..db.queries.nomenclatures import get_saved_content_mapping
@@ -18,6 +25,28 @@ from ..data_preview.preview import set_total_columns, get_preview
 from ..logs import logger
 
 from ..blueprint import blueprint
+
+
+@blueprint.route("/setFix/<import_id>", methods=["PUT"])
+@permissions.check_cruved_scope("U", True, module_code="IMPORT")
+@json_resp
+def set_fix(info_role, import_id):
+    if not get_user_rights(info_role, import_id):
+        raise InsufficientRightsError(
+                ('User "{}" cannot update this current import').format(
+                    info_role.id_role
+                ),
+                403,
+            )
+    
+    data = request.get_json()
+    update_dict = { key: data.get(key, None) for key in ['need_fix', 'fix_comment'] }
+
+    if update_dict:
+        set_need_fix_and_comment(import_id=import_id, **update_dict)
+        return {"message": "Import updated"}, 200
+    else:
+        return {"message": "Import not updated"}, 200
 
 
 @blueprint.route("/getValidData/<import_id>", methods=["GET", "POST"])
@@ -75,6 +104,10 @@ def get_valid_data(info_role, import_id):
         ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, int(import_id)
     )
     n_invalid = get_n_invalid_rows(table_names["imports_full_table_name"])
+
+    # Get need_fix and fix_comment
+    need_fix, fix_comment = get_need_fix_and_comment(import_id=import_id)
+
     logger.info("-> got valid data for preview")
     return (
         {
@@ -83,6 +116,8 @@ def get_valid_data(info_role, import_id):
             "n_valid_data": n_valid,
             "n_invalid_data": n_invalid,
             "valid_bbox": valid_bbox,
+            "fix": {"need": need_fix, 
+                    "comment": fix_comment or ""}
         },
         200,
     )

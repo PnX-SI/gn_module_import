@@ -301,7 +301,7 @@ def get_n_invalid_rows(full_table_name):
         n_invalid_rows = DB.session.execute(
             """
             SELECT count(*)
-            FROM {} WHERE gn_is_valid = 'False';
+            FROM {} WHERE gn_invalid_reason IS NOT NULL;
             """.format(
                 full_table_name
             )
@@ -316,7 +316,7 @@ def get_valid_bbox(schema_name, table_name):
         """
             SELECT ST_AsGeojson(ST_Extent(gn_the_geom_4326))
             FROM {schema_name}.{table_name}
-            WHERE gn_is_valid = 'True';
+            WHERE gn_invalid_reason IS NULL;
             """.format(
             schema_name=schema_name, table_name=table_name,
         )
@@ -335,7 +335,7 @@ def get_n_valid_rows(schema_name, table_name):
             """
             SELECT count(*)
             FROM {schema_name}.{table_name}
-            WHERE gn_is_valid = 'True';
+            WHERE gn_invalid_reason IS NULL;
             """.format(
                 schema_name=schema_name, table_name=table_name
             )
@@ -352,7 +352,7 @@ def get_n_taxa(schema_name, table_name, cd_nom_col):
             SELECT COUNT(DISTINCT TAXREF.cd_ref)
             FROM {schema_name}.{table_name} SOURCE
             JOIN taxonomie.taxref TAXREF ON TAXREF.cd_nom = SOURCE.{cd_nom_col}::integer
-            WHERE SOURCE.gn_is_valid = 'True';
+            WHERE SOURCE.gn_invalid_reason IS NULL;
             """.format(
                 schema_name=schema_name, table_name=table_name, cd_nom_col=cd_nom_col
             )
@@ -368,7 +368,7 @@ def get_date_ext(schema_name, table_name, date_min_col, date_max_col):
             """
             SELECT min({date_min_col}), max({date_max_col})
             FROM {schema_name}.{table_name}
-            WHERE gn_is_valid = 'True';
+            WHERE gn_invalid_reason IS NULL;
             """.format(
                 schema_name=schema_name,
                 table_name=table_name,
@@ -389,7 +389,7 @@ def get_invalid_data(
             SELECT I.gn_invalid_reason, A.*
             FROM {full_imports_table_name} I
             LEFT JOIN {full_archive_table_name} A ON I.{pk_name} = A.{pk_name}
-            WHERE I.gn_is_valid = 'False'
+            WHERE I.gn_invalid_reason IS NOT NULL
             ORDER BY I.{pk_name} ASC
             ;
         """.format(
@@ -448,4 +448,30 @@ def get_delimiter(schema_name, import_id):
         return delimiter
 
     except Exception:
+        raise
+
+
+def get_db_need_fix_and_comment(import_id):
+    return DB.session.query(TImports.need_fix, TImports.fix_comment)\
+        .filter(TImports.id_import == import_id)
+
+
+def get_need_fix_and_comment(import_id):
+    table = get_db_need_fix_and_comment(import_id)
+    results = table.one()
+    return results.need_fix, results.fix_comment 
+
+
+def set_need_fix_and_comment(import_id, 
+                             need_fix: bool=None, 
+                             fix_comment: str=None):
+    table = get_db_need_fix_and_comment(import_id)
+    if need_fix is not None:
+        table.update({TImports.need_fix: need_fix})
+    if fix_comment is not None:
+        table.update({TImports.fix_comment: fix_comment})
+    try:
+        DB.session.commit()
+    except Exception:
+        DB.session.rollback()
         raise
