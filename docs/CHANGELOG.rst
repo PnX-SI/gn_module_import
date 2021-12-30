@@ -11,8 +11,8 @@ CHANGELOG
 * Possibilité de taguer un import nécessitant des corrections et d'y attribuer un commentaire le cas échéant (#230)
 * Possibilité de filtrer les imports nécessitant des corrections depuis la liste des imports (#189)
 * Possibilité d'alimenter le champs "additionnal_data" de la synthèse avec un ou plusieurs champs du fichier source (#165)
-* Possibilité de restreindre les imports à une aire géographique du ref_geo (configurable) : les données hors du territoire configuré sont mises en erreur (#217)
-* Possibilité de restreindre les imports à une liste de taxons (configurable) : les données ne portant pas sur ces taxons sont mises en erreur (#217)
+* Possibilité de restreindre les imports à une aire géographique du ref_geo (configurable avec le nouveau paramètre ``ID_AREA_RESTRICTION``) : les données hors du territoire configuré sont mises en erreur (#217)
+* Possibilité de restreindre les imports à une liste de taxons (configurable avec le nouveau paramètre ``ID_LIST_TAXA_RESTRICTION``) : les données ne portant pas sur ces taxons sont mises en erreur (#217)
 * Affichage du nombre de données importées / nombre total dans la liste des imports (#183)
 * Possibilité d'exporter ou d'importer des mappings en JSON pour les échanger entre instances de GeoNature (#146)
 
