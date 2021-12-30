@@ -17,9 +17,9 @@ ALTER TABLE gn_imports.t_imports
 ADD need_fix boolean default false,
 ADD fix_comment text;
 
---------------------------------------------------------
--- ENABLE ADDITIONNAL DATA FIELD IN A DEDICATED THEME --
---------------------------------------------------------
+------------------------------------------------
+-- Enable additionnal field in a dedicated theme
+------------------------------------------------
 INSERT INTO gn_imports.dict_themes (name_theme, fr_label_theme, eng_label_theme, desc_theme, order_theme)
 VALUES ('additionnal_data', 'Champs additionnels', '', '', 6);
 
