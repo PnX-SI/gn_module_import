@@ -210,7 +210,8 @@ class NomenclatureTransformer:
                     )
                     query = """
                     UPDATE {schema}.{table}
-                    SET gn_invalid_reason = 'INVALID_NOMENCLATURE'
+                    SET gn_is_valid = 'False',
+                    gn_invalid_reason = 'INVALID_NOMENCLATURE'
                     WHERE gn_pk in :id_rows
                     """.format(
                         schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],

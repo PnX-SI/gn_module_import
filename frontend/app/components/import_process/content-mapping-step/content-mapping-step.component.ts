@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ViewEncapsulation } from "@angular/core";
 import { Router } from "@angular/router";
-import { FormControl, FormGroup, FormBuilder, Validators } from "@angular/forms";
+import { FormControl, FormGroup, FormBuilder } from "@angular/forms";
 import {
   StepsService,
   Step3Data,
@@ -8,13 +8,11 @@ import {
   Step2Data
 } from "../steps.service";
 import { DataService } from "../../../services/data.service";
-import { FileService } from "../../../services/file.service";
 import { ContentMappingService } from "../../../services/mappings/content-mapping.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
 import { ModuleConfig } from "../../../module.config";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
-
 
 @Component({
   selector: "content-mapping-step",
@@ -48,20 +46,15 @@ export class ContentMappingStepComponent implements OnInit {
   public displayCheckBox = ModuleConfig.DISPLAY_CHECK_BOX_MAPPED_VALUES;
   public mappingListForm = new FormControl();
   public newMappingNameForm = new FormControl();
-  public importForm: FormGroup;
-  public importJsonFile: File;
 
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
-  @ViewChild("modalImport") modalImport: any;
-  public modalImportVar: NgbModal;
 
   constructor(
     private stepService: StepsService,
     private _fb: FormBuilder,
     private _ds: DataService,
     public _cm: ContentMappingService,
-    private _fs: FileService,
     private _commonService: CommonService,
     private _router: Router,
     private _modalService: NgbModal,
@@ -76,13 +69,12 @@ export class ContentMappingStepComponent implements OnInit {
     this.contentTargetForm = this._fb.group({});
 
     // show list of user mappings
-    this._cm.getMappingNamesListMap().subscribe();
+    this._cm.getMappingNamesList();
 
     this.getNomencInf();
 
     // listen to change on mappingListForm select
     this.onMappingName();
-    
   }
 
   getNomencInf() {
@@ -132,7 +124,7 @@ export class ContentMappingStepComponent implements OnInit {
       );
   }
 
-  saveMappingNameForJson(jsonfile) {
+  saveMappingName(value) {
     // save new mapping in bib_mapping
     // then select the mapping name in the select
     let mappingType = "CONTENT";
@@ -142,18 +134,8 @@ export class ContentMappingStepComponent implements OnInit {
     this._ds.postMappingName(mappingForm, mappingType).subscribe(
       id_mapping => {
         this._cm.newMapping = false;
-        // We can subscribe here because getMappingNamesListMap returns
-        // an Observable (thanks to map)
-        this._cm.getMappingNamesListMap(id_mapping, this.mappingListForm).subscribe(
-          () => {
-            this.newMappingNameForm.reset();
-            // Need to read the json here so that our form does not get reset
-            this._fs.readJson(jsonfile, 
-              this.loadMapping.bind(this), 
-              this.displayError.bind(this))
-          }
-        );
-        
+        this._cm.getMappingNamesList(id_mapping, this.mappingListForm);
+        this.newMappingNameForm.reset();
         //this.enableMapping(targetForm);
       },
       error => {
@@ -213,52 +195,6 @@ export class ContentMappingStepComponent implements OnInit {
     this.contentTargetForm.controls[formControlName].setValue(values);
   }
 
-  displayError(message) {
-    this._commonService.regularToaster(
-      "error",
-      `ERROR: ${message}`
-    );
-  }
-  
-  onImportModal() {
-    //Creates the form and opens the import modal
-    this.importForm = this._fb.group({
-      // The validator for the name is done via the API Call
-      name: ["", [Validators.required]],
-      file: ["", [Validators.required]]
-    });
-    // Store this in a property to be able to close it later
-    this.modalImportVar = this._modalService.open(this.modalImport);
-  }
-
-  onFileSelect(event: Event) {
-    // Need to do this so that the provided file can be readable.
-    // The counterpart is that we need to store this in a property
-    // and not in the form directly otherwise => DOMException...
-    this.importJsonFile = (event.target as HTMLInputElement).files[0];
-  }
-
-  onFileProvided() {
-    // stop here if form is invalid
-    if (this.importForm.invalid) {
-      return;
-    }
-    const name = this.importForm.get('name').value
-    // Get the jsonfile from the property NOT FROM THE FORM ! See onFileSelect
-    const jsonfile = this.importJsonFile
-    
-    this.newMappingNameForm.patchValue(name)
-    this.saveMappingNameForJson(jsonfile)
-    this.modalImportVar.close()  // See this.onFileSelect
-  }
-
-  loadMapping(data) {
-    // Since the exported json is of the same format
-    // as the field one, we need to transform it to the correct format
-    // (see API calls)
-    this.fillFormFromMappings(data.map(e => [e]))
-  }
-
   isEnabled(value_def_id: string) {
     return true;
     /*(!this.contentTargetForm.controls[value_def_id].value)
@@ -310,7 +246,47 @@ export class ContentMappingStepComponent implements OnInit {
   fillMapping(id_mapping) {
     this.id_mapping = id_mapping;
     this._ds.getMappingContents(id_mapping).subscribe(mappingContents => {
-      this.fillFormFromMappings(mappingContents)
+      this.contentTargetForm.reset();
+      if (mappingContents[0] != "empty") {
+
+        this.n_mappes = 0;
+        for (let content of mappingContents) {
+          let arrayVal: any = [];
+
+          for (let val of content) {
+            if (val["source_value"] != "") {
+              let id_info = this.getId(
+                val["source_value"],
+                val["id_target_value"]
+              );
+              arrayVal.push({ id: id_info, value: val["source_value"] });
+            }
+          }
+          const formControl = this.contentTargetForm.get(
+            String(content[0]["id_target_value"])
+          );
+
+          if (formControl) {
+            formControl.setValue(arrayVal)
+            this.n_mappes = this.n_mappes + 1;
+          }
+
+        }
+      } else {
+        this.contentTargetForm.reset();
+        this.n_mappes = -1;
+      }
+      this.n_aMapper = 0;
+      for (let contentMapping of this.stepData.contentMappingInfo) {
+        this.n_aMapper += contentMapping.user_values.values.filter(
+          val => val.value
+        ).length;
+        this.n_mappes -= contentMapping.user_values.values.filter(
+          val => val.value
+        ).length;
+      }
+      // at the end set the formgroup as pristine
+      this.contentTargetForm.markAsPristine();
     }),
       error => {
         if (error.statusText === "Unknown Error") {
@@ -324,50 +300,6 @@ export class ContentMappingStepComponent implements OnInit {
         }
       };
   }
-
-  fillFormFromMappings(mappingContents) {
-    this.contentTargetForm.reset();
-    if (mappingContents[0] != "empty") {
-
-      this.n_mappes = 0;
-      for (let content of mappingContents) {
-        let arrayVal: any = [];
-
-        for (let val of content) {
-          if (val["source_value"] != "") {
-            let id_info = this.getId(
-              val["source_value"],
-              val["id_target_value"]
-            );
-            arrayVal.push({ id: id_info, value: val["source_value"] });
-          }
-        }
-        const formControl = this.contentTargetForm.get(
-          String(content[0]["id_target_value"])
-        );
-
-        if (formControl) {
-          formControl.setValue(arrayVal)
-          this.n_mappes = this.n_mappes + 1;
-        }
-
-      }
-    } else {
-      this.contentTargetForm.reset();
-      this.n_mappes = -1;
-    }
-    this.n_aMapper = 0;
-    for (let contentMapping of this.stepData.contentMappingInfo) {
-      this.n_aMapper += contentMapping.user_values.values.filter(
-        val => val.value
-      ).length;
-      this.n_mappes -= contentMapping.user_values.values.filter(
-        val => val.value
-      ).length;
-    }
-    // at the end set the formgroup as pristine
-    this.contentTargetForm.markAsPristine();
-    }
 
   onStepBack() {
     this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.stepData.importId}/step/2`]);
