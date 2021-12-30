@@ -10,7 +10,7 @@ from ..db.queries.nomenclatures import get_SINP_synthese_cols
 from ..db.queries.utils import get_types
 from ..wrappers import checker
 from ..logs import logger
-from .utils import fill_map, set_error_and_invalid_reason
+from .utils import fill_map, set_is_valid, set_error_and_invalid_reason
 
 
 def convert_to_datetime(value):
@@ -113,6 +113,7 @@ def check_types_and_date(
                 lambda x: type(x) is pd.Timestamp
             )
 
+            set_is_valid(df, "temp")
             # id_rows_errors = df.index[df["temp"] == False].to_list()
             invalid_rows = df[df["temp"] == False]
             values_error = invalid_rows[selected_columns[field]].to_list()
@@ -195,6 +196,7 @@ def check_types_and_date(
                     .astype("bool")
                 )
 
+                set_is_valid(df, "temp")
                 id_rows_errors = df.index[df["temp"] == False].to_list()
 
                 logger.info(
@@ -249,6 +251,7 @@ def check_types_and_date(
                     .astype("bool")
                 )
 
+                set_is_valid(df, "temp")
                 id_rows_errors = df.index[df["temp"] == False].to_list()
 
                 logger.info(
@@ -314,6 +317,7 @@ def check_types_and_date(
                         .astype("bool")
                     )
 
+                    set_is_valid(df, "temp")
                     id_rows_errors = df.index[df["temp"] == False].to_list()
 
                     logger.info(
@@ -362,6 +366,7 @@ def check_types_and_date(
                         "coerce",
                     ).notnull()
 
+                set_is_valid(df, "temp")
                 id_rows_errors = df.index[df["temp"] == False].to_list()
 
                 logger.info(

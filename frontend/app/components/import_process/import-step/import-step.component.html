@@ -11,10 +11,11 @@
 
                 Rapports
             </h4>
-            <div class="card-body card-margin row">
+            <div class="card-body card-margin">
 
-                <div class="col-12 col-lg-6 vl">
+                <div>
                     <div
+                        *ngIf="nbWarning > 0 || nbError > 0"
                         class="content-report card-margin"
                     >
                         <button
@@ -22,7 +23,7 @@
                             mat-raised-button
                             color=accent
                         >
-                            Rapport d'import/erreurs/avertissement
+                            Rapport d'erreurs/avertissement
                         </button>
                         <div
                         *ngIf="nbError==0 && nbWarning == 0"
@@ -44,12 +45,7 @@
                             (click)="_csvExport.onCSV(idImport)"
                         > Exporter vos {{nInvalidData}} observations invalides </button>
                     </div>
-                </div>
-                <div class="col-12 col-lg-6 mt-2">
-                    <need-fix
-                        [fix]="fix"
-                        [importId]="idImport"
-                    ></need-fix>
+
                 </div>
             </div>
         </div>

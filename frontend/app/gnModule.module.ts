@@ -6,8 +6,6 @@ import { Routes, RouterModule } from "@angular/router";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatCheckboxModule } from "@angular/material/checkbox";
-import { ChartsModule } from 'ng2-charts';
-
 import { ImportModalDatasetComponent } from "./components/modal_dataset/import-modal-dataset.component";
 import { ModalDeleteImport } from "./components/delete-modal/delete-modal.component";
 import { DataService } from "./services/data.service";
@@ -16,7 +14,7 @@ import { StepperGuardService } from "./services/stepper-guard";
 import { FieldMappingService } from "./services/mappings/field-mapping.service";
 import { ContentMappingService } from "./services/mappings/content-mapping.service";
 import { ImportComponent } from "./components/import_list/import.component";
-import { ImportReportComponent } from "./components/import_report/import_report.component";
+import { ImportErrorsComponent } from "./components/import_errors/import_errors.component";
 import { StepsService } from "./components/import_process/steps.service";
 import { UploadFileStepComponent } from "./components/import_process/upload-file-step/upload-file-step.component";
 import { FieldsMappingStepComponent } from "./components/import_process/fields-mapping-step/fields-mapping-step.component";
@@ -24,14 +22,11 @@ import { ContentMappingStepComponent } from "./components/import_process/content
 import { ImportStepComponent } from "./components/import_process/import-step/import-step.component";
 import { stepperComponent } from "./components/import_process/stepper/stepper.component";
 import { FooterStepperComponent } from "./components/import_process/footer-stepper/footer-stepper.component";
-import { FileService } from "./services/file.service";
-import { PermissionsService } from "./services/permissions.service";
-import { NeedFixComponent } from "./components/need-fix/need-fix.component";
 
 // my module routing
 const routes: Routes = [
   { path: "", component: ImportComponent },
-  { path: "report/:id_import", component: ImportReportComponent },
+  { path: "errors/:id_import", component: ImportErrorsComponent },
   {
     path: "process/step/1",
     component: UploadFileStepComponent,
@@ -61,7 +56,7 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     ImportComponent,
-    ImportReportComponent,
+    ImportErrorsComponent,
     ImportModalDatasetComponent,
     ModalDeleteImport,
     UploadFileStepComponent,
@@ -69,8 +64,7 @@ const routes: Routes = [
     ContentMappingStepComponent,
     ImportStepComponent,
     stepperComponent,
-    FooterStepperComponent,
-    NeedFixComponent
+    FooterStepperComponent
   ],
   imports: [
     GN2CommonModule,
@@ -79,7 +73,6 @@ const routes: Routes = [
     MatProgressSpinnerModule,
     MatStepperModule,
     MatCheckboxModule,
-    ChartsModule,
     NgbModule
   ],
   entryComponents: [ModalDeleteImport],
@@ -87,11 +80,9 @@ const routes: Routes = [
     DataService,
     StepsService,
     CsvExportService,
-    FileService,
     FieldMappingService,
     StepperGuardService,
-    ContentMappingService,
-    PermissionsService
+    ContentMappingService
   ],
 
   bootstrap: []

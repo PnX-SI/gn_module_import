@@ -3,10 +3,7 @@ from flask import Blueprint, jsonify
 
 from .api_error import GeonatureImportApiError
 
-blueprint = Blueprint("import", 
-                      __name__, 
-                      template_folder='templates'
-                      )
+blueprint = Blueprint("import", __name__)
 
 from .routes import (
     checks_and_transformations,
@@ -16,7 +13,6 @@ from .routes import (
     mappings,
     preview,
     uploads,
-    permissions,
 )
 
 

@@ -84,7 +84,8 @@ def data_cleaning(
         # user_error = []
         added_cols = {}
 
-        # set gn_invalid_reason:
+        # set gn_is_valid and gn_invalid_reason:
+        df["gn_is_valid"] = True
         df["gn_invalid_reason"] = ""
 
         # get synthese column info:
@@ -436,8 +437,7 @@ def field_mapping_data_checking(import_id, id_mapping):
         logger.info("*** END CORRESPONDANCE MAPPING")
 
         DB.session.query(TImports).filter(TImports.id_import == int(import_id)).update(
-            {TImports.id_field_mapping: int(id_mapping),
-             TImports.need_fix: n_invalid_rows > 0}
+            {TImports.id_field_mapping: int(id_mapping)}
         )
 
         DB.session.commit()
