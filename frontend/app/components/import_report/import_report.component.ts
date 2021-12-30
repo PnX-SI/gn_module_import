@@ -143,19 +143,23 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             // values to get the actual value
             // Then affect the target_value and the definition
             this.matchedNomenclature.forEach(
-                val => sourceValues.filter(
-                    elm => parseInt(elm.id) == val.id_target_value).map(
-                        elm => {
-                            // Carefull the target_value is actually the
-                            // source value, needs to rename
-                            val.target_value = val.source_value
-                            val.source_value = elm.value;
-                            val.definition = elm.definition;
-                            val.cd_nomenclature = elm.cd_nomenclature;
-                            val.mnemonique = elm.mnemonique;
-                            }
-                        )[0]
-                    )
+                (val) =>
+                    sourceValues
+                    .filter((elm) => parseInt(elm.id) == val.id_target_value)
+                    .map((elm) => {
+                        // Carefull the target_value is actually the
+                        // source value, needs to rename
+                        val.target_value = val.source_value;
+                        val.source_value = elm.value;
+                        val.definition = elm.definition;
+                        val.cd_nomenclature = elm.cd_nomenclature;
+                        val.mnemonique = elm.mnemonique;
+                        val.nomenc_synthese_name =
+                        this.nomenclature.content_mapping_info.filter(
+                            (item) => item.nomenc_abbr == val.mnemonique
+                        )[0].nomenc_synthese_name;
+                    })[0]
+                );
         }
     }
 
@@ -198,8 +202,26 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     exportNomenclatures() {
         // Exactly like the correspondances
         if (this.matchedNomenclature) {
-            const blob = new Blob([JSON.stringify(this.matchedNomenclature, null, 4)], 
-                                {type : 'application/json'});
+            // keys to export
+            const toExport = [
+                "nomenc_synthese_name",
+                "source_value",
+                "cd_nomenclature",
+                "mnemonique",
+            ];
+            // Taken on https://stackoverflow.com/questions/34658867/slice-specific-keys-in-javascript-object/53202834
+            const pick = (obj, ...args) => ({
+                ...args.reduce((res, key) => ({ ...res, [key]: obj[key] }), {}),
+            });
+            // For all obj in this.matchedNomenclature pick only the toExport
+            // keys
+            const filtered = this.matchedNomenclature.map((item) =>
+                pick(item, ...toExport)
+            );
+            // Export
+            const blob = new Blob([JSON.stringify(filtered, null, 4)], {
+                type: "application/json",
+            });
             saveAs(blob, "nomenclatures.json");
         }
     }
