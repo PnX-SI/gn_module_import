@@ -95,20 +95,7 @@ class TImports(ModelCruvedAutorization):
         import_as_dict["dataset_name"] = import_as_dict["dataset"]["dataset_name"]
         import_as_dict.pop("dataset")
         import_as_dict["errors"] = import_as_dict.get("errors", [])
-
-        if self.id_source_synthese is None:
-            name_source = "Import(id=" + str(self.id_import) + ")"
-            id_source = None
-            source = (
-                DB.session.query(TSources.id_source)
-                .filter(TSources.name_source == name_source)
-                .first()
-            )
-            if source:
-                id_source = source[0]
-            import_as_dict["id_source"] = id_source
-        else:
-            import_as_dict["id_source"] = self.id_source_synthese
+        import_as_dict["id_source"] = self.id_source_synthese
         return import_as_dict
 
 
