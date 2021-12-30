@@ -2,6 +2,35 @@
 CHANGELOG
 =========
 
+1.2.0 (unreleased)
+------------------
+
+**🚀 Nouveautés**
+
+* Ajout d'un rapport d'import - consultable en ligne et exportable en PDF - en cohérence avec le module métadonnées (#158)
+* Possibilité de taguer un import nécessitant des corrections et d'y attribuer un commentaire le cas échéant (#230)
+* Possibilité de filtrer les imports nécessitant des corrections depuis la liste des imports (#189)
+* Possibilité d'alimenter le champs "additionnal_data" de la synthèse avec un ou plusieurs champs du fichier source (#165)
+* Possibilité de restreindre les imports à une aire géographique du ref_geo (configurable) : les données hors du territoire configuré sont mises en erreur (#217)
+* Possibilité de restreindre les imports à une liste de taxons (configurable) : les données ne portant pas sur ces taxons sont mises en erreur (#217)
+* Affichage du nombre de données importées / nombre total dans la liste des imports (#183)
+* Possibilité d'exporter ou d'importer des mappings en JSON pour les échanger entre instances de GeoNature (#146)
+
+**🐛 Corrections**
+
+* Suppression du champs "gn_is_valid" : les lignes invalides sont déduites à partir des erreurs détectées pour chaque donnée (gn_invalid_reason) (#223)
+* L'étape 3 (mapping de nomenclatures) est désormais passée automatiquement si aucun champs de nomenclature n'a été rempli à l'étape 2 (mapping des champs) (#157)
+* Suppression du rapport d'erreur au profit du rapport d'import plus complet et visuel (158)
+* Correction de l'autocomplétion de la recherche (#214)
+* Amélioration du modèle de données concernant le lien entre import et sources de la syntèse (#201)
+* Correction de la version setuptools lors de l'installation (#244)
+
+**Notes de version**
+
+* Exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.6to1.2.0.sql``)
+
+
+
 1.1.5 (unreleased)
 ------------------
 
