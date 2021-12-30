@@ -10,7 +10,9 @@ from geonature.core.gn_permissions import decorators as permissions
 from ..db.models import TImports, TMappings
 
 from ..db.queries.save_mapping import get_selected_columns, get_additional_data
-from ..db.queries.load_to_synthese import insert_into_t_sources, check_id_source
+from ..db.queries.load_to_synthese import (insert_into_t_sources, 
+                                           check_id_source,
+                                           get_id_source)
 from ..db.queries.user_table_queries import (
     set_imports_table_name,
     get_table_name,
@@ -183,6 +185,8 @@ def finalize_import(id_import, table_name, total_columns):
     import_obj.is_finished = True
     import_obj.processing = False
     import_obj.in_error = False
+    # Get id_source from t_sources table
+    import_obj.id_source_synthese = get_id_source(id_import)
 
     logger.info("-> t_imports updated on final step")
 
