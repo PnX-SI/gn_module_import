@@ -490,7 +490,6 @@ export class FieldsMappingStepComponent implements OnInit {
       mappingFields => {
         this.enableMapping(this.syntheseForm);
         this.fillFormFromMappings(mappingFields);
-        
       },
       error => {
         if (error.statusText === "Unknown Error") {
@@ -520,7 +519,7 @@ export class FieldsMappingStepComponent implements OnInit {
               form.setValue(field["source_field"] == 'true')
             }
         }
-        if (field["target_field"] == 'altitudes_generate') {
+        else if (field["target_field"] == 'altitudes_generate') {
           const form = this.syntheseForm
             .get('altitudes_generate')
           if(form) {
@@ -529,13 +528,21 @@ export class FieldsMappingStepComponent implements OnInit {
             
         }
 
-        if (columnsArray.includes(field["source_field"])) {
+        else if (columnsArray.includes(field["source_field"])) {
           const target_form = this.syntheseForm.get(field["target_field"])
           if (target_form) {
             target_form.setValue(field["source_field"]);
             this.mappedList.push(field["target_field"]);
           }
 
+        }
+        
+        else if (Array.isArray(field["source_field"]) && field["source_field"].every(val => columnsArray.includes(val))) {
+          const target_form = this.syntheseForm.get(field["target_field"])
+          if (target_form) {
+            target_form.setValue(field["source_field"]);
+            this.mappedList.push(field["target_field"]);
+          }
         }
       }
       this.shadeSelectedColumns(this.syntheseForm);
