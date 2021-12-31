@@ -5,6 +5,8 @@ CHANGELOG
 1.1.6 (unreleased)
 ------------------
 
+Compatible avec Debian 10, nécessite des mises à jour des dépendances pour fonctionner sur Debian 11
+
 **🐛 Corrections**
 
 * Correction des performances de la liste des imports (#254)
