@@ -10,6 +10,7 @@ CHANGELOG
 * Correction des performances de la liste des imports (#254)
 * Optimisation du json chargé pour afficher la liste des imports
 * Correction des rapports d'erreurs
+* Fixer les versions des dépendances ``setuptools`` et ``pyproj`` (#244)
 
 1.1.5 (2021-10-07)
 ------------------
