@@ -2,7 +2,7 @@
 Routes to manage import (import list, cancel import, import info...)
 """
 from flask import request, current_app
-from sqlalchemy.orm import exc as SQLAlchelyExc
+from sqlalchemy.orm import exc as SQLAlchelyExc, joinedload, raiseload
 from sqlalchemy import or_
 
 from pypnusershub.db.models import User
@@ -53,6 +53,12 @@ def get_import_list(info_role):
     if info_role.value_filter == "2":
         ors.append(TImports.author.any(id_organisme=info_role.id_organisme))
     q = q.filter(or_(*ors))
+    q = q.options(
+        joinedload('author'),
+        joinedload('dataset'),
+        joinedload('errors'),
+        raiseload('*'),
+    )
     results = q.all()
     nrows = None
     if not results:
@@ -64,7 +70,14 @@ def get_import_list(info_role):
         info_role.id_role,
         module_code="IMPORT"
     )[0]
-    return {"empty": False, "history": [r.to_dict(info_role, user_cruved) for r in results]}, 200
+
+    fields = [
+        'errors.id_user_error',
+        'dataset.dataset_name',
+        'author',
+    ]
+
+    return {"empty": False, "history": [r.to_dict(info_role, user_cruved, fields=fields) for r in results]}, 200
 
 
 @blueprint.route("/update_import/<int:id_import>", methods=["POST"])
@@ -89,7 +102,7 @@ def update_import(id_import):
 def get_one_import(import_id):
     import_obj = TImports.query.get(import_id)
     if import_obj:
-        return import_obj.to_dict()
+        return import_obj.to_dict(fields=['errors'])
     return None
 
 
