@@ -117,27 +117,29 @@ Le module permet de traiter un fichier CSV ou GeoJSON sous toute structure de do
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-02.jpg
 
-3. Chargez le fichier CSV ou GeoJSON à importer. Le nom du fichier ne doit pas dépasser 50 charactères.
+3. Chargez le fichier CSV ou GeoJSON à importer. Le nom du fichier ne doit pas dépasser 50 caractères.
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-03.jpg
 
-4. Mapping des champs. Il s'agit de faire correspondre les champs du fichier importé aux champs de la Synthèse (basé sur le standard "Occurrences de taxons" du SINP). Vous pouvez utiliser un mapping déjà existant ou en créer un nouveau. Le module contient par défaut un mapping correspondant à un fichier exporté au format par défaut de la synthèse de GeoNature. Si vous créez un nouveau mapping, il sera ensuite réutilisable pour les imports suivants. Il est aussi possible de choisir si les UUID uniques doivent être générés et si les altitudes doivent être calculées automatiquement si elles ne sont pas renseignées dans le fichier importé.
+4. Mapping des champs. Il s'agit de faire correspondre les champs du fichier importé aux champs de la Synthèse (basé sur le standard "Occurrences de taxons" du SINP). Vous pouvez utiliser un mapping déjà existant ou en créer un nouveau. Le module contient par défaut un mapping correspondant à un fichier exporté au format par défaut de la synthèse de GeoNature. Si vous créez un nouveau mapping, il sera ensuite réutilisable pour les imports suivants. Il est aussi possible de choisir si les UUID uniques doivent être générés et si les altitudes doivent être calculées automatiquement si elles ne sont pas renseignées dans le fichier importé. Il est également possible de sélectionner un ou plusieurs champs sources "personnalisés" pour alimenter les attributs additionnels dans la synthèse.
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-04.jpg
 
-6. Une fois le mapping des champs réalisé, au moins sur les champs obligatoires, il faut alors valider le mapping pour lancer le contrôle des données. Vous pouvez ensuite consulter les éventuelles erreurs. Il est alors possible de corriger les données en erreurs directement dans la base de données, dans la table temporaire des données en cours d'import, puis de revalider le mapping, ou de passer à l'étape suivante. Les données en erreur ne seront pas importées et seront téléchargeables dans un fichier dédié à l'issue du processus.
-
-.. image:: https://geonature.fr/docs/img/import/gn_imports-05.jpg
-
-7. Mapping des contenus. Il s'agit de faire correspondre les valeurs des champs du fichier importé avec les valeurs disponibles dans les champs de la Synthèse de GeoNature (basés par défaut sur les nomenclatures du SINP). Par défaut les correspondances avec les nomenclatures du SINP sous forme de code ou de libellés sont fournies.
+6. Mapping des contenus. Il s'agit de faire correspondre les valeurs des champs du fichier importé avec les valeurs disponibles dans les champs de la Synthèse de GeoNature (basés par défaut sur les nomenclatures du SINP). Par défaut les correspondances avec les nomenclatures du SINP sous forme de code ou de libellés sont fournies. Si les champs sélectionnés lors de l'étape précédente ne correspondent à aucun champ de nomenclature, alors cette étape est automatiquement passée.
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-06.jpg
 
-8. La dernière étape permet d'avoir un aperçu des données à importer et leur nombre, avant de valider l'import final dans la Synthèse de GeoNature.
+7. Une fois l'ensemble des correspondances réalisées (champs et contenu) - au moins sur les champs obligatoires - il faut alors valider le mapping pour lancer le contrôle des données. Vous pourrez ensuite consulter les éventuelles erreurs lors de l'étape de prévisualisation. Il est éventuellement possible de corriger les données en erreurs directement dans la base de données, dans la table des données en cours d'import, puis de revalider le mapping, ou de passer à l'étape suivante. Les données en erreur ne seront pas importées et seront téléchargeables dans un fichier dédié à l'issue du processus.
+
+.. image:: https://geonature.fr/docs/img/import/gn_imports-05.jpg
+
+8. La dernière étape permet d'avoir un aperçu des données à importer et leur nombre, et de consulter le détail des erreurs identifiées lors des contrôles avant de valider l'import final dans la Synthèse de GeoNature. Vous pouvez également taguer un import nécessitant des corrections ou compléments ultérieurs, et y associer un commentaire pour revenir sur cet import ou le compléter par la suite.
 
 .. image:: https://geonature.fr/docs/img/import/gn_imports-07.jpg
 
-Pour chaque fichier importé, les données brutes sont importées intialement et stockées tel quel dans une table portant le nom du fichier, dans le schéma ``gn_import_archives``. Elles sont aussi stockées dans une table intermédiaire, enrichie au fur et à mesure des étapes de l'import.
+10. Depuis la liste des imports, vous pourrez consulter un rapport d'import fournissant une description des données importées, le détail des erreurs rencontrées, permettant également de télécharger les données invalides ainsi que l'ensemble des correspondances effectuées au format JSON en vue de partager les mappings entre plusieurs instances de GeoNature. Le rapport d'import PDF est exportable au format PDF pour en faciliter la diffusion auprès de partenaires fournisseurs de données notamment. 
+
+Pour chaque fichier importé, les données brutes sont importées et stockées tel quel dans une table portant le nom du fichier, dans le schéma ``gn_import_archives``. Elles sont aussi stockées dans une table intermédiaire, enrichie au fur et à mesure des étapes de l'import pour transformer les données vers les formats du SINP.
 
 Liste des contrôles réalisés sur le fichier importé et ses données : https://github.com/PnX-SI/gn_module_import/issues/17
 
@@ -160,12 +162,12 @@ Fonctionnement du module (serveur et BDD)
 - une fois dans le schéma ``gn_imports_archives`` : cette archive ne sera jamais modifiée, et permettra de garder une trace des données brutes telles qu'elles ont été transmises
 - une fois dans le schéma ``gn_imports`` : cette copie est la table d'imports
 
-3. La table créée dans le schéma ``gn_imports`` est la table de travail sur laquelle les différentes transformations et différents compléments seront effectués au cours du processus. Cette table se voit dotée de 3 champs "techniques" : ``gn_is_valid`` (booléen qui précise la validité de la ligne lors du processus d'import), ``gn_invalid_reason`` (ensemble des erreurs détectées rendant la donnée invalide), et ``gn_pk`` (clé primaire purement technique).
+3. La table créée dans le schéma ``gn_imports`` est la table de travail sur laquelle les différentes transformations et différents compléments seront effectués au cours du processus. Cette table se voit dotée de 2 champs "techniques" : ``gn_invalid_reason`` (ensemble des erreurs détectées rendant la donnée invalide), et ``gn_pk`` (clé primaire purement technique).
 
-A la fin du processus, seules les données ``gn_is_valid=true`` seront importées dans la synthèse. 
+A la fin du processus, seules les données valides (dont le champs ``gn_invalid_reason`` est vide) seront importées dans la synthèse. 
 
 4. Entre les différents mappings et à l'issue de l'étape 3 (mapping de contenus), des modifications peuvent être effectuées sur la table de travail, directement dans la base de données. 
 
 Le module permet ainsi l'ajout de nouveaux champs (ajout et calcul d'un champs cd_nom par l'administrateur par exemple), ou le travail sur les données en cours d'import (rentre invalides des données n'appartenant pas à un territoire etc). Le module, initialement conçu comme un outil d'aide à l'import des données pour les administrateurs, permet donc de modifier, corriger, ou travailler sur les données dans la base au cours du processus.  
 
-Financement de la version 1.0.0 : DREAL et Conseil Régional Auvergne-Rhône-Alpes.
+Financement de la version 1.0.0 : DREAL et Conseil Régional Auvergne-Rhône-Alpes dans le cadre de l'animation régionale du SINP via le Pôle Invertébrés.

@@ -13,3 +13,12 @@ ngx-datatable{
 :host ::ng-deep datatable-body-cell {
   padding: 10px 5px !important;
 }
+
+.datatable-body-cell {
+  text-align: center;
+}
+
+.mat-icon-button {
+  bottom: 10px;
+  background: transparent !important;
+}

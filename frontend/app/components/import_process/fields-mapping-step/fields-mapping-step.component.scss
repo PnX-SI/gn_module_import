@@ -94,3 +94,36 @@ tr:nth-child(even) {
   color: #b1b0b0
 }
 
+.mat-form-field {
+  width: 100%;
+}
+
+.mat-form-field-disabled {
+  cursor: not-allowed !important;
+}
+
+.mat-form-field-infix {
+  border-top-width: 0px;
+  padding: 0;
+}
+
+.mat-form-field-appearance-legacy .mat-form-field-infix {
+  padding: 0;
+}
+
+.mat-select-disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed !important;
+  
+  .mat-select-trigger {
+    cursor: not-allowed !important;
+    
+  }
+  .mat-select-value {
+    pointer-events: none;
+  }
+}
+
+.mat-form-field-underline {
+  display: none;
+}
