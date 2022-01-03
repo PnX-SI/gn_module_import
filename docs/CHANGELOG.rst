@@ -6,6 +6,7 @@ CHANGELOG
 ------------------
 
 Nécessite la version 2.9.0 de GeoNature à minima
+Compatible avec Debian 10, nécessite des mises à jour des dépendances pour fonctionner sur Debian 11
 
 **🚀 Nouveautés**
 
@@ -26,20 +27,32 @@ Nécessite la version 2.9.0 de GeoNature à minima
 * Suppression du rapport d'erreur au profit du rapport d'import plus complet, visuel et exportable (158)
 * Correction de l'autocomplétion de la recherche (#214)
 * Amélioration du modèle de données : ajout d'une clé étrangère entre imports (gn_import.t_imports) et sources de la syntèse (gn_synthese.t_sources) (#201)
-* Correction de la version setuptools lors de l'installation (#244)
 
 **Notes de version**
 
 * Exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.6to1.2.0.sql``)
+* Depuis cette version, les icônes "Warning" de la liste d'imports mettent en avant les imports tagués comme "nécessitant des corrections". Les imports comportant des données en erreur sont identifiables par le lien de téléchargement des données invalides.
 
-
-
-1.1.5 (unreleased)
+1.1.6 (2022-01-03)
 ------------------
+
+Compatible avec Debian 10, nécessite des mises à jour des dépendances pour fonctionner sur Debian 11
 
 **🐛 Corrections**
 
-* 
+* Correction des performances de la liste des imports (#254)
+* Optimisation du json chargé pour afficher la liste des imports
+* Correction des rapports d'erreurs
+* Versions des dépendances ``setuptools`` et ``pyproj`` fixées (#244)
+
+1.1.5 (2021-10-07)
+------------------
+
+Nécessite la version 2.8.0 (ou plus) de GeoNature
+
+**🚀 Nouveautés**
+
+* Compatibilité avec Marshmallow 3 / GeoNature 2.8.0
 
 1.1.4 (2021-06-30)
 ------------------
