@@ -33,8 +33,6 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.selectDatasetForm = new FormControl(null, Validators.required);
-    console.log(this.cruvedStore.cruved);
-    
   }
 
   onOpenModal(content) {

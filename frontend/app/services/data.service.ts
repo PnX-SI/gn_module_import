@@ -225,7 +225,6 @@ export class DataService {
     // formData.append("chart", new Blob([chartImg], {type: 'image/png'}), "chart");
     formData.append("map", mapImg);
     formData.append("chart", chartImg);
-    console.log(formData)
     return this._http.post(`${urlApi}/export_pdf/${importId}`, 
                            formData, {responseType: 'blob'});
   }
