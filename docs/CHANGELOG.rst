@@ -2,12 +2,57 @@
 CHANGELOG
 =========
 
-1.1.5 (unreleased)
+1.2.0 (unreleased)
 ------------------
+
+Nécessite la version 2.9.0 de GeoNature à minima
+Compatible avec Debian 10, nécessite des mises à jour des dépendances pour fonctionner sur Debian 11
+
+**🚀 Nouveautés**
+
+* Ajout d'un rapport d'import - consultable en ligne et exportable en PDF - en cohérence avec le module métadonnées (#158)
+* Affichage dynamique du nombre de données importées par rang taxonomique sous forme de graphique dans le rapport d'import et son export pdf (rang par défaut configurable avec le nouveau paramètre ``DEFAULT_RANK_VALUE``) (#221)
+* Possibilité de taguer un import nécessitant des corrections et d'y attribuer un commentaire le cas échéant (#230)
+* Possibilité de filtrer les imports nécessitant des corrections depuis la liste des imports (#189)
+* Possibilité d'alimenter le champs "additionnal_data" de la synthèse avec un ou plusieurs champs du fichier source (#165)
+* Possibilité de restreindre les imports à une aire géographique du ref_geo (configurable avec le nouveau paramètre ``ID_AREA_RESTRICTION``) : les données hors du territoire configuré sont mises en erreur (#217)
+* Possibilité de restreindre les imports à une liste de taxons (configurable avec le nouveau paramètre ``ID_LIST_TAXA_RESTRICTION``) : les données ne portant pas sur ces taxons sont mises en erreur (#217)
+* Affichage du nombre de données importées / nombre total dans la liste des imports (#183)
+* Possibilité d'exporter ou d'importer des mappings en JSON pour les échanger entre instances de GeoNature (#146)
 
 **🐛 Corrections**
 
-* 
+* Suppression du champs "gn_is_valid" dans les tables d'import : les lignes invalides sont déduites à partir des erreurs détectées pour chaque donnée (gn_invalid_reason) (#223)
+* L'étape 3 (mapping de nomenclatures) est désormais passée automatiquement si aucun champs de nomenclature n'a été rempli à l'étape précédente (mapping des champs) (#157)
+* Suppression du rapport d'erreur au profit du rapport d'import plus complet, visuel et exportable (158)
+* Correction de l'autocomplétion de la recherche (#214)
+* Amélioration du modèle de données : ajout d'une clé étrangère entre imports (gn_import.t_imports) et sources de la syntèse (gn_synthese.t_sources) (#201)
+
+**Notes de version**
+
+* Exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.6to1.2.0.sql``)
+* Depuis cette version, les icônes "Warning" de la liste d'imports mettent en avant les imports tagués comme "nécessitant des corrections". Les imports comportant des données en erreur sont identifiables par le lien de téléchargement des données invalides.
+
+1.1.6 (2022-01-03)
+------------------
+
+Compatible avec Debian 10, nécessite des mises à jour des dépendances pour fonctionner sur Debian 11
+
+**🐛 Corrections**
+
+* Correction des performances de la liste des imports (#254)
+* Optimisation du json chargé pour afficher la liste des imports
+* Correction des rapports d'erreurs
+* Versions des dépendances ``setuptools`` et ``pyproj`` fixées (#244)
+
+1.1.5 (2021-10-07)
+------------------
+
+Nécessite la version 2.8.0 (ou plus) de GeoNature
+
+**🚀 Nouveautés**
+
+* Compatibilité avec Marshmallow 3 / GeoNature 2.8.0
 
 1.1.4 (2021-06-30)
 ------------------
