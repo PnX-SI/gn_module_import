@@ -13,7 +13,7 @@ import { ContentMappingService } from "../../../services/mappings/content-mappin
 import { CommonService } from "@geonature_common/service/common.service";
 import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
 import { ModuleConfig } from "../../../module.config";
-import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { NgbModal, NgbModalRef } from "@ng-bootstrap/ng-bootstrap";
 
 
 @Component({
@@ -54,7 +54,7 @@ export class ContentMappingStepComponent implements OnInit {
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;
   @ViewChild("modalImport") modalImport: any;
-  public modalImportVar: NgbModal;
+  public modalImportVar: NgbModalRef;
 
   constructor(
     private stepService: StepsService,
@@ -130,6 +130,38 @@ export class ContentMappingStepComponent implements OnInit {
           }
         }
       );
+  }
+
+  saveMappingName(value) {
+    // save new mapping in bib_mapping
+    // then select the mapping name in the select
+    let mappingType = "CONTENT";
+    const mappingForm = {
+      mappingName: this.newMappingNameForm.value
+    };
+    this._ds.postMappingName(mappingForm, mappingType).subscribe(
+        (id_mapping) => {
+            this._cm.newMapping = false;
+            this._cm
+                .getMappingNamesListMap(id_mapping, this.mappingListForm)
+                .toPromise()
+                .then(() => {});
+            this.newMappingNameForm.reset();
+            //this.enableMapping(targetForm);
+        },
+      (error) => {
+        if (error.statusText === "Unknown Error") {
+          // show error message if no connexion
+          this._commonService.regularToaster(
+            "error",
+            "Une erreur s'est produite : contactez l'administrateur du site"
+          );
+        } else {
+          console.log(error);
+          this._commonService.regularToaster("error", error.error);
+        }
+      }
+    );
   }
 
   saveMappingNameForJson(jsonfile) {
@@ -253,10 +285,35 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   loadMapping(data) {
+    // Set the proper ids by matching mnemonique and cd_nomenclature
+    // between data and content_mapping_info
+    data = this.correctMapping(data)
     // Since the exported json is of the same format
     // as the field one, we need to transform it to the correct format
     // (see API calls)
     this.fillFormFromMappings(data.map(e => [e]))
+    this._ds
+        .updateContentMapping(this.id_mapping, this.contentTargetForm.value)
+        .toPromise()
+        .then(() => {})
+        .catch((error) =>
+          this._commonService.regularToaster("error", error.error.message)
+        );
+  }
+
+  correctMapping(data) {
+    return data.map((element) => {
+      const nomenc = this.stepData.contentMappingInfo.filter(
+        (content) => content.nomenc_abbr == element.mnemonique
+      )[0];
+      if (nomenc) {
+        const _id = nomenc.nomenc_values_def.filter(
+          (val) => val.cd_nomenclature == element.cd_nomenclature
+        )[0];
+        element.id_target_value = parseInt(_id.id);
+      }
+      return element
+    });
   }
 
   isEnabled(value_def_id: string) {

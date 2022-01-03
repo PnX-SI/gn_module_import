@@ -81,8 +81,6 @@ export class ImportStepComponent implements OnInit {
         this.spinner = true;
         this._ds.importData(this.idImport).subscribe(
             res => {
-                console.log(res);
-
                 this.spinner = false;
 
                 this.stepService.resetStepoer();
