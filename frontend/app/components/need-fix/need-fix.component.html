@@ -6,11 +6,14 @@
     </mat-slide-toggle>
   </div>
 
-  <mat-form-field class="d-block mt-2">
+  <mat-form-field 
+    class="d-block mt-3" 
+    appearance="outline">
+    <mat-label>Commentaires</mat-label>
     <textarea
       matInput
       [(ngModel)]="fix.comment"
-      placeholder="Commentaire"
+      placeholder="Entrez un commentaire"
       [disabled]="!hasRights"
     ></textarea>
   </mat-form-field>
