@@ -23,7 +23,7 @@ import { CsvExportService } from "../../services/csv-export.service";
 })
 export class ImportComponent implements OnInit {
   public deletedStep1;
-  public history;
+  public history = [];
   public filteredHistory;
   public empty: boolean = false;
   public config = ModuleConfig;
@@ -120,7 +120,7 @@ export class ImportComponent implements OnInit {
 
     this._ds.getImportList().subscribe(
       res => {
-        this.history = res.history;
+        this.history = res.history || [];
         // filterErrors will apply the "Error only" check box
         // which will by the same way set the this.filteredHistory
         // variable

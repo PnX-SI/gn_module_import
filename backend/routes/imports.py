@@ -161,13 +161,15 @@ def cancel_import(info_role, import_id):
                 403,
             )
 
+    
     # delete imported data if the import is already finished
-    is_finished = (
-        DB.session.query(TImports.is_finished)
+    current_import = (
+        DB.session.query(TImports)
         .filter(TImports.id_import == import_id)
-        .one()[0]
+        .one()
     )
-    if is_finished:
+    
+    if current_import.is_finished:
         name_source = "Import(id=" + import_id + ")"
         id_source = (
             DB.session.query(TSources.id_source)
@@ -181,20 +183,9 @@ def cancel_import(info_role, import_id):
         ).delete()
 
     # get step number
-    step = (
-        DB.session.query(TImports.step)
-        .filter(TImports.id_import == import_id)
-        .one()[0]
-    )
-
-    if step > 1:
-
+    if current_import.step > 1:
         # get data table name
-        user_data_name = (
-            DB.session.query(TImports.import_table)
-            .filter(TImports.id_import == import_id)
-            .one()[0]
-        )
+        user_data_name = current_import.import_table
 
         # set data table names
         archives_full_name = get_full_table_name(
