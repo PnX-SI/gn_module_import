@@ -3,6 +3,7 @@ CHANGELOG
 =========
 
 1.1.7 (unreleased)
+------------------
 
 Compatibilité avec GeoNature version 2.9.0 et plus
 
