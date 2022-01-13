@@ -2,7 +2,7 @@
 CHANGELOG
 =========
 
-1.1.7 (unreleased)
+1.1.7 (2022-01-13)
 ------------------
 
 Compatibilité avec GeoNature version 2.9.0 et plus
@@ -11,6 +11,10 @@ Compatibilité avec GeoNature version 2.9.0 et plus
 
 * Révision du formulaire de mapping des nomenclatures pour l'adapter au passage à la libraire ``ng-select2`` dans la version 2.9.0 de GeoNature
 * Limitation des jeux de données à ceux associés au module et en se basant sur l'action C du CRUVED du module (#267)
+
+**⚠️ Notes de version**
+
+* La liste des JDD associable à un import se base désormais sur le C du CRUVED de l'utilisateur au niveau du module (ou du C du CRUVED de GeoNature si l'utilisateur n'a pas de CRUVED sur le module), au lieu du R de GeoNature jusqu'à présent. Vous devrez donc potentiellement adapter vos permissions à ce changement de comportement (#267)
 
 1.1.6 (2022-01-03)
 ------------------
