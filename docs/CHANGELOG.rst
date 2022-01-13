@@ -5,10 +5,11 @@ CHANGELOG
 1.1.7 (2022-01-13)
 ------------------
 
-Compatibilité avec GeoNature version 2.9.0 et plus
+Nécessite la version 2.9.0 (ou plus) de GeoNature
 
 **💻 Evolutions**
 
+* Compatibilité avec GeoNature version 2.9.0 et plus.
 * Révision du formulaire de mapping des nomenclatures pour l'adapter au passage à la libraire ``ng-select2`` dans la version 2.9.0 de GeoNature
 * Limitation des jeux de données à ceux associés au module et en se basant sur l'action C du CRUVED du module (#267)
 
