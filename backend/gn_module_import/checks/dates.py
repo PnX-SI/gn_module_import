@@ -1,4 +1,7 @@
-def concat_dates(df, selected_columns):
+from gn_module_import.db.models import BibFields
+
+
+def concat_dates(df, selected_columns, synthese_fields):
     assert('date_min' in selected_columns)  # date_min is a required field
 
     date_min_col = selected_columns["date_min"]
@@ -48,4 +51,7 @@ def concat_dates(df, selected_columns):
     selected_columns['date_min'] = 'concatened_date_min'
     if 'date_max' in selected_columns:
         selected_columns['orig_date_max'] = selected_columns['date_max']
+    else:
+        # date max was not selected, but we add it to synthese fields as we have a computed value for it
+        synthese_fields.append(BibFields.query.filter_by(name_field='date_max').one())
     selected_columns['date_max'] = 'concatened_date_max'

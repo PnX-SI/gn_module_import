@@ -116,7 +116,7 @@ def check_dates(df, selected_columns):
 
 
 def _run_all_checks(df, imprt, selected_columns, synthese_fields):
-    concat_dates(df, selected_columns)
+    concat_dates(df, selected_columns, synthese_fields)
     clean_missing_values(df, selected_columns)
     yield from check_required_values(df, imprt, selected_columns, synthese_fields)
     yield from check_types(df, imprt, selected_columns, synthese_fields)
