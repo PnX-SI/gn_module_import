@@ -34,8 +34,8 @@ DEFAULT_LIST_COLUMN = [
         "filter": True,
     },
     {
-        "prop": "dataset_name",
-        "name": "JDD",
+        "prop": "dataset.dataset_name",
+        "name": "Voir la fiche du JDD",
         "max_width": 400,
         "show": True,
         "filter": True,
@@ -106,6 +106,7 @@ MAX_LINE_LIMIT = 1000
 INSTANCE_BOUNDING_BOX = [-5.0, 41, 10, 51.15]
 
 ALLOW_MODIFY_DEFAULT_MAPPING = True
+ALLOW_FIELD_MAPPING = True
 DEFAULT_FIELD_MAPPING_ID = 1
 # Parameter to define if the checkbox allowing to change display mode is displayed or not.
 DISPLAY_CHECK_BOX_MAPPED_FIELD = True
@@ -136,6 +137,7 @@ class GnModuleSchemaConf(Schema):
     ENABLE_SYNTHESE_UUID_CHECK = fields.Boolean(load_default=True)
     DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(load_default=True)
     ALLOW_MODIFY_DEFAULT_MAPPING = fields.Boolean(load_default=ALLOW_MODIFY_DEFAULT_MAPPING)
+    ALLOW_FIELD_MAPPING = fields.Boolean(load_default=ALLOW_FIELD_MAPPING)
     DEFAULT_FIELD_MAPPING_ID = fields.Integer(load_default=DEFAULT_FIELD_MAPPING_ID)
     DISPLAY_MAPPED_FIELD = fields.Boolean(load_default=False)
     DISPLAY_CHECK_BOX_MAPPED_FIELD = fields.Boolean(load_default=True)
@@ -143,3 +145,4 @@ class GnModuleSchemaConf(Schema):
     CHECK_REF_BIBLIO_LITTERATURE = fields.Boolean(load_default=True)
     CHECK_EXIST_PROOF = fields.Boolean(load_default=True)
     CHECK_TYPE_INFO_GEO = fields.Boolean(load_default=True)
+

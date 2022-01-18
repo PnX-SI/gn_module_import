@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import request, current_app, jsonify, Response
 from werkzeug.exceptions import Conflict, BadRequest
 import sqlalchemy as sa
+from sqlalchemy.orm import joinedload, raiseload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import select, join
 
@@ -57,8 +58,26 @@ def get_import_list(scope):
 
     Get all imports to which logged-in user has access.
     """
-    imports = TImports.query.filter_by_scope(scope).order_by(TImports.id_import).all()
-    return jsonify([imprt.as_dict() for imprt in imports])
+    imports = (
+        TImports.query
+        .options(
+            joinedload('authors'),
+            joinedload('dataset'),
+            joinedload('errors'),
+            raiseload('*'),
+        )
+        .filter_by_scope(scope)
+        .order_by(TImports.id_import)
+        .all()
+    )
+
+    fields = [
+        'errors.id_user_error',
+        'dataset.dataset_name',
+        'authors',
+    ]
+
+    return jsonify([imprt.as_dict(fields=fields) for imprt in imports])
 
 
 @blueprint.route("/imports/<int:import_id>/", methods=["GET"])
@@ -72,7 +91,7 @@ def get_one_import(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     # check that the user has read permission to this particular import instance:
     imprt.check_instance_permission(scope)
-    return jsonify(imprt.as_dict())
+    return jsonify(imprt.as_dict(fields=['errors']))
 
 
 @blueprint.route("/imports/<int:import_id>/columns", methods=["GET"])

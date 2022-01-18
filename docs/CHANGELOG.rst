@@ -21,6 +21,55 @@ CHANGELOG
   * Factorisation de la gestion des erreurs
 * Simplification de la logique du frontend en supprimant les données par étape au profit de l’utilisation des modèles Python.
 
+1.1.7 (2022-01-13)
+------------------
+
+Nécessite la version 2.9.0 (ou plus) de GeoNature
+
+**💻 Evolutions**
+
+* Compatibilité avec GeoNature version 2.9.0 et plus.
+* Révision du formulaire de mapping des nomenclatures pour l'adapter au passage à la libraire ``ng-select2`` dans la version 2.9.0 de GeoNature
+* Limitation des jeux de données à ceux associés au module et en se basant sur l'action C du CRUVED du module (#267)
+
+**⚠️ Notes de version**
+
+* La liste des JDD associable à un import se base désormais sur le C du CRUVED de l'utilisateur au niveau du module (ou du C du CRUVED de GeoNature si l'utilisateur n'a pas de CRUVED sur le module), au lieu du R de GeoNature jusqu'à présent. Vous devrez donc potentiellement adapter vos permissions à ce changement de comportement (#267)
+
+1.1.6 (2022-01-03)
+------------------
+
+Compatible avec Debian 10, nécessite des mises à jour des dépendances pour fonctionner sur Debian 11
+
+**🐛 Corrections**
+
+* Correction des performances de la liste des imports (#254)
+* Optimisation du json chargé pour afficher la liste des imports
+* Correction des rapports d'erreurs
+* Versions des dépendances ``setuptools`` et ``pyproj`` fixées (#244)
+
+1.1.5 (2021-10-07)
+------------------
+
+Nécessite la version 2.8.0 (ou plus) de GeoNature
+
+**🚀 Nouveautés**
+
+* Compatibilité avec Marshmallow 3 / GeoNature 2.8.0
+
+1.1.4 (2021-06-30)
+------------------
+
+**🐛 Corrections**
+
+* Correction du parsing des dates dans le cas où il y a une date mais pas d'heure, alors qu’on a mappé un champs d'heure
+
+1.1.3 (2021-06-29)
+------------------
+
+**🐛 Corrections**
+
+* Correction du contrôle des UUID quand ils sont fournis dans le fichier source
 
 1.1.2 (2021-03-10)
 ------------------
@@ -32,7 +81,7 @@ CHANGELOG
 
 **Notes de version**
 
-* Exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.1.rc.2to1.1.2.sql``)
+* Exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.1to1.1.2.sql``)
 * Si vous avez fait des imports depuis la version 1.1.1, vous pouvez jouer le script ``data/migration/generate_uuid.sql``. Attention, celui-ci regénère des nouveaux UUID dans la synthese pour toutes les données provenant du module Import où le champs ``unique_id_sinp`` est ``NULL``
 
 1.1.1 (2020-02-04)
@@ -186,3 +235,4 @@ Première version fonctionelle du module Import de GeoNature
 * Contrôle des erreurs et téléchargement des données erronées
 * Flexibilité de l'interface et des regroupements de champs, paramétrable via les tables ``gn_import.dict_themes`` et ``gn_import.dict_fields``
 * Import des données dans la synthèse
+

@@ -194,9 +194,6 @@ class TImports(InstancePermissionMixin, DB.Model):
         if import_as_dict["date_end_import"] is None:
             import_as_dict["date_end_import"] = "En cours"
         import_as_dict["authors_name"] = "; ".join([ author.nom_complet for author in self.authors])
-        if 'dataset' in import_as_dict:
-            import_as_dict["dataset_name"] = import_as_dict["dataset"]["dataset_name"]
-            import_as_dict.pop("dataset")
         if self.detected_encoding:
             import_as_dict['available_encodings'] = sorted(TImports.AVAILABLE_ENCODINGS | {self.detected_encoding,})
         else:
