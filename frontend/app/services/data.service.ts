@@ -138,7 +138,7 @@ export class DataService {
   }
 
   getValidData(import_id: number): Observable<any> {
-    return this._http.get<any>(`${urlApi}/imports/${import_id}/valid_data`);
+    return this._http.get<any>(`${urlApi}/imports/${import_id}/preview_valid_data`);
   }
 
   finalizeImport(import_id): Observable<Import> {
