@@ -50,20 +50,20 @@ from gn_module_import.logs import logger
 
 
 @blueprint.route("/imports/", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="IMPORT")
-def get_import_list(info_role):
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def get_import_list(scope):
     """
     .. :quickref: Import; Get all imports.
 
     Get all imports to which logged-in user has access.
     """
-    imports = TImports.get_list_for_role(info_role)
+    imports = TImports.query.filter_by_scope(scope).order_by(TImports.id_import).all()
     return jsonify([imprt.as_dict() for imprt in imports])
 
 
 @blueprint.route("/imports/<int:import_id>/", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="IMPORT")
-def get_one_import(info_role, import_id):
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def get_one_import(scope, import_id):
     """
     .. :quickref: Import; Get an import.
 
@@ -71,28 +71,28 @@ def get_one_import(info_role, import_id):
     """
     imprt = TImports.query.get_or_404(import_id)
     # check that the user has read permission to this particular import instance:
-    imprt.check_instance_permission(info_role)
+    imprt.check_instance_permission(scope)
     return jsonify(imprt.as_dict())
 
 
 @blueprint.route("/imports/<int:import_id>/columns", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="IMPORT")
-def get_import_columns_name(info_role, import_id):
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def get_import_columns_name(scope, import_id):
     """
     .. :quickref: Import;
 
     Return all the columns of the file of an import
     """
     imprt = TImports.query.get_or_404(import_id)
-    imprt.check_instance_permission(info_role)
+    imprt.check_instance_permission(scope)
     if not imprt.import_table:
         raise Conflict(description='Data have not been decoded.')
     return jsonify(list(imprt.columns.keys()))
 
 
 @blueprint.route("/imports/<int:import_id>/values", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="IMPORT")
-def get_import_values(info_role, import_id):
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def get_import_values(scope, import_id):
     """
     .. :quickref: Import;
 
@@ -100,7 +100,7 @@ def get_import_values(info_role, import_id):
     """
     imprt = TImports.query.get_or_404(import_id)
     # check that the user has read permission to this particular import instance:
-    imprt.check_instance_permission(info_role)
+    imprt.check_instance_permission(scope)
     if not imprt.import_table:
         raise Conflict(description='Data have not been decoded.')
     if not imprt.id_field_mapping:
@@ -127,10 +127,10 @@ def get_import_values(info_role, import_id):
 
 
 @blueprint.route("/imports/<int:import_id>/fieldMapping", methods=["POST"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT", object_code="IMPORT")
-def set_import_field_mapping(info_role, import_id):
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def set_import_field_mapping(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
-    imprt.check_instance_permission(info_role)
+    imprt.check_instance_permission(scope)
     if not imprt.import_table:  # necesary to check before setting imprt.step
         raise Conflict("Import file must have been decoded before executing this action.")
     data = request.get_json()
@@ -148,10 +148,10 @@ def set_import_field_mapping(info_role, import_id):
 
 
 @blueprint.route("/imports/<int:import_id>/contentMapping", methods=["POST"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT", object_code="IMPORT")
-def set_import_content_mapping(info_role, import_id):
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def set_import_content_mapping(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
-    imprt.check_instance_permission(info_role)
+    imprt.check_instance_permission(scope)
     # Check preconditions to execute this action
     if not imprt.id_field_mapping:  # necesary to check before setting imprt.step
         raise Conflict("Field mapping ID must have been set before executing this action.")
@@ -170,13 +170,13 @@ def set_import_content_mapping(info_role, import_id):
 
 
 @blueprint.route("/imports/<int:import_id>/prepare", methods=["POST"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT", object_code="IMPORT")
-def prepare_import(info_role, import_id):
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def prepare_import(scope, import_id):
     """
     Prepare data to be imported: apply all checks and transformations.
     """
     imprt = TImports.query.get_or_404(import_id)
-    imprt.check_instance_permission(info_role)
+    imprt.check_instance_permission(scope)
 
     # Check preconditions to execute this action
     if not imprt.import_table:
@@ -259,10 +259,10 @@ def prepare_import(info_role, import_id):
 
 
 @blueprint.route("/imports/<int:import_id>/preview_valid_data/", methods=["GET"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT")
-def preview_valid_data(info_role, import_id):
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT")
+def preview_valid_data(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
-    imprt.check_instance_permission(info_role)
+    imprt.check_instance_permission(scope)
     fieldmapping = TMappings.query.get(imprt.id_field_mapping)
     ImportEntry = get_table_class(get_import_table_name(imprt))
     selected_cols = { f.target_field: f.source_field for f in fieldmapping.fields \
@@ -295,15 +295,15 @@ def preview_valid_data(info_role, import_id):
 
 
 @blueprint.route("/imports/<int:import_id>/invalid_rows", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="IMPORT")
-def get_import_invalid_rows_as_csv(info_role, import_id):
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT")
+def get_import_invalid_rows_as_csv(scope, import_id):
     """
     .. :quickref: Import; Get invalid rows of an import as CSV.
 
     Export invalid data in CSV.
     """
     imprt = TImports.query.get_or_404(import_id)
-    imprt.check_instance_permission(info_role)
+    imprt.check_instance_permission(scope)
 
     if not imprt.import_table:
         raise BadRequest('Import file has not been decoded.')
@@ -323,15 +323,15 @@ def get_import_invalid_rows_as_csv(info_role, import_id):
 
 
 @blueprint.route("/imports/<int:import_id>/import", methods=["POST"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT", object_code="IMPORT")
-def import_valid_data(info_role, import_id):
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def import_valid_data(scope, import_id):
     """
     .. :quickref: Import; Import the valid data.
 
     Import valid data in GeoNature synthese.
     """
     imprt = TImports.query.get_or_404(import_id)
-    imprt.check_instance_permission(info_role)
+    imprt.check_instance_permission(scope)
 
     source_name = f'Import(id={imprt.id_import})'
     if db.session.query(TSources.query.filter_by(name_source=source_name).exists()).scalar():
@@ -440,8 +440,8 @@ def import_valid_data(info_role, import_id):
 
 
 @blueprint.route("/imports/<int:import_id>/", methods=["DELETE"])
-@permissions.check_cruved_scope("D", True, module_code="IMPORT", object_code="IMPORT")
-def delete_import(info_role, import_id):
+@permissions.check_cruved_scope("D", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def delete_import(scope, import_id):
     """
     .. :quickref: Import; Delete an import.
 
@@ -449,7 +449,7 @@ def delete_import(info_role, import_id):
     """
     imprt = TImports.query.get_or_404(import_id)
     # check that the user has delete permission to this particular import instance:
-    imprt.check_instance_permission(info_role)
+    imprt.check_instance_permission(scope)
     ImportUserError.query.filter_by(imprt=imprt).delete()
     if imprt.is_finished:
         # delete imported data if the import is already finished

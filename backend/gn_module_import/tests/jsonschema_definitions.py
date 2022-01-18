@@ -97,8 +97,6 @@ jsonschema_definitions = {
             'id_broader',
             'hierarchy',
             'active',
-            'meta_create_date',
-            'meta_update_date',
         ],
     },
     'import': {

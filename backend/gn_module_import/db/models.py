@@ -2,7 +2,7 @@ from datetime import datetime
 from collections.abc import Mapping
 
 import chardet
-from flask import current_app
+from flask import current_app, g
 import sqlalchemy as sa
 from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func, PrimaryKeyConstraint
 from sqlalchemy.orm import relationship, deferred
@@ -11,6 +11,7 @@ from sqlalchemy import and_, or_, all_, any_, true, false
 from werkzeug.exceptions import Forbidden
 from sqlalchemy.dialects.postgresql import HSTORE
 from sqlalchemy.ext.mutable import MutableDict
+from flask_sqlalchemy import BaseQuery
 
 from utils_flask_sqla.serializers import serializable
 
@@ -81,16 +82,18 @@ class ImportUserError(db.Model):
 
 
 class InstancePermissionMixin:
-    def get_instance_permissions(self, id_role, id_organisme, scopes):
+    def get_instance_permissions(self, scopes, user=None):
+        if user is None:
+            user = g.current_user
         if isinstance(scopes, Mapping):
-            return { key: self.has_instance_permission(id_role, id_organisme, scope)
+            return { key: self.has_instance_permission(scope, user=user)
                      for key, scope in scopes.items() }
         else:
-            return [ self.has_instance_permission(id_role, id_organisme, scope)
+            return [ self.has_instance_permission(scope, user=user)
                      for scope in scopes ]
 
-    def check_instance_permission(self, info_role):
-        if not self.has_instance_permission(info_role.id_role, info_role.id_organisme, int(info_role.value_filter)):
+    def check_instance_permission(self, scope, user=None):
+        if not self.has_instance_permission(scope, user=user):
             raise Forbidden()
 
 
@@ -101,10 +104,28 @@ cor_role_import = db.Table('cor_role_import',
 )
 
 
+class ImportQuery(BaseQuery):
+    def filter_by_scope(self, scope, user=None):
+        if user is None:
+            user = g.current_user
+        if scope == 0:
+            return self.filter(sa.false())
+        elif scope in (1, 2):
+            filters = [ TImports.authors.any(id_role=user.id_role) ]
+            if scope == 2 and user.id_organisme is not None:
+                filters.append(TImports.authors.any(id_organisme=user.id_organisme))
+            return self.filter(or_(*filters)).distinct()
+        elif scope == 3:
+            return self
+        else:
+            raise Exception(f"Unexpected scope {scope}")
+
+
 @serializable(fields=['authors.nom_complet'], exclude=['source_file'])
 class TImports(InstancePermissionMixin, DB.Model):
     __tablename__ = "t_imports"
     __table_args__ = {"schema": IMPORT_SCHEMA} #, "extend_existing": True}
+    query_class = ImportQuery
 
     # https://docs.python.org/3/library/codecs.html
     # https://chardet.readthedocs.io/en/latest/supported-encodings.html
@@ -156,29 +177,18 @@ class TImports(InstancePermissionMixin, DB.Model):
     # as keys and original columns name (in uploaded csv) as values
     columns = DB.Column(MutableDict.as_mutable(HSTORE))
 
-    def has_instance_permission(self, id_role, id_organisme, scope):
+    def has_instance_permission(self, scope, user=None):
+        if user is None:
+            user = g.current_user
         if scope == 0:  # pragma: no cover (should not happen as already checked by the decorator)
             return False
         elif scope == 1:  # self
-            return id_role in [ author.id_role for author in self.authors ]
+            return user.id_role in [ author.id_role for author in self.authors ]
         elif scope == 2:  # organism
-            return id_role in [ author.id_role for author in self.authors ] or \
-                (id_organisme is not None and id_organisme in [ author.id_organisme for author in self.authors ])
+            return user.id_role in [ author.id_role for author in self.authors ] or \
+                (user.id_organisme is not None and user.id_organisme in [ author.id_organisme for author in self.authors ])
         elif scope == 3:  # all
             return True
-
-    @staticmethod
-    def get_list_for_role(info_role):
-        scope = int(info_role.value_filter)
-        imports = TImports.query.order_by(TImports.id_import)
-        if scope == 3:
-            return imports
-        else:
-            filters = [ TImports.authors.any(id_role=info_role.id_role) ]
-            if scope == 2 and info_role.id_organisme is not None:
-                filters.append(TImports.authors.any(id_organisme=info_role.id_organisme))
-            return imports.filter(or_(*filters)).distinct()
-
 
     def as_dict(self, import_as_dict):
         if import_as_dict["date_end_import"] is None:
@@ -206,10 +216,31 @@ cor_role_mapping = db.Table('cor_role_mapping',
 )
 
 
+class MappingQuery(BaseQuery):
+    def filter_by_scope(self, scope, user=None):
+        if user is None:
+            user = g.current_user
+        if scope == 0:
+            return self.filter(sa.false())
+        elif scope in (1, 2):
+            filters = [
+                TMappings.is_public == True,
+                TMappings.owners.any(id_role=user.id_role),
+            ]
+            if scope == 2 and user.id_organisme is not None:
+                filters.append(TMappings.owners.any(id_organisme=user.id_organisme))
+            return self.filter(or_(*filters)).distinct()
+        elif scope == 3:
+            return self
+        else:
+            raise Exception(f"Unexpected scope {scope}")
+
+
 @serializable
 class TMappings(InstancePermissionMixin, DB.Model):
     __tablename__ = "t_mappings"
     __table_args__ = {"schema": IMPORT_SCHEMA}
+    query_class = MappingQuery
 
     id_mapping = DB.Column(DB.Integer, primary_key=True, autoincrement=True)
     mapping_label = DB.Column(DB.Unicode, nullable=False)
@@ -223,39 +254,26 @@ class TMappings(InstancePermissionMixin, DB.Model):
         secondary=cor_role_mapping,
     )
     
-    def has_instance_permission(self, id_role, id_organisme, scope: int):
+    def has_instance_permission(self, scope: int, user=None):
+        if user is None:
+            user = g.current_user
         if scope == 0:  # pragma: no cover (should not happen as already checked by the decorator)
             return False
         elif self.is_public:
             return True
         else:
             if scope == 1:  # self
-                return id_role in [ owner.id_role for owner in self.owners ]
+                return user.id_role in [ owner.id_role for owner in self.owners ]
             elif scope == 2:  # organism
-                return id_role in [ owner.id_role for owner in self.owners ] or \
-                    (id_organisme is not None and id_organisme in [ owner.id_organisme for owner in self.owners ])
+                return user.id_role in [ owner.id_role for owner in self.owners ] or \
+                    (user.id_organisme is not None and user.id_organisme in [ owner.id_organisme for owner in self.owners ])
             elif scope == 3:  # all
                 return True  # no check to perform
 
-    @staticmethod
-    def get_list_for_role(info_role):
-        scope = int(info_role.value_filter)
-        mappings = TMappings.query.order_by(TMappings.id_mapping)
-        if scope == 3:
-            return mappings
-        else:
-            filters = [
-                TMappings.is_public == True,
-                TMappings.owners.any(id_role=info_role.id_role),
-            ]
-            if scope == 2 and info_role.id_organisme is not None:
-                filters.append(TMappings.owners.any(id_organisme=info_role.id_organisme))
-            return mappings.filter(or_(*filters)).distinct()
-
-    def as_dict_with_cruved(self, id_role, id_organisme):
+    def as_dict_with_cruved(self):
         data = self.as_dict()
-        scopes = get_scopes_by_action(id_role, "IMPORT", "MAPPING")
-        data['cruved'] = self.get_instance_permissions(id_role, id_organisme, scopes)
+        scopes = get_scopes_by_action(module_code="IMPORT", object_code="MAPPING")
+        data['cruved'] = self.get_instance_permissions(scopes)
         return data
 
 

@@ -1,1 +1,1 @@
-from geonature.tests import app, users, datasets, temporary_transaction
+from geonature.tests.fixtures import app, _session, users, acquisition_frameworks, datasets

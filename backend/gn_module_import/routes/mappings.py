@@ -1,6 +1,6 @@
 from itertools import groupby
 
-from flask import Blueprint, request, jsonify, send_file, current_app
+from flask import Blueprint, request, jsonify, send_file, current_app, g
 from werkzeug.exceptions import Forbidden, Conflict, BadRequest, NotFound
 from jsonschema import validate as validate_json
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -33,8 +33,8 @@ from ..blueprint import blueprint
 
 
 @blueprint.route("/mappings/", methods=["POST"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT", object_code="MAPPING")
-def add_mapping(info_role):
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="MAPPING")
+def add_mapping(scope):
     """
     .. :quickref: Import; Add a mapping.
 
@@ -57,18 +57,18 @@ def add_mapping(info_role):
         mapping_label=name,
         mapping_type=mapping_type,
     )
-    owner = User.query.get(info_role.id_role)
+    owner = g.current_user
     mapping.owners.append(owner)
 
     db.session.add(mapping)
     db.session.commit()
 
-    return jsonify(mapping.as_dict_with_cruved(info_role.id_role, info_role.id_organisme))
+    return jsonify(mapping.as_dict_with_cruved())
 
 
 @blueprint.route("/mappings/", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="MAPPING")
-def get_mapping_list(info_role):
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="MAPPING")
+def list_mappings(scope):
     """
     .. :quickref: Import; Return all active named mappings.
 
@@ -78,32 +78,32 @@ def get_mapping_list(info_role):
     :type type: str
     """
     mapping_type = request.args['type']
-    mappings = TMappings.get_list_for_role(info_role) \
+    mappings = TMappings.query.filter_by_scope(scope) \
                     .filter(TMappings.mapping_label != None) \
                     .filter(TMappings.active == True) \
                     .filter(TMappings.mapping_type == mapping_type.upper())
-    return jsonify([ mapping.as_dict_with_cruved(info_role.id_role, info_role.id_organisme)
+    return jsonify([ mapping.as_dict_with_cruved()
                      for mapping in mappings ])
 
 
 @blueprint.route("/mappings/<int:id_mapping>/", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="MAPPING")
-def get_one_mapping(info_role, id_mapping):
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="MAPPING")
+def get_mapping(scope, id_mapping):
     """
     .. :quickref: Import; Return a mapping.
 
     Return a mapping. Mapping has to be active.
     """
     mapping = TMappings.query.get_or_404(id_mapping)
-    mapping.check_instance_permission(info_role)
+    mapping.check_instance_permission(scope)
     if mapping.active is False:
         raise Forbidden(description='Mapping is not active.')
-    return jsonify(mapping.as_dict_with_cruved(info_role.id_role, info_role.id_organisme))
+    return jsonify(mapping.as_dict_with_cruved())
 
 
 @blueprint.route("/mappings/<int:id_mapping>/name", methods=["POST"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT", object_code="MAPPING")
-def rename_mapping(info_role, id_mapping):
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="MAPPING")
+def rename_mapping(scope, id_mapping):
     """
     .. :quickref: Import; Update mapping name.
 
@@ -113,7 +113,7 @@ def rename_mapping(info_role, id_mapping):
     :type mappingName: str
     """
     mapping = TMappings.query.get_or_404(id_mapping)
-    mapping.check_instance_permission(info_role)
+    mapping.check_instance_permission(scope)
 
     data = request.get_json()
 
@@ -129,12 +129,12 @@ def rename_mapping(info_role, id_mapping):
     mapping.mapping_label = name
     db.session.commit()
 
-    return jsonify(mapping.as_dict_with_cruved(info_role.id_role, info_role.id_organisme))
+    return jsonify(mapping.as_dict_with_cruved())
 
 
 @blueprint.route("/mappings/<int:id_mapping>/", methods=["DELETE"])
-@permissions.check_cruved_scope("D", True, module_code="IMPORT", object_code="MAPPING")
-def delete_mapping(info_role, id_mapping):
+@permissions.check_cruved_scope("D", get_scope=True, module_code="IMPORT", object_code="MAPPING")
+def delete_mapping(scope, id_mapping):
     """
     .. :quickref: Import; Delete a mapping.
 
@@ -145,7 +145,7 @@ def delete_mapping(info_role, id_mapping):
     mapping = TMappings.query.get_or_404(id_mapping)
     if not mapping.mapping_label:
         raise BadRequest(description="Only permanent (named) mapping can be deleted.")
-    mapping.check_instance_permission(info_role)
+    mapping.check_instance_permission(scope)
     mapping_type = mapping.mapping_type
     mapping_id = mapping.id_mapping
     if mapping_type == 'FIELD':
@@ -160,17 +160,17 @@ def delete_mapping(info_role, id_mapping):
     db.session.commit()
 
     # FIXME really usefull?
-    mappings = TMappings.get_list_for_role(info_role) \
+    mappings = TMappings.query.filter_by_scope(scope) \
                     .filter(TMappings.mapping_label != None) \
                     .filter(TMappings.active == True) \
                     .filter(TMappings.mapping_type == mapping_type)
-    return jsonify([ mapping.as_dict_with_cruved(info_role.id_role, info_role.id_organisme)
+    return jsonify([ mapping.as_dict_with_cruved()
                      for mapping in mappings ])
 
 
 @blueprint.route("/mappings/<int:id_mapping>/fields", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="MAPPING")
-def get_mapping_fields(info_role, id_mapping):
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="MAPPING")
+def get_mapping_fields(scope, id_mapping):
     """
     .. :quickref: Import; Get fields of a mapping.
 
@@ -179,7 +179,7 @@ def get_mapping_fields(info_role, id_mapping):
     mapping = TMappings.query.get_or_404(id_mapping)
     if mapping.mapping_type != 'FIELD':
         raise NotFound()
-    mapping.check_instance_permission(info_role)
+    mapping.check_instance_permission(scope)
     fields = (
         TMappingsFields.query
             .filter(TMappingsFields.source_field != '')  # these entries does not make sense
@@ -189,8 +189,8 @@ def get_mapping_fields(info_role, id_mapping):
 
 
 @blueprint.route("/mappings/<int:id_mapping>/fields", methods=["POST"])
-@permissions.check_cruved_scope("U", True, module_code="IMPORT", object_code="MAPPING")
-def update_mapping_fields(info_role, id_mapping):
+@permissions.check_cruved_scope("U", get_scope=True, module_code="IMPORT", object_code="MAPPING")
+def update_mapping_fields(scope, id_mapping):
     """
     This view add fields mapping to a existing mapping-set.
     Existing fields mapping are kept.
@@ -198,7 +198,7 @@ def update_mapping_fields(info_role, id_mapping):
     mapping = TMappings.query.get_or_404(id_mapping)
     if mapping.mapping_type != 'FIELD':
         raise NotFound()
-    mapping.check_instance_permission(info_role)
+    mapping.check_instance_permission(scope)
     data = request.get_json()
     target_fields = BibFields.query.filter_by(display=True)
     str_target_fields = [ f.name_field for f in target_fields.filter_by(autogenerated=False).with_entities('name_field') ]
@@ -242,8 +242,8 @@ def update_mapping_fields(info_role, id_mapping):
 
 
 @blueprint.route("/mappings/<int:id_mapping>/contents", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="IMPORT", object_code="MAPPING")
-def get_mapping_contents(info_role, id_mapping):
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="MAPPING")
+def get_mapping_contents(scope, id_mapping):
     """
     .. :quickref: Import; Get values of a mapping.
 
@@ -253,14 +253,14 @@ def get_mapping_contents(info_role, id_mapping):
     mapping = TMappings.query.get_or_404(id_mapping)
     if mapping.mapping_type != 'CONTENT':
         raise NotFound()
-    mapping.check_instance_permission(info_role)
+    mapping.check_instance_permission(scope)
     values = TMappingsValues.query.filter_by(id_mapping=id_mapping)
     return jsonify([value.as_dict() for value in values])
 
 
 @blueprint.route("/mappings/<int:mapping_id>/contents", methods=["POST"])
-@permissions.check_cruved_scope("U", True, module_code="IMPORT", object_code="MAPPING")
-def update_mapping_contents(info_role, mapping_id):
+@permissions.check_cruved_scope("U", get_scope=True, module_code="IMPORT", object_code="MAPPING")
+def update_mapping_contents(scope, mapping_id):
     """
     This view add fields mapping to a existing mapping-set.
     Existing fields mapping are kept.
@@ -268,7 +268,7 @@ def update_mapping_contents(info_role, mapping_id):
     mapping = TMappings.query.get_or_404(mapping_id)
     if mapping.mapping_type != 'CONTENT':
         raise NotFound()
-    mapping.check_instance_permission(info_role)
+    mapping.check_instance_permission(scope)
     data = request.get_json()
     try:
         validate_json(data, {
@@ -318,8 +318,8 @@ def update_mapping_contents(info_role, mapping_id):
 
 
 @blueprint.route("/synthesis/fields", methods=["GET"])
-@permissions.check_cruved_scope("C", True, module_code="IMPORT")
-def get_synthesis_fields(info_role):
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT")
+def get_synthesis_fields(scope):
     """
     .. :quickref: Import; Get synthesis fields.
 

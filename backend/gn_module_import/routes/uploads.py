@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 import codecs
 
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, g
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -23,8 +23,8 @@ from gn_module_import.utils.imports import load_data, get_clean_column_name, \
 
 @blueprint.route("/imports/upload", methods=["POST"])
 @blueprint.route("/imports/<int:import_id>/upload", methods=["PUT"])
-@permissions.check_cruved_scope("C", get_role=True, module_code="IMPORT", object_code="IMPORT")
-def upload_file(info_role, import_id=None):
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def upload_file(scope, import_id=None):
     """
     .. :quickref: Import; Add an import or update an existing import.
 
@@ -33,7 +33,7 @@ def upload_file(info_role, import_id=None):
     :form file: file to import
     :form int datasetId: dataset ID to which import data
     """
-    author = User.query.get(info_role.id_role)
+    author = g.current_user
     if import_id:
         imprt = TImports.query.get_or_404(import_id)
     else:
@@ -58,13 +58,7 @@ def upload_file(info_role, import_id=None):
             dataset_id = int(request.form['datasetId'])
         except ValueError as e:
             raise BadRequest(description="'datasetId' must be an integer.")
-        scope = int(info_role.value_filter)  # FIXME: il faut récupérer le cruved dataset!
-        if scope == 1:
-            datasets = TDatasets.get_user_datasets(info_role, only_query=True, only_user=True)
-        elif scope == 2:
-            datasets = TDatasets.get_user_datasets(info_role, only_query=True)
-        elif scope == 3:
-            datasets = TDatasets.query
+        datasets = TDatasets.query.filter_by_scope(scope)
         try:
             dataset = datasets.filter(TDatasets.id_dataset==dataset_id).one()
         except NoResultFound:
