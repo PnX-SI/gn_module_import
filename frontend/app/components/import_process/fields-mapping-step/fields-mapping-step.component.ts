@@ -33,18 +33,18 @@ import { Step } from "../../../models/enums.model";
 
 })
 export class FieldsMappingStepComponent implements OnInit {
-  private step: Step;
-  private importData: Import; // the current import
-  private spinner: boolean = false;
-  private userFieldMappings: Array<Mapping>; // all field mapping accessible by the users
+  public step: Step;
+  public importData: Import; // the current import
+  public spinner: boolean = false;
+  public userFieldMappings: Array<Mapping>; // all field mapping accessible by the users
 
   public targetFields: Array<SynthesisThemeFields>; // list of target fields, i.e. fields of synthesis, ordered by theme
-  private mappedTargetFields: Set<string>;
-  private unmappedTargetFields: Set<string>;
+  public mappedTargetFields: Set<string>;
+  public unmappedTargetFields: Set<string>;
 
-  private sourceFields: Array<string>; // list of all source fields of the import
-  private mappedSourceFields: Set<string>;
-  private unmappedSourceFields: Set<string>;
+  public sourceFields: Array<string>; // list of all source fields of the import
+  public mappedSourceFields: Set<string>;
+  public unmappedSourceFields: Set<string>;
 
   public formReady: boolean = false; // do not show frontend fields until all forms are ready
   public fieldMappingForm = new FormControl(); // from to select the mapping to use
@@ -57,7 +57,7 @@ export class FieldsMappingStepComponent implements OnInit {
   public createMappingFormVisible: boolean = false; // show mapping creation form
   public renameMappingFormVisible: boolean = false; // show rename mapping form
   public createOrRenameMappingForm = new FormControl(null, [Validators.required]); // form to add a new mapping
-  private modalCreateMappingForm = new FormControl('');
+  public modalCreateMappingForm = new FormControl('');
   @ViewChild('saveMappingModal') saveMappingModal;
 
   constructor(

@@ -13,8 +13,8 @@ import { DataService } from '../../services/data.service';
 })
 
 export class ImportErrorsComponent implements OnInit {
-    private importData: Import;
-    private importErrors: Array<ImportError> = null;
+    public importData: Import;
+    public importErrors: Array<ImportError> = null;
 
     constructor(
         private _router: Router,

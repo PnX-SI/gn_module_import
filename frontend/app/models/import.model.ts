@@ -44,12 +44,14 @@ export interface Import {
     is_finished: boolean;
     processing: boolean;
     in_error: boolean;
-    //errors: [ImportError];
 
     authors_name: string;
     available_encodings?: [string];
     available_formats?: [string];
     detected_format?: string;
+
+    errors?: [ImportError];
+    dataset?: any; // TODO Dataset
 }
 
 export interface NomenclatureType {

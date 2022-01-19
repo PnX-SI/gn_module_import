@@ -27,14 +27,16 @@ import { ImportProcessService } from "../import-process.service";
   encapsulation: ViewEncapsulation.None
 })
 export class ContentMappingStepComponent implements OnInit {
-  private step: Step;
-  private selectMappingContentForm = new FormControl();
-  private importData: Import;
-  private userContentMappings: Array<Mapping>;
-  private importValues: ImportValues;
-  private showForm: boolean = false;
-  private contentTargetForm: FormGroup;
-  private spinner: boolean = false;
+  public step: Step;
+  public selectMappingContentForm = new FormControl();
+  public importData: Import;
+  public userContentMappings: Array<Mapping>;
+  public importValues: ImportValues;
+  public showForm: boolean = false;
+  public contentTargetForm: FormGroup;
+  public spinner: boolean = false;
+  public mappedFields: Set<string>;  // FIXME
+  public unmappedFields: Set<string>; // FIXME
 
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;

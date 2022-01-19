@@ -17,13 +17,13 @@ import { ImportProcessService } from "../import-process.service";
   templateUrl: "upload-file-step.component.html"
 })
 export class UploadFileStepComponent implements OnInit {
-  private step: Step;
-  private importData: Import;
-  private datasetId: number = null;
-  private uploadForm: FormGroup;
-  private file: File | null = null;
-  private fileName: string;
-  private isUploadRunning: boolean = false;
+  public step: Step;
+  public importData: Import;
+  public datasetId: number = null;
+  public uploadForm: FormGroup;
+  public file: File | null = null;
+  public fileName: string;
+  public isUploadRunning: boolean = false;
 
   constructor(
     private ds: DataService,

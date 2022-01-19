@@ -15,11 +15,11 @@ import { Import } from "../../../models/import.model";
   templateUrl: "decode-file-step.component.html"
 })
 export class DecodeFileStepComponent implements OnInit {
-  private step: Step;
-  private importData: Import;
-  private paramsForm: FormGroup;
-  private importConfig = ModuleConfig;
-  private isRequestPending: boolean = false; // spinner
+  public step: Step;
+  public importData: Import;
+  public paramsForm: FormGroup;
+  public importConfig = ModuleConfig;
+  public isRequestPending: boolean = false; // spinner
 
   constructor(
     private fb: FormBuilder,

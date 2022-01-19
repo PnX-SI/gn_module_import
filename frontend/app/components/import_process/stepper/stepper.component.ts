@@ -13,5 +13,5 @@ export class StepperComponent {
 	public Step = Step;
 	public IMPORT_CONFIG = ModuleConfig;
 
-	constructor(private importProcessService: ImportProcessService) { }
+	constructor(public importProcessService: ImportProcessService) { }
 }

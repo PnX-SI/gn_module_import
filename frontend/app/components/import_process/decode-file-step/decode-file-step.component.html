@@ -89,25 +89,6 @@
                     <i class="material-icons"> navigate_next </i>
                 </button>
             </div>
-            <!-- Error list in table -->
-            <div
-                id="errorList"
-                *ngIf="uploadFileErrors"
-            >
-                <div> Attention, erreurs détectées dans le fichier soumis </div>
-                <button
-                    mat-raised-button
-                    color="warn"
-                >
-                    <a
-                        target="_blank"
-                        [routerLink]="['/import/errors', importId]"
-                    >
-
-                        Voir le rapport complet
-                    </a>
-                </button>
-            </div>
         </div>
     </div>
 <!-- Spinner -->

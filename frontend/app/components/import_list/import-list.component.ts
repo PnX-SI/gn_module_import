@@ -17,13 +17,13 @@ import { CsvExportService } from "../../services/csv-export.service";
   templateUrl: "import-list.component.html",
 })
 export class ImportListComponent implements OnInit {
-  private history;
-  private filteredHistory;
-  private empty: boolean = false;
-  private config = ModuleConfig;
-  private deleteOne: Import;
-  private interval: any;
-  private search = new FormControl()
+  public history;
+  public filteredHistory;
+  public empty: boolean = false;
+  public config = ModuleConfig;
+  public deleteOne: Import;
+  public interval: any;
+  public search = new FormControl()
 
   constructor(
     public _cruvedStore: CruvedStoreService,

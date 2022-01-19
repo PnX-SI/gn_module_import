@@ -15,23 +15,23 @@ import { Import } from "../../../models/import.model";
     templateUrl: "import-step.component.html"
 })
 export class ImportStepComponent implements OnInit {
-    private step: Step;
-    private importData: Import;
+    public step: Step;
+    public importData: Import;
     // public isCollapsed = false;
     // public idImport: any;
     // importDataRes: any;
-    private validData: Array<any>;
+    public validData: Array<any>;
     // total_columns: any;
-    private columns: Array<any> = [];
-    private nValidData: number;
-    private nInvalidData: number;
-    private validBbox: any;
-    private spinner: boolean = true;
+    public columns: Array<any> = [];
+    public nValidData: number;
+    public nInvalidData: number;
+    public validBbox: any;
+    public spinner: boolean = true;
     // public nbLignes: string = "X";
-    private errorCount: number;
-    private warningCount: number;
-    private invalidRowCount: number;
-    private tableReady: boolean = true;
+    public errorCount: number;
+    public warningCount: number;
+    public invalidRowCount: number;
+    public tableReady: boolean = true;
 
     @ViewChild("modalRedir") modalRedir: any;
 
