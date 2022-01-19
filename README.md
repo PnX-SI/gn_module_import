@@ -1,5 +1,14 @@
-Installation du module d\'imports
-=================================
+Module d’import
+===============
+
+| branche | tests | coverage |
+|---|---|---|
+| refactor | [![pytest](https://github.com/PnX-SI/gn_module_import/actions/workflows/pytest.yml/badge.svg?branch=refactor)](https://github.com/PnX-SI/gn_module_import/actions/workflows/pytest.yml) | [![codecov](https://codecov.io/gh/PnX-SI/gn_module_import/branch/refactor/graph/badge.svg?token=BU2G1MN5XH)](https://codecov.io/gh/PnX-SI/gn_module_import) |
+
+Ce module permet d’importer des données depuis un fichier CSV dans [GeoNature](https://github.com/PnX-SI/GeoNature).
+
+Installation du module d’imports
+================================
 
 Télécharger puis renommer la version souhaitée du module :
 
