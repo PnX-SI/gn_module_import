@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+1.1.8 (unreleased)
+------------------
+
+Nécessite la version 2.10.0 (ou plus) de GeoNature
+
+**Evolutions**
+
+- Compatibilité avec Angular version 12, mis à jour dans la version 2.10.0 de GeoNature (#251)
+
 1.1.7 (2022-01-13)
 ------------------
 
