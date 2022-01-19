@@ -9,6 +9,7 @@ from flask import current_app
 from geonature.utils.config import config
 from geonature import create_app
 from geonature.core.gn_synthese.models import Synthese
+from geonature.tests.fixtures import synthese_data
 
 from gn_module_import.db.models import TImports, BibFields
 from gn_module_import.checks import *
@@ -227,10 +228,10 @@ class TestChecks:
             Error(error_code='DATE_MIN_SUP_DATE_MAX', column='datemin', invalid_rows=frozenset([1])),
         ])
 
-    def test_check_uuid(self, imprt):
+    def test_check_uuid(self, imprt, synthese_data):
         uuid1 = UUID('82ff094c-c3b3-11eb-9804-bfdc95e73f38')
         uuid2 = UUID('acad9eb6-c773-11eb-8b3e-f3419e53c26b')
-        existing_uuid = Synthese.query.first().unique_id_sinp
+        existing_uuid = synthese_data[0].unique_id_sinp
         df = pd.DataFrame([
                 [uuid1],
                 [uuid1],
@@ -309,7 +310,7 @@ class TestChecks:
                 [default_min_value, 2],
                 [1, 2],
                 [2, 1],
-            ], columns=['min', 'max'], dtype=np.float),
+            ], columns=['min', 'max'], dtype=float),
         )
 
         df = pd.DataFrame([
@@ -326,7 +327,7 @@ class TestChecks:
             pd.DataFrame([
                 [default_min_value, default_min_value],
                 [2, 2],
-            ], columns=['min', '_count_max'], dtype=np.float),
+            ], columns=['min', '_count_max'], dtype=float),
         )
 
         df = pd.DataFrame([
