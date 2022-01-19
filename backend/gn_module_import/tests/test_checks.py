@@ -190,7 +190,7 @@ class TestChecks:
         }
         synthese_fields = get_synthese_fields(selected_columns)
         clean_missing_values(df, selected_columns)  # replace '' with np.nan
-        concat_dates(df, selected_columns)
+        concat_dates(df, selected_columns, synthese_fields)
         errors = list(check_types(df, imprt, selected_columns, synthese_fields))
         assert_errors(errors, expected=[
             Error(error_code='INVALID_DATE', column='datemin', invalid_rows=frozenset([9, 10])),

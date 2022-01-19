@@ -218,10 +218,12 @@ def prepare_import(scope, import_id):
     # Note: this mapping may be modified during data cleaning, when computed columns are added
     selected_columns = { f.target_field: f.source_field for f in fieldmapping.fields \
                          if f.source_field in imprt.columns.keys() }
-    synthese_fields = BibFields.query \
-                            .filter_by(synthese_field=True) \
-                            .filter(BibFields.name_field.in_(selected_columns)) \
-                            .all()
+    synthese_fields = (
+        BibFields.query
+        .filter_by(synthese_field=True)
+        .filter(BibFields.name_field.in_(selected_columns))
+        .all()
+    )
 
     # 1) load the table in a dataframe
     # 2) apply some check and transformation on the dataframe
