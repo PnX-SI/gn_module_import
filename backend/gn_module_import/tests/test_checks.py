@@ -310,7 +310,7 @@ class TestChecks:
                 [default_min_value, 2],
                 [1, 2],
                 [2, 1],
-            ], columns=['min', 'max'], dtype=np.float),
+            ], columns=['min', 'max'], dtype=float),
         )
 
         df = pd.DataFrame([
@@ -327,7 +327,7 @@ class TestChecks:
             pd.DataFrame([
                 [default_min_value, default_min_value],
                 [2, 2],
-            ], columns=['min', '_count_max'], dtype=np.float),
+            ], columns=['min', '_count_max'], dtype=float),
         )
 
         df = pd.DataFrame([
