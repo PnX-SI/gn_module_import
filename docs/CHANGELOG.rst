@@ -21,6 +21,15 @@ CHANGELOG
   * Factorisation de la gestion des erreurs
 * Simplification de la logique du frontend en supprimant les données par étape au profit de l’utilisation des modèles Python.
 
+1.1.8 (unreleased)
+------------------
+
+Nécessite la version 2.10.0 (ou plus) de GeoNature
+
+**Evolutions**
+
+- Compatibilité avec Angular version 12, mis à jour dans la version 2.10.0 de GeoNature (#251)
+
 1.1.7 (2022-01-13)
 ------------------
 
@@ -235,4 +244,3 @@ Première version fonctionelle du module Import de GeoNature
 * Contrôle des erreurs et téléchargement des données erronées
 * Flexibilité de l'interface et des regroupements de champs, paramétrable via les tables ``gn_import.dict_themes`` et ``gn_import.dict_fields``
 * Import des données dans la synthèse
-
