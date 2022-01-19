@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import request, current_app, jsonify, Response
 from werkzeug.exceptions import Conflict, BadRequest
 import sqlalchemy as sa
-from sqlalchemy.orm import joinedload, raiseload
+from sqlalchemy.orm import joinedload, raiseload, Load
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import select, join
 
@@ -61,10 +61,10 @@ def get_import_list(scope):
     imports = (
         TImports.query
         .options(
+            Load(TImports).raiseload('*'),
             joinedload('authors'),
             joinedload('dataset'),
             joinedload('errors'),
-            raiseload('*'),
         )
         .filter_by_scope(scope)
         .order_by(TImports.id_import)
