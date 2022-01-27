@@ -107,7 +107,11 @@ export class ImportComponent implements OnInit {
   }
 
   fixOnly(event: Event) {
-    this.filterFix(this.history)
+    this.filterFix(this.history);
+    const search = this.search.value;
+    if (search) {
+      this.updateFilter(search);
+    }
   }
 
   filterFix(history) {
