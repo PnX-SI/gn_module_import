@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from "@angular/router";
 import { saveAs } from "file-saver";
 import  leafletImage from 'leaflet-image';
+import { BaseChartDirective } from 'ng2-charts';
 
 import { MapService } from '@geonature_common/map/map.service';
 import { ModuleConfig } from "../../module.config";
@@ -17,6 +18,7 @@ import FixModel from '../need-fix/need-fix.models';
 })
 
 export class ImportReportComponent implements OnInit, OnDestroy {
+    @ViewChild( BaseChartDirective ) private _chart: any; //BaseChartDirective;
     readonly maxErrorsLines: number = 10;
     readonly rankOptions: string[] = ['regne', 
                                       'phylum',
@@ -47,7 +49,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
       }];
     public doughnutChartType = 'doughnut';
     private options: any = {
-        legend: { position: 'left' }
+        legend: { position: 'left', display: true }
       };
     public loadingPdf = false 
 
@@ -183,6 +185,11 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             colors[i] = "#" + ((1<<24)*Math.random() | 0).toString(16)
         }
         this.doughnutChartColors[0].backgroundColor.push(...colors);
+    }
+
+    toggleLegend() {
+        this.options.legend.display = !this.options.legend.display
+        this._chart.refresh();
     }
 
     getChartPNG() {

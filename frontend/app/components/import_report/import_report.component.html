@@ -291,6 +291,16 @@
                         </div>
                         
                         <div style="display: block">
+                            <button 
+                                mat-icon-button 
+                                color="primary"
+                                [matTooltip]="options.legend.display ? 'Cacher la légende' : 'Afficher la légende'"
+                                (click)="toggleLegend()"
+                                >
+                                <mat-icon>
+                                    {{ options.legend.display ? 'visibility_off' : 'visibility' }}
+                                </mat-icon>
+                              </button>
                             <canvas id="chart" baseChart
                                 [data]="doughnutChartData"
                                 [labels]="doughnutChartLabels"
