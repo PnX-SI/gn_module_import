@@ -90,7 +90,7 @@ export class ImportComponent implements OnInit {
     });
 
     // Un resultat est retenu si au moins une colonne contient le mot-cle
-    this.filteredHistory = this.history.filter(item => {
+    const filtered = this.history.filter(item => {
       for (let i = 0; i < cols.length; i++) {
         if (
           (item[cols[i]['prop']] && item[cols[i]['prop']]
@@ -102,17 +102,18 @@ export class ImportComponent implements OnInit {
           return true;
         }
       }
-    });
+    })
+    this.filterFix(filtered)
   }
 
   fixOnly(event: Event) {
-    this.filterFix()
+    this.filterFix(this.history)
   }
 
-  filterFix() {
+  filterFix(history) {
     // filters the history variable to retains only
     // errors if the checkbox is checked
-    this.filteredHistory = this.history.filter(
+    this.filteredHistory = history.filter(
       item => item.need_fix || !this.checked)
   }
 
@@ -126,7 +127,7 @@ export class ImportComponent implements OnInit {
         // variable
         // Since onImpportList is called multiple times (see setInterval)
         // we need to do this here
-        this.filterFix();
+        this.filterFix(this.history);
         this.empty = res.empty;
       },
       error => {
