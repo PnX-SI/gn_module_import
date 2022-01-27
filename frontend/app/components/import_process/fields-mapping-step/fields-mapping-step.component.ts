@@ -624,6 +624,40 @@ export class FieldsMappingStepComponent implements OnInit {
     }
   }
 
+  saveMappingName(mappingName, targetForm) {
+    let mappingType = "FIELD";
+    const value = {};
+    value["mappingName"] = mappingName;
+    this._ds.postMappingName(value, mappingType).subscribe(
+      new_id_mapping => {
+        this.stepData.id_field_mapping = new_id_mapping;
+        this.newMapping = false;
+        this.newMappingForm.reset();
+        this._ds.getMappings("FIELD").subscribe(result => {
+          this.userFieldMappings = result;
+          const newMapping = this.userFieldMappings.find(
+            el => el.id_mapping == new_id_mapping
+          );
+          this.fieldMappingForm.setValue(newMapping);
+        });
+
+        this.enableMapping(targetForm);
+      },
+      error => {
+        if (error.statusText === "Unknown Error") {
+          // show error message if no connexion
+          this._commonService.regularToaster(
+            "error",
+            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
+          );
+        } else {
+          console.error(error);
+          this._commonService.regularToaster("error", error.error);
+        }
+      }
+    );
+  }
+  
   saveMappingNameForJson(mappingName, targetForm, jsonfile) {
     // Only used to import a mapping from a json
     let mappingType = "FIELD";
