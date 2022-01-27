@@ -85,8 +85,8 @@ class TImports(ModelCruvedAutorization):
     need_fix = DB.Column(DB.Boolean, default=False)
     fix_comment = DB.Column(DB.TEXT, nullable=True)
 
-    def to_dict(self, user=None, user_cruved=None):
-        import_as_dict = self.as_dict(True)
+    def to_dict(self, user=None, user_cruved=None, fields=None):
+        import_as_dict = self.as_dict(fields=fields)
         if user and user_cruved:
             import_as_dict["cruved"] = self.get_model_cruved(user, user_cruved)
         if import_as_dict["date_end_import"] is None:
@@ -94,8 +94,7 @@ class TImports(ModelCruvedAutorization):
         import_as_dict["author_name"] = "; ".join(
             [a.nom_role + " " + a.prenom_role for a in self.author]
         )
-        import_as_dict["dataset_name"] = import_as_dict["dataset"]["dataset_name"]
-        import_as_dict.pop("dataset")
+        import_as_dict["dataset_name"] = self.dataset.dataset_name
         import_as_dict["errors"] = import_as_dict.get("errors", [])
         import_as_dict["id_source"] = self.id_source_synthese
         return import_as_dict

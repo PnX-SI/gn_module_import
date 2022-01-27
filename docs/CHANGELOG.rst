@@ -2,12 +2,41 @@
 CHANGELOG
 =========
 
-1.1.5 (unreleased)
+1.1.7 (2022-01-13)
 ------------------
+
+Nécessite la version 2.9.0 (ou plus) de GeoNature
+
+**💻 Evolutions**
+
+* Compatibilité avec GeoNature version 2.9.0 et plus.
+* Révision du formulaire de mapping des nomenclatures pour l'adapter au passage à la libraire ``ng-select2`` dans la version 2.9.0 de GeoNature
+* Limitation des jeux de données à ceux associés au module et en se basant sur l'action C du CRUVED du module (#267)
+
+**⚠️ Notes de version**
+
+* La liste des JDD associable à un import se base désormais sur le C du CRUVED de l'utilisateur au niveau du module (ou du C du CRUVED de GeoNature si l'utilisateur n'a pas de CRUVED sur le module), au lieu du R de GeoNature jusqu'à présent. Vous devrez donc potentiellement adapter vos permissions à ce changement de comportement (#267)
+
+1.1.6 (2022-01-03)
+------------------
+
+Compatible avec Debian 10, nécessite des mises à jour des dépendances pour fonctionner sur Debian 11
 
 **🐛 Corrections**
 
-* 
+* Correction des performances de la liste des imports (#254)
+* Optimisation du json chargé pour afficher la liste des imports
+* Correction des rapports d'erreurs
+* Versions des dépendances ``setuptools`` et ``pyproj`` fixées (#244)
+
+1.1.5 (2021-10-07)
+------------------
+
+Nécessite la version 2.8.0 (ou plus) de GeoNature
+
+**🚀 Nouveautés**
+
+* Compatibilité avec Marshmallow 3 / GeoNature 2.8.0
 
 1.1.4 (2021-06-30)
 ------------------
