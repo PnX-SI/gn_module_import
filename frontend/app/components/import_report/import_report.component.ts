@@ -243,7 +243,8 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         let chartImg = document.createElement('img');
         // Check if the chart exists
         if  (<HTMLCanvasElement>document.getElementById('chart')) {
-            let chartImg = this.getChartPNG();
+            chartImg = this.getChartPNG();
+            console.log('chartImg', chartImg);
         }
         leafletImage(this._map.map, function(err, canvas) {
             img.src = canvas.toDataURL('image/png');
