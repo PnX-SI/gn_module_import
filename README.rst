@@ -131,7 +131,7 @@ Le module permet de traiter un fichier CSV ou GeoJSON sous toute structure de do
 
 6. Une fois l'ensemble des correspondances réalisées (champs et contenu) - au moins sur les champs obligatoires - il faut alors valider le mapping pour lancer le contrôle des données. Vous pourrez ensuite consulter les éventuelles erreurs lors de l'étape de prévisualisation. Il est éventuellement possible de corriger les données en erreurs directement dans la base de données, dans la table des données en cours d'import, puis de revalider le mapping, ou de passer à l'étape suivante. Les données en erreur ne seront pas importées et seront téléchargeables dans un fichier dédié à l'issue du processus.
 
-.. image:: https://geonature.fr/docs/img/import/gn_imports-05.jpg
+.. image:: https://geonature.fr/docs/img/import/gn_imports-06.jpg
 
 7. La dernière étape permet d'avoir un aperçu des données à importer et leur nombre, et de consulter le détail des erreurs identifiées lors des contrôles avant de valider l'import final dans la Synthèse de GeoNature. Vous pouvez également taguer un import nécessitant des corrections ou compléments ultérieurs, et y associer un commentaire pour revenir sur cet import ou le compléter par la suite.
 
