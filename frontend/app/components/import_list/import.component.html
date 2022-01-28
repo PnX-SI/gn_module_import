@@ -122,8 +122,9 @@
                                 <mat-icon color="primary" style="text-align: center;">info</mat-icon>
                             </button>
                             <mat-icon *ngIf="row.need_fix"
+                                matTooltip="Nécessite des corrections"
                                 color="warn">
-                                warning
+                                feedback
                             </mat-icon>
                             <button
                                 *ngIf="(row.is_finished) && ((row.source_count - row.import_count) > 0)"
