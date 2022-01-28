@@ -67,7 +67,7 @@ def data_checker(info_role, import_id, id_field_mapping, id_content_mapping):
     Check and transform the data for field and content mapping
     """
     import_obj = DB.session.query(TImports).get(import_id)
-    import_as_dict = import_obj.as_dict(True)
+    import_as_dict = import_obj.as_dict(fields=['author'])
     import_obj.id_content_mapping = int(id_content_mapping)
     DB.session.commit()
 
