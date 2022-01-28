@@ -267,10 +267,10 @@ def get_import_columns_name(id_import):
     return col_names
 
 
-def get_import(id_import:int):
+def get_import(id_import:int, fields=None):
     import_obj = TImports.query.get(id_import)
     if import_obj:
-        return import_obj.to_dict()
+        return import_obj.to_dict(fields=fields)
     return None
 
 @blueprint.route("/export_pdf/<int:id_import>", methods=["POST"])
@@ -280,7 +280,7 @@ def download(id_import):
     Downloads the report in pdf format
     """
     filename = "rapport.pdf"
-    dataset = get_import(id_import=id_import)
+    dataset = get_import(id_import=id_import, fields=['errors'])
     dataset['map'] = request.form.get('map')
     dataset['chart'] = request.form.get('chart')
 
