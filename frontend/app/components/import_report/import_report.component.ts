@@ -35,6 +35,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     public expansionPanelHeight: string = "60px";
     public validBbox: Object;
     public validData: Array<Object>;
+    public nInvalidData: number;
     public fix: FixModel;
     public fields: Array<Object>;
     public taxaDistribution: Array<{ count: number, group: string }>;
@@ -96,6 +97,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         ).subscribe(data => {
             this.validBbox = data.valid_bbox;
             this.validData = data.valid_data;
+            this.nInvalidData = data.n_invalid_data;
             this.fix = data.fix;
         })
     }
