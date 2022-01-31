@@ -7,6 +7,7 @@ import sqlalchemy as sa
 from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func, PrimaryKeyConstraint
 from sqlalchemy.orm import relationship, deferred
 from sqlalchemy.types import ARRAY
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import and_, or_, all_, any_, true, false
 from werkzeug.exceptions import Forbidden
 from sqlalchemy.dialects.postgresql import HSTORE
@@ -176,6 +177,13 @@ class TImports(InstancePermissionMixin, DB.Model):
     # the columns field is a mapping with cleaned columns names (also db fields)
     # as keys and original columns name (in uploaded csv) as values
     columns = DB.Column(MutableDict.as_mutable(HSTORE))
+
+    @hybrid_property
+    def cruved(self):
+        if not hasattr(g, 'scopes_by_action'):
+            g.scopes_by_action = get_scopes_by_action(module_code="IMPORT", object_code="IMPORT")
+        return { action: self.has_instance_permission(scope)
+                 for action, scope in g.scopes_by_action.items() }
 
     def has_instance_permission(self, scope, user=None):
         if user is None:

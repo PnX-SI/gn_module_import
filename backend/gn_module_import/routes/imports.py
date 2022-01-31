@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import request, current_app, jsonify, Response
+from flask import request, current_app, g, jsonify, Response
 from werkzeug.exceptions import Conflict, BadRequest
 import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, raiseload, Load
@@ -15,6 +15,7 @@ from apptax.taxonomie.models import Taxref
 from geonature.utils.env import DB as db
 from geonature.utils.config import config
 from geonature.core.gn_permissions import decorators as permissions
+from geonature.core.gn_permissions.tools import get_scopes_by_action
 from geonature.core.gn_synthese.models import (
     Synthese,
     TSources,
@@ -71,6 +72,7 @@ def get_import_list(scope):
         .all()
     )
 
+    g.scopes_by_action = get_scopes_by_action(module_code="IMPORT", object_code="IMPORT")
     fields = [
         'errors.id_user_error',
         'dataset.dataset_name',
