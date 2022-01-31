@@ -35,8 +35,8 @@ export class ContentMappingStepComponent implements OnInit {
   public showForm: boolean = false;
   public contentTargetForm: FormGroup;
   public spinner: boolean = false;
-  public mappedFields: Set<string>;  // FIXME
-  public unmappedFields: Set<string>; // FIXME
+  public mappedFields: Set<string> = new Set<string>();  // TODO
+  public unmappedFields: Set<string> = new Set<string>();  // TODO
 
   @ViewChild("modalConfirm") modalConfirm: any;
   @ViewChild("modalRedir") modalRedir: any;

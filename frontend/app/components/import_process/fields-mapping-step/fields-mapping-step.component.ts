@@ -247,9 +247,9 @@ export class FieldsMappingStepComponent implements OnInit {
       mappingFields => {
         this.syntheseForm.reset();
         for (let field of mappingFields) {
-          let control = this.syntheseForm.get(field.target_field)
+          let control = this.syntheseForm.get(field.target_field);
           if (!control) continue;  // masked field?
-          if (!(field.source_field in this.sourceFields)) continue;  // this field mapping does not apply to this file
+          if (!this.sourceFields.includes(field.source_field)) continue;  // this field mapping does not apply to this file
           control.setValue(field.source_field);
         }
       },
