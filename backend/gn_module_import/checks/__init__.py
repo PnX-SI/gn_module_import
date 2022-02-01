@@ -140,7 +140,7 @@ def run_all_checks(df, imprt, selected_columns, synthese_fields):
             raise Exception(f"Error code '{error_code}' not found.")
         invalid_rows = error['invalid_rows']
         df['gn_is_valid'][invalid_rows.index] = False
-        df['gn_invalid_reason'][invalid_rows.index & df['gn_invalid_reason'].isnull()] = \
+        df['gn_invalid_reason'][invalid_rows.index.intersection(df['gn_invalid_reason'].isnull())] = \
                 f'{error_type.name}'  # FIXME comment
         ordered_invalid_rows = sorted([ row + 1 for row in invalid_rows.index.to_list()])
         error = ImportUserError(
