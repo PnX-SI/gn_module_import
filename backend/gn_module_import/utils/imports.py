@@ -245,7 +245,6 @@ def save_dataframe_to_database(imprt, df, drop_table=True):
         ImportEntry = get_table_class(get_import_table_name(imprt))
         ImportEntry.drop(db.session.connection())
         db.metadata.remove(ImportEntry)
-    #columns = [df.index.name] + list(df.columns),
     columns = []
     for column, dtype, in zip(df.columns, df.dtypes):
         if column == 'gn_pk':
@@ -260,9 +259,6 @@ def save_dataframe_to_database(imprt, df, drop_table=True):
         columns,
     )
     ImportEntry.create(db.session.connection())
-    #print(df['prof_min'])
-    #df = df.where(pd.notna(df), other=None)
-    #print(pd.notna(df)['prof_min'])
     df = df.replace({np.nan:None})
     list_of_dicts = df.to_dict(orient='records')
     db.session.execute(ImportEntry.insert(), list_of_dicts)

@@ -5,7 +5,6 @@ from ..db.queries.altitudes import create_column, generate_altitudes
 
 @checker("Data cleaning : altitudes created")
 def set_altitudes(
-    df,
     selected_columns,
     import_id,
     full_table_name,
@@ -22,7 +21,6 @@ def set_altitudes(
         generate_type = None
         if "altitude_min" not in selected_columns.keys():
             generate_type = "generate_all"
-            df["gn_altitude_min"] = ""
             create_column(
                 full_table_name=full_table_name, alt_col="gn_altitude_min"
             )
@@ -31,7 +29,6 @@ def set_altitudes(
             generate_type = "generate_missing"
 
         if "altitude_max" not in selected_columns.keys():
-            df["gn_altitude_max"] = ""
             create_column(
                 full_table_name=full_table_name, alt_col="gn_altitude_max"
             )

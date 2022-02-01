@@ -170,24 +170,6 @@ def check_anytype_field(df, target_field, source_field, field_type, required):
         raise Exception("Unknown field type {}".format(field_type))  # pragma: no cover
 
 
-#def check_datetime_ordering(df, date_min, date_max):
-#    ordered = df[date_min] <= df[date_max]
-#    ordered = ordered.fillna(False)
-#    invalid_rows = df[~ordered & df[date_min].notna() & df[date_max].notna()]
-#    logger.info(
-#        "%s date_min (= %s user column) > date_max (= %s user column) errors detected",
-#        len(invalid_rows),
-#        date_min,
-#        date_max,
-#    )
-#    if len(invalid_rows) > 0:
-#        yield dict(
-#            error_code="DATE_MIN_SUP_DATE_MAX",
-#            invalid_rows=invalid_rows,
-#            column=date_min,
-#        )
-
-
 def check_types(df, imprt, selected_columns, synthese_fields):
     for field in synthese_fields:
         if field.nomenclature_type:  # we do not check fields with nomenclatures

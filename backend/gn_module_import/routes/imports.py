@@ -254,7 +254,6 @@ def prepare_import(scope, import_id):
 
     is_generate_alt = selected_columns.get('altitudes_generate') == 'true'
     set_altitudes(
-            df,
             selected_columns,
             import_id,
             get_import_table_name(imprt),
