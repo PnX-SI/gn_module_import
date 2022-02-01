@@ -259,7 +259,8 @@ def save_dataframe_to_database(imprt, df, drop_table=True):
         columns,
     )
     ImportEntry.create(db.session.connection())
-    df = df.replace({np.nan:None})
+    df.replace({np.nan: None}, inplace=True)
+    df.replace({pd.NaT: None}, inplace=True)
     list_of_dicts = df.to_dict(orient='records')
     db.session.execute(ImportEntry.insert(), list_of_dicts)
 
