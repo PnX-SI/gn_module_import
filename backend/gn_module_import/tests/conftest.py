@@ -1,1 +1,2 @@
-from geonature.tests.fixtures import app, _session, users, acquisition_frameworks, datasets
+from geonature.tests.fixtures import *
+from geonature.tests.fixtures import app, _session, users
