@@ -30,76 +30,80 @@ tests_path = Path(__file__).parent
 
 
 
+@pytest.fixture()
+def mappings(users):
+    mappings = {}
+    with db.session.begin_nested():
+        mappings['content_public'] = TMappings(mapping_type='CONTENT', mapping_label='Content Mapping', active=True, is_public=True)
+        mappings['field_public'] = TMappings(mapping_type='FIELD', mapping_label='Public Field Mapping', active=True, is_public=True)
+        mappings['field'] = TMappings(mapping_type='FIELD', mapping_label='Private Field Mapping', active=True, is_public=False)
+        mappings['field_public_disabled'] = TMappings(mapping_type='FIELD', mapping_label='Disabled Public Field Mapping', active=False, is_public=True)
+        mappings['self'] = TMappings(mapping_type='FIELD', mapping_label='Self’s Mapping', active=True, is_public=False)
+        mappings['self'].owners.append(users['self_user'])
+        mappings['stranger'] = TMappings(mapping_type='FIELD', mapping_label='Stranger’s Mapping', active=True, is_public=False)
+        mappings['stranger'].owners.append(users['stranger_user'])
+        mappings['associate'] = TMappings(mapping_type='FIELD', mapping_label='Associate’s Mapping', active=True, is_public=False)
+        mappings['associate'].owners.append(users['associate_user'])
+        db.session.add_all(mappings.values())
+    return mappings
+
+
 @pytest.mark.usefixtures("client_class", "temporary_transaction")
 class TestMappings:
-    def test_mapping_list(self, users):
-        with db.session.begin_nested():
-            mapping1 = TMappings(mapping_type='CONTENT', mapping_label='Mapping 1', active=True, is_public=True)
-            db.session.add(mapping1)
-            mapping2 = TMappings(mapping_type='FIELD', mapping_label='Mapping 2', active=True, is_public=True)
-            db.session.add(mapping2)
-            mapping3 = TMappings(mapping_type='FIELD', mapping_label='Mapping 3', active=True, is_public=False)
-            db.session.add(mapping3)
-            mapping4 = TMappings(mapping_type='FIELD', mapping_label='Mapping 4', active=False, is_public=True)
-            db.session.add(mapping4)
-            mapping5 = TMappings(mapping_type='FIELD', mapping_label='Mapping 5', active=True, is_public=False)
-            mapping5.owners.append(users['self_user'])
-            db.session.add(mapping5)
-            mapping6 = TMappings(mapping_type='FIELD', mapping_label='Mapping 6', active=True, is_public=False)
-            mapping6.owners.append(users['stranger_user'])
-            db.session.add(mapping6)
-            mapping7 = TMappings(mapping_type='FIELD', mapping_label='Mapping 7', active=True, is_public=False)
-            mapping7.owners.append(users['associate_user'])
-            db.session.add(mapping7)
-
+    def test_mapping_list(self, users, mappings):
         set_logged_user_cookie(self.client, users['noright_user'])
 
         r = self.client.get(url_for('import.list_mappings'), query_string={'type': 'field'})
         assert(r.status_code == Forbidden.code)
 
-        set_logged_user_cookie(self.client, users['self_user'])
+        set_logged_user_cookie(self.client, users['admin_user'])
 
         r = self.client.get(url_for('import.list_mappings'), query_string={'type': 'field'})
         assert(r.status_code == 200)
-        mappings = r.get_json()
-        validate_json(mappings, {
+        validate_json(r.get_json(), {
             'definitions': jsonschema_definitions,
             'type': 'array',
             'items': { '$ref': '#/definitions/mapping' },
             'minItems': 1,
         })
-        mapping_ids = [ mapping['id_mapping'] for mapping in mappings ]
-        assert(mapping1.id_mapping not in mapping_ids)  # wrong mapping type
-        assert(mapping2.id_mapping in mapping_ids)
-        assert(self.client.get(url_for('import.get_mapping', id_mapping=mapping2.id_mapping)).status_code == 200)
-        assert(mapping3.id_mapping not in mapping_ids)  # not public
-        assert(self.client.get(url_for('import.get_mapping', id_mapping=mapping3.id_mapping)).status_code == Forbidden.code)
-        assert(mapping4.id_mapping not in mapping_ids)  # not active
-        assert(self.client.get(url_for('import.get_mapping', id_mapping=mapping4.id_mapping)).status_code == Forbidden.code)
-        assert(mapping5.id_mapping in mapping_ids)  # not public but user is owner
-        assert(self.client.get(url_for('import.get_mapping', id_mapping=mapping5.id_mapping)).status_code == 200)
-        assert(mapping6.id_mapping not in mapping_ids)  # not public and owned by another user
-        assert(self.client.get(url_for('import.get_mapping', id_mapping=mapping6.id_mapping)).status_code == Forbidden.code)
-        assert(mapping7.id_mapping not in mapping_ids)  # not public and owned by an user in the same organism whereas read scope is 1
-        assert(self.client.get(url_for('import.get_mapping', id_mapping=mapping7.id_mapping)).status_code == Forbidden.code)
+
+    def test_mapping_permissions(self, users, mappings):
+        set_logged_user_cookie(self.client, users['self_user'])
+
+        r = self.client.get(url_for('import.list_mappings'), query_string={'type': 'field'})
+        assert(r.status_code == 200)
+        mapping_ids = [ mapping['id_mapping'] for mapping in r.get_json() ]
+        assert(mappings['content_public'].id_mapping not in mapping_ids)  # wrong mapping type
+        assert(mappings['field_public'].id_mapping in mapping_ids)
+        assert(self.client.get(url_for('import.get_mapping', id_mapping=mappings['field_public'].id_mapping)).status_code == 200)
+        assert(mappings['field'].id_mapping not in mapping_ids)  # not public
+        assert(self.client.get(url_for('import.get_mapping', id_mapping=mappings['field'].id_mapping)).status_code == Forbidden.code)
+        assert(mappings['field_public_disabled'].id_mapping not in mapping_ids)  # not active
+        assert(self.client.get(url_for('import.get_mapping', id_mapping=mappings['field_public_disabled'].id_mapping)).status_code == Forbidden.code)
+        assert(mappings['self'].id_mapping in mapping_ids)  # not public but user is owner
+        assert(self.client.get(url_for('import.get_mapping', id_mapping=mappings['self'].id_mapping)).status_code == 200)
+        assert(mappings['stranger'].id_mapping not in mapping_ids)  # not public and owned by another user
+        assert(self.client.get(url_for('import.get_mapping', id_mapping=mappings['stranger'].id_mapping)).status_code == Forbidden.code)
+        assert(mappings['associate'].id_mapping not in mapping_ids)  # not public and owned by an user in the same organism whereas read scope is 1
+        assert(self.client.get(url_for('import.get_mapping', id_mapping=mappings['associate'].id_mapping)).status_code == Forbidden.code)
 
         set_logged_user_cookie(self.client, users['user'])
 
         # refresh mapping list
         r = self.client.get(url_for('import.list_mappings'), query_string={'type': 'field'})
         mapping_ids = [ mapping['id_mapping'] for mapping in r.get_json() ]
-        assert(mapping6.id_mapping not in mapping_ids)  # not public and owned by another user
-        assert(self.client.get(url_for('import.get_mapping', id_mapping=mapping6.id_mapping)).status_code == Forbidden.code)
-        assert(mapping7.id_mapping in mapping_ids)  # not public but owned by an user in the same organism whereas read scope is 2
-        assert(self.client.get(url_for('import.get_mapping', id_mapping=mapping7.id_mapping)).status_code == 200)
+        assert(mappings['stranger'].id_mapping not in mapping_ids)  # not public and owned by another user
+        assert(self.client.get(url_for('import.get_mapping', id_mapping=mappings['stranger'].id_mapping)).status_code == Forbidden.code)
+        assert(mappings['associate'].id_mapping in mapping_ids)  # not public but owned by an user in the same organism whereas read scope is 2
+        assert(self.client.get(url_for('import.get_mapping', id_mapping=mappings['associate'].id_mapping)).status_code == 200)
 
         set_logged_user_cookie(self.client, users['admin_user'])
 
         # refresh mapping list
         r = self.client.get(url_for('import.list_mappings'), query_string={'type': 'field'})
         mapping_ids = [ mapping['id_mapping'] for mapping in r.get_json() ]
-        assert(mapping6.id_mapping in mapping_ids)  # not public and owned by another user but we have scope = 3
-        assert(self.client.get(url_for('import.get_mapping', id_mapping=mapping6.id_mapping)).status_code == 200)
+        assert(mappings['stranger'].id_mapping in mapping_ids)  # not public and owned by another user but we have scope = 3
+        assert(self.client.get(url_for('import.get_mapping', id_mapping=mappings['stranger'].id_mapping)).status_code == 200)
 
 
     def test_add_mapping(self, users):
