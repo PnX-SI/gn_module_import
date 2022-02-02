@@ -90,7 +90,6 @@ class GeometrySetter:
             if results_out_of_box:
                 set_user_error(
                     id_import=self.id_import,
-                    step="FIELD_MAPPING",
                     error_code="GEOMETRY_OUT_OF_BOX",
                     col_name="Colonne géométriques",
                     id_rows=list(map(lambda row: row.gn_pk, results_out_of_box)),
@@ -141,7 +140,6 @@ class GeometrySetter:
             if len(commune_errors["id_rows"]) > 0:
                 set_user_error(
                     id_import=self.id_import,
-                    step="FIELD_MAPPING",
                     error_code="INVALID_GEOM_CODE",
                     col_name=self.code_commune_col,
                     id_rows=commune_errors["id_rows"],
@@ -152,7 +150,6 @@ class GeometrySetter:
             if len(maille_errors["id_rows"]) > 0:
                 set_user_error(
                     id_import=self.id_import,
-                    step="FIELD_MAPPING",
                     error_code="INVALID_GEOM_CODE",
                     col_name=self.code_maille_col,
                     id_rows=maille_errors["id_rows"],
@@ -163,7 +160,6 @@ class GeometrySetter:
             if len(dep_errors["id_rows"]) > 0:
                 set_user_error(
                     id_import=self.id_import,
-                    step="FIELD_MAPPING",
                     error_code="INVALID_GEOM_CODE",
                     col_name=self.code_dep_col,
                     id_rows=dep_errors["id_rows"],
@@ -189,7 +185,6 @@ class GeometrySetter:
         if len(invalid_geom_rows) > 0:
             set_user_error(
                 self.id_import,
-                step="FIELD_MAPPING",
                 error_code="INVALID_GEOMETRY",
                 id_rows=list(map(lambda r: r.gn_pk, invalid_geom_rows)),
                 comment="Des géométrie fournies s'auto-intersectent",

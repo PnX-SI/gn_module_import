@@ -148,7 +148,6 @@ def run_all_checks(df, imprt, selected_columns, synthese_fields):
             type=error_type,
             column=error['column'],
             rows=ordered_invalid_rows,
-            step='',
             comment=error.get('comment'),
         )
         db.session.add(error)

@@ -29,7 +29,6 @@ def check_user_file_good_table(
             # other goodtable errors :
             set_user_error(
                 id_import=id_import,
-                step="UPLOAD",
                 error_code=ERROR_MAPPING.get(error["code"], "UNKNOWN_ERROR"),
                 comment="Erreur d'origine :" + error["message"],
                 commit=False,
@@ -41,7 +40,7 @@ def check_user_file_good_table(
     if report["tables"][0]["row-count"] == 0:
         gn_error = ImportUserErrorType.query.filter_by(name="EMPTY_FILE").one()
         set_user_error(
-            id_import=id_import, step="UPLOAD", id_error=gn_error.pk,
+            id_import=id_import, id_error=gn_error.pk,
             commit=False,
         )
         errors.append("no data")

@@ -7,7 +7,6 @@ from gn_module_import.db.models import ImportUserErrorType, ImportUserError
 
 def set_user_error(
     id_import,
-    step,
     id_error=None,
     error_code=None,
     col_name="",
@@ -19,7 +18,6 @@ def set_user_error(
     Add a entry in t_user_error_list
 
     :params id_import int: id of the import
-    :params step str: step of the error <'UPLOAD', 'FIELD_MAPPING', 'CONTENT_MAPPING'>
     :params error_code str: the code of the error (t_user_errors)
     :params col_name str: column(s) concerned by the error
     :params n_errors int[]: id of the rows concerned by the errors
@@ -34,7 +32,7 @@ def set_user_error(
     else:
         ordered_id_rows = ['ALL']
     error = ImportUserError(id_import=id_import, type=error_type, column=col_name,
-                            rows=ordered_id_rows, step=step, comment=comment)
+                            rows=ordered_id_rows, comment=comment)
     db.session.add(error)
     if commit:
         db.session.commit()

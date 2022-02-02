@@ -14,7 +14,6 @@ def handle_invalid_rows(df, imprt, error_code, error_field_name, invalid_rows, c
         raise Exception(f"Error code '{error_code}' not found.")
     set_user_error(
         id_import=imprt.id_import,
-        step="FIELD_MAPPING",
         id_error=error_type.pk,
         col_name=error_field_name,
         id_rows=invalid_rows.index.to_list(),
@@ -91,7 +90,6 @@ def handle_invalid_rows(df, imprt, error_code, error_field_name, invalid_rows, c
 #        raise Exception(f"Error code '{error_code}' not found.")
 #    set_user_error(
 #        id_import=id_import,
-#        step="FIELD_MAPPING",
 #        id_error=error_type.pk,
 #        col_name=col_name_error,
 #        id_rows=id_rows_error,

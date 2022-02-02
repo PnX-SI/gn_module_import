@@ -40,6 +40,7 @@ export class ImportProcessService {
   }
 
   getRouterLinkForStep(step: Step) {
+    console.log(step, "get router linl for step")
     if (this.importData == null) return null;
     let stepName = Step[step].toLowerCase();
     let importId: number = this.importData.id_import;
@@ -47,6 +48,7 @@ export class ImportProcessService {
   }
 
   navigateToStep(step: Step) {
+    console.log(step, "navigateStep")
     this.router.navigate(this.getRouterLinkForStep(step));
   }
 
@@ -79,6 +81,7 @@ export class ImportProcessService {
 
   continueProcess(importData: Import) {
     this.importData = importData;
-    this.navigateToStep(importData.step);
+    console.log("continue process")
+    this.navigateToStep(this.getLastAvailableStep());
   }
 }
