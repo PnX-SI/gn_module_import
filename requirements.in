@@ -1,5 +1,5 @@
 goodtables
-pandas<1.4
+pandas<1.4  # panda 1.4 requires sqlalchemy>=1.4
 geopandas
 dask[dataframe]
 psutil
