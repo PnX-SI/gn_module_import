@@ -169,6 +169,59 @@ class TestImports:
         r = self.client.delete(url_for('import.delete_import', import_id=imprt.id_import))
         assert(r.status_code == 404)
 
+    def test_import_upload(self, users, datasets):
+        with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+            data = {
+                'file': (f, 'one_line.csv'),
+                'datasetId': datasets['own_dataset'].id_dataset,
+            }
+            r = self.client.post(url_for('import.upload_file'), data=data,
+                            headers=Headers({'Content-Type': 'multipart/form-data'}))
+            assert r.status_code == Unauthorized.code
+
+        set_logged_user_cookie(self.client, users['noright_user'])
+        with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+            data = {
+                'file': (f, 'one_line.csv'),
+                'datasetId': datasets['own_dataset'].id_dataset,
+            }
+            r = self.client.post(url_for('import.upload_file'), data=data,
+                            headers=Headers({'Content-Type': 'multipart/form-data'}))
+            assert r.status_code == Forbidden.code
+            assert 'cannot "C" in IMPORT' in r.json['description']
+
+        set_logged_user_cookie(self.client, users['user'])
+
+        unexisting_id = db.session.query(func.max(TDatasets.id_dataset)).scalar() + 1
+        with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+            data = {
+                'file': (f, 'one_line.csv'),
+                'datasetId': unexisting_id,
+            }
+            r = self.client.post(url_for('import.upload_file'), data=data,
+                            headers=Headers({'Content-Type': 'multipart/form-data'}))
+            assert r.status_code == BadRequest.code
+            assert r.json['description'] == f"Dataset '{unexisting_id}' does not exist."
+
+        with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+            data = {
+                'file': (f, 'one_line.csv'),
+                'datasetId': datasets['stranger_dataset'].id_dataset,
+            }
+            r = self.client.post(url_for('import.upload_file'), data=data,
+                            headers=Headers({'Content-Type': 'multipart/form-data'}))
+            assert r.status_code == Forbidden.code
+            assert 'jeu de données' in r.json['description']  # this is a DS issue
+
+        with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+            data = {
+                'file': (f, 'one_line.csv'),
+                'datasetId': datasets['own_dataset'].id_dataset,
+            }
+            r = self.client.post(url_for('import.upload_file'), data=data,
+                            headers=Headers({'Content-Type': 'multipart/form-data'}))
+            assert r.status_code == 200
+
     def test_import_columns(self, users, datasets):
         set_logged_user_cookie(self.client, users['user'])
         with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:

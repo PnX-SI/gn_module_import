@@ -57,10 +57,10 @@ def upload_file(scope, import_id=None):
             dataset_id = int(request.form['datasetId'])
         except ValueError as e:
             raise BadRequest(description="'datasetId' must be an integer.")
-        datasets = TDatasets.query.filter_by_scope(scope)
-        try:
-            dataset = datasets.filter(TDatasets.id_dataset==dataset_id).one()
-        except NoResultFound:
+        dataset = TDatasets.query.get(dataset_id)
+        if dataset is None:
+            raise BadRequest(description=f"Dataset '{dataset_id}' does not exist.")
+        if not dataset.has_instance_permission(scope):
             raise Forbidden(description='Vous n’avez pas les permissions sur ce jeu de données.')
         now = datetime.now()
         imprt = TImports(source_file=f.read(), full_file_name=f.filename,
