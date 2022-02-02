@@ -20,8 +20,7 @@ from pypnusershub.db.models import User, Organisme, Application, Profils as Prof
 from gn_module_import.db.models import TImports, TMappings, TMappingsFields, TMappingsValues, \
                                        BibThemes, BibFields, ImportUserError, ImportUserErrorType
 from gn_module_import.steps import Step
-from gn_module_import.utils.imports import get_table_class, get_import_table_name, \
-                                           get_archive_table_name
+from gn_module_import.utils.imports import get_table_class, get_import_table_name
 
 from .jsonschema_definitions import jsonschema_definitions
 
@@ -142,17 +141,28 @@ class TestImports:
         imports_ids = [ imprt['id_import'] for imprt in json_data ]
         assert(set(imports_ids) == { imports[imprt].id_import for imprt in ['own_import', 'associate_import'] })
 
-    def test_get_import(self, users):
-        with db.session.begin_nested():
-            imprt = TImports()
-            db.session.add(imprt)
-        r =  self.client.get(url_for('import.get_one_import', import_id=imprt.id_import))
-        assert(r.status_code == Unauthorized.code)
-        set_logged_user_cookie(self.client, users["admin_user"])
-        r =  self.client.get(url_for('import.get_one_import', import_id=imprt.id_import))
-        assert(r.status_code == 200)
-        imprt_json = r.get_json()
-        assert(imprt_json['id_import'] == imprt.id_import)
+    def test_get_import(self, users, imports):
+        r =  self.client.get(url_for('import.get_one_import', import_id=imports['own_import'].id_import))
+        assert r.status_code == Unauthorized.code
+
+        set_logged_user_cookie(self.client, users["noright_user"])
+        r =  self.client.get(url_for('import.get_one_import', import_id=imports['own_import'].id_import))
+        assert r.status_code == Forbidden.code
+
+        set_logged_user_cookie(self.client, users["user"])
+        r =  self.client.get(url_for('import.get_one_import', import_id=imports['stranger_import'].id_import))
+        assert r.status_code == Forbidden.code
+
+        set_logged_user_cookie(self.client, users["self_user"])
+        r =  self.client.get(url_for('import.get_one_import', import_id=imports['associate_import'].id_import))
+        assert r.status_code == Forbidden.code
+
+        set_logged_user_cookie(self.client, users["user"])
+        r =  self.client.get(url_for('import.get_one_import', import_id=imports['associate_import'].id_import))
+        assert r.status_code == 200
+        r =  self.client.get(url_for('import.get_one_import', import_id=imports['own_import'].id_import))
+        assert r.status_code == 200
+        assert r.json['id_import'] == imports['own_import'].id_import
     
     def test_delete_import(self, users):
         with db.session.begin_nested():
@@ -221,6 +231,53 @@ class TestImports:
             r = self.client.post(url_for('import.upload_file'), data=data,
                             headers=Headers({'Content-Type': 'multipart/form-data'}))
             assert r.status_code == 200
+
+    def test_import_decode(self, users, imports):
+        imprt = imports['own_import']
+        data = {
+            'encoding': 'utf-16',
+            'format': 'csv',
+            'srid': 2154,
+        }
+
+        r = self.client.post(url_for('import.decode_file', import_id=imprt.id_import), data=data)
+        assert r.status_code == Unauthorized.code
+
+        set_logged_user_cookie(self.client, users['noright_user'])
+        r = self.client.post(url_for('import.decode_file', import_id=imprt.id_import), data=data)
+        assert r.status_code == Forbidden.code
+
+        set_logged_user_cookie(self.client, users['user'])
+        r = self.client.post(url_for('import.decode_file', import_id=imprt.id_import), data=data)
+        assert r.status_code == BadRequest.code
+        assert 'first upload' in r.json['description']
+
+        imprt.full_file_name = 'import.csv'
+        imprt.detected_encoding = 'utf-8'
+
+        with open(tests_path / 'files' / 'utf8_file.csv', 'rb') as f:
+            imprt.source_file = f.read()
+        r = self.client.post(url_for('import.decode_file', import_id=imprt.id_import), data=data)
+        assert r.status_code == BadRequest.code
+
+        data['encoding'] = 'utf-8'
+
+        with open(tests_path / 'files' / 'duplicate_column_names.csv', 'rb') as f:
+            imprt.source_file = f.read()
+        r = self.client.post(url_for('import.decode_file', import_id=imprt.id_import), data=data)
+        assert r.status_code == BadRequest.code
+        assert 'Duplicates column names' in r.json['description']
+
+        with open(tests_path / 'files' / 'wrong_line_length.csv', 'rb') as f:
+            imprt.source_file = f.read()
+        r = self.client.post(url_for('import.decode_file', import_id=imprt.id_import), data=data)
+        assert r.status_code == BadRequest.code
+        assert 'Expected' in r.json['description']
+
+        with open(tests_path / 'files' / 'utf8_file.csv', 'rb') as f:
+            imprt.source_file = f.read()
+        r = self.client.post(url_for('import.decode_file', import_id=imprt.id_import), data=data)
+        assert r.status_code == 200
 
     def test_import_columns(self, users, datasets):
         set_logged_user_cookie(self.client, users['user'])
@@ -324,58 +381,6 @@ class TestImports:
         errors = r.get_json()
         assert(len(errors) == 0)
 
-
-    def test_import_invalid_file(self, users, datasets):
-        set_logged_user_cookie(self.client, users['user'])
-
-        # Upload step
-        test_file_name = 'invalid_file.csv'
-        test_file_line_count = 3
-        with open(tests_path / 'files' / test_file_name, 'rb') as f:
-            data = {
-                'file': (f, test_file_name),
-                'datasetId': datasets['own_dataset'].id_dataset,
-            }
-            r = self.client.post(url_for('import.upload_file'), data=data,
-                            headers=Headers({'Content-Type': 'multipart/form-data'}))
-        assert(r.status_code == 200)
-        imprt_json = r.get_json()
-        imprt = TImports.query.get(imprt_json['id_import'])
-        assert(len(imprt.authors) == 1)
-        assert(imprt_json['date_create_import'])
-        assert(imprt_json['date_update_import'])
-        assert(imprt_json['detected_encoding'] == 'utf-8')
-        assert(imprt_json['detected_format'] == 'csv')
-        assert(imprt_json['full_file_name'] == test_file_name)
-        assert(imprt_json['id_dataset'] == datasets['own_dataset'].id_dataset)
-
-        assert(not db.session.query(ImportUserError.query.filter_by(imprt=imprt).exists()).scalar())
-
-        # Decode step
-        data = {
-            'encoding': 'utf-8',
-            'format': 'csv',
-            'srid': 2154,
-        }
-        r = self.client.post(url_for('import.decode_file', import_id=imprt.id_import), data=data)
-        assert(r.status_code == 400)
-        # print(r.get_json())
-        # assert(r.status_code == 200)
-        # imprt_json = r.get_json()
-        # assert(imprt_json['date_update_import'])
-        # assert(imprt_json['encoding'] == 'utf-8')
-        # assert(imprt_json['format_source_file'] == 'csv')
-        # assert(imprt_json['srid'] == 2154)
-        # assert(imprt_json['source_count'] is None)
-        # assert(imprt_json['import_table'] is None)
-
-        # assert(db.session.query(ImportUserError.query.filter_by(imprt=imprt).exists()).scalar())
-
-        # r = self.client.get(url_for('import.get_import_errors', import_id=imprt.id_import))
-        # assert(r.status_code == 200)
-        # errors = r.get_json()
-        # assert(len(errors) == 1)
-
     def test_import_valid_file(self, users, datasets):
         set_logged_user_cookie(self.client, users['user'])
 
@@ -422,8 +427,6 @@ class TestImports:
         imprt = TImports.query.get(imprt.id_import)
         ImportEntry = get_table_class(get_import_table_name(imprt))
         assert(db.session.query(ImportEntry).count() == imprt_json['source_count'])
-        ImportArchiveEntry = get_table_class(get_archive_table_name(imprt))
-        assert(db.session.query(ImportArchiveEntry).count() == imprt_json['source_count'])
 
         # Field mapping step
         fieldmapping = TMappings.query.filter_by(mapping_label='Synthese GeoNature').one()
