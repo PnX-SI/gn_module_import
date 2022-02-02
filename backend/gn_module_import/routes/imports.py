@@ -159,11 +159,6 @@ def set_import_field_mapping(scope, import_id):
     if fieldmapping.mapping_type != 'FIELD':
         raise BadRequest('Field mapping ID refer to a non-field mapping.')
     imprt.id_field_mapping = fieldmapping.id_mapping
-    if data.get('step'):
-        try:
-            imprt.step = Step(data['step'])
-        except ValueError:
-            raise BadRequest('Invalid step')
     db.session.commit()
     return jsonify(imprt.as_dict())
 
@@ -181,11 +176,6 @@ def set_import_content_mapping(scope, import_id):
     if contentmapping.mapping_type != 'CONTENT':
         raise BadRequest('Content mapping ID refer to a non-content mapping.')
     imprt.id_content_mapping = contentmapping.id_mapping
-    if data.get('step'):
-        try:
-            imprt.step = Step(data['step'])
-        except ValueError:
-            raise BadRequest('Invalid step')
     db.session.commit()
     return jsonify(imprt.as_dict())
 

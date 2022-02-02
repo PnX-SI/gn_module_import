@@ -295,7 +295,6 @@ class TestImports:
         assert(imprt_json['detected_format'] == 'csv')
         assert(imprt_json['full_file_name'] == test_file_name)
         assert(imprt_json['id_dataset'] == datasets['own_dataset'].id_dataset)
-        assert(imprt_json['step'] == Step.Decode)
 
         assert(not db.session.query(ImportUserError.query.filter_by(imprt=imprt).exists()).scalar())
 
@@ -315,7 +314,6 @@ class TestImports:
         # assert(imprt_json['format_source_file'] == 'csv')
         # assert(imprt_json['srid'] == 2154)
         # assert(imprt_json['source_count'] is None)
-        # assert(imprt_json['step'] == Step.Decode)  # style same step
         # assert(imprt_json['import_table'] is None)
 
         # assert(db.session.query(ImportUserError.query.filter_by(imprt=imprt).exists()).scalar())
@@ -349,7 +347,6 @@ class TestImports:
         assert(imprt_json['detected_format'] == 'csv')
         assert(imprt_json['full_file_name'] == test_file_name)
         assert(imprt_json['id_dataset'] == datasets['own_dataset'].id_dataset)
-        assert(imprt_json['step'] == Step.Decode)
 
 
         # Decode step
@@ -366,7 +363,6 @@ class TestImports:
         assert(imprt_json['format_source_file'] == 'csv')
         assert(imprt_json['srid'] == 4326)
         assert(imprt_json['source_count'] == test_file_line_count)
-        assert(imprt_json['step'] == Step.FieldMapping)
         assert(imprt_json['import_table'])
         assert(imprt_json['columns'])
         assert(len(imprt_json['columns']) > 0)
@@ -380,14 +376,12 @@ class TestImports:
         fieldmapping = TMappings.query.filter_by(mapping_label='Synthese GeoNature').one()
         data = {
             'id_field_mapping': fieldmapping.id_mapping,
-            'step': Step.ContentMapping,
         }
         r = self.client.post(url_for('import.set_import_field_mapping', import_id=imprt.id_import), data=data)
         assert(r.status_code == 200)
         data = r.get_json()
         validate_json(data, {'definitions': jsonschema_definitions, '$ref': '#/definitions/import'})
         assert(data['id_field_mapping'] == fieldmapping.id_mapping)
-        assert(data['step'] == Step.ContentMapping)
 
         # Content mapping step
         contentmapping = TMappings.query.filter_by(mapping_label='Nomenclatures SINP (labels)').one()
@@ -399,7 +393,6 @@ class TestImports:
         data = r.get_json()
         validate_json(data, {'definitions': jsonschema_definitions, '$ref': '#/definitions/import'})
         assert(data['id_content_mapping'] == contentmapping.id_mapping)
-        assert(data['step'] == Step.ContentMapping)
 
         # Prepare data before import
         r = self.client.post(url_for('import.prepare_import', import_id=imprt.id_import))

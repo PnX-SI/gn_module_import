@@ -79,6 +79,6 @@ export class ImportProcessService {
 
   continueProcess(importData: Import) {
     this.importData = importData;
-    this.navigateToStep(importData.step);
+    this.navigateToStep(this.getLastAvailableStep());
   }
 }

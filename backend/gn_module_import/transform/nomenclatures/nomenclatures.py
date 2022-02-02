@@ -178,7 +178,6 @@ class NomenclatureTransformer:
                     ]
                     set_user_error(
                         id_import=id_import,
-                        step="CONTENT_MAPPING",
                         error_code="INVALID_NOMENCLATURE_WARNING",
                         col_name=el["user_col"],
                         id_rows=row.gn_pk,
@@ -192,7 +191,6 @@ class NomenclatureTransformer:
                 else:
                     set_user_error(
                         id_import=id_import,
-                        step="CONTENT_MAPPING",
                         error_code="INVALID_NOMENCLATURE",
                         col_name=el["user_col"],
                         id_rows=row.gn_pk,
@@ -236,7 +234,6 @@ class NomenclatureTransformer:
             if row_with_errors_proof and row_with_errors_proof.id_rows:
                 set_user_error(
                     id_import=id_import,
-                    step="CONTENT_MAPPING",
                     error_code="INVALID_EXISTING_PROOF_VALUE",
                     col_name=self.selected_columns.get("id_nomenclature_exist_proof"),
                     id_rows=row_with_errors_proof.id_rows,
@@ -250,7 +247,6 @@ class NomenclatureTransformer:
             if row_with_errors_blurr and row_with_errors_blurr.id_rows:
                 set_user_error(
                     id_import=id_import,
-                    step="CONTENT_MAPPING",
                     error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
                     col_name=self.selected_columns.get("id_nomenclature_blurring", ""),
                     id_rows=row_with_errors_blurr.id_rows,
@@ -268,7 +264,6 @@ class NomenclatureTransformer:
             if row_with_errors_bib and row_with_errors_bib.id_rows:
                 set_user_error(
                     id_import=id_import,
-                    step="CONTENT_MAPPING",
                     error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
                     col_name=self.selected_columns.get("reference_biblio")
                     or self.selected_columns.get("id_nomenclature_source_status"),
@@ -288,7 +283,6 @@ class NomenclatureTransformer:
             if row_with_error_info_geo and row_with_error_info_geo.id_rows:
                 set_user_error(
                     id_import=id_import,
-                    step="CONTENT_MAPPING",
                     error_code="CONDITIONAL_INVALID_DATA",
                     col_name=self.selected_columns.get("id_nomenclature_info_geo_type"),
                     id_rows=row_with_error_info_geo.id_rows,
@@ -305,7 +299,6 @@ class NomenclatureTransformer:
             if row_with_error_info_geo_2 and row_with_error_info_geo_2.id_rows:
                 set_user_error(
                     id_import=id_import,
-                    step="CONTENT_MAPPING",
                     error_code="CONDITIONAL_MANDATORY_FIELD_ERROR",
                     col_name=self.selected_columns.get("id_nomenclature_info_geo_type") or 'TypeInfoGeo',
                     id_rows=row_with_error_info_geo_2.id_rows,

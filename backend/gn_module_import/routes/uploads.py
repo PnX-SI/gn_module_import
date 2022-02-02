@@ -65,8 +65,7 @@ def upload_file(scope, import_id=None):
             raise Forbidden(description='Vous n’avez pas les permissions sur ce jeu de données.')
         now = datetime.now()
         imprt = TImports(source_file=f.read(), full_file_name=f.filename,
-                         detected_encoding=detected_encoding,
-                         step=Step.next_step(Step.Upload), dataset=dataset,
+                         detected_encoding=detected_encoding, dataset=dataset,
                          date_create_import=now, date_update_import=now)
         imprt.authors.append(author)
         db.session.add(imprt)
