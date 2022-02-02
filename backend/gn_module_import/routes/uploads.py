@@ -51,7 +51,6 @@ def upload_file(scope, import_id=None):
         imprt.source_file = f.read()
         imprt.full_file_name = f.filename
         imprt.detected_encoding = detected_encoding
-        #imprt.step = Step.next_step(Step.Upload)
         db.session.commit()
     else:
         try:
@@ -77,7 +76,7 @@ def upload_file(scope, import_id=None):
 @permissions.check_cruved_scope("C", module_code="IMPORT", object_code="IMPORT")
 def decode_file(import_id):
     imprt = TImports.query.get_or_404(import_id)
-    if imprt.step < Step.Decode:
+    if source_file is None:
         raise BadRequest(description='A file must be first uploaded.')
     if 'encoding' not in request.json:
         raise BadRequest(description='Missing encoding.')
@@ -116,6 +115,5 @@ def decode_file(import_id):
         imprt.columns = { get_clean_column_name(col): col for col in report['column_names'] }
         create_tables(imprt)
         imprt.source_count = report['row_count'] - 1
-        imprt.step = Step.next_step(Step.Decode)
         db.session.commit()
         return jsonify(imprt.as_dict())
