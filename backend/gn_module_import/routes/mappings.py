@@ -27,7 +27,6 @@ from ..db.models import (
     BibThemes,
 )
 
-from ..upload.upload_errors import *
 from ..logs import logger
 from ..blueprint import blueprint
 

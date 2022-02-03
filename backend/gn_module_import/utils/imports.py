@@ -20,6 +20,7 @@ from geonature.utils.env import DB as db
 
 from gn_module_import.steps import Step
 from gn_module_import.exceptions import ImportFileError
+from gn_module_import.upload.geojson_to_csv import parse_geojson
 
 
 MAX_TABLE_NAME_LEN = 30
