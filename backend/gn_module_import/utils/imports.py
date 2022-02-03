@@ -1,4 +1,4 @@
-from io import BytesIO, StringIO
+from io import BytesIO, StringIO, TextIOWrapper
 import csv
 from datetime import datetime
 import logging
@@ -8,6 +8,7 @@ from shapely import wkb
 
 from slugify import slugify
 from flask import current_app, stream_with_context
+from werkzeug.exceptions import BadRequest
 from sqlalchemy.schema import Table
 from sqlalchemy import func
 import pandas as pd
@@ -17,7 +18,6 @@ from sqlalchemy import cast as sa_cast, Numeric, DateTime
 
 from geonature.utils.env import DB as db
 
-from gn_module_import.file_checks.check_user_file import check_user_file_good_table
 from gn_module_import.steps import Step
 from gn_module_import.exceptions import ImportFileError
 
@@ -56,34 +56,46 @@ def get_import_table_name(imprt):
     )
 
 
-def get_archive_table_name(imprt):
-    return '{schema}.{table}_{import_id}'.format(
-        schema=current_app.config['IMPORT']['ARCHIVES_SCHEMA_NAME'],
-        table=imprt.import_table,
-        import_id=imprt.id_import,
-    )
-
-
-def load_geojson_data(id_import, geojson_data):
+def load_geojson_data(imprt, geojson_data):
     csv_data = StringIO()
     parse_geojson(geojson_data, csv_data, geometry_col_name)
-    return load_csv_data(id_import, csv_data.encode('utf-8'), encoding='utf-8')
+    return load_csv_data(imprt, csv_data.encode('utf-8'), encoding='utf-8')
 
 
-def load_csv_data(id_import, csv_data, encoding):
-    return check_user_file_good_table(id_import, csv_data, encoding)
+def load_csv_data(imprt, csv_data, encoding):
+    csvfile = TextIOWrapper(csv_data, encoding=encoding)
+    headline = csvfile.readline()
+    dialect = csv.Sniffer().sniff(headline)
+    csvreader = csv.reader(csvfile, delimiter=dialect.delimiter)
+    csvfile.seek(0)
+    columns = next(csvreader)
+    duplicates = set([col for col in columns if columns.count(col) > 1])
+    if duplicates:
+        raise BadRequest(f"Duplicates column names: {duplicates}")
+    imprt.columns = { col: get_clean_column_name(col) for col in columns }
+    csvfile.seek(0)
+    try:
+        df = pd.read_csv(csvfile, delimiter=dialect.delimiter,
+                         header=0,  # this will determine the "official" cols number
+                         index_col=None,
+                         on_bad_lines='error')
+    except pd.errors.ParserError as e:
+        raise BadRequest(description=str(e))
+    # Use slugified db-compatible column names
+    df = df.reindex(columns=imprt.columns.values())
+    return df
 
 
-def load_data(id_import, raw_data, encoding, fmt):
+def load_data(imprt, raw_data, encoding, fmt):
     if fmt == 'csv':
-        report = load_csv_data(id_import, BytesIO(raw_data), encoding=encoding)
+        df = load_csv_data(imprt, BytesIO(raw_data), encoding=encoding)
     elif fmt == 'geojson':
         try:
             data = raw_data.decode(encoding)
         except UnicodeDecodeError:
-            raise ImportFileError(description='Erreur d’encodage')
-        report = load_geojson_data(id_import, data)
-    return report
+            raise BadRequest(description='Erreur d’encodage')
+        df = load_geojson_data(imprt, data)
+    return df
 
 
 def get_clean_table_name(file_name):
@@ -131,33 +143,10 @@ def create_table_class(table_class_name, long_table_name, columns):
     return Table(table_name, db.metadata, schema=schema_name, *_columns)
 
 
-def create_import_table_class(imprt, columns):
-    columns = [
-        db.Column('gn_pk', db.Integer, primary_key=True),
-        db.Column('gn_is_valid', db.Boolean, nullable=True),
-        db.Column('gn_invalid_reason', db.Text, nullable=True),
-    ] + columns
-    return create_table_class(
-        "UserTImportsTableClass{}".format(imprt.id_import),
-        get_import_table_name(imprt),
-        columns,
-    )
-
-
-def create_archive_table_class(imprt, columns):
-    columns = [ 'gn_pk' ] + columns
-    return create_table_class(
-        "UserArchiveTableClass{}".format(imprt.id_import),
-        get_archive_table_name(imprt),
-        columns,
-    )
-
-
 def delete_tables(imprt):
     assert(imprt.import_table is not None)
     table_names = [
         get_import_table_name(imprt),
-        get_archive_table_name(imprt),
     ]
     for table_name in table_names:
         table_class = get_table_class(table_name)
@@ -166,76 +155,18 @@ def delete_tables(imprt):
     imprt.import_table = None
 
 
-def psql_insert_copy(table, conn, keys, data_iter):
-    """
-    Execute SQL statement inserting data
-
-    Parameters
-    ----------
-    table : pandas.io.sql.SQLTable
-    conn : sqlalchemy.engine.Engine or sqlalchemy.engine.Connection
-    keys : list of str
-        Column names
-    data_iter : Iterable that iterates the values to be inserted
-    """
-    # gets a DBAPI connection that can provide a cursor
-    dbapi_conn = conn.connection
-    with dbapi_conn.cursor() as cur:
-        s_buf = StringIO()
-        writer = csv.writer(s_buf)
-        writer.writerows(data_iter)
-        s_buf.seek(0)
-
-        columns = ', '.join('"{}"'.format(k) for k in keys)
-        if table.schema:
-            table_name = '{}.{}'.format(table.schema, table.name)
-        else:
-            table_name = table.name
-
-        sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
-            table_name, columns)
-        cur.copy_expert(sql=sql, file=s_buf)
-
-
-def create_tables(imprt, session=None):
-    assert(imprt.import_table == None)
-    session = session or db.session
-
-    imprt.import_table = get_clean_table_name(imprt.full_file_name)
-
-    # keys are origin names, values are cleaned names
-    columns = list(imprt.columns.keys())
-
-    import_table_class = create_import_table_class(imprt, columns)
-    import_table_class.create(db.session.connection())
-    archive_table_class = create_archive_table_class(imprt, columns)
-    archive_table_class.create(db.session.connection())
-
-    csvfile = StringIO(imprt.source_file.decode(imprt.encoding))
-    dialect = csv.Sniffer().sniff(csvfile.readline())
-    df = pd.read_csv(csvfile, delimiter=dialect.delimiter, names=columns)
-    # FIXME does this opperate on the transaction?
-    df.to_sql(get_import_table_name(imprt), db.session.connection(), if_exists='append', chunksize=10000, method=psql_insert_copy, index=False)
-    df.to_sql(get_archive_table_name(imprt), db.session.connection(), if_exists='append', chunksize=10000, method=psql_insert_copy, index=False)
-    # FIXME save data to archive
-    #save_dataframe_to_database(imprt, df)
-    #ImportEntry = get_table_class(get_import_table_name(imprt))
-    #list_of_dicts = df.to_dict(orient='records')
-    #db.session.execute(ImportEntry.insert(), list_of_dicts)
-    db.session.commit()
-
-
 def load_import_to_dataframe(imprt):
     ImportEntry = get_table_class(get_import_table_name(imprt))
+    columns = ImportEntry.c.keys()
     query = db.session.query(ImportEntry)
-    dtypes = { col: 'string' for col in ImportEntry.c.keys() }
+    dtypes = { col: 'string' for col in columns }
     dtypes.update({
         'gn_pk': 'int64',
         'gn_is_valid': 'bool',
     })
     df = pd.DataFrame.from_records(
         query.all(),
-        columns=ImportEntry.columns.keys(),
+        columns=columns,
     ).astype(dtypes)
     return df
 

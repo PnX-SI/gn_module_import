@@ -16,8 +16,7 @@ from ..db.models import TImports, TDatasets, ImportUserError
 from gn_module_import.steps import Step
 from gn_module_import.blueprint import blueprint
 from gn_module_import.utils.imports import load_data, get_clean_column_name, \
-                                           create_tables, delete_tables, \
-                                           detect_encoding
+                                           detect_encoding, get_clean_table_name, save_dataframe_to_database
 
 
 
@@ -99,21 +98,21 @@ def decode_file(import_id):
         raise BadRequest(description='SRID must be an integer.')
     imprt.date_update_import = datetime.now()
     db.session.commit()  # commit parameters
-    ImportUserError.query.filter_by(imprt=imprt).delete()  # clear all errors
-    report = load_data(imprt.id_import, imprt.source_file,
-                       encoding=imprt.encoding, fmt=imprt.format_source_file)
-    db.session.commit()  # commit errors
-    if report['errors']:
-        # FIXME
-        error = report['errors'][0]
-        raise BadRequest(description=error['message'])
-    else:
-        if imprt.import_table:
-            delete_tables(imprt)
-            db.session.commit()
-        # FIXME handle duplicate column name
-        imprt.columns = { get_clean_column_name(col): col for col in report['column_names'] }
-        create_tables(imprt)
-        imprt.source_count = report['row_count'] - 1
-        db.session.commit()
-        return jsonify(imprt.as_dict())
+
+    try:
+        df = load_data(imprt,
+                       imprt.source_file,
+                       encoding=imprt.encoding,
+                       fmt=imprt.format_source_file)
+    except UnicodeError as e:
+        raise BadRequest(description=str(e))
+    df['gn_pk'] = df.index
+    df['gn_is_valid'] = True
+    drop_table = imprt.import_table is not None
+    imprt.import_table = get_clean_table_name(imprt.full_file_name)
+    imprt.source_count = len(df.index)
+    save_dataframe_to_database(imprt, df, drop_table=drop_table)
+
+    db.session.commit()
+
+    return jsonify(imprt.as_dict())
