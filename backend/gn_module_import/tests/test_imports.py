@@ -19,7 +19,6 @@ from pypnusershub.db.models import User, Organisme, Application, Profils as Prof
 
 from gn_module_import.db.models import TImports, TMappings, TMappingsFields, TMappingsValues, \
                                        BibThemes, BibFields, ImportUserError, ImportUserErrorType
-from gn_module_import.steps import Step
 from gn_module_import.utils.imports import get_table_class, get_import_table_name
 
 from .jsonschema_definitions import jsonschema_definitions

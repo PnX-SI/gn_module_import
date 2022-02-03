@@ -18,7 +18,6 @@ from sqlalchemy import cast as sa_cast, Numeric, DateTime
 
 from geonature.utils.env import DB as db
 
-from gn_module_import.steps import Step
 from gn_module_import.exceptions import ImportFileError
 
 

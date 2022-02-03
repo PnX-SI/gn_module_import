@@ -25,7 +25,6 @@ from geonature.core.gn_permissions.tools import get_scopes_by_action
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
 from pypnusershub.db.models import User
 
-from gn_module_import.steps import Step
 
 
 IMPORT_SCHEMA = 'gn_imports'
@@ -68,17 +67,6 @@ class ImportUserError(db.Model):
     column = db.Column('column_error', db.Unicode)
     rows = db.Column('id_rows', db.ARRAY(db.Integer))
     comment = db.Column(db.UnicodeText)
-
-    def as_dict(self, s):
-        if 'step' in s: # may be excluded with specific serialization parameters
-            step = s['step']
-            # convert from FIELD_MAPPING to FieldMapping (for instance)
-            step = ''.join(map(str.capitalize, s['step'].split('_')))
-            try:
-                s['step'] = Step[step].value
-            except KeyError:
-                pass
-        return s
 
 
 class InstancePermissionMixin:

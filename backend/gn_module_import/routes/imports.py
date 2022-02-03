@@ -42,7 +42,6 @@ from gn_module_import.blueprint import blueprint
 from gn_module_import.utils.imports import get_table_class, delete_tables, \
                             load_import_to_dataframe, save_dataframe_to_database, \
                             get_import_table_name, geom_to_wkb
-from gn_module_import.steps import Step
 from gn_module_import.utils import get_missing_fields
 from gn_module_import.transform.set_geometry import GeometrySetter
 from gn_module_import.transform.set_altitudes import set_altitudes

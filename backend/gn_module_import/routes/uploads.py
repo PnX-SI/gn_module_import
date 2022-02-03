@@ -13,7 +13,6 @@ from pypnusershub.db.models import User
 
 from ..db.models import TImports, TDatasets, ImportUserError
 
-from gn_module_import.steps import Step
 from gn_module_import.blueprint import blueprint
 from gn_module_import.utils.imports import load_data, get_clean_column_name, \
                                            detect_encoding, get_clean_table_name, save_dataframe_to_database
