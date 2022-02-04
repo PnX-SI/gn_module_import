@@ -73,7 +73,7 @@ def get_import_list(scope):
 
     g.scopes_by_action = get_scopes_by_action(module_code="IMPORT", object_code="IMPORT")
     fields = [
-        'errors.id_user_error',
+        'errors.pk',
         'dataset.dataset_name',
         'authors',
     ]
