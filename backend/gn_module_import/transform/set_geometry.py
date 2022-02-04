@@ -61,14 +61,14 @@ class GeometrySetter:
             self.transform_geom(
                 source_column='_geom',
                 source_srid=self.import_srid,
-                target_geom_col="gn_the_geom_4326",
+                target_column="gn_the_geom_4326",
                 target_srid="4326",
             )
         else:
             self.transform_geom(
                 source_column='_geom',
                 source_srid=self.import_srid,
-                target_geom_col="gn_the_geom_4326",
+                target_column="gn_the_geom_4326",
                 target_srid="4326",
             )
             self.transform_geom(
