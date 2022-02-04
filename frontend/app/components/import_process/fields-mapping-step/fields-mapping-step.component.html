@@ -206,7 +206,7 @@
                                         >
                                             <option [ngValue]="null"></option>
                                             <option
-                                                *ngFor="let sourceField of sourceFields"
+                                                *ngFor="let sourceField of sourceFields.sort()"
                                                 [value]="sourceField"
                                             >
                                                 {{ sourceField }}
