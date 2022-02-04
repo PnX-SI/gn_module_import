@@ -8,7 +8,7 @@ from jsonschema import validate as validate_json
 from sqlalchemy import func
 
 from geonature.utils.env import DB as db
-from geonature.tests.utils import set_logged_user_cookie
+from geonature.tests.utils import set_logged_user_cookie, unset_logged_user_cookie
 from geonature.core.gn_permissions.tools import UserCruved
 from geonature.core.gn_permissions.models import TActions, TFilters, CorRoleActionFilterModuleObject
 from geonature.core.gn_commons.models import TModules
@@ -44,12 +44,12 @@ def imports(users):
 
 @pytest.fixture()
 def uploaded_import(users, datasets):
-    with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+    with open(tests_path / 'files' / 'valid_file.csv', 'rb') as f:
         imprt = TImports(
             authors=[users['user']],
             id_dataset=datasets['own_dataset'].id_dataset,
             source_file=f.read(),
-            full_file_name='one_line.csv',
+            full_file_name='valid_file.csv',
         )
     with db.session.begin_nested():
         db.session.add(imprt)
@@ -68,10 +68,13 @@ def decoded_import(client, uploaded_import):
             'srid': 2154,
         },
     )
+    unset_logged_user_cookie(client)
+    db.session.refresh(uploaded_import)
     return uploaded_import
 
 @pytest.fixture()
 def prepared_import(client, decoded_import):
+    set_logged_user_cookie(client, decoded_import.authors[0])
     decoded_import.field_mapping = (
         TMappings.query
         .filter_by(mapping_label='Synthese GeoNature')
@@ -83,6 +86,18 @@ def prepared_import(client, decoded_import):
         .one()
     )
     client.post(url_for('import.prepare_import', import_id=decoded_import.id_import))
+    unset_logged_user_cookie(client)
+    db.session.refresh(decoded_import)
+    return decoded_import
+
+
+@pytest.fixture()
+def imported_import(client, prepared_import):
+    set_logged_user_cookie(client, prepared_import.authors[0])
+    client.post(url_for('import.import_valid_data', import_id=prepared_import.id_import))
+    unset_logged_user_cookie(client)
+    db.session.refresh(prepared_import)
+    return prepared_import
 
 
 @pytest.mark.usefixtures("client_class", "temporary_transaction")
@@ -205,18 +220,14 @@ class TestImports:
         assert r.status_code == 200
         assert r.json['id_import'] == imports['own_import'].id_import
     
-    def test_delete_import(self, users):
-        with db.session.begin_nested():
-            imprt = TImports()
-            db.session.add(imprt)
-        import_id = imprt.id_import
+    def test_delete_import(self, users, imported_import):
+        imprt = imported_import
         r = self.client.delete(url_for('import.delete_import', import_id=imprt.id_import))
         assert(r.status_code == Unauthorized.code)
         set_logged_user_cookie(self.client, users["admin_user"])
         r = self.client.delete(url_for('import.delete_import', import_id=imprt.id_import))
         assert(r.status_code == 200)
-        TImports.query.get(import_id)
-        # TODO: check data from synthese, and import tables are also removed (need a more avanced import)
+        # TODO: check data from synthese, and import tables are also removed
         r = self.client.delete(url_for('import.delete_import', import_id=imprt.id_import))
         assert(r.status_code == 404)
 
@@ -277,25 +288,26 @@ class TestImports:
         assert imprt.source_file is not None
         assert imprt.full_file_name == 'simple_file.csv'
 
-    def test_import_reupload_after_decode(self, decoded_import):
-        old_file_name = decoded_import.full_file_name
-        set_logged_user_cookie(self.client, decoded_import.authors[0])
+    def test_import_reupload_after_decode(self, prepared_import):
+        imprt = prepared_import
+        #old_file_name = decoded_import.full_file_name
+        set_logged_user_cookie(self.client, imprt.authors[0])
         with open(tests_path / 'files' / 'utf8_file.csv', 'rb') as f:
             data = {
                 'file': (f, 'utf8_file.csv'),
-                'datasetId': decoded_import.id_dataset,
+                'datasetId': imprt.id_dataset,
             }
             r = self.client.put(
-                url_for('import.upload_file', import_id=decoded_import.id_import),
+                url_for('import.upload_file', import_id=imprt.id_import),
                 data=data,
                 headers=Headers({'Content-Type': 'multipart/form-data'}),
             )
             assert r.status_code == 200
-        db.session.refresh(decoded_import)
-        assert decoded_import.source_file is not None
-        assert decoded_import.source_count == None
-        assert decoded_import.full_file_name == 'utf8_file.csv'
-        assert decoded_import.columns == {}
+        db.session.refresh(imprt)
+        assert imprt.source_file is not None
+        assert imprt.source_count == None
+        assert imprt.full_file_name == 'utf8_file.csv'
+        assert imprt.columns == {}
 
     def test_import_decode(self, users, imports):
         imprt = imports['own_import']
@@ -470,7 +482,6 @@ class TestImports:
         assert(imprt_json['detected_format'] == 'csv')
         assert(imprt_json['full_file_name'] == test_file_name)
         assert(imprt_json['id_dataset'] == datasets['own_dataset'].id_dataset)
-
 
         # Decode step
         data = {
