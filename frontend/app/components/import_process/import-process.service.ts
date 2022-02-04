@@ -23,7 +23,7 @@ export class ImportProcessService {
   getLastAvailableStep(): Step {
     console.log(this.importData);
     let lastAvailableStep = Step.Import;
-    if (!this.importData.full_file_name || !this.importData.detected_format || !this.importData.detected_encoding) {
+    if (!this.importData.full_file_name) {
       lastAvailableStep = Step.Upload;
     } else if (!this.importData.import_table) {
       lastAvailableStep = Step.Decode;

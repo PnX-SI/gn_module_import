@@ -15,14 +15,15 @@ from ..db.models import TImports, TDatasets, ImportUserError
 
 from gn_module_import.blueprint import blueprint
 from gn_module_import.utils.imports import load_data, get_clean_column_name, \
-                                           detect_encoding, get_clean_table_name, save_dataframe_to_database
+                                           detect_encoding, get_clean_table_name, \
+                                           save_dataframe_to_database, drop_import_table
 
 
 
-@blueprint.route("/imports/upload", methods=["POST"])
+@blueprint.route("/imports/upload", defaults={'import_id': None}, methods=["POST"])
 @blueprint.route("/imports/<int:import_id>/upload", methods=["PUT"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def upload_file(scope, import_id=None):
+def upload_file(scope, import_id):
     """
     .. :quickref: Import; Add an import or update an existing import.
 
@@ -45,12 +46,7 @@ def upload_file(scope, import_id=None):
     if size > max_file_size:
         raise BadRequest(description=f"File too big ({size} > {max_file_size}).")  # FIXME better error signaling?
     detected_encoding = detect_encoding(f)
-    if imprt:
-        imprt.source_file = f.read()
-        imprt.full_file_name = f.filename
-        imprt.detected_encoding = detected_encoding
-        db.session.commit()
-    else:
+    if imprt is None:
         try:
             dataset_id = int(request.form['datasetId'])
         except ValueError as e:
@@ -60,13 +56,23 @@ def upload_file(scope, import_id=None):
             raise BadRequest(description=f"Dataset '{dataset_id}' does not exist.")
         if not dataset.has_instance_permission(scope):
             raise Forbidden(description='Vous n’avez pas les permissions sur ce jeu de données.')
-        now = datetime.now()
-        imprt = TImports(source_file=f.read(), full_file_name=f.filename,
-                         detected_encoding=detected_encoding, dataset=dataset,
-                         date_create_import=now, date_update_import=now)
+        imprt = TImports(dataset=dataset)
         imprt.authors.append(author)
         db.session.add(imprt)
-        db.session.commit()
+    imprt.source_file = f.read()
+    imprt.full_file_name = f.filename
+    imprt.detected_encoding = detected_encoding
+
+    # reset decode step
+    imprt.source_count = None
+    imprt.columns = {}
+    if imprt.import_table:
+        drop_import_table(imprt)
+    # reset mappings steps
+    imprt.field_mapping = None
+    imprt.content_mapping = None
+
+    db.session.commit()
     return jsonify(imprt.as_dict())
 
 
@@ -107,10 +113,7 @@ def decode_file(import_id):
         raise BadRequest(description=str(e))
     df['gn_pk'] = df.index
     df['gn_is_valid'] = True
-    drop_table = imprt.import_table is not None
-    imprt.import_table = get_clean_table_name(imprt.full_file_name)
-    imprt.source_count = len(df.index)
-    save_dataframe_to_database(imprt, df, drop_table=drop_table)
+    save_dataframe_to_database(imprt, df)
 
     db.session.commit()
 

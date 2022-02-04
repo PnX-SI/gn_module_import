@@ -142,16 +142,12 @@ def create_table_class(table_class_name, long_table_name, columns):
     return Table(table_name, db.metadata, schema=schema_name, *_columns)
 
 
-def delete_tables(imprt):
-    assert(imprt.import_table is not None)
-    table_names = [
-        get_import_table_name(imprt),
-    ]
-    for table_name in table_names:
-        table_class = get_table_class(table_name)
-        table_class.drop(db.session.connection())
-        db.metadata.remove(table_class)
+def drop_import_table(imprt):
+    table_class = get_table_class(get_import_table_name(imprt))
+    table_class.drop(db.session.connection())
+    db.metadata.remove(table_class)
     imprt.import_table = None
+    imprt.source_count = None
 
 
 def load_import_to_dataframe(imprt):
@@ -170,11 +166,11 @@ def load_import_to_dataframe(imprt):
     return df
 
 
-def save_dataframe_to_database(imprt, df, drop_table=True):
-    if drop_table:
-        ImportEntry = get_table_class(get_import_table_name(imprt))
-        ImportEntry.drop(db.session.connection())
-        db.metadata.remove(ImportEntry)
+def save_dataframe_to_database(imprt, df):
+    if imprt.import_table:
+        drop_import_table(imprt)
+    imprt.import_table = get_clean_table_name(imprt.full_file_name)
+    imprt.source_count = len(df.index)
     columns = []
     for column, dtype, in zip(df.columns, df.dtypes):
         if column == 'gn_pk':

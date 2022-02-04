@@ -39,7 +39,7 @@ from gn_module_import.utils.imports import (
 )
 from gn_module_import.checks import run_all_checks
 from gn_module_import.blueprint import blueprint
-from gn_module_import.utils.imports import get_table_class, delete_tables, \
+from gn_module_import.utils.imports import get_table_class, drop_import_table, \
                             load_import_to_dataframe, save_dataframe_to_database, \
                             get_import_table_name, geom_to_wkb
 from gn_module_import.utils import get_missing_fields
@@ -469,7 +469,7 @@ def delete_import(scope, import_id):
         Synthese.query.filter_by(source=source).delete()
         db.session.delete(source)
     if imprt.import_table:
-        delete_tables(imprt)
+        drop_import_table(imprt)
     db.session.delete(imprt)
     db.session.commit()
     return jsonify()

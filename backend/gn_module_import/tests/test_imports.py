@@ -42,6 +42,48 @@ def imports(users):
         'orphan_import': create_import(),
     }
 
+@pytest.fixture()
+def uploaded_import(users, datasets):
+    with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+        imprt = TImports(
+            authors=[users['user']],
+            id_dataset=datasets['own_dataset'].id_dataset,
+            source_file=f.read(),
+            full_file_name='one_line.csv',
+        )
+    with db.session.begin_nested():
+        db.session.add(imprt)
+    return imprt
+
+
+@pytest.fixture()
+def decoded_import(client, uploaded_import):
+    set_logged_user_cookie(client, uploaded_import.authors[0])
+    client.post(
+        url_for('import.decode_file',
+        import_id=uploaded_import.id_import),
+        data={
+            'encoding': 'utf-8',
+            'format': 'csv',
+            'srid': 2154,
+        },
+    )
+    return uploaded_import
+
+@pytest.fixture()
+def prepared_import(client, decoded_import):
+    decoded_import.field_mapping = (
+        TMappings.query
+        .filter_by(mapping_label='Synthese GeoNature')
+        .one()
+    )
+    decoded_import.content_mapping = (
+        TMappings.query
+        .filter_by(mapping_label='Nomenclatures SINP (labels)')
+        .one()
+    )
+    client.post(url_for('import.prepare_import', import_id=decoded_import.id_import))
+
 
 @pytest.mark.usefixtures("client_class", "temporary_transaction")
 class TestImports:
@@ -179,9 +221,9 @@ class TestImports:
         assert(r.status_code == 404)
 
     def test_import_upload(self, users, datasets):
-        with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+        with open(tests_path / 'files' / 'simple_file.csv', 'rb') as f:
             data = {
-                'file': (f, 'one_line.csv'),
+                'file': (f, 'simple_file.csv'),
                 'datasetId': datasets['own_dataset'].id_dataset,
             }
             r = self.client.post(url_for('import.upload_file'), data=data,
@@ -189,9 +231,9 @@ class TestImports:
             assert r.status_code == Unauthorized.code
 
         set_logged_user_cookie(self.client, users['noright_user'])
-        with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+        with open(tests_path / 'files' / 'simple_file.csv', 'rb') as f:
             data = {
-                'file': (f, 'one_line.csv'),
+                'file': (f, 'simple_file.csv'),
                 'datasetId': datasets['own_dataset'].id_dataset,
             }
             r = self.client.post(url_for('import.upload_file'), data=data,
@@ -202,9 +244,9 @@ class TestImports:
         set_logged_user_cookie(self.client, users['user'])
 
         unexisting_id = db.session.query(func.max(TDatasets.id_dataset)).scalar() + 1
-        with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+        with open(tests_path / 'files' / 'simple_file.csv', 'rb') as f:
             data = {
-                'file': (f, 'one_line.csv'),
+                'file': (f, 'simple_file.csv'),
                 'datasetId': unexisting_id,
             }
             r = self.client.post(url_for('import.upload_file'), data=data,
@@ -212,9 +254,9 @@ class TestImports:
             assert r.status_code == BadRequest.code
             assert r.json['description'] == f"Dataset '{unexisting_id}' does not exist."
 
-        with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+        with open(tests_path / 'files' / 'simple_file.csv', 'rb') as f:
             data = {
-                'file': (f, 'one_line.csv'),
+                'file': (f, 'simple_file.csv'),
                 'datasetId': datasets['stranger_dataset'].id_dataset,
             }
             r = self.client.post(url_for('import.upload_file'), data=data,
@@ -222,14 +264,38 @@ class TestImports:
             assert r.status_code == Forbidden.code
             assert 'jeu de données' in r.json['description']  # this is a DS issue
 
-        with open(tests_path / 'files' / 'one_line.csv', 'rb') as f:
+        with open(tests_path / 'files' / 'simple_file.csv', 'rb') as f:
             data = {
-                'file': (f, 'one_line.csv'),
+                'file': (f, 'simple_file.csv'),
                 'datasetId': datasets['own_dataset'].id_dataset,
             }
             r = self.client.post(url_for('import.upload_file'), data=data,
                             headers=Headers({'Content-Type': 'multipart/form-data'}))
             assert r.status_code == 200
+
+        imprt = TImports.query.get(r.json['id_import'])
+        assert imprt.source_file is not None
+        assert imprt.full_file_name == 'simple_file.csv'
+
+    def test_import_reupload_after_decode(self, decoded_import):
+        old_file_name = decoded_import.full_file_name
+        set_logged_user_cookie(self.client, decoded_import.authors[0])
+        with open(tests_path / 'files' / 'utf8_file.csv', 'rb') as f:
+            data = {
+                'file': (f, 'utf8_file.csv'),
+                'datasetId': decoded_import.id_dataset,
+            }
+            r = self.client.put(
+                url_for('import.upload_file', import_id=decoded_import.id_import),
+                data=data,
+                headers=Headers({'Content-Type': 'multipart/form-data'}),
+            )
+            assert r.status_code == 200
+        db.session.refresh(decoded_import)
+        assert decoded_import.source_file is not None
+        assert decoded_import.source_count == None
+        assert decoded_import.full_file_name == 'utf8_file.csv'
+        assert decoded_import.columns == {}
 
     def test_import_decode(self, users, imports):
         imprt = imports['own_import']
