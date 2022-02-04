@@ -46,7 +46,10 @@ CREATE TABLE t_imports(
     step integer,
     is_finished boolean DEFAULT FALSE,
     processing boolean DEFAULT FALSE,
-    in_error boolean DEFAULT FALSE
+    in_error boolean DEFAULT FALSE,
+    id_source_synthese integer,
+    need_fix boolean DEFAULT FALSE,
+    fix_comment text
 );
 
 -- Créer la table stockant les auteurs des imports
@@ -211,6 +214,9 @@ ALTER TABLE ONLY t_user_error_list
 ALTER TABLE ONLY t_imports
     ADD CONSTRAINT fk_gn_meta_t_datasets FOREIGN KEY (id_dataset) REFERENCES gn_meta.t_datasets(id_dataset) ON UPDATE CASCADE ON DELETE CASCADE;
 
+ALTER TABLE only t_imports
+  ADD CONSTRAINT fk_gn_imports_t_import_id_source_synthese FOREIGN KEY (id_source_synthese) REFERENCES gn_synthese.t_sources(id_source) ON UPDATE CASCADE ON DELETE CASCADE;
+
 ALTER TABLE ONLY t_imports
     ADD CONSTRAINT fk_gn_imports_t_mappings_fields FOREIGN KEY (id_field_mapping) REFERENCES gn_imports.t_mappings(id_mapping) ON UPDATE CASCADE ON DELETE NO ACTION;
 
@@ -259,9 +265,6 @@ ALTER TABLE ONLY cor_role_import
  ALTER TABLE ONLY cor_role_import
  ADD CONSTRAINT fk_cor_role_import_import FOREIGN KEY (id_import) REFERENCES gn_imports.t_imports(id_import) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER table gn_imports.t_imports add column id_source_synthese int4 default null;
-ALTER TABLE only gn_imports.t_imports
-    ADD CONSTRAINT fk_gn_imports_t_import_id_source_synthese FOREIGN KEY (id_source_synthese) REFERENCES gn_synthese.t_sources(id_source) ON UPDATE SET NULL ON DELETE CASCADE;
 ---------------------
 --OTHER CONSTRAINTS--
 ---------------------

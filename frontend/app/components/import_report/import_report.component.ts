@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from "@angular/router";
 import { saveAs } from "file-saver";
 import  leafletImage from 'leaflet-image';
+import { BaseChartDirective } from 'ng2-charts';
 
 import { MapService } from '@geonature_common/map/map.service';
 import { ModuleConfig } from "../../module.config";
@@ -17,6 +18,7 @@ import FixModel from '../need-fix/need-fix.models';
 })
 
 export class ImportReportComponent implements OnInit, OnDestroy {
+    @ViewChild( BaseChartDirective ) private _chart: any; //BaseChartDirective;
     readonly maxErrorsLines: number = 10;
     readonly rankOptions: string[] = ['regne', 
                                       'phylum',
@@ -33,6 +35,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
     public expansionPanelHeight: string = "60px";
     public validBbox: Object;
     public validData: Array<Object>;
+    public nInvalidData: number;
     public fix: FixModel;
     public fields: Array<Object>;
     public taxaDistribution: Array<{ count: number, group: string }>;
@@ -47,7 +50,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
       }];
     public doughnutChartType = 'doughnut';
     private options: any = {
-        legend: { position: 'left' }
+        legend: { position: 'left', display: true }
       };
     public loadingPdf = false 
 
@@ -94,6 +97,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         ).subscribe(data => {
             this.validBbox = data.valid_bbox;
             this.validData = data.valid_data;
+            this.nInvalidData = data.n_invalid_data;
             this.fix = data.fix;
         })
     }
@@ -185,6 +189,11 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         this.doughnutChartColors[0].backgroundColor.push(...colors);
     }
 
+    toggleLegend() {
+        this.options.legend.display = !this.options.legend.display
+        this._chart.refresh();
+    }
+
     getChartPNG() {
         let chart = <HTMLCanvasElement>document.getElementById('chart')
         let img = document.createElement('img');
@@ -236,7 +245,7 @@ export class ImportReportComponent implements OnInit, OnDestroy {
         let chartImg = document.createElement('img');
         // Check if the chart exists
         if  (<HTMLCanvasElement>document.getElementById('chart')) {
-            let chartImg = this.getChartPNG();
+            chartImg = this.getChartPNG();
         }
         leafletImage(this._map.map, function(err, canvas) {
             img.src = canvas.toDataURL('image/png');

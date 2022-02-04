@@ -191,15 +191,14 @@
                                         <pnx-multiselect
                                             [values]="contentMapping.user_values.values"
                                             [parentFormControl]="contentTargetForm.controls[value_def.id]"
-                                            keyLabel="value"
                                             keyValue="value"
+                                            keyLabel="value"
                                             debounceTime="500"
                                             [searchBar]="false"
                                             [disabled]="disabled"
                                             [bindAllItem]="true"
-                                            (onChange)="onSelectChange($event,contentMapping,value_def.id)"
-                                            (onDelete)="onSelectDelete($event,contentMapping,value_def.id)"
-                                        >
+                                            (onDelete)="onSelectDelete($event, contentMapping.user_values.values)"
+                                            >
                                         </pnx-multiselect>
                                     </div>
                                 </div>

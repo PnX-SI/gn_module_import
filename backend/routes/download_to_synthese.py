@@ -42,7 +42,7 @@ def import_data(info_role, import_id):
     """
     MODULE_CODE = blueprint.config["MODULE_CODE"]
     import_obj = DB.session.query(TImports).get(import_id)
-    import_as_dict = import_obj.as_dict(True)
+    import_as_dict = import_obj.as_dict(fields=['author'])
     table_name = set_imports_table_name(get_table_name(import_obj.id_import))
     # set total user columns
     selected_cols = get_selected_columns(table_name, import_obj.id_field_mapping)

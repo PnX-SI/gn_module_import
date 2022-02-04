@@ -1,10 +1,9 @@
 """
 Routes to manage import (import list, cancel import, import info...)
 """
-from os import path
 from pathlib import Path
-from flask import request, current_app, render_template, send_file
-from sqlalchemy.orm import exc as SQLAlchelyExc
+from flask import request, current_app, send_file
+from sqlalchemy.orm import exc as SQLAlchelyExc, joinedload, raiseload
 from sqlalchemy import or_
 from urllib.parse import urljoin
 from functools import reduce
@@ -60,6 +59,12 @@ def get_import_list(info_role):
     if info_role.value_filter == "2":
         ors.append(TImports.author.any(id_organisme=info_role.id_organisme))
     q = q.filter(or_(*ors))
+    q = q.options(
+        joinedload('author'),
+        joinedload('dataset'),
+        joinedload('errors'),
+        raiseload('*'),
+    )
     results = q.all()
     nrows = None
     if not results:
@@ -71,7 +76,14 @@ def get_import_list(info_role):
         info_role.id_role,
         module_code="IMPORT"
     )[0]
-    return {"empty": False, "history": [r.to_dict(info_role, user_cruved) for r in results]}, 200
+
+    fields = [
+        'errors.id_user_error',
+        'dataset.dataset_name',
+        'author',
+    ]
+
+    return {"empty": False, "history": [r.to_dict(info_role, user_cruved, fields=fields) for r in results]}, 200
 
 
 @blueprint.route("/update_import/<int:id_import>", methods=["POST"])
@@ -94,7 +106,10 @@ def update_import(id_import):
 @permissions.check_cruved_scope("R", module_code="IMPORT")
 @json_resp
 def get_one_import(import_id):
-    return get_import(import_id)
+    import_obj = TImports.query.get(import_id)
+    if import_obj:
+        return import_obj.to_dict(fields=['errors'])
+    return None
 
 
 @blueprint.route("/by_dataset/<int:id_dataset>", methods=["GET"])
@@ -252,10 +267,10 @@ def get_import_columns_name(id_import):
     return col_names
 
 
-def get_import(id_import:int):
+def get_import(id_import:int, fields=None):
     import_obj = TImports.query.get(id_import)
     if import_obj:
-        return import_obj.to_dict()
+        return import_obj.to_dict(fields=fields)
     return None
 
 @blueprint.route("/export_pdf/<int:id_import>", methods=["POST"])
@@ -265,7 +280,7 @@ def download(id_import):
     Downloads the report in pdf format
     """
     filename = "rapport.pdf"
-    dataset = get_import(id_import=id_import)
+    dataset = get_import(id_import=id_import, fields=['errors'])
     dataset['map'] = request.form.get('map')
     dataset['chart'] = request.form.get('chart')
 
