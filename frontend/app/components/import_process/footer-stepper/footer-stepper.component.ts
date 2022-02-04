@@ -31,33 +31,30 @@ export class FooterStepperComponent implements OnInit {
   deleteImport() {
     let importData: Import | null = this.importProcessService.getImportData();
     if (importData) {
-      console.log("cancel import", importData.id_import);
-      /*this._ds.deleteImport(this.importId).subscribe(*/
+      this._ds.deleteImport(importData.id_import).subscribe(
+        () => { this.leaveImport(); }
+      );
+    } else {
+      this.leaveImport();
     }
-    this.leaveImport();
   }
 
   saveAndLeaveImport() {
     if (this.stepComponent.onSaveData !== undefined) {
       let ret = this.stepComponent.onSaveData();
       if (isObservable(ret)) {
-        console.log("wait for leaving");
         ret.subscribe(() => {
-          console.log("leaving time arrived");
           this.leaveImport();
         });
       } else {
-        console.log("leave imediatly");
         this.leaveImport();
       }
     } else {
-      console.log("no save data hook");
       this.leaveImport();
     }
   }
 
   leaveImport() {
-    return;
     this.importProcessService.resetImportData();
     this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);
   }
