@@ -53,6 +53,9 @@ class ImportUserErrorType(db.Model):
     description = db.Column(db.Unicode)
     level = db.Column('error_level', db.Unicode)
 
+    def __str__(self):
+        return f'<ImportErrorType {self.name}>'
+
     
 @serializable
 class ImportUserError(db.Model):
@@ -67,6 +70,9 @@ class ImportUserError(db.Model):
     column = db.Column('column_error', db.Unicode)
     rows = db.Column('id_rows', db.ARRAY(db.Integer))
     comment = db.Column(db.UnicodeText)
+
+    def __str__(self):
+        return f'<ImportError import={self.id_import},type={self.type.name},rows={self.rows}>'
 
 
 class InstancePermissionMixin:

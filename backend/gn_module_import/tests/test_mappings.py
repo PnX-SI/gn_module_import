@@ -328,3 +328,36 @@ class TestMappings:
         assert(cm and cm.target_value == nomenclatures[1])  # not updated
         cm = TMappingsValues.query.filter_by(mapping=mapping, target_field=target_field, source_value='value 2').one()
         assert(cm and cm.target_value == nomenclatures[3])  # created
+
+
+    def test_synthesis_fields(self, users):
+        assert(self.client.get(url_for('import.get_synthesis_fields')).status_code == Unauthorized.code)
+        set_logged_user_cookie(self.client, users["admin_user"])
+        r = self.client.get(url_for('import.get_synthesis_fields'))
+        assert(r.status_code == 200)
+        data = r.get_json()
+        themes_count = BibThemes.query.count()
+        schema = {
+            'definitions': jsonschema_definitions,
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'theme': { '$ref': '#/definitions/synthesis_theme' },
+                    'fields': {
+                        'type': 'array',
+                        'items': { '$ref': '#/definitions/synthesis_field' },
+                        'uniqueItems': True,
+                        'minItems': 1,
+                    }
+                },
+                'required': [
+                    'theme',
+                    'fields',
+                ],
+                'additionalProperties': False,
+            },
+            'minItems': themes_count,
+            'maxItems': themes_count,
+        }
+        validate_json(data, schema)

@@ -44,7 +44,8 @@ def get_valid_bbox(geo_field):
                          )
                      )
                  ).fetchone()
-    return json.loads(valid_bbox)
+    if valid_bbox:
+        return json.loads(valid_bbox)
 
 
 def get_import_table_name(imprt):

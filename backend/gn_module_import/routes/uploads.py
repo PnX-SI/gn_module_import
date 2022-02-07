@@ -71,6 +71,8 @@ def upload_file(scope, import_id):
     # reset mappings steps
     imprt.field_mapping = None
     imprt.content_mapping = None
+    # reset prepare step
+    ImportUserError.query.filter_by(imprt=imprt).delete()
 
     db.session.commit()
     return jsonify(imprt.as_dict())
@@ -114,6 +116,12 @@ def decode_file(import_id):
     df['gn_pk'] = df.index
     df['gn_is_valid'] = True
     save_dataframe_to_database(imprt, df)
+
+    # reset mappings steps
+    imprt.field_mapping = None
+    imprt.content_mapping = None
+    # reset prepare step
+    ImportUserError.query.filter_by(imprt=imprt).delete()
 
     db.session.commit()
 

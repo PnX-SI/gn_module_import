@@ -116,7 +116,7 @@ def get_import_values(scope, import_id):
     """
     .. :quickref: Import;
 
-    Return all the columns of the file of an import
+    Return all the values of nomenclatures fields
     """
     imprt = TImports.query.get_or_404(import_id)
     # check that the user has read permission to this particular import instance:
@@ -279,8 +279,8 @@ def preview_valid_data(scope, import_id):
     selected_cols = { f.target_field: f.source_field for f in fieldmapping.fields \
                       if f.source_field in imprt.columns.keys() }
     total_columns = { f.target_field: f.source_field for f in fieldmapping.fields \
-                   if f.source_field in imprt.columns.keys()
-                   and f.target.synthese_field }
+                      if f.source_field in imprt.columns.keys()
+                      and f.target.synthese_field }
     total_columns.update({
         "the_geom_4326": "gn_the_geom_4326",
         "the_geom_local": "gn_the_geom_local",
