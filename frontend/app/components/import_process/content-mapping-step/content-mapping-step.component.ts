@@ -296,7 +296,7 @@ export class ContentMappingStepComponent implements OnInit {
     // Since the exported json is of the same format
     // as the field one, we need to transform it to the correct format
     // (see API calls)
-    this.fillFormFromMappings(data.map(e => [e]))
+    this.fillFormFromMappings(data)
     this._ds
         .updateContentMapping(this.id_mapping, this.contentTargetForm.value)
         .toPromise()
@@ -307,7 +307,7 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   correctMapping(data) {
-    return data.map((element) => {
+    return data.map((el) => el.map(element => {
       const nomenc = this.stepData.contentMappingInfo.filter(
         (content) => content.nomenc_abbr == element.mnemonique
       )[0];
@@ -318,7 +318,7 @@ export class ContentMappingStepComponent implements OnInit {
         element.id_target_value = parseInt(_id.id);
       }
       return element
-    });
+    }));
   }
 
   isEnabled(value_def_id: string) {

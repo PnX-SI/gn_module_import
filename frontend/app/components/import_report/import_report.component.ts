@@ -144,29 +144,29 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             elm => elm.nomenc_values_def).flat();
         
         if (sourceValues.length > 0) {
-            this.matchedNomenclature = this.contentMapping.map(elm => elm[0])
-            // For each values in target_values (this.matchedNomenclature)
-            // filter with the id of target_values with the id of source
-            // values to get the actual value
-            // Then affect the target_value and the definition
-            this.matchedNomenclature.forEach(
-                (val) =>
-                    sourceValues
-                    .filter((elm) => parseInt(elm.id) == val.id_target_value)
-                    .map((elm) => {
-                        // Carefull the target_value is actually the
-                        // source value, needs to rename
-                        val.target_value = val.source_value;
-                        val.source_value = elm.value;
-                        val.definition = elm.definition;
-                        val.cd_nomenclature = elm.cd_nomenclature;
-                        val.mnemonique = elm.mnemonique;
-                        val.nomenc_synthese_name =
-                        this.nomenclature.content_mapping_info.filter(
-                            (item) => item.nomenc_abbr == val.mnemonique
-                        )[0].nomenc_synthese_name;
-                    })[0]
+            this.matchedNomenclature = this.contentMapping
+            this.matchedNomenclature.forEach(element => {
+                // For each values in target_values (this.matchedNomenclature)
+                // filter with the id of target_values with the id of source
+                // values to get the actual value
+                // Then affect the target_value and the definition
+                return element.forEach(
+                    (val) =>
+                        sourceValues
+                        .filter((elm) => parseInt(elm.id) == val.id_target_value)
+                        .map((elm) => {
+                            val.target_value = elm.value;
+                            val.source_value = val.source_value;
+                            val.definition = elm.definition;
+                            val.cd_nomenclature = elm.cd_nomenclature;
+                            val.mnemonique = elm.mnemonique;
+                            val.nomenc_synthese_name =
+                            this.nomenclature.content_mapping_info.filter(
+                                (item) => item.nomenc_abbr == val.mnemonique
+                            )[0].nomenc_synthese_name;
+                        })[0]
                 );
+            });
         }
     }
 
@@ -227,9 +227,9 @@ export class ImportReportComponent implements OnInit, OnDestroy {
             });
             // For all obj in this.matchedNomenclature pick only the toExport
             // keys
-            const filtered = this.matchedNomenclature.map((item) =>
+            const filtered = this.matchedNomenclature.map(elm => elm.map((item) =>
                 pick(item, ...toExport)
-            );
+            ));
             // Export
             const blob = new Blob([JSON.stringify(filtered, null, 4)], {
                 type: "application/json",
