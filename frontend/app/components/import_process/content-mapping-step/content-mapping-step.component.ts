@@ -183,6 +183,7 @@ export class ContentMappingStepComponent implements OnInit {
             this._fs.readJson(jsonfile, 
               this.loadMapping.bind(this), 
               this.displayError.bind(this))
+            this.modalImportVar.close()  // See this.onFileSelect
           }
         );
         
@@ -286,7 +287,6 @@ export class ContentMappingStepComponent implements OnInit {
     
     this.newMappingNameForm.patchValue(name)
     this.saveMappingNameForJson(jsonfile)
-    this.modalImportVar.close()  // See this.onFileSelect
   }
 
   loadMapping(data) {
