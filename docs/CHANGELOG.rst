@@ -2,6 +2,13 @@
 CHANGELOG
 =========
 
+1.1.8 (2022-02-23)
+------------------
+
+**🐛 Corrections**
+
+* Correction des performances d'import liées à la sérialisation récursive (#262 / #278)
+
 1.1.7 (2022-01-13)
 ------------------
 
