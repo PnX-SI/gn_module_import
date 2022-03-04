@@ -187,7 +187,8 @@ def prepare_import(scope, import_id):
     """
     imprt = TImports.query.get_or_404(import_id)
     imprt.check_instance_permission(scope)
-
+    # Clean all errors
+    imprt.errors = []
     # Check preconditions to execute this action
     if not imprt.import_table:
         raise Conflict("Import file must have been decoded before executing this action.")
