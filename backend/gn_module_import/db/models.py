@@ -163,7 +163,8 @@ class TImports(InstancePermissionMixin, DB.Model):
     processing = DB.Column(DB.Boolean, nullable=False, default=False)
     in_error = DB.Column(DB.Boolean)
     errors = DB.relationship("ImportUserError", back_populates='imprt',
-                             order_by='ImportUserError.id_type')  # TODO order by type.category
+                             order_by='ImportUserError.id_type',
+                             cascade="all, delete-orphan")  # TODO order by type.category
     dataset = DB.relationship("TDatasets", lazy="joined")
     source_file = deferred(db.Column(DB.LargeBinary))
     # the columns field is a mapping with cleaned columns names (also db fields)
