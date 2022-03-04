@@ -66,6 +66,11 @@ export class ContentMappingStepComponent implements OnInit {
         this.userContentMappings = contentMappings;
 
         this.importValues = importValues;
+        // If there is no value to map: got to the next step
+        // automatically
+        if (Object.keys(this.importValues).length === 0) {
+          this.submit(false);
+        }
         this.contentTargetForm = this._fb.group({});
         for (let targetField of Object.keys(this.importValues)) {
             this.importValues[targetField].nomenclature_type.isCollapsed = false;
