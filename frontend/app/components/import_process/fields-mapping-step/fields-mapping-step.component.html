@@ -92,7 +92,7 @@
                             class="d-flex justify-content-center align-content-between mr-2 button-success"
                             mat-raised-button
                             matTooltip="Créer un nouveau mapping"
-                            (click)="createMapping(createOrUpdateMappingForm.value)"
+                            (click)="createMapping(createOrRenameMappingForm.value)"
                             [disabled]="!createOrRenameMappingForm.valid"
                         >
                             <mat-icon>add</mat-icon>
@@ -120,7 +120,7 @@
                         >
                         <button
                             class="d-flex justify-content-center align-content-between mr-2 button-success"
-                            (click)="updateMappingName(createOrRenameMappingForm.value)"
+                            (click)="renameMapping()"
                             mat-raised-button
                             matTooltip="Modifier le nom du modèle d'import"
                             [disabled]="!createOrRenameMappingForm.valid"
@@ -332,7 +332,7 @@
             type="button"
             mat-raised-button
             color="primary"
-            (click)="modal.close(); submitMapping(true, 'hop')"
+            (click)="modal.close(); submitMapping(true, createOrRenameMappingForm.value)"
         > Enregistrer un nouveau modèle </button>
     </div>
 </ng-template>
