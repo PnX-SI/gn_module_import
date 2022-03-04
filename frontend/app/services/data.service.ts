@@ -94,9 +94,8 @@ export class DataService {
 
   renameMapping(idMapping, name): Observable<Mapping> {
     const url = `${urlApi}/mappings/${idMapping}/name`;
-    let fd = new FormData();
-    fd.append("name", name);
-    return this._http.post<Mapping>(url, fd);
+    const payload = {"name": name}
+    return this._http.post<Mapping>(url, payload);
   }
 
   deleteImport(importId: number): Observable<void> {
