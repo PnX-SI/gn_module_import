@@ -100,7 +100,12 @@ export class ImportStepComponent implements OnInit {
     openErrorSheet() {
         const url = new URL(window.location.href);
         url.hash = this._router.serializeUrl(
-            this._router.createUrlTree(['import', this.importData.id_import, 'errors'])
+          this._router.createUrlTree(
+            ["../../../", this.importData.id_import, "report"],
+            {
+              relativeTo: this._route,
+            }
+          )
         );
         window.open(url.href, "_blank");
     }

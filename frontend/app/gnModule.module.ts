@@ -26,7 +26,7 @@ import { ImportStepComponent } from "./components/import_process/import-step/imp
 import { StepperComponent } from "./components/import_process/stepper/stepper.component";
 import { FooterStepperComponent } from "./components/import_process/footer-stepper/footer-stepper.component";
 import { Step } from "./models/enums.model";
-
+import { ImportReportComponent } from "./components/import_report/import_report.component";
 
 // my module routing
 const routes: Routes = [
@@ -35,7 +35,13 @@ const routes: Routes = [
     component: ImportErrorsComponent,
     resolve: { importData: ImportProcessResolver, },
   },
-  { path: "process",
+  {
+    path: ":id_import/report",
+    component: ImportReportComponent,
+    resolve: { importData: ImportProcessResolver },
+  },
+  {
+    path: "process",
     component: ImportProcessComponent,
     children: [
       {
@@ -92,6 +98,7 @@ const routes: Routes = [
     StepperComponent,
     FooterStepperComponent,
     ImportProcessComponent,
+    ImportReportComponent,
   ],
   imports: [
     GN2CommonModule,

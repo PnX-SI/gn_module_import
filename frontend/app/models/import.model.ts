@@ -19,6 +19,7 @@ export interface ImportError {
     rows: Array<number>;
     step: number;
     comment: string;
+    show?: boolean;
 }
 
 export interface Dataset {
