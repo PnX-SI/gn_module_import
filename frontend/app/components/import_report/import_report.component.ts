@@ -17,6 +17,8 @@ interface CustomNomenclature {
   source_value: string;
   mnemonique: string;
   cd_nomenclature: string;
+  definition: string;
+  target_value: string;
 }
 
 @Component({
@@ -170,8 +172,10 @@ export class ImportReportComponent implements OnInit {
       const tempNomenc: CustomNomenclature = {
         nomenc_synthese_name: item.target_field_name,
         source_value: item.source_value,
+        target_value: nomenclature.label_default,
         mnemonique: mnemonique,
         cd_nomenclature: nomenclature.cd_nomenclature,
+        definition: nomenclature.definition_default,
       };
       this.matchedNomenclature.push(tempNomenc);
     });
@@ -215,12 +219,27 @@ export class ImportReportComponent implements OnInit {
   }
 
   exportNomenclatures() {
+    const allowed: string[] = [
+      "nomenc_synthese_name",
+      "source_value",
+      "cd_nomenclature",
+      "mnemonique",
+    ];
     // Exactly like the correspondances
     if (this.matchedNomenclature) {
-      const blob: Blob = new Blob(
-        [JSON.stringify(this.matchedNomenclature, null, 4)],
-        { type: "application/json" }
-      );
+      const filtered = []
+      // Filter out everything except the allowed "keys"
+      this.matchedNomenclature.forEach((item) => {
+        filtered.push(Object.keys(item)
+        .filter((key) => allowed.includes(key))
+        .reduce((obj, key) => {
+          obj[key] = item[key];
+          return obj;
+        }, {}));
+      })
+      const blob: Blob = new Blob([JSON.stringify(filtered, null, 4)], {
+        type: "application/json",
+      });
       saveAs(blob, "nomenclatures.json");
     }
   }
