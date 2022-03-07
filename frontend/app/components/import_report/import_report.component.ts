@@ -9,8 +9,15 @@ import { DataService } from "../../services/data.service";
 import { CsvExportService } from "../../services/csv-export.service";
 import { Step } from "../../models/enums.model";
 import { ImportProcessService } from "../import_process/import-process.service";
-import { Import, ImportError } from "../../models/import.model";
+import { Import, ImportError, ImportValues } from "../../models/import.model";
 import { MappingContent, MappingField } from "../../models/mapping.model";
+
+interface CustomNomenclature {
+  nomenc_synthese_name: string;
+  source_value: string;
+  mnemonique: string;
+  cd_nomenclature: string;
+}
 
 @Component({
   selector: "pnx-import-report",
@@ -31,16 +38,16 @@ export class ImportReportComponent implements OnInit {
     "group2_inpn",
   ];
   public importData: Import;
-  public formatedErrors: string;
   public expansionPanelHeight: string = "60px";
   public validBbox: any;
   public validData: Array<Object>;
   public fields: MappingField[];
   public taxaDistribution: Array<{ count: number; group: string }>;
-  public nomenclature: any;
+  public nomenclature: ImportValues;
   public contentMapping: Array<MappingContent>;
-  public matchedNomenclature: any;
+  public matchedNomenclature: CustomNomenclature[];
   public importErrors: Array<ImportError> = null;
+  public nbTotalErrors: number = 0;
   public rank: string = ""; //ModuleConfig.DEFAULT_RANK;
   public doughnutChartLabels: Array<String> = [];
   public doughnutChartData: Array<number> = [];
@@ -65,14 +72,11 @@ export class ImportReportComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    const step: Step = this._route.snapshot.data.step;
     this.importData = this.importProcessService.getImportData();
     // Load additionnal data if imported data
     this.loadValidData(this.importData.id_import);
-    //const idSource = data.id_source;
     this.loadMapping();
-    
-    this.loadContentMapping();
+    this.loadNomenclature();
     //this.loadNomenclature(this.importData.id_import, fieldMapping, contentMapping);
     //this.loadTaxaDistribution(idSource);
     // Add property to show errors lines. Need to do this to
@@ -82,7 +86,7 @@ export class ImportReportComponent implements OnInit {
     // });
 
     //this.rank = this.rankOptions[0]  // default
-    this.loadErrors()
+    this.loadErrors();
   }
 
   /** Gets the validBbox and validData (info about observations)
@@ -96,29 +100,31 @@ export class ImportReportComponent implements OnInit {
   }
 
   loadMapping() {
-    this._dataService.getMappingFields(this.importData.id_field_mapping).subscribe((data) => {
-      this.fields = data;
-      console.log(this.fields);
-      
-    });
+    this._dataService
+      .getMappingFields(this.importData.id_field_mapping)
+      .subscribe((data) => {
+        this.fields = data;
+      });
   }
 
-  loadNomenclature(
-    idImport: number
-  ) {
-    this._dataService.getNomencInfo(idImport).subscribe((data) => {
-      this.nomenclature = data;
-      this.loadContentMapping();
-    });
+  loadNomenclature() {
+    this._dataService
+      .getImportValues(this.importData.id_import)
+      .subscribe((data) => {
+        this.nomenclature = data;
+        this.loadContentMapping();
+      });
   }
 
   loadContentMapping() {
-    this._dataService.getMappingContents(this.importData.id_content_mapping).subscribe((data) => {
-      this.contentMapping = data;
-      if (data) {
-        this.matchNomenclature();
-      }
-    });
+    this._dataService
+      .getMappingContents(this.importData.id_content_mapping)
+      .subscribe((data) => {
+        this.contentMapping = data;
+        if (data) {
+          this.matchNomenclature();
+        }
+      });
   }
 
   loadTaxaDistribution(idSource: number) {
@@ -133,37 +139,42 @@ export class ImportReportComponent implements OnInit {
   }
 
   loadErrors() {
-    this._dataService.getImportErrors(this.importData.id_import).subscribe(
-      errors => { this.importErrors = errors; },
-    );
+    this._dataService
+      .getImportErrors(this.importData.id_import)
+      .subscribe((errors) => {
+        this.importErrors = errors;
+        // Get the total number of errors:
+        // 1. get all rows in errors
+        // 2. flaten to have 1 array of all rows in error
+        // 3. remove duplicates (with Set)
+        // 4. return the size of the Set (length)
+        this.nbTotalErrors = new Set(
+          errors
+            .map((item) => item.rows)
+            .reduce((acc, val) => acc.concat(val), [])
+        ).size;
+      });
   }
 
   matchNomenclature() {
+    // Reset this.matchedNomenclature
     this.matchedNomenclature = [];
-    let sourceValues = this.nomenclature.content_mapping_info
-      .map((elm) => elm.nomenc_values_def)
-      .flat();
-
-    if (sourceValues.length > 0) {
-      this.matchedNomenclature = this.contentMapping.map((elm) => elm[0]);
-
-      // For each values in target_values (this.matchedNomenclature)
-      // filter with the id of target_values with the id of source
-      // values to get the actual value
-      // Then affect the target_value and the definition
-      this.matchedNomenclature.forEach(
-        (val) =>
-          sourceValues
-            .filter((elm) => parseInt(elm.id) == val.id_target_value)
-            .map(function (elm) {
-              // Carefull the target_value is actually the
-              // source value, needs to rename
-              val.target_value = val.source_value;
-              val.source_value = elm.value;
-              val.definition = elm.definition;
-            })[0]
-      );
-    }
+    // For each content match the nomenclature info
+    this.contentMapping.forEach((item) => {
+      const mnemonique =
+        this.nomenclature[item.target_field_name].nomenclature_type.mnemonique;
+      const nomenclature = this.nomenclature[
+        item.target_field_name
+      ].nomenclatures.find((nom) => nom.id_nomenclature);
+      // Temporary object of a Nomenclature
+      const tempNomenc: CustomNomenclature = {
+        nomenc_synthese_name: item.target_field_name,
+        source_value: item.source_value,
+        mnemonique: mnemonique,
+        cd_nomenclature: nomenclature.cd_nomenclature,
+      };
+      this.matchedNomenclature.push(tempNomenc);
+    });
   }
 
   updateChart() {
@@ -196,7 +207,7 @@ export class ImportReportComponent implements OnInit {
     // this.fields can be null
     // 4 : tab size
     if (this.fields) {
-      const blob = new Blob([JSON.stringify(this.fields, null, 4)], {
+      const blob: Blob = new Blob([JSON.stringify(this.fields, null, 4)], {
         type: "application/json",
       });
       saveAs(blob, "correspondances.json");
@@ -206,7 +217,7 @@ export class ImportReportComponent implements OnInit {
   exportNomenclatures() {
     // Exactly like the correspondances
     if (this.matchedNomenclature) {
-      const blob = new Blob(
+      const blob: Blob = new Blob(
         [JSON.stringify(this.matchedNomenclature, null, 4)],
         { type: "application/json" }
       );
@@ -250,12 +261,4 @@ export class ImportReportComponent implements OnInit {
   onRankChange($event) {
     //this.loadTaxaDistribution(this.importData.id_source);
   }
-
-  groupBy(xs, key) {
-    return xs.reduce(function (rv, x) {
-      (rv[x[key]] = rv[x[key]] || []).push(x);
-      return rv;
-    }, {});
-  }
-
 }
