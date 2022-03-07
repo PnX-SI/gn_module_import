@@ -4,12 +4,10 @@ import { saveAs } from "file-saver";
 import leafletImage from "leaflet-image";
 
 import { MapService } from "@geonature_common/map/map.service";
-import { ModuleConfig } from "../../module.config";
 import { DataService } from "../../services/data.service";
 import { CsvExportService } from "../../services/csv-export.service";
-import { Step } from "../../models/enums.model";
 import { ImportProcessService } from "../import_process/import-process.service";
-import { Import, ImportError, ImportValues } from "../../models/import.model";
+import { Import, ImportError, ImportValues, TaxaDistribution } from "../../models/import.model";
 import { MappingContent, MappingField } from "../../models/mapping.model";
 
 interface CustomNomenclature {
@@ -44,13 +42,13 @@ export class ImportReportComponent implements OnInit {
   public validBbox: any;
   public validData: Array<Object>;
   public fields: MappingField[];
-  public taxaDistribution: Array<{ count: number; group: string }>;
+  public taxaDistribution: TaxaDistribution[];
   public nomenclature: ImportValues;
   public contentMapping: Array<MappingContent>;
   public matchedNomenclature: CustomNomenclature[];
   public importErrors: Array<ImportError> = null;
   public nbTotalErrors: number = 0;
-  public rank: string = ""; //ModuleConfig.DEFAULT_RANK;
+  public rank: string = this.rankOptions[0]; //ModuleConfig.DEFAULT_RANK;
   public doughnutChartLabels: Array<String> = [];
   public doughnutChartData: Array<number> = [];
   public doughnutChartColors: Array<{ backgroundColor: Array<String> }> = [
@@ -79,15 +77,12 @@ export class ImportReportComponent implements OnInit {
     this.loadValidData(this.importData.id_import);
     this.loadMapping();
     this.loadNomenclature();
-    //this.loadNomenclature(this.importData.id_import, fieldMapping, contentMapping);
-    //this.loadTaxaDistribution(idSource);
+    this.loadTaxaDistribution();
     // Add property to show errors lines. Need to do this to
     // show line per line...
     // data.errors.forEach((element) => {
     //   element.show = false;
     // });
-
-    //this.rank = this.rankOptions[0]  // default
     this.loadErrors();
   }
 
@@ -129,15 +124,16 @@ export class ImportReportComponent implements OnInit {
       });
   }
 
-  loadTaxaDistribution(idSource: number) {
-    const toto = 2;
-    // this._dataService.getTaxaRepartition(idSource, this.rank)
-    //     .subscribe(
-    //         data => {
-    //             this.taxaDistribution = data
-    //             this.updateChart();
-    //         }
-    //         )
+  loadTaxaDistribution() {
+    //FIXME get idSource from import!
+    const idSource: number = 1
+    this._dataService.getTaxaRepartition(idSource, this.rank)
+        .subscribe(
+            data => {
+                this.taxaDistribution = data
+                this.updateChart();
+            }
+            )
   }
 
   loadErrors() {
@@ -182,8 +178,8 @@ export class ImportReportComponent implements OnInit {
   }
 
   updateChart() {
-    const labels = this.taxaDistribution.map((e) => e.group);
-    const data = this.taxaDistribution.map((e) => e.count);
+    const labels: string[] = this.taxaDistribution.map((e) => e.group);
+    const data: number[] = this.taxaDistribution.map((e) => e.count);
 
     this.doughnutChartLabels.length = 0;
     // Must push here otherwise the chart will not update
@@ -193,16 +189,16 @@ export class ImportReportComponent implements OnInit {
     this.doughnutChartData = data;
 
     // Fill colors with random colors
-    let colors = new Array(this.doughnutChartData.length);
+    const colors: string[] = new Array(this.doughnutChartData.length);
     for (let i = 0; i < colors.length; i++) {
       colors[i] = "#" + (((1 << 24) * Math.random()) | 0).toString(16);
     }
     this.doughnutChartColors[0].backgroundColor.push(...colors);
   }
 
-  getChartPNG() {
-    let chart = <HTMLCanvasElement>document.getElementById("chart");
-    let img = document.createElement("img");
+  getChartPNG(): HTMLImageElement {
+    const chart: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("chart");
+    const img: HTMLImageElement = document.createElement("img");
     img.src = chart.toDataURL();
     return img;
   }
@@ -245,9 +241,9 @@ export class ImportReportComponent implements OnInit {
   }
 
   exportAsPDF() {
-    var img = document.createElement("img");
+    const img: HTMLImageElement = document.createElement("img");
     this.loadingPdf = true;
-    let chartImg = this.getChartPNG();
+    const chartImg: HTMLImageElement = this.getChartPNG();
     leafletImage(
       this._map.map,
       function (err, canvas) {
@@ -278,6 +274,6 @@ export class ImportReportComponent implements OnInit {
   }
 
   onRankChange($event) {
-    //this.loadTaxaDistribution(this.importData.id_source);
+    this.loadTaxaDistribution();
   }
 }

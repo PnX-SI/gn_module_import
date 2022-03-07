@@ -3,7 +3,7 @@ import { Observable } from "rxjs";
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { AppConfig } from "@geonature_config/app.config";
 import { ModuleConfig } from "../module.config";
-import { Import, ImportError, ImportValues, SynthesisThemeFields } from "../models/import.model";
+import { Import, ImportError, ImportValues, SynthesisThemeFields, TaxaDistribution } from "../models/import.model";
 import { FieldMapping, FieldMappingValues, ContentMapping, ContentMappingValues } from "../models/mapping.model";
 
 const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
@@ -173,5 +173,17 @@ export class DataService {
 
   getImportErrors(importId): Observable<Array<ImportError>> {
     return this._http.get<Array<ImportError>>(`${urlApi}/imports/${importId}/errors`);
+  }
+
+  getTaxaRepartition(sourceId: number, taxa_rank: string) {
+    return this._http.get<Array<TaxaDistribution>>(
+      `${AppConfig.API_ENDPOINT}/synthese/taxa_distribution`,
+      {
+        params: {
+          id_source: sourceId,
+          taxa_rank: taxa_rank,
+        },
+      }
+    );
   }
 }

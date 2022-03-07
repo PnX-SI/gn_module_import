@@ -122,3 +122,8 @@ export interface SynthesisThemeFields {
     theme: SynthesisTheme,
     fields: [SynthesisField],
 }
+
+export interface TaxaDistribution {
+    count: number,
+    group: string
+}
