@@ -37,22 +37,18 @@
             </h4>
             <div class="card-body card-margin">
                  <div
-                     *ngIf="warningCount > 0 || errorCount > 0; else noerrors"
                      class="content-report card-margin"
                  >
                      <button
-                         (click)="openErrorSheet(importData.id_import)"
+                         (click)="openReportSheet(importData.id_import)"
                          mat-raised-button
                          color=accent
                      >
-                         Rapport d'erreurs/avertissement
+                     Rapport d'import/erreurs/avertissement
                      </button>
                      <div *ngIf="errorCount > 0"> {{errorCount}} erreur(s) </div>
                      <div *ngIf="warningCount > 0"> {{warningCount}} avertissement(s) </div>
                  </div>
-                 <ng-template #noerrors class="content-report">
-                     Aucune erreur à afficher
-                 </ng-template>
                  <div
                      *ngIf="invalidRowCount > 0"
                      class="content-report"

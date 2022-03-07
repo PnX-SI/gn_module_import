@@ -97,7 +97,7 @@ export class ImportStepComponent implements OnInit {
             }
         })
     }
-    openErrorSheet() {
+    openReportSheet() {
         const url = new URL(window.location.href);
         url.hash = this._router.serializeUrl(
           this._router.createUrlTree(
