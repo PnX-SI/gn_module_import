@@ -3,7 +3,7 @@ import codecs
 from io import StringIO
 import csv
 
-from flask import request, current_app, jsonify, g, stream_with_context
+from flask import request, current_app, jsonify, g, stream_with_context, send_file
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden
 from sqlalchemy import or_, func, desc
 from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
@@ -39,6 +39,7 @@ from gn_module_import.utils import (
     get_file_size,
     clean_import,
 )
+from gn_module_import.utils.pdf import generate_pdf_from_template
 from gn_module_import.tasks import do_import_checks, do_import_in_synthese
 
 IMPORTS_PER_PAGE = 15
@@ -549,3 +550,39 @@ def delete_import(scope, import_id):
     db.session.delete(imprt)
     db.session.commit()
     return jsonify()
+
+
+@blueprint.route("/export_pdf/<int:import_id>", methods=["GET"])
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT")
+def download_pdf(scope, import_id):
+    """
+    Downloads the report in pdf format
+    """
+    filename = "rapport.pdf"
+    imprt = (
+        TImports.query
+        .options(
+            Load(TImports).raiseload('*'),
+            joinedload('authors'),
+            joinedload('dataset'),
+            joinedload('errors'),
+        )
+        .get_or_404(import_id)
+    )
+    imprt.check_instance_permission(scope)
+    dataset = imprt.as_dict(fields=['errors', 'errors.type', 'dataset.dataset_name'])
+    
+    # dataset['map'] = request.form.get('map')
+    # dataset['chart'] = request.form.get('chart')
+    print(dataset, flush=True)
+    url_list = [current_app.config['URL_APPLICATION'],
+                '#',
+                current_app.config['IMPORT'].get('MODULE_URL', "").replace('/',''),
+                str(dataset['id_import']),
+                'report']
+    dataset['url'] = '/'.join(url_list)
+    pdf_file = generate_pdf_from_template("import_template_pdf.html", dataset, filename)
+    return send_file(BytesIO(pdf_file),
+                     mimetype='application/pdf', 
+                     as_attachment=True,
+                     attachment_filename="rapport.pdf")
