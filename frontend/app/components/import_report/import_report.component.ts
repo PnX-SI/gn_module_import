@@ -267,7 +267,7 @@ export class ImportReportComponent implements OnInit {
       function (err, canvas) {
         img.src = canvas.toDataURL("image/png");
         this._dataService
-          .getPdf(this.import.id_import, img.src, chartImg.src)
+          .getPdf(this.importData.id_import, img.src, chartImg.src)
           .subscribe(
             (result) => {
               this.loadingPdf = false;

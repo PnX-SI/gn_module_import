@@ -192,4 +192,15 @@ export class DataService {
       `${AppConfig.API_ENDPOINT}/meta/dataset/${datasetId}`
     );
   }
+
+  getPdf(importId, mapImg, chartImg) {
+    const formData = new FormData();
+    // formData.append("map", new Blob([mapImg], {type: 'image/png'}), "map");
+    // formData.append("chart", new Blob([chartImg], {type: 'image/png'}), "chart");
+    formData.append("map", mapImg);
+    formData.append("chart", chartImg);
+    // return this._http.post(`${urlApi}/export_pdf/${importId}`, 
+    //                        formData, {responseType: 'blob'});
+    return this._http.get(`${urlApi}/export_pdf/${importId}`, {responseType: 'blob'})
+  }
 }
