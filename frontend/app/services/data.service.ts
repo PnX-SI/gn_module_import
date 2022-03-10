@@ -3,7 +3,7 @@ import { Observable } from "rxjs";
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { AppConfig } from "@geonature_config/app.config";
 import { ModuleConfig } from "../module.config";
-import { Import, ImportError, ImportValues, SynthesisThemeFields, TaxaDistribution } from "../models/import.model";
+import { Dataset, Import, ImportError, ImportValues, SynthesisThemeFields, TaxaDistribution } from "../models/import.model";
 import { FieldMapping, FieldMappingValues, ContentMapping, ContentMappingValues } from "../models/mapping.model";
 
 const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
@@ -184,6 +184,12 @@ export class DataService {
           taxa_rank: taxa_rank,
         },
       }
+    );
+  }
+
+  getDatasetFromId(datasetId: number) {
+    return this._http.get<Dataset>(
+      `${AppConfig.API_ENDPOINT}/meta/dataset/${datasetId}`
     );
   }
 }

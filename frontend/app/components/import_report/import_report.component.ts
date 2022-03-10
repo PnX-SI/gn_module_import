@@ -7,7 +7,12 @@ import { MapService } from "@geonature_common/map/map.service";
 import { DataService } from "../../services/data.service";
 import { CsvExportService } from "../../services/csv-export.service";
 import { ImportProcessService } from "../import_process/import-process.service";
-import { Import, ImportError, ImportValues, TaxaDistribution } from "../../models/import.model";
+import {
+  Import,
+  ImportError,
+  ImportValues,
+  TaxaDistribution,
+} from "../../models/import.model";
 import { MappingContent, MappingField } from "../../models/mapping.model";
 
 interface CustomNomenclature {
@@ -48,6 +53,7 @@ export class ImportReportComponent implements OnInit {
   public matchedNomenclature: CustomNomenclature[];
   public importErrors: Array<ImportError> = null;
   public nbTotalErrors: number = 0;
+  public datasetName: string = "";
   public rank: string = this.rankOptions[0]; //ModuleConfig.DEFAULT_RANK;
   public doughnutChartLabels: Array<String> = [];
   public doughnutChartData: Array<number> = [];
@@ -78,6 +84,7 @@ export class ImportReportComponent implements OnInit {
     this.loadMapping();
     this.loadNomenclature();
     this.loadTaxaDistribution();
+    this.loadDatasetName();
     // Add property to show errors lines. Need to do this to
     // show line per line...
     // data.errors.forEach((element) => {
@@ -126,14 +133,21 @@ export class ImportReportComponent implements OnInit {
 
   loadTaxaDistribution() {
     //FIXME get idSource from import!
-    const idSource: number = 1
-    this._dataService.getTaxaRepartition(idSource, this.rank)
-        .subscribe(
-            data => {
-                this.taxaDistribution = data
-                this.updateChart();
-            }
-            )
+    const idSource: number = 1;
+    this._dataService
+      .getTaxaRepartition(idSource, this.rank)
+      .subscribe((data) => {
+        this.taxaDistribution = data;
+        this.updateChart();
+      });
+  }
+
+  loadDatasetName() {
+    this._dataService
+      .getDatasetFromId(this.importData.id_dataset)
+      .subscribe((data) => {
+        this.datasetName = data.dataset_name;
+      });
   }
 
   loadErrors() {
@@ -197,7 +211,9 @@ export class ImportReportComponent implements OnInit {
   }
 
   getChartPNG(): HTMLImageElement {
-    const chart: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("chart");
+    const chart: HTMLCanvasElement = <HTMLCanvasElement>(
+      document.getElementById("chart")
+    );
     const img: HTMLImageElement = document.createElement("img");
     img.src = chart.toDataURL();
     return img;
@@ -223,16 +239,18 @@ export class ImportReportComponent implements OnInit {
     ];
     // Exactly like the correspondances
     if (this.matchedNomenclature) {
-      const filtered = []
+      const filtered = [];
       // Filter out everything except the allowed "keys"
       this.matchedNomenclature.forEach((item) => {
-        filtered.push(Object.keys(item)
-        .filter((key) => allowed.includes(key))
-        .reduce((obj, key) => {
-          obj[key] = item[key];
-          return obj;
-        }, {}));
-      })
+        filtered.push(
+          Object.keys(item)
+            .filter((key) => allowed.includes(key))
+            .reduce((obj, key) => {
+              obj[key] = item[key];
+              return obj;
+            }, {})
+        );
+      });
       const blob: Blob = new Blob([JSON.stringify(filtered, null, 4)], {
         type: "application/json",
       });

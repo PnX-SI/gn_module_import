@@ -10,9 +10,11 @@
             <p class="card-text">
               <b>Jeu de données : </b
               ><a
-                routerLink="/metadata/dataset_detail/{{ importData?.id_dataset }}"
+                routerLink="/metadata/dataset_detail/{{
+                  importData?.id_dataset
+                }}"
                 matTooltip="Voir dans le module Metadonnées"
-                >{{ importData?.dataset }}</a
+                >{{ datasetName }}</a
               >
             </p>
             <p class="card-text">
@@ -46,7 +48,7 @@
               <div class="card-body">
                 <div class="row">
                   <div class="col-9 col-md-7">
-                    <h5 class="card-title">Taxons importés</h5>
+                    <h5 class="card-title">Taxa importés</h5>
                     <div class="d-flex justify-content-center">
                       <h5>{{ importData?.taxa_count }}</h5>
                     </div>
@@ -205,7 +207,10 @@
                 </tr>
               </tbody>
             </table>
-            <div class="d-flex flex-row-reverse" *ngIf="importData?.errors.length">
+            <div
+              class="d-flex flex-row-reverse"
+              *ngIf="importData?.errors.length"
+            >
               <button
                 class="mat-raised-button mat-primary"
                 (click)="_csvExport.onCSV(importData?.id_import)"

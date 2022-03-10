@@ -127,3 +127,8 @@ export interface TaxaDistribution {
     count: number,
     group: string
 }
+
+// minimal dataset model
+export interface Dataset {
+    dataset_name: string
+}
