@@ -35,7 +35,6 @@
       <h5> Nom du fichier d'import : {{ data.full_file_name }} </h5>
       <div class="ligne-titre ligne main-color"></div>
     </div>
-    {% if data.taxa_count: %}
     <div class="etiquettes">
       <div id="taxons" class="etiquette">
         <div class="etiquette-haut">
@@ -70,16 +69,13 @@
           </div>
         </div>
       </div>
-      {% if data.map: %}
       <div class="zone">
         <!-- <p class="zone-geographique">Périmètre géographique</p> -->
         <h5 class="zone-geographique">Zone géographique</h5>
         <img id="map" src="{{ data.map }}">
       </div>
-      {% endif %}
     </div>
     </div>
-    {% endif %}
     <div class="description">
       <div class="left-block">
         <p class="fiche-descriptive">Fiche descriptive</p>

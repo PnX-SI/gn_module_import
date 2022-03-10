@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
-import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 import { AppConfig } from "@geonature_config/app.config";
 import { ModuleConfig } from "../module.config";
 import { Dataset, Import, ImportError, ImportValues, SynthesisThemeFields, TaxaDistribution } from "../models/import.model";
@@ -195,12 +195,11 @@ export class DataService {
 
   getPdf(importId, mapImg, chartImg) {
     const formData = new FormData();
-    // formData.append("map", new Blob([mapImg], {type: 'image/png'}), "map");
-    // formData.append("chart", new Blob([chartImg], {type: 'image/png'}), "chart");
     formData.append("map", mapImg);
     formData.append("chart", chartImg);
-    // return this._http.post(`${urlApi}/export_pdf/${importId}`, 
-    //                        formData, {responseType: 'blob'});
-    return this._http.get(`${urlApi}/export_pdf/${importId}`, {responseType: 'blob'})
+    return this._http
+      .post(`${urlApi}/export_pdf/${importId}`, formData, { responseType: "blob",
+      });
+    // return this._http.get(`${urlApi}/export_pdf/${importId}`, {responseType: 'blob'})
   }
 }

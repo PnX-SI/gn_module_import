@@ -552,7 +552,7 @@ def delete_import(scope, import_id):
     return jsonify()
 
 
-@blueprint.route("/export_pdf/<int:import_id>", methods=["GET"])
+@blueprint.route("/export_pdf/<int:import_id>", methods=["POST"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT")
 def download_pdf(scope, import_id):
     """
@@ -572,9 +572,8 @@ def download_pdf(scope, import_id):
     imprt.check_instance_permission(scope)
     dataset = imprt.as_dict(fields=['errors', 'errors.type', 'dataset.dataset_name'])
     
-    # dataset['map'] = request.form.get('map')
-    # dataset['chart'] = request.form.get('chart')
-    print(dataset, flush=True)
+    dataset['map'] = request.form.get('map')
+    dataset['chart'] = request.form.get('chart')
     url_list = [current_app.config['URL_APPLICATION'],
                 '#',
                 current_app.config['IMPORT'].get('MODULE_URL', "").replace('/',''),
