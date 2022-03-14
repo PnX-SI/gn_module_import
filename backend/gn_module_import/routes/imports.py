@@ -554,7 +554,7 @@ def delete_import(scope, import_id):
 
 @blueprint.route("/export_pdf/<int:import_id>", methods=["POST"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT")
-def download_pdf(scope, import_id):
+def export_pdf(scope, import_id):
     """
     Downloads the report in pdf format
     """
