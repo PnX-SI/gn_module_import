@@ -69,11 +69,13 @@
           </div>
         </div>
       </div>
+      {% if data.map is not none %}
       <div class="zone">
         <!-- <p class="zone-geographique">Périmètre géographique</p> -->
         <h5 class="zone-geographique">Zone géographique</h5>
         <img id="map" src="{{ data.map }}">
       </div>
+      {% endif %}
     </div>
     </div>
     <div class="description">
@@ -119,7 +121,7 @@
         </div>
         {% endif %}
       </div>
-      {% if data.chart %}
+      {% if data.chart is not none %}
       <div id="chart" class="zone">
         <p class="zone-geographique">Répartition taxonomique</p>
         <img src="{{ data.chart }}">
