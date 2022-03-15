@@ -23,7 +23,7 @@ export class ImportListComponent implements OnInit {
   public config = ModuleConfig;
   public deleteOne: Import;
   public interval: any;
-  public search = new FormControl()
+  public search: string = "";
 
   constructor(
     public _cruvedStore: CruvedStoreService,
@@ -40,14 +40,8 @@ export class ImportListComponent implements OnInit {
 
     this.onImportList();
 
-    clearInterval(this.interval)
-    this.interval = setInterval(() => {
-      this.onImportList();
-    }, 15000);
-
-    this.search.valueChanges.subscribe(value => {
-      this.updateFilter(value);
-    });
+    clearInterval(this.interval);
+    this.interval = this.setRefresh();
   }
 
   ngOnDestroy() {
@@ -55,8 +49,19 @@ export class ImportListComponent implements OnInit {
     clearInterval(this.interval)
   }
 
-  updateFilter(val: any) {
-    const value = val.toString().toLowerCase().trim();
+  setRefresh() {
+    return setInterval(() => {
+      this.onImportList();
+    }, 3000);
+  }
+
+  updateFilter() {
+    const value = this.search.toString().toLowerCase().trim();
+    if (value !== "") {
+      clearInterval(this.interval);
+    } else {
+      this.interval = this.setRefresh();
+    }
 
     // listes des colonnes selon lesquelles filtrer
     const cols = this.config.LIST_COLUMNS_FRONTEND.filter(item => {

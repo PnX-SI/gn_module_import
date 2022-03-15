@@ -6,13 +6,14 @@
         <div class="card-body">
             <div *ngIf="!empty">
                 <input
-                    [formControl]="search"
+                    [(ngModel)]="search"
                     id="search"
                     type="text"
                     class="form-control"
                     placeholder="Search"
                     aria-label="Search"
                     aria-describedby="basic-addon1"
+                    (input)="updateFilter()"
                 />
                 <ngx-datatable
                     #table
