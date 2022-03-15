@@ -263,23 +263,23 @@ def check_geography(
                         id_rows_error=out_bound_errors.index.to_list(),
                     )
                 
-                if id_area != -1:    
-                    df['in_territory'] = df.apply(
-                    lambda row: check_wkt_inside_l_areas(
-                        wkt=row[selected_columns["WKT"]],
-                        id_area=id_area),
-                        axis=1)
-                
-                    out_bound_errors = df[df["in_territory"] == False]
-                    if len(out_bound_errors) > 0:
-                        set_error_and_invalid_reason(
-                            df=df,
-                            id_import=import_id,
-                            error_code="GEOMETRY_OUTSIDE",
-                            col_name_error="Colonnes géometriques",
-                            df_col_name_valid="in_territory",
-                            id_rows_error=out_bound_errors.index.to_list(),
-                        )
+            if id_area != -1:
+                df['in_territory'] = df.apply(
+                lambda row: check_wkt_inside_l_areas(
+                    wkt=row[selected_columns["WKT"]],
+                    id_area=id_area),
+                    axis=1)
+            
+                out_bound_errors = df[df["in_territory"] == False]
+                if len(out_bound_errors) > 0:
+                    set_error_and_invalid_reason(
+                        df=df,
+                        id_import=import_id,
+                        error_code="GEOMETRY_OUTSIDE",
+                        col_name_error="Colonnes géometriques",
+                        df_col_name_valid="in_territory",
+                        id_rows_error=out_bound_errors.index.to_list(),
+                    )
 
             # remove invalid where codecommune/maille or dep are fill
             df["valid_wkt"] = df.iloc[
