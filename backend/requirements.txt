@@ -1,5 +1,5 @@
 goodtables
 pandas<1.4
-dask[dataframe]
+dask[dataframe]==2022.01.0
 geopandas
 pyproj==2.6.1.post1
