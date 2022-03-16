@@ -34,7 +34,6 @@ def insert_into_synthese(
         # insert user values in synthese
         query = """
             BEGIN;
-            SET datestyle = DMY;
             ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_meta_dates_change_synthese;
             ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_insert_cor_area_synthese;
 
