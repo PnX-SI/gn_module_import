@@ -2,7 +2,7 @@
 CHANGELOG
 =========
 
-1.2.0 (unreleased)
+1.2.0 (2022-03-21)
 ------------------
 
 Nécessite la version 2.9.0 (ou plus) de GeoNature
