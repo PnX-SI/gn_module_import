@@ -31,7 +31,7 @@ Nécessite la version 2.9.0 (ou plus) de GeoNature
 
 **Notes de version**
 
-* Exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.7to1.2.0.sql``)
+* Exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.8to1.2.0.sql``)
 
 1.1.8 (2022-02-23)
 ------------------
