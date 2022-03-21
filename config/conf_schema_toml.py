@@ -55,7 +55,7 @@ DEFAULT_LIST_COLUMN = [
         "filter": True,
     },
     {
-        "prop": "import_count",
+        "prop": "source_count",
         "name": "Données totales",
         "max_width": 120,
         "show": True,

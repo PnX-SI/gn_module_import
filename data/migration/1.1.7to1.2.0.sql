@@ -18,6 +18,18 @@ ALTER TABLE gn_imports.t_imports
 ADD need_fix boolean default false,
 ADD fix_comment text;
 
+--------------------------------------
+-- Add new error
+--------------------------------------
+INSERT INTO gn_imports.t_user_errors (error_type, name, description, error_level) VALUES ('Géométrie','GEOMETRY_OUTSIDE', 'La géométrie se trouve à l''extérieur du territoire renseigné','ERROR');
+
+--------------------------------------
+-- Change error description
+--------------------------------------
+UPDATE gn_imports.t_user_errors
+set description = 'Le Cd_nom renseigné ne peut être importé car il est absent du référentiel TAXREF ou de la liste de taxons importables configurée par l’administrateur'
+where name = 'CD_NOM_NOT_FOUND';
+
 ------------------------------------------------
 -- Enable additional field in a dedicated theme
 ------------------------------------------------
