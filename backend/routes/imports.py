@@ -1,9 +1,12 @@
 """
 Routes to manage import (import list, cancel import, import info...)
 """
-from flask import request, current_app
+from pathlib import Path
+from flask import request, current_app, send_file
 from sqlalchemy.orm import exc as SQLAlchelyExc, joinedload, raiseload
 from sqlalchemy import or_
+from urllib.parse import urljoin
+from functools import reduce
 
 from pypnusershub.db.models import User
 from pypnusershub.db.tools import InsufficientRightsError
@@ -18,6 +21,7 @@ from geonature.core.gn_synthese.models import (
     TSources,
 )
 from geonature.core.gn_meta.models import TDatasets
+import geonature.utils.filemanager as fm
 
 from ..api_error import GeonatureImportApiError
 
@@ -32,6 +36,8 @@ from ..db.queries.user_table_queries import (
     set_imports_table_name,
     get_table_info,
     get_table_names,
+    get_table_name,
+    get_valid_bbox,
 )
 from ..utils.clean_names import *
 from ..utils.utils import get_pk_name
@@ -170,13 +176,15 @@ def cancel_import(info_role, import_id):
                 403,
             )
 
+    
     # delete imported data if the import is already finished
-    is_finished = (
-        DB.session.query(TImports.is_finished)
+    current_import = (
+        DB.session.query(TImports)
         .filter(TImports.id_import == import_id)
-        .one()[0]
+        .one()
     )
-    if is_finished:
+    
+    if current_import.is_finished:
         name_source = "Import(id=" + import_id + ")"
         id_source = (
             DB.session.query(TSources.id_source)
@@ -190,20 +198,9 @@ def cancel_import(info_role, import_id):
         ).delete()
 
     # get step number
-    step = (
-        DB.session.query(TImports.step)
-        .filter(TImports.id_import == import_id)
-        .one()[0]
-    )
-
-    if step > 1:
-
+    if current_import.step > 1:
         # get data table name
-        user_data_name = (
-            DB.session.query(TImports.import_table)
-            .filter(TImports.id_import == import_id)
-            .one()[0]
-        )
+        user_data_name = current_import.import_table
 
         # set data table names
         archives_full_name = get_full_table_name(
@@ -264,8 +261,35 @@ def get_import_columns_name(id_import):
         ARCHIVES_SCHEMA_NAME, IMPORTS_SCHEMA_NAME, id_import)
     col_names = get_table_info(
         table_names["imports_table_name"], info="column_name")
-    col_names.remove("gn_is_valid")
     col_names.remove("gn_invalid_reason")
     col_names.remove(get_pk_name(blueprint.config["PREFIX"]))
 
     return col_names
+
+
+def get_import(id_import:int, fields=None):
+    import_obj = TImports.query.get(id_import)
+    if import_obj:
+        return import_obj.to_dict(fields=fields)
+    return None
+
+@blueprint.route("/export_pdf/<int:id_import>", methods=["POST"])
+@permissions.check_cruved_scope("R", module_code="IMPORT")
+def download(id_import):
+    """
+    Downloads the report in pdf format
+    """
+    filename = "rapport.pdf"
+    dataset = get_import(id_import=id_import, fields=['errors'])
+    dataset['map'] = request.form.get('map')
+    dataset['chart'] = request.form.get('chart')
+
+    url_list = [current_app.config['URL_APPLICATION'],
+                '#',
+                current_app.config['IMPORT'].get('MODULE_URL', "").replace('/',''),
+                'report',
+                str(dataset.get('id_import', 0))]
+    dataset['url'] = '/'.join(url_list)
+    pdf_file = fm.generate_pdf("import_template_pdf.html", dataset, filename)
+    pdf_file_posix = Path(pdf_file)
+    return send_file(pdf_file_posix, as_attachment=True)

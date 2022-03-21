@@ -78,8 +78,10 @@ def get_nomenclature_values(mnemoniques_type: list):
 def get_nomenc_values(nommenclature_abb):
     query = """SELECT
             nom.id_nomenclature AS nomenc_id,
+            nom.cd_nomenclature AS nomenc_cd,
             nom.label_default AS nomenc_values, 
-            nom.definition_default AS nomenc_definitions
+            nom.definition_default AS nomenc_definitions,
+            bib.mnemonique AS nomenc_mnemo
         FROM ref_nomenclatures.bib_nomenclatures_types AS bib
         JOIN ref_nomenclatures.t_nomenclatures AS nom ON nom.id_type = bib.id_type
         WHERE bib.mnemonique = :nomenc
@@ -345,7 +347,7 @@ def exist_proof_check(
     query = """
         SELECT array_agg(gn_pk) as id_rows
         FROM {schema}.{table}
-        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature({field_proof}::integer) = '1' 
+        WHERE gn_invalid_reason IS NULL AND ref_nomenclatures.get_cd_nomenclature({field_proof}::integer) = '1' 
         """.format(
         schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table=table_name,
@@ -395,7 +397,7 @@ def dee_bluring_check(table_name, id_import, bluring_col):
             query = """
                 SELECT array_agg(gn_pk) as id_rows
                 FROM {schema}.{table}
-                WHERE gn_is_valid != 'False' AND {bluring_col} IS NULL
+                WHERE gn_invalid_reason IS NULL AND {bluring_col} IS NULL
             """.format(
                 schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
                 table=table_name,
@@ -416,7 +418,7 @@ def ref_biblio_check(table_name, field_statut_source, field_ref_biblio):
     query = """
         SELECT array_agg(gn_pk) as id_rows
         FROM {schema}.{table}
-        WHERE gn_is_valid != 'False' AND ref_nomenclatures.get_cd_nomenclature({field_statut_source}::integer) = 'Li' 
+        WHERE gn_invalid_reason IS NULL AND ref_nomenclatures.get_cd_nomenclature({field_statut_source}::integer) = 'Li' 
         """.format(
         schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
         table=table_name,

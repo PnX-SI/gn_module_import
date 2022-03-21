@@ -2,7 +2,7 @@ import re
 import numpy as np
 import pandas as pd
 from ..wrappers import checker
-from .utils import set_is_valid, fill_map, set_error_and_invalid_reason
+from .utils import fill_map, set_error_and_invalid_reason
 from ..logs import logger
 from ..db.queries.metadata import get_id_roles
 
@@ -33,7 +33,6 @@ def check_entity_source(
             )
             df["temp"] = ~df["temp"].astype("bool")
 
-            set_is_valid(df, "temp")
             id_rows_errors = df.index[df["temp"] == False].to_list()
 
             logger.info(
@@ -73,7 +72,6 @@ def check_id_digitizer(df, selected_columns, synthese_info, import_id, schema_na
                         .fillna(id_roles[0])
                         .isin(id_roles)
                     )
-                    set_is_valid(df, "temp")
 
                     id_rows_errors = df.index[df["temp"] == False].to_list()
 

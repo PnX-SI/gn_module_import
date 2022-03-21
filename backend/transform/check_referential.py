@@ -5,7 +5,7 @@ Vérificateur de reférentiel. Utilisé pour vérifier la confirmité avec Habre
 
 from geonature.utils.env import DB
 
-from .utils import fill_col, fill_map, set_is_valid, set_error_and_invalid_reason
+from .utils import fill_col, fill_map, set_error_and_invalid_reason
 from ..wrappers import checker
 from ..logs import logger
 
@@ -44,8 +44,6 @@ def check_referential(
             .where(cond=df[selected_columns[ref_col]].notnull(), other=True)
         )
 
-        # set gn_is_valid and invalid_reason
-        set_is_valid(df, "temp")
         # get invalid id rows
         id_rows_invalid = df.index[df["temp"] == False].to_list()
 

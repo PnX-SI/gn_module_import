@@ -21,7 +21,8 @@ def get_data_type(column_name):
 
 
 def insert_into_synthese(
-    schema_name, table_name, select_part, total_columns, import_obj
+    schema_name, table_name, select_part, total_columns, import_obj,
+    additional_data=[]
 ):
     try:
         id_source = DB.session.execute(
@@ -32,25 +33,33 @@ def insert_into_synthese(
             """
         ).fetchone()[0]
         # insert user values in synthese
+        subquery = "NULL"
+        if additional_data:
+            subquery = """
+            json_build_object({select_part})
+            """.format(
+                select_part=','.join([f"'{a}',{a}" for a in additional_data]))
+        
         query = """
             BEGIN;
             ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_meta_dates_change_synthese;
             ALTER TABLE gn_synthese.synthese DISABLE TRIGGER tri_insert_cor_area_synthese;
 
-            INSERT INTO gn_synthese.synthese ({into_part})
-            SELECT {select_part}
+            INSERT INTO gn_synthese.synthese ({into_part},additional_data)
+            SELECT {select_part},{subquery}
             FROM {schema_name}.{table_name}
-            WHERE gn_is_valid='True';
+            WHERE gn_invalid_reason IS NULL;
 
             ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_meta_dates_change_synthese;
             ALTER TABLE gn_synthese.synthese ENABLE TRIGGER tri_insert_cor_area_synthese;
-            COMMIT;            
+            COMMIT;
             
             """.format(
             into_part=",".join(total_columns.keys()),
             select_part=",".join(select_part),
             schema_name=schema_name,
             table_name=table_name,
+            subquery=subquery
         )
 
         DB.session.execute(query)

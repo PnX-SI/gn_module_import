@@ -16,8 +16,8 @@ export class FieldMappingService {
     private _commonService: CommonService
   ) { }
 
-  getMappingNamesList(mapping_type) {
-    this._ds.getMappings(mapping_type).subscribe(
+  getMappingNamesListMap(mapping_type) {
+    return this._ds.getMappings(mapping_type).map(
       result => {
         this.userFieldMappings = result["mappings"];
         if (result["column_names"] != "undefined import_id") {

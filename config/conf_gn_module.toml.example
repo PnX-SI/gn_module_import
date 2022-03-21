@@ -48,3 +48,7 @@ CHECK_REF_BIBLIO_LITTERATURE = true
 CHECK_EXIST_PROOF = true
 # Active la vérification de cohérence entre le TypeInfoGeo et les éventuels rattachements géographiques fournis
 CHECK_TYPE_INFO_GEO = true
+# Active la restriction de territoire
+ID_AREA_RESTRICTION = 999999
+# Active la restriction de territoire
+ID_LIST_TAXA_RESTRICTION = 100

@@ -7,7 +7,7 @@ def get_valid_user_data(schema_name, table_name, selected_cols, limit):
     preview = DB.session.execute("""
             SELECT {cols}
             FROM {schema_name}.{table_name}
-            WHERE gn_is_valid = 'True'
+            WHERE gn_invalid_reason IS NULL
             LIMIT {limit};        
             """.format(
                 cols=",".join(cols),
