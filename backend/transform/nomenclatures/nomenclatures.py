@@ -210,8 +210,7 @@ class NomenclatureTransformer:
                     )
                     query = """
                     UPDATE {schema}.{table}
-                    SET gn_is_valid = 'False',
-                    gn_invalid_reason = 'INVALID_NOMENCLATURE'
+                    SET gn_invalid_reason = 'INVALID_NOMENCLATURE'
                     WHERE gn_pk in :id_rows
                     """.format(
                         schema=current_app.config["IMPORT"]["IMPORTS_SCHEMA_NAME"],
@@ -353,6 +352,8 @@ def get_nomenc_info(form_data, schema_name, table_name):
                     "value": val.nomenc_values,
                     "definition": val.nomenc_definitions,
                     "name": clean_string(val.nomenc_values),
+                    "cd_nomenclature": str(val.nomenc_cd),
+                    "mnemonique": str(val.nomenc_mnemo),
                 }
                 val_def_list.append(d)
 

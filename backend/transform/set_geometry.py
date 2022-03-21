@@ -163,8 +163,7 @@ class GeometrySetter:
         """
         query = """
         UPDATE {table}
-        SET gn_is_valid = 'False',
-        gn_invalid_reason = 'INVALID_GEOMETRY'
+        SET gn_invalid_reason = 'INVALID_GEOMETRY'
         WHERE ST_IsValid(gn_the_geom_4326) IS FALSE
         RETURNING gn_pk;
         """.format(
@@ -208,7 +207,7 @@ class GeometrySetter:
         query = """
                 UPDATE {table_name} 
                 SET {target_colmun} = ST_SetSRID(given_geom, {srid})
-                WHERE gn_is_valid = 'True' AND given_geom IS NOT NULL;
+                WHERE gn_invalid_reason IS NULL AND given_geom IS NOT NULL;
                 """.format(
             table_name=self.table_name, target_colmun=target_colmun, srid=srid,
         )
@@ -224,7 +223,7 @@ class GeometrySetter:
             ST_SetSRID(given_geom, {origin_srid}), 
             {target_srid}
             )
-        WHERE gn_is_valid = 'True';
+        WHERE gn_invalid_reason IS NULL;
         """.format(
             table_name=self.table_name,
             target_geom_col=target_geom_col,
@@ -241,7 +240,7 @@ class GeometrySetter:
         query = """
             UPDATE {table_name}
             SET {target_geom_column} = ST_centroid({source_geom_column})
-            WHERE gn_is_valid = 'True'
+            WHERE gn_invalid_reason IS NULL
             ;
             """.format(
             table_name=self.table_name,
@@ -300,14 +299,13 @@ class GeometrySetter:
 
     def set_attachment_referential_errors(self):
         """
-        Method who update the import table to set gn_is_valid=false
+        Method who update the import table to set the invalid reason
         where the code attachement given is not correct
         Take only the row where its valid to not take raise twice error for the same line
         """
         query = """
         UPDATE {table} as i
-        SET gn_is_valid = 'False',
-        gn_invalid_reason = 'INVALID_GEOM_CODE'
+        SET gn_invalid_reason = 'INVALID_GEOM_CODE'
         FROM (
             SELECT gn_pk
             FROM {table}
@@ -317,7 +315,7 @@ class GeometrySetter:
             {code_dep_col} IS NOT NULL
             )
         ) as sub 
-        WHERE sub.gn_pk = i.gn_pk AND i.gn_is_valid = 'True'
+        WHERE sub.gn_pk = i.gn_pk AND i.gn_invalid_reason IS NULL
         RETURNING i.gn_pk, 
         {code_commune_col} as code_com,
         {code_maille_col} as code_maille,
@@ -343,8 +341,7 @@ class GeometrySetter:
 
         query = """
         UPDATE {table} as i
-        SET gn_is_valid = 'False',
-        gn_invalid_reason = 'GEOMETRY_OUT_OF_BOX'
+        SET gn_invalid_reason = 'GEOMETRY_OUT_OF_BOX'
         WHERE gn_pk IN (
         SELECT gn_pk as id_rows
         FROM {table}

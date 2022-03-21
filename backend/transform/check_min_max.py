@@ -60,9 +60,6 @@ def check_min_max(
                     ),
                     axis=1,
                 )
-                df["gn_is_valid"] = df["gn_is_valid"].where(
-                    cond=df["temp"].apply(lambda x: fill_col(x)), other=False
-                )
                 # get invalid id rows
                 id_rows_errors = df.index[df["temp"] == False].to_list()
                 error_code = "ALTI_MIN_SUP_ALTI_MAX" if min_col == "altitude_min" else "DEPTH_MIN_SUP_ALTI_MAX"

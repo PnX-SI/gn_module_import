@@ -23,7 +23,7 @@ import { CsvExportService } from "../../services/csv-export.service";
 })
 export class ImportComponent implements OnInit {
   public deletedStep1;
-  public history;
+  public history = [];
   public filteredHistory;
   public empty: boolean = false;
   public config = ModuleConfig;
@@ -32,6 +32,8 @@ export class ImportComponent implements OnInit {
   csvDownloadResp: any;
   public deleteOne: any;
   public interval: any;
+  public refreshTime: number = 15000;
+  public checked: boolean;
 
   public search = new FormControl()
 
@@ -49,19 +51,34 @@ export class ImportComponent implements OnInit {
 
     this.onImportList();
 
-    clearInterval(this.interval)
-    this.interval = setInterval(() => {
-      this.onImportList();
-    }, 15000);
+    // Clears the setInterval
+    clearInterval(this.interval);
+    // Sets the interval: activate the refresh functionality
+    this.setRefresh();
 
     this.search.valueChanges.subscribe(value => {
       this.updateFilter(value);
+      // Checks if the value in the search bar is not empty
+      if (value) {
+        // If there is a value, deactivate the refresh
+        clearInterval(this.interval);
+      }
+      else {
+        // If the search bar is empty, activate the refresh
+        this.setRefresh();
+      }
     });
   }
 
   ngOnDestroy() {
     this._ds.getImportList().subscribe().unsubscribe();
     clearInterval(this.interval)
+  }
+
+  setRefresh() {
+    this.interval = setInterval(() => {
+      this.onImportList();
+    }, this.refreshTime);
   }
 
   updateFilter(val: any) {
@@ -73,7 +90,7 @@ export class ImportComponent implements OnInit {
     });
 
     // Un resultat est retenu si au moins une colonne contient le mot-cle
-    this.filteredHistory = this.history.filter(item => {
+    const filtered = this.history.filter(item => {
       for (let i = 0; i < cols.length; i++) {
         if (
           (item[cols[i]['prop']] && item[cols[i]['prop']]
@@ -85,15 +102,36 @@ export class ImportComponent implements OnInit {
           return true;
         }
       }
-    });
+    })
+    this.filterFix(filtered)
+  }
+
+  fixOnly(event: Event) {
+    this.filterFix(this.history);
+    const search = this.search.value;
+    if (search) {
+      this.updateFilter(search);
+    }
+  }
+
+  filterFix(history) {
+    // filters the history variable to retains only
+    // errors if the checkbox is checked
+    this.filteredHistory = history.filter(
+      item => item.need_fix || !this.checked)
   }
 
   private onImportList() {
 
     this._ds.getImportList().subscribe(
       res => {
-        this.history = res.history;
-        this.filteredHistory = this.history;
+        this.history = res.history || [];
+        // filterErrors will apply the "Error only" check box
+        // which will by the same way set the this.filteredHistory
+        // variable
+        // Since onImpportList is called multiple times (see setInterval)
+        // we need to do this here
+        this.filterFix(this.history);
         this.empty = res.empty;
       },
       error => {

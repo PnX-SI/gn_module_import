@@ -1,6 +1,6 @@
 import pandas as pd
 
-from .utils import fill_col, fill_map, set_is_valid, set_error_and_invalid_reason
+from .utils import fill_col, fill_map, set_error_and_invalid_reason
 from ..wrappers import checker
 from ..logs import logger
 
@@ -152,7 +152,6 @@ def check_counts(
                 )
                 df["temp"] = -df["temp"].map(fill_map).astype("bool")
 
-                set_is_valid(df, "temp")
                 id_rows_errors = df.index[df["temp"] == False].to_list()
 
                 logger.info(

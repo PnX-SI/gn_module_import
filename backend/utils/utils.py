@@ -1,4 +1,9 @@
 import os
+from flask import current_app
+
+
+def get_config():
+    return current_app.config.get('IMPORT', {})
 
 
 def create_col_name(df, col_dict, key, import_id):
