@@ -27,6 +27,7 @@ Nécessite la version 2.9.0 (ou plus) de GeoNature
 * Correction de l'autocomplétion de la recherche (#214)
 * Amélioration du modèle de données : ajout d'une clé étrangère entre imports (gn_import.t_imports) et sources de la syntèse (gn_synthese.t_sources) (#201)
 * Correction de la version setuptools lors de l'installation (#244)
+* Compatilité Debian10 et Debian11
 
 **Notes de version**
 
