@@ -4,7 +4,7 @@ from sqlalchemy.orm import joinedload
 from geonature.core.gn_permissions import decorators as permissions
 
 from gn_module_import.blueprint import blueprint
-from gn_module_import.db.models import TImports
+from gn_module_import.models import TImports
 
 
 @blueprint.route("/imports/<int:import_id>/errors", methods=["GET"])
@@ -16,6 +16,7 @@ def get_import_errors(scope, import_id):
     Get errors of an import.
     """
     imprt = TImports.query.options(joinedload('errors')).get_or_404(import_id)
-    imprt.check_instance_permission(scope)
+    if not imprt.has_instance_permission(scope):
+        raise Forbidden
     return jsonify([ error.as_dict(fields=['type'])
                      for error in imprt.errors ])

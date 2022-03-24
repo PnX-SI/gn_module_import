@@ -4,7 +4,7 @@ import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { AppConfig } from "@geonature_config/app.config";
 import { ModuleConfig } from "../module.config";
 import { Import, ImportError, ImportValues, SynthesisThemeFields } from "../models/import.model";
-import { Mapping, MappingField, MappingContent } from "../models/mapping.model";
+import { FieldMapping, FieldMappingValues, ContentMapping, ContentMappingValues } from "../models/mapping.model";
 
 const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 
@@ -45,40 +45,52 @@ export class DataService {
     return this._http.post<Import>(`${urlApi}/imports/${idImport}/update`, data);
   }
 
-  createMapping(name, type): Observable<Mapping> {
-    return this._http.post<Mapping>(`${urlApi}/mappings/`, {
-        name: name,
-        type: type,
-    });
+  createFieldMapping(name: string, values: FieldMappingValues): Observable<FieldMapping> {
+    return this._http.post<FieldMapping>(`${urlApi}/fieldmappings/?label=${name}`, values);
   }
 
-  getMappings(mapping_type): Observable<Array<Mapping>> {
-    return this._http.get<Array<Mapping>>(`${urlApi}/mappings/?type=${mapping_type}`);
+  createContentMapping(name: string, values: ContentMappingValues): Observable<ContentMapping> {
+    return this._http.post<ContentMapping>(`${urlApi}/contentmappings/?label=${name}`, values);
   }
 
-  getMapping(id_mapping): Observable<Mapping> {
-    return this._http.get<Mapping>(`${urlApi}/mappings/${id_mapping}/`);
+  getFieldMappings(): Observable<Array<FieldMapping>> {
+    return this._http.get<Array<FieldMapping>>(`${urlApi}/fieldmappings/`);
   }
 
-  getMappingFields(id_mapping: number): Observable<Array<MappingField>> {
-    return this._http.get<Array<MappingField>>(`${urlApi}/mappings/${id_mapping}/fields`);
+  getContentMappings(): Observable<Array<ContentMapping>> {
+    return this._http.get<Array<ContentMapping>>(`${urlApi}/contentmappings/`);
   }
 
-  updateMappingFields(id_mapping: number, data): Observable<Array<MappingField>> {
-    return this._http.post<Array<MappingField>>(`${urlApi}/mappings/${id_mapping}/fields`, data);
+  getFieldMapping(id_mapping: number): Observable<FieldMapping> {
+    return this._http.get<FieldMapping>(`${urlApi}/fieldmappings/${id_mapping}/`);
   }
 
-  getMappingContents(id_mapping: number): Observable<Array<MappingContent>> {
-    return this._http.get<Array<MappingContent>>(`${urlApi}/mappings/${id_mapping}/contents`);
+  getContentMapping(id_mapping: number): Observable<ContentMapping> {
+    return this._http.get<ContentMapping>(`${urlApi}/contentmappings/${id_mapping}/`);
   }
 
-  updateMappingContents(id_mapping: number, data): Observable<Array<MappingContent>> {
-    return this._http.post<Array<MappingContent>>(`${urlApi}/mappings/${id_mapping}/contents`, data);
+  updateFieldMapping(id_mapping: number, values: FieldMappingValues): Observable<FieldMapping> {
+    return this._http.post<FieldMapping>(`${urlApi}/fieldmappings/${id_mapping}/`, values);
   }
 
-  // Return all mappings of the same type of the removed mapping
-  deleteMapping(id_mapping: number): Observable<Array<Mapping>> {
-    return this._http.delete<Array<Mapping>>(`${urlApi}/mappings/${id_mapping}/`);
+  updateContentMapping(id_mapping: number, values: ContentMappingValues): Observable<ContentMapping> {
+    return this._http.post<ContentMapping>(`${urlApi}/contentmappings/${id_mapping}/`, values);
+  }
+
+  renameFieldMapping(id_mapping: number, label: string): Observable<FieldMapping> {
+    return this._http.post<FieldMapping>(`${urlApi}/fieldmappings/${id_mapping}/?label=${label}`, null);
+  }
+
+  renameContentMapping(id_mapping: number, label: string): Observable<ContentMapping> {
+    return this._http.post<ContentMapping>(`${urlApi}/contentmappings/${id_mapping}/?label=${label}`, null);
+  }
+
+  deleteFieldMapping(id_mapping: number): Observable<null> {
+    return this._http.delete<null>(`${urlApi}/fieldmappings/${id_mapping}/`);
+  }
+
+  deleteContentMapping(id_mapping: number): Observable<null> {
+    return this._http.delete<null>(`${urlApi}/contentmappings/${id_mapping}/`);
   }
 
   /**
@@ -91,12 +103,6 @@ export class DataService {
     const url = `${urlApi}/data_checker/${idImport}/field_mapping/${idFieldMapping}/content_mapping/${idContentMapping}`;
     return this._http.post<Import>(url, new FormData());
   }*/
-
-  renameMapping(idMapping, name): Observable<Mapping> {
-    const url = `${urlApi}/mappings/${idMapping}/name`;
-    const payload = {"name": name}
-    return this._http.post<Mapping>(url, payload);
-  }
 
   deleteImport(importId: number): Observable<void> {
     return this._http.delete<void>(`${urlApi}/imports/${importId}/`);
@@ -118,12 +124,12 @@ export class DataService {
     return this._http.get<Array<SynthesisThemeFields>>(`${urlApi}/synthesis/fields`);
   }
 
-  setImportFieldMapping(idImport: number, idFieldMapping: number): Observable<Import> {
-    return this._http.post<Import>(`${urlApi}/imports/${idImport}/fieldMapping`, { id_field_mapping: idFieldMapping });
+  setImportFieldMapping(idImport: number, values: FieldMappingValues): Observable<Import> {
+    return this._http.post<Import>(`${urlApi}/imports/${idImport}/fieldmapping`, values);
   }
 
-  setImportContentMapping(idImport: number, idContentMapping: number): Observable<Import> {
-    return this._http.post<Import>(`${urlApi}/imports/${idImport}/contentMapping`, { id_content_mapping: idContentMapping });
+  setImportContentMapping(idImport: number, values: ContentMappingValues): Observable<Import> {
+    return this._http.post<Import>(`${urlApi}/imports/${idImport}/contentmapping`, values);
   }
 
   getNomencInfo(id_import: number) {

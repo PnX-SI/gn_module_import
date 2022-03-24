@@ -5,7 +5,7 @@ from flask import current_app
 
 from geonature.core.gn_synthese.models import Synthese
 
-from gn_module_import.db.models import BibFields
+from gn_module_import.models import BibFields
 
 
 def clean_missing_values(df, selected_columns):

@@ -8,9 +8,9 @@ import { ModuleConfig } from "../../module.config";
 export class ImportProcessService {
     private importData: Import | null = null;
 
-	constructor(
-		private router: Router,
-		private route: ActivatedRoute) { }
+constructor(
+    private router: Router,
+    private route: ActivatedRoute) { }
 
   setImportData(importData: Import) {
     this.importData  = importData;
@@ -26,9 +26,9 @@ export class ImportProcessService {
       lastAvailableStep = Step.Upload;
     } else if (!this.importData.import_table) {
       lastAvailableStep = Step.Decode;
-    } else if (!this.importData.id_field_mapping) {
+    } else if (!this.importData.fieldmapping) {
       lastAvailableStep = Step.FieldMapping;
-    } else if (!this.importData.id_content_mapping) {
+    } else if (!this.importData.contentmapping) {
       lastAvailableStep = Step.ContentMapping;
     }
     return lastAvailableStep;

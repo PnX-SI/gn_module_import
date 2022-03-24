@@ -1,6 +1,5 @@
 from io import BytesIO, StringIO, TextIOWrapper
 import csv
-from datetime import datetime
 import logging
 import json
 import numpy as np
@@ -18,7 +17,7 @@ from sqlalchemy import cast as sa_cast, Numeric, DateTime
 
 from geonature.utils.env import DB as db
 
-from gn_module_import.exceptions import ImportFileError
+from gn_module_import.models import BibFields
 
 
 MAX_TABLE_NAME_LEN = 30
@@ -58,7 +57,8 @@ def get_import_table_name(imprt):
 
 def load_geojson_data(imprt, geojson_data):
     csv_data = StringIO()
-    parse_geojson(geojson_data, csv_data, geometry_col_name)
+    #  parse_geojson(geojson_data, csv_data, geometry_col_name)
+    raise Exception("Not implemented")
     return load_csv_data(imprt, csv_data.encode('utf-8'), encoding='utf-8')
 
 
@@ -72,7 +72,7 @@ def load_csv_data(imprt, csv_data, encoding):
     duplicates = set([col for col in columns if columns.count(col) > 1])
     if duplicates:
         raise BadRequest(f"Duplicates column names: {duplicates}")
-    imprt.columns = { col: get_clean_column_name(col) for col in columns }
+    imprt.columns = {col: get_clean_column_name(col) for col in columns}
     csvfile.seek(0)
     try:
         df = pd.read_csv(csvfile, delimiter=dialect.delimiter,
@@ -155,7 +155,7 @@ def load_import_to_dataframe(imprt):
     ImportEntry = get_table_class(get_import_table_name(imprt))
     columns = ImportEntry.c.keys()
     query = db.session.query(ImportEntry)
-    dtypes = { col: 'string' for col in columns }
+    dtypes = {col: 'string' for col in columns}
     dtypes.update({
         'gn_pk': 'int64',
         'gn_is_valid': 'bool',
@@ -202,9 +202,16 @@ def get_selected_synthese_fields(imprt):
     """
         Return a list [ fieldmapping ]
     """
-    return [ f for f in imprt.field_mapping.fields
-               if f.source_field in imprt.columns.keys()
-               and f.target.synthese_field ]
+    synthese_fields = {
+        f.name_field: f
+        for f in BibFields.query.filter_by(synthese_field=True)
+    }
+    return {
+        synthese_fields[target]: source
+        for target, source in imprt.fieldmapping.items()
+        if source in imprt.columns.keys() and target in synthese_fields
+    }
+
 
 def get_synthese_columns_mapping(imprt, cast=True):
     """
@@ -215,26 +222,26 @@ def get_synthese_columns_mapping(imprt, cast=True):
     ImportEntry = get_table_class(get_import_table_name(imprt))
     fields = get_selected_synthese_fields(imprt)
     columns_mapping = {}
-    for f in fields:
-        source_field = COMPUTED_SOURCE_FIELDS.get(f.target_field, f.source_field)
-        target_column = f.target_field
-        if f.target.mnemonique:
-            source_column = ImportEntry.c['_tr_{}_{}'.format(f.target_field, source_field)]
+    for target_field, source in fields.items():
+        target = target_field.name_field
+        source_field = COMPUTED_SOURCE_FIELDS.get(target, source)
+        if target_field.mnemonique:
+            source_column = ImportEntry.c['_tr_{}_{}'.format(target, source)]
         else:
             source_column = ImportEntry.c[source_field]
         if cast:
-            if f.target.type_field == 'uuid':
+            if target_field.type_field == 'uuid':
                 cast_type = UUID
-            elif f.target.type_field == 'integer':
+            elif target_field.type_field == 'integer':
                 cast_type = Numeric
-            elif f.target.type_field == 'timestamp without time zone':
+            elif target_field.type_field == 'timestamp without time zone':
                 cast_type = DateTime
-            elif f.target.type_field in ['character varying', 'text']:
+            elif target_field.type_field in ['character varying', 'text']:
                 cast_type = db.String
             else:
                 cast_type = db.String
             source_column = sa_cast(source_column, cast_type)
-        columns_mapping[target_column] = source_column
+        columns_mapping[target] = source_column
     return columns_mapping
 
 

@@ -4,7 +4,7 @@ from ..db.queries.data_preview import (
     get_synthese_fields,
 )
 
-from ..db.models import TImports
+from gn_module_import.models import TImports
 from gn_module_import.transform.nomenclatures.nomenclatures import NomenclatureTransformer
 from gn_module_import.utils.imports import get_import_table_name, get_table_class
 from gn_module_import.db.queries.nomenclatures import get_nomenclature_label_from_id

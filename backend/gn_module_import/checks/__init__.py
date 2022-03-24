@@ -4,10 +4,10 @@ from itertools import chain
 from sqlalchemy.orm.exc import NoResultFound
 from flask import current_app
 
-from geonature.utils.env import DB as db
+from geonature.utils.env import db
 from geonature.core.gn_synthese.models import Synthese
 
-from gn_module_import.db.models import ImportUserError, ImportUserErrorType
+from gn_module_import.models import ImportUserError, ImportUserErrorType
 
 from .missing import clean_missing_values, check_required_values
 from .geography import check_geography

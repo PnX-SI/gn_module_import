@@ -3,21 +3,20 @@ from datetime import datetime
 import codecs
 
 from flask import request, jsonify, current_app, g
-from werkzeug.exceptions import BadRequest, NotFound, Forbidden
-from sqlalchemy.orm.exc import NoResultFound
+from werkzeug.exceptions import BadRequest, Forbidden
 
 from geonature.core.gn_permissions import decorators as permissions
-from geonature.utils.env import DB as db
+from geonature.core.gn_meta.models import TDatasets
+from geonature.utils.env import db
 
-from pypnusershub.db.models import User
-
-from ..db.models import TImports, TDatasets, ImportUserError
-
+from gn_module_import.models import TImports, ImportUserError
 from gn_module_import.blueprint import blueprint
-from gn_module_import.utils.imports import load_data, get_clean_column_name, \
-                                           detect_encoding, get_clean_table_name, \
-                                           save_dataframe_to_database, drop_import_table
-
+from gn_module_import.utils.imports import (
+    load_data,
+    detect_encoding,
+    save_dataframe_to_database,
+    drop_import_table,
+)
 
 
 @blueprint.route("/imports/upload", defaults={'import_id': None}, methods=["POST"])

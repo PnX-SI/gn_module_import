@@ -11,10 +11,11 @@ import { startWith, pairwise, concatMap, mapTo, finalize, tap } from "rxjs/opera
 import { DataService } from "../../../services/data.service";
 import { ContentMappingService } from "../../../services/mappings/content-mapping.service";
 import { CommonService } from "@geonature_common/service/common.service";
+import { SyntheseDataService } from "@geonature_common/form/synthese-form/synthese-data.service";
 import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
 import { ModuleConfig } from "../../../module.config";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
-import { Mapping, MappingContent } from "../../../models/mapping.model";
+import { ContentMapping, ContentMappingValues } from "../../../models/mapping.model";
 import { Step } from "../../../models/enums.model";
 import { Import, ImportValues, Nomenclature } from "../../../models/import.model";
 import { ImportProcessService } from "../import-process.service";
@@ -30,7 +31,7 @@ export class ContentMappingStepComponent implements OnInit {
   public step: Step;
   public selectMappingContentForm = new FormControl();
   public importData: Import;
-  public userContentMappings: Array<Mapping>;
+  public userContentMappings: Array<ContentMapping>;
   public importValues: ImportValues;
   public showForm: boolean = false;
   public contentTargetForm: FormGroup;
@@ -45,6 +46,7 @@ export class ContentMappingStepComponent implements OnInit {
     //private stepService: StepsService,
     private _fb: FormBuilder,
     private _ds: DataService,
+    private _synthese_ds: SyntheseDataService,
     public _cm: ContentMappingService,
     private _commonService: CommonService,
     private _router: Router,
@@ -60,41 +62,72 @@ export class ContentMappingStepComponent implements OnInit {
     this.contentTargetForm = this._fb.group({});
 
     forkJoin({
-        contentMappings: this._ds.getMappings('content'),
+        contentMappings: this._ds.getContentMappings(),
         importValues: this._ds.getImportValues(this.importData.id_import),
     }).subscribe(({contentMappings, importValues}) => {
         this.userContentMappings = contentMappings;
 
+        this.selectMappingContentForm.valueChanges.subscribe(mapping => {
+            this.onSelectMapping(mapping);
+        });
+
         this.importValues = importValues;
         this.contentTargetForm = this._fb.group({});
         for (let targetField of Object.keys(this.importValues)) {
-            this.importValues[targetField].nomenclature_type.isCollapsed = false;
+            //this.importValues[targetField].nomenclature_type.isCollapsed = false;  ???
             this.importValues[targetField].values.forEach((value, index) => {
                 let control = new FormControl(null, [Validators.required]);
                 let control_name = targetField + '-' + index;
                 this.contentTargetForm.addControl(control_name, control);
-                // Search for a nomenclature with a label equals to the user value.
-                for (let nomenclature of this.importValues[targetField].nomenclatures) {
-                    if (value == nomenclature.label_default) {
-                        control.setValue(nomenclature);
-                        break;
-                    }
+                if (!this.importData.contentmapping) {
+                  // Search for a nomenclature with a label equals to the user value.
+                  let nomenclature = this.importValues[targetField].nomenclatures.find(
+                    n => n.label_default == value
+                  );
+                  if (nomenclature) {
+                    control.setValue(nomenclature);
+                  }
                 }
-                // TODO: if value is null, select the default nomenclature!
-                // require to add default nomenclature in data returned by the API
             });
+        }
+        if (this.importData.contentmapping) {
+          this.fillContentFormWithMapping(this.importData.contentmapping);
         }
         this.showForm = true;
     });
   }
 
    // Used by select component to compare content mappings
-  areMappingContentEqual(mc1: MappingContent, mc2: MappingContent): boolean {
-    return (mc1 == null && mc2 == null) || (mc1 != null && mc2 != null && mc1.id_mapping === mc2.id_mapping);
+  areMappingContentEqual(mc1: ContentMapping, mc2: ContentMapping): boolean {
+    return (mc1 == null && mc2 == null) || (mc1 != null && mc2 != null && mc1.id === mc2.id);
   }
 
   areNomenclaturesEqual(n1: Nomenclature, n2: Nomenclature): boolean {
     return (n1 == null && n2 == null) || (n1 != null && n2 != null && n1.cd_nomenclature === n2.cd_nomenclature);
+  }
+
+  onSelectMapping(mapping: ContentMapping) {
+      console.log("reset");
+      this.contentTargetForm.reset();
+      this.fillContentFormWithMapping(mapping.values);
+  }
+
+  fillContentFormWithMapping(mappingvalues: ContentMappingValues) {
+    for (let targetField of Object.keys(this.importValues)) {
+      let type_mnemo = this.importValues[targetField].nomenclature_type.mnemonique;
+      if (!(type_mnemo in mappingvalues)) continue;
+      this.importValues[targetField].values.forEach((value, index) => {
+        if (value in mappingvalues[type_mnemo]) {
+          let control = this.contentTargetForm.get(targetField + '-' + index);
+          let nomenclature = this.importValues[targetField].nomenclatures.find(
+            n => n.cd_nomenclature === mappingvalues[type_mnemo][value]
+          );
+          if (nomenclature) {
+            control.setValue(nomenclature);
+          }
+        }
+      });
+    }
   }
 
   onSelectNomenclature(targetFieldValue: string) {
@@ -131,50 +164,46 @@ export class ContentMappingStepComponent implements OnInit {
     }
   }
 
-  updateMappingContents(id_mapping: number): Observable<Array<MappingContent>> {
-    let data = []
+  computeContentMappingValues(): ContentMappingValues {
+    let values = {} as ContentMappingValues;
     for (let targetField of Object.keys(this.importValues)) {
-        this.importValues[targetField].values.forEach((value, index) => {
-            let control = this.contentTargetForm.controls[targetField + '-' + index];
-            data.push({'target_field_name': targetField, 'source_value': value, 'target_id_nomenclature': control.value.id_nomenclature});
-        });
+      let _values = {}
+      this.importValues[targetField].values.forEach((value, index) => {
+        let control = this.contentTargetForm.controls[targetField + '-' + index];
+        _values[value] = control.value.cd_nomenclature;
+      });
+      values[this.importValues[targetField].nomenclature_type.mnemonique] = _values;
     }
-    return this._ds.updateMappingContents(id_mapping, data);
+    return values;
   }
 
-  submit(save: boolean, mapping_name: string = '') {
-    console.log("save", save, "mapping_name", mapping_name);
+  submit(save: boolean, mapping_label: string = null) {
+    console.log("save", save, "mapping_label", mapping_label);
     this.spinner = true;
+    let values: ContentMappingValues = this.computeContentMappingValues();
     of(1).pipe(
       concatMap(() => {
-        if (save) { // the mapping must be saved (non temporarly)
-          if (mapping_name) { // create a new mapping with the given name
-            console.log("create mapping " + mapping_name);
-            return this._ds.createMapping(mapping_name, 'content');
-          } else { // update the currently selected mapping
-            return of(this.selectMappingContentForm.value);
+        if (save) {
+          if (mapping_label) { // create a new mapping
+            console.log("create new mapping");
+            return this._ds.createContentMapping(mapping_label, values).mapTo(values);
+          } else { // update existing mapping
+            let mapping: ContentMapping = this.selectMappingContentForm.value;
+            console.log("update mapping", mapping.label);
+            mapping.values = values;
+            return this._ds.updateContentMapping(mapping.id, values).mapTo(values);
           }
-        } else { // create a temporarly mapping
-          console.log("create temporary mapping ");
-          return this._ds.createMapping('', 'content');
+        } else { // update the currently selected mapping
+          console.log("do not create or update mapping");
+          return of(values);
         }
       }),
-      concatMap((mapping: Mapping) => {
-        console.log("mapping created (eventually) (id=" + mapping.id_mapping + "), updating mapping");
-        return this.updateMappingContents(mapping.id_mapping).pipe(mapTo(mapping));
-      }),
-      concatMap((mapping: Mapping) => {
-        console.log("mapping fields updated");
-        if (this.importData.id_content_mapping != mapping.id_mapping) {
-          console.log("set import content mapping");
-          return this._ds.setImportContentMapping(this.importData.id_import, mapping.id_mapping);
-        } else {
-          console.log("import field mapping not changed, nothing to do");
-          return of(this.importData);
-        }
+      concatMap((values: ContentMappingValues) => {
+        console.log("updating import content mapping");
+        return this._ds.setImportContentMapping(this.importData.id_import, values);
       }),
       concatMap((importData: Import) => {
-        console.log("prepare import"); // TODO: skip if uneeded (mapping not changed & unmodified)
+        console.log("prepare import"); // TODO: move this in prepare step
         return this._ds.prepareImport(importData.id_import);
       }),
       finalize(() => this.spinner = false),

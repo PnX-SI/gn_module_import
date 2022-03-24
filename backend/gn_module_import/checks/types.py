@@ -9,12 +9,10 @@ from sqlalchemy.dialects.postgresql import UUID as UUIDType
 from dateutil.parser import parse as parse_datetime
 
 from geonature.core.gn_synthese.models import Synthese
-from geonature.utils.env import DB as db
+from geonature.utils.env import db
 
-from ..db.queries.nomenclatures import get_SINP_synthese_cols
-from ..wrappers import checker
-from ..logs import logger
-from gn_module_import.db.models import BibFields
+from gn_module_import.logs import logger
+from gn_module_import.models import BibFields
 
 
 def convert_to_datetime(value):

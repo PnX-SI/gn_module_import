@@ -1,4 +1,4 @@
-from gn_module_import.db.models import BibFields
+from gn_module_import.models import BibFields
 
 
 def concat_dates(df, selected_columns, synthese_fields):

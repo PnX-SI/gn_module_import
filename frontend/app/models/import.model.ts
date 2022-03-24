@@ -1,4 +1,5 @@
 import { Step } from "./enums.model";
+import { FieldMappingValues, ContentMappingValues } from "./mapping.model";
 
 
 export interface ImportErrorType {
@@ -30,8 +31,6 @@ export interface Import {
     import_table: string;
     full_file_name: string;
     id_dataset: number;
-    id_field_mapping: number;
-    id_content_mapping: number;
     date_create_import: string;
     date_update_import: string;
     source_count: number;
@@ -44,6 +43,8 @@ export interface Import {
     is_finished: boolean;
     processing: boolean;
     in_error: boolean;
+    fieldmapping: FieldMappingValues;
+    contentmapping: ContentMappingValues;
 
     authors_name: string;
     available_encodings?: [string];
@@ -64,6 +65,7 @@ export interface NomenclatureType {
 }
 
 export interface Nomenclature {
+    id_nomenclature: number;
     cd_nomenclature: string;
     mnemonique: string;
     label_default: string;

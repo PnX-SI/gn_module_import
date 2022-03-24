@@ -1,15 +1,8 @@
-import itertools
 from types import SimpleNamespace
 
 from flask import current_app
-from sqlalchemy import exc
 from sqlalchemy.sql import text
-from psycopg2.errors import DuplicateColumn
 from geonature.utils.env import DB
-
-from collections import defaultdict
-
-from ..models import TMappingsValues, TMappings
 
 
 def get_nomenclature_values(mnemoniques_type: list):
@@ -199,29 +192,6 @@ def get_mnemo(id_nomenc):
             return ""
     except Exception:
         raise
-
-
-def get_saved_content_mapping(id_mapping):
-    contents = (
-        DB.session.query(TMappingsValues)
-        .filter(TMappingsValues.id_mapping == int(id_mapping))
-        .all()
-    )
-    mapping_contents = []
-
-    if len(contents) > 0:
-        for content in contents:
-            if content.source_value != "":
-                d = {str(content.id_target_value): content.source_value}
-                mapping_contents.append(d)
-    selected_content = defaultdict(list)
-    for content in mapping_contents:
-        for key, value in content.items():
-            selected_content[key].append(value)
-    return selected_content
-
-
-#  conditional check
 
 
 def exist_proof_check(

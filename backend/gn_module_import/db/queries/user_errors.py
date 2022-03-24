@@ -2,7 +2,7 @@ from flask import current_app
 from sqlalchemy import text
 
 from geonature.utils.env import DB as db
-from gn_module_import.db.models import ImportUserErrorType, ImportUserError
+from gn_module_import.models import ImportUserErrorType, ImportUserError
 
 
 def set_user_error(

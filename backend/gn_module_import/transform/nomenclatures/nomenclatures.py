@@ -1,6 +1,10 @@
+from itertools import groupby
+
 from geonature.utils.env import DB
 
-from ...db.queries.nomenclatures import (
+from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
+
+from gn_module_import.db.queries.nomenclatures import (
     get_nomenclature_values,
     get_nomenc_values,
     find_row_with_nomenclatures_error,
@@ -11,14 +15,13 @@ from ...db.queries.nomenclatures import (
     set_nomenclature_id,
     get_nomenc_abb_from_name,
     set_default_nomenclature_id,
-    get_saved_content_mapping,
     exist_proof_check,
     dee_bluring_check,
     ref_biblio_check,
     set_default_value,
     get_mnemo,
     get_nomenc_values,
-    #add_nomenclature_transformed_col,
+    # add_nomenclature_transformed_col,
     info_geo_attachment_check,
     info_geo_attachment_check_2,
 )
@@ -49,13 +52,13 @@ class NomenclatureTransformer:
     def __init__(self):
         pass
 
-    def init(self, id_mapping, selected_columns, table_name):
+    def init(self, contentmapping, selected_columns, table_name):
         """
-        :params id_mapping int: the id_mapping
+        :params contentmapping
         :params selected_columns: colums of the field mapping corresponding of the import
         """
         self.table_name = table_name
-        self.id_mapping = id_mapping
+        self.contentmapping = contentmapping
         self.nomenclature_fields = self.set_nomenclature_fields(selected_columns)
         self.formated_mapping_content = self.__formated_mapping_content(
             selected_columns
@@ -86,31 +89,35 @@ class NomenclatureTransformer:
         for each provided nomenclature column
         """
         for nom in nomenclature_fields:
-            #add_nomenclature_transformed_col(nom["transformed_col"], self.table_name)
+            # add_nomenclature_transformed_col(nom["transformed_col"], self.table_name)
             DB.session.execute('ALTER TABLE {table_name} ADD COLUMN {col_name} character varying(5)'.format(table_name=self.table_name, col_name=nom['transformed_col']))
 
     def __formated_mapping_content(self, selected_columns):
         """
         Set nomenclatures_field and formated_mapping_content attributes
         """
+        key = lambda u: u[1]
         formated_mapping_content = []
         self.mapping_val_by_mnemo = {}
-        raw_mapping_content = get_saved_content_mapping(self.id_mapping)
-        for id_nomenclature, mapped_values in raw_mapping_content.items():
-            mnemonique_type = get_nomenc_abb(id_nomenclature)
-            if not mnemonique_type in self.mapping_val_by_mnemo:
-                self.mapping_val_by_mnemo[mnemonique_type] = [*mapped_values]
-            else:
-                self.mapping_val_by_mnemo[mnemonique_type] = [*self.mapping_val_by_mnemo[mnemonique_type], *mapped_values]
-            synthese_name = get_synthese_col(mnemonique_type)
-            if synthese_name in selected_columns:
-                d = {
-                    "id_nomenclature": id_nomenclature,
-                    "user_values": mapped_values,
-                    "user_col": selected_columns[synthese_name],
-                    "transformed_col": f"_tr_{synthese_name}_{selected_columns[synthese_name]}",
-                }
-                formated_mapping_content.append(d)
+        for mnemo, mappings in self.contentmapping.items():
+            synthese_name = get_synthese_col(mnemo)
+            for cd_nomenc, values in groupby(sorted(mappings.items(), key=key), key=key):
+                values = [k for k, v in values]
+                self.mapping_val_by_mnemo[mnemo] = values
+                nomenclature = TNomenclatures.query.filter(
+                    TNomenclatures.cd_nomenclature == cd_nomenc,
+                    TNomenclatures.nomenclature_type.has(
+                        BibNomenclaturesTypes.mnemonique == mnemo,
+                    ),
+                ).one()
+                if synthese_name in selected_columns:
+                    d = {
+                        "id_nomenclature": nomenclature.id_nomenclature,
+                        "user_values": values,
+                        "user_col": selected_columns[synthese_name],
+                        "transformed_col": f"_tr_{synthese_name}_{selected_columns[synthese_name]}",
+                    }
+                    formated_mapping_content.append(d)
         return formated_mapping_content
 
     def __set_accepted_id_nomencatures(self):
