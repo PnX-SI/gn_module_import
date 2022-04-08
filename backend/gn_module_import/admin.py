@@ -39,11 +39,6 @@ class MappingView(CruvedProtectedMixin, ModelView):
     column_export_list = ('label', 'values',)
 
 
-class FieldMappingValueForm(BaseForm):
-    value = StringField('Source')
-    key = StringField('Destination')
-
-
 def FieldMappingValuesValidator(form, field):
     try:
         FieldMapping.validate_values({
@@ -64,12 +59,14 @@ def ContentMappingValuesValidator(form, field):
 class FieldMappingView(MappingView):
     form_args = {
         'values': {
-            'form': FieldMappingValueForm,
             'validators': [FieldMappingValuesValidator],
         },
     }
     colmun_labels = {
         'values': 'Association',
+    }
+    column_formatters_detail = {
+        'values': lambda v, c, m, p: Markup('<pre>%s</pre>' % pformat(m.values)),
     }
 
 class ContentMappingView(MappingView):
@@ -80,6 +77,9 @@ class ContentMappingView(MappingView):
     }
     colmun_labels = {
         'values': 'Association',
+    }
+    column_formatters_detail = {
+        'values': lambda v, c, m, p: Markup('<pre>%s</pre>' % pformat(m.values)),
     }
 
 

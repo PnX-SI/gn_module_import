@@ -7,6 +7,7 @@ Create Date: 2021-04-27 10:02:53.798753
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.types import ARRAY
 
 
 # revision identifiers, used by Alembic.
@@ -17,22 +18,28 @@ depends_on = None
 
 
 def upgrade():
-    op.execute("""
-        ALTER TABLE gn_imports.t_imports
-        ADD COLUMN columns HSTORE
-    """)
+    op.add_column(
+        table_name="t_imports",
+        column=sa.Column(
+            "columns",
+            ARRAY(sa.Unicode),
+        ),
+        schema="gn_imports",
+    )
     op.execute("""
         ALTER TABLE gn_imports.t_user_error_list
         ALTER COLUMN id_rows TYPE integer[] USING id_rows::integer[]
     """)
-    op.execute("""
-        ALTER TABLE gn_imports.t_mappings_fields
-        DROP COLUMN is_added
-    """)
-    op.execute("""
-        ALTER TABLE gn_imports.t_mappings_fields
-        DROP COLUMN is_selected
-    """)
+    op.drop_column(
+        table_name="t_mappings_fields",
+        column_name="is_added",
+        schema="gn_imports",
+    )
+    op.drop_column(
+        table_name="t_mappings_fields",
+        column_name="is_selected",
+        schema="gn_imports",
+    )
 
 
 def downgrade():
@@ -48,7 +55,8 @@ def downgrade():
         ALTER TABLE gn_imports.t_user_error_list
         ALTER COLUMN id_rows TYPE text[] USING id_rows::text[]
     """)
-    op.execute("""
-        ALTER TABLE gn_imports.t_imports
-        DROP COLUMN columns
-    """)
+    op.drop_column(
+        table_name="t_imports",
+        column_name="columns",
+        schema="gn_imports",
+    )

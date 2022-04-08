@@ -49,10 +49,14 @@ export class ImportStepComponent implements OnInit {
       this.step = this._route.snapshot.data.step;
       this.importData = this.importProcessService.getImportData();
       // TODO : parallel requests, spinner
-      this._ds.getImportErrors(this.importData.id_import).subscribe(errors => {
-          this.errorCount = errors.filter(error => error.type.level == "ERROR").length;
-          this.warningCount = errors.filter(error => error.type.level == "WARNING").length;
-      });
+      this._ds.getImportErrors(this.importData.id_import).subscribe(
+        importErrors => {
+          this.errorCount = importErrors.filter(error => error.type.level == "ERROR").length;
+          this.warningCount = importErrors.filter(error => error.type.level == "WARNING").length;
+        },
+        err => {
+          this.spinner = false;
+        });
       this._ds.getValidData(this.importData.id_import).subscribe(res => {
         this.spinner = false;
         this.nValidData = res.n_valid_data;

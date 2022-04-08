@@ -8,7 +8,7 @@ def get_missing_fields(imprt):
     mapped_target_fields = {
         target
         for target, source in imprt.fieldmapping.items()
-        if source in imprt.columns.keys()
+        if source in imprt.columns
     }
     location_fields = ['WKT', 'longitude', 'latitude',
                        'codecommune', 'codemaille', 'codedepartement']

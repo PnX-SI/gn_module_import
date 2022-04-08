@@ -8,7 +8,7 @@ from ..logs import logger
 from ..db.queries.geometries import get_id_area_type
 from ..db.queries.user_errors import set_user_error
 #from .utils import set_error_and_invalid_reason FIXME
-from gn_module_import.utils.imports import get_import_table_name
+#from gn_module_import.utils.imports import get_import_table_name
 
 
 class GeometrySetter:

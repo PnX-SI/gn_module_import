@@ -24,9 +24,9 @@ constructor(
     let lastAvailableStep = Step.Import;
     if (!this.importData.full_file_name) {
       lastAvailableStep = Step.Upload;
-    } else if (!this.importData.import_table) {
+    } else if (!this.importData.columns || !this.importData.columns.length) {
       lastAvailableStep = Step.Decode;
-    } else if (!this.importData.fieldmapping) {
+    } else if (!this.importData.source_count) {
       lastAvailableStep = Step.FieldMapping;
     } else if (!this.importData.contentmapping) {
       lastAvailableStep = Step.ContentMapping;

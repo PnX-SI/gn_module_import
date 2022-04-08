@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
 import codecs
+from io import StringIO
+import csv
 
 from flask import request, jsonify, current_app, g
 from werkzeug.exceptions import BadRequest, Forbidden
@@ -9,13 +11,11 @@ from geonature.core.gn_permissions import decorators as permissions
 from geonature.core.gn_meta.models import TDatasets
 from geonature.utils.env import db
 
-from gn_module_import.models import TImports, ImportUserError
+from gn_module_import.models import TImports
 from gn_module_import.blueprint import blueprint
 from gn_module_import.utils.imports import (
-    load_data,
     detect_encoding,
-    save_dataframe_to_database,
-    drop_import_table,
+    insert_import_data_in_database,
 )
 
 
@@ -34,6 +34,8 @@ def upload_file(scope, import_id):
     author = g.current_user
     if import_id:
         imprt = TImports.query.get_or_404(import_id)
+        if not imprt.has_instance_permission(scope):
+            raise Forbidden
     else:
         imprt = None
     f = request.files['file']
@@ -48,12 +50,12 @@ def upload_file(scope, import_id):
     if imprt is None:
         try:
             dataset_id = int(request.form['datasetId'])
-        except ValueError as e:
+        except ValueError:
             raise BadRequest(description="'datasetId' must be an integer.")
         dataset = TDatasets.query.get(dataset_id)
         if dataset is None:
             raise BadRequest(description=f"Dataset '{dataset_id}' does not exist.")
-        if not dataset.has_instance_permission(scope):
+        if not dataset.has_instance_permission(scope):  # FIXME wrong scope
             raise Forbidden(description='Vous n’avez pas les permissions sur ce jeu de données.')
         imprt = TImports(dataset=dataset)
         imprt.authors.append(author)
@@ -63,24 +65,21 @@ def upload_file(scope, import_id):
     imprt.detected_encoding = detected_encoding
 
     # reset decode step
+    imprt.columns = None
     imprt.source_count = None
-    imprt.columns = {}
-    if imprt.import_table:
-        drop_import_table(imprt)
-    # reset mappings steps
-    imprt.field_mapping = None
-    imprt.content_mapping = None
-    # reset prepare step
-    ImportUserError.query.filter_by(imprt=imprt).delete()
+    imprt.synthese_data = []
+    imprt.errors = []
 
     db.session.commit()
     return jsonify(imprt.as_dict())
 
 
 @blueprint.route("/imports/<int:import_id>/decode", methods=["POST"])
-@permissions.check_cruved_scope("C", module_code="IMPORT", object_code="IMPORT")
-def decode_file(import_id):
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def decode_file(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
+    if not imprt.has_instance_permission(scope):
+        raise Forbidden
     if imprt.source_file is None:
         raise BadRequest(description='A file must be first uploaded.')
     if 'encoding' not in request.json:
@@ -106,22 +105,39 @@ def decode_file(import_id):
     db.session.commit()  # commit parameters
 
     try:
-        df = load_data(imprt,
-                       imprt.source_file,
-                       encoding=imprt.encoding,
-                       fmt=imprt.format_source_file)
+        csvfile = StringIO(imprt.source_file.decode(imprt.encoding))
     except UnicodeError as e:
         raise BadRequest(description=str(e))
-    df['gn_pk'] = df.index
-    df['gn_is_valid'] = True
-    save_dataframe_to_database(imprt, df)
+    headline = csvfile.readline()
+    csvfile.seek(0)
+    dialect = csv.Sniffer().sniff(headline)
+    csvreader = csv.reader(csvfile, delimiter=";")#dialect.delimiter)
+    columns = next(csvreader)
+    duplicates = set([col for col in columns if columns.count(col) > 1])
+    if duplicates:
+        raise BadRequest(f"Duplicates column names: {duplicates}")
 
-    # reset mappings steps
-    imprt.field_mapping = None
-    imprt.content_mapping = None
-    # reset prepare step
-    ImportUserError.query.filter_by(imprt=imprt).delete()
+    imprt.columns = columns
+    imprt.source_count = None
+    imprt.synthese_data = []
+    imprt.errors = []
 
     db.session.commit()
 
+    return jsonify(imprt.as_dict())
+
+
+@blueprint.route("/imports/<int:import_id>/load", methods=["POST"])
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
+def load_import(scope, import_id):
+    imprt = TImports.query.get_or_404(import_id)
+    if imprt.source_file is None:
+        raise BadRequest(description='A file must be first uploaded.')
+    if imprt.fieldmapping is None:
+        raise BadRequest(description='File fields must be first mapped.')
+    line_no = insert_import_data_in_database(imprt)
+    if not line_no:
+        raise BadRequest("File with 0 lines.")
+    imprt.source_count = line_no
+    db.session.commit()
     return jsonify(imprt.as_dict())

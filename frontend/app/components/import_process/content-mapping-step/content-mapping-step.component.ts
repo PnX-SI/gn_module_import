@@ -74,7 +74,6 @@ export class ContentMappingStepComponent implements OnInit {
         this.importValues = importValues;
         this.contentTargetForm = this._fb.group({});
         for (let targetField of Object.keys(this.importValues)) {
-            //this.importValues[targetField].nomenclature_type.isCollapsed = false;  ???
             this.importValues[targetField].values.forEach((value, index) => {
                 let control = new FormControl(null, [Validators.required]);
                 let control_name = targetField + '-' + index;
@@ -86,6 +85,7 @@ export class ContentMappingStepComponent implements OnInit {
                   );
                   if (nomenclature) {
                     control.setValue(nomenclature);
+                    this.contentTargetForm.markAsDirty();
                   }
                 }
             });
@@ -143,10 +143,33 @@ export class ContentMappingStepComponent implements OnInit {
   }
 
   onNextStep() {
-    if (!this.contentTargetForm.pristine) {
+    if (!this.isNextStepAvailable()) { return; }
+    this.spinner = true;
+    of(this.importData).pipe(
+      concatMap((importData: Import) => {
+        if (this.contentTargetForm.dirty) {
+          console.log("Updating import content mapping");
+          let values: ContentMappingValues = this.computeContentMappingValues();
+          return this._ds.setImportContentMapping(importData.id_import, values);
+        } else {
+          return of(importData);
+        }
+      }),
+      concatMap((importData: Import) => {
+        console.log("Prepare import");
+        return this._ds.prepareImport(importData.id_import);
+      }),
+      finalize(() => this.spinner = false),
+    ).subscribe(
+      (importData: Import) => {
+        this.importProcessService.setImportData(importData);
+        this.importProcessService.navigateToNextStep(this.step);
+      }
+    )
+    /*if (!this.contentTargetForm.pristine) {
       // TODO: check cruved before updating mapping
       // this.selectMappingContentForm.value.id_mapping
-      /*console.log("create mapping");
+      console.log("create mapping");
       this._ds.createMapping('', 'content').subscribe(mapping => {
         console.log("mapping created", mapping.id_mapping);
         this.updateMappingContents(mapping.id_mapping).subscribe(mappingvalues => {
@@ -157,11 +180,11 @@ export class ContentMappingStepComponent implements OnInit {
             this.importProcessService.navigateToLastStep();
           });
         });
-      });*/
+      });
       this.submit(false);
     } else {
       this.importProcessService.navigateToNextStep(this.step);
-    }
+    }*/
   }
 
   computeContentMappingValues(): ContentMappingValues {
@@ -177,7 +200,7 @@ export class ContentMappingStepComponent implements OnInit {
     return values;
   }
 
-  submit(save: boolean, mapping_label: string = null) {
+  /*submit(save: boolean, mapping_label: string = null) {
     console.log("save", save, "mapping_label", mapping_label);
     this.spinner = true;
     let values: ContentMappingValues = this.computeContentMappingValues();
@@ -213,8 +236,7 @@ export class ContentMappingStepComponent implements OnInit {
     }, (error: HttpErrorResponse) => {
       this._commonService.regularToaster('error', error.error.description);
     });
-  }
-
+  }*/
 
   /*getNomencInf() {
     this._ds

@@ -41,6 +41,11 @@ export class DataService {
     return this._http.post<Import>(url, params);
   }
 
+  loadImport(importId: number): Observable<Import> {
+    const url = `${urlApi}/imports/${importId}/load`;
+    return this._http.post<Import>(url, null);
+  }
+
   updateImport(idImport, data): Observable<Import> {
     return this._http.post<Import>(`${urlApi}/imports/${idImport}/update`, data);
   }
@@ -150,11 +155,9 @@ export class DataService {
     return this._http.post<Import>(`${urlApi}/imports/${import_id}/import`, {});
   }
 
-  getErrorCSV(importId: number) { // FIXME
-    let fd = new FormData();
-    return this._http.post(`${urlApi}/imports/${importId}/invalid_rows`, fd, {
+  getErrorCSV(importId: number) {
+    return this._http.get(`${urlApi}/imports/${importId}/invalid_rows`, {
       responseType: "blob"
-      //headers: new HttpHeaders().append("Content-Type", "application/json")
     });
   }
 

@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 import numpy as np
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from datetime import datetime
 from uuid import UUID
 from flask import current_app
@@ -23,11 +23,11 @@ def imprt():
     return TImports(id_import=42, srid='2154')
 
 
-def get_synthese_fields(selected_columns):
-    return BibFields.query \
-                    .filter_by(synthese_field=True) \
-                    .filter(BibFields.name_field.in_(selected_columns)) \
-                    .all()
+def get_fields(names):
+    fields = OrderedDict()
+    for name in names:
+        fields[name] = BibFields.query.filter_by(name_field=name).one()
+    return fields
 
 
 def assert_errors(errors, expected):
@@ -43,37 +43,47 @@ def assert_errors(errors, expected):
 @pytest.mark.usefixtures('app')
 class TestChecks:
     def test_clean_missing_values(self, imprt):
-        df = pd.DataFrame([
-            [None],
-            [''],
-            ['nan'],
-            [42],
-        ], columns=['wkt'])
-        clean_missing_values(df, {'WKT': 'wkt'})
-        expected_df = pd.DataFrame([
-            [np.nan],
-            [np.nan],
-            ['nan'],
-            [42],
-        ], columns=['wkt'])
+        fields = get_fields(['WKT'])
+        df = pd.DataFrame(
+            [
+                [None],
+                [''],
+                ['str'],
+                [42],
+            ],
+            columns=[field.source_field for field in fields.values()],
+        )
+        clean_missing_values(df, fields)
+        expected_df = pd.DataFrame(
+            [
+                [np.nan],
+                [np.nan],
+                ['str'],
+                [42],
+            ],
+            columns=[field.source_field for field in fields.values()],
+        )
         pd.testing.assert_frame_equal(df, expected_df)
 
     def test_check_required_values(self):
-        selected_columns = { 'nom_cite': 'nomcite' }
-        synthese_fields = get_synthese_fields(selected_columns)
+        fields = get_fields(['precision', 'WKT', 'cd_nom'])
         df = pd.DataFrame(
             [
-                ['bombix'],
-                [np.nan],
+                ['a', np.nan, 'c'],
+                [np.nan, 'b', np.nan],
             ],
-            columns=['nomcite'],
+            columns=[field.source_field for field in fields.values()],
         )
-        errors = check_required_values(df, imprt, selected_columns, synthese_fields)
+        errors = check_required_values(df, fields)
         assert_errors(errors, expected=[
-            Error(error_code='MISSING_VALUE', column='nomcite', invalid_rows=frozenset([1])),
+            Error(error_code='MISSING_VALUE', column='WKT', invalid_rows=frozenset([0])),
+            Error(error_code='MISSING_VALUE', column='cd_nom', invalid_rows=frozenset([1])),
         ])
 
     def test_check_geography(self, imprt):
+        fields = get_fields([
+            'WKT', 'latitude', 'longitude', 'codecommune', 'codemaille', 'codedepartement',
+        ])
         df = pd.DataFrame(
             [
                 # [0] No geometry
@@ -115,29 +125,33 @@ class TestChecks:
                 # [18] Codes are ignored if xy
                 [None, '600000', '7000000', '42', '42', '42'],
             ],
-            columns=['wkt', 'latitude', 'longitude', 'commune', 'maille', 'departement'],
+            columns=[field.source_field for field in fields.values()],
         )
-        mapped_target_fields = {
-            'WKT': 'wkt',
-            'latitude': 'latitude',
-            'longitude': 'longitude',
-            'codecommune': 'commune',
-            'codemaille': 'maille',
-            'codedepartement': 'departement',
-        }
-        errors = check_geography(df, imprt, mapped_target_fields)
+        errors = check_geography(
+            df,
+            fields,
+            file_srid=imprt.srid,
+        )
         assert_errors(errors, expected=[
             Error(error_code='NO-GEOM', column='Champs géométriques', invalid_rows=frozenset([0, 1, 2])),
-            Error(error_code='GEOMETRY_OUT_OF_BOX', column='wkt', invalid_rows=frozenset([5])),
+            Error(error_code='GEOMETRY_OUT_OF_BOX', column='WKT', invalid_rows=frozenset([5])),
             Error(error_code='GEOMETRY_OUT_OF_BOX', column='latitude, longitude', invalid_rows=frozenset([6])),
             Error(error_code='MULTIPLE_ATTACHMENT_TYPE_CODE', column='Champs géométriques', invalid_rows=frozenset([7])),
             Error(error_code='MULTIPLE_CODE_ATTACHMENT', column='Champs géométriques', invalid_rows=frozenset([8,9,10, 11])),
-            Error(error_code='INVALID_WKT', column='wkt', invalid_rows=frozenset([15])),
+            Error(error_code='INVALID_WKT', column='WKT', invalid_rows=frozenset([15])),
             Error(error_code='INVALID_GEOMETRIE', column='latitude, longitude', invalid_rows=frozenset([16])),
         ])
 
     def test_check_types(self, imprt):
         uuid = '82ff094c-c3b3-11eb-9804-bfdc95e73f38'
+        fields = get_fields([
+            'datetime_min',
+            'datetime_max',
+            'meta_v_taxref',
+            'digital_proof',
+            'id_digitiser',
+            'unique_id_sinp',
+        ])
         df = pd.DataFrame([
                 ['2020-01-01', '2020-01-02', 'taxref', 'proof', '42', uuid],  # OK
                 ['2020-01-01', 'AAAAAAAAAA', 'taxref', 'proof', '42', uuid],  # KO: invalid date
@@ -145,29 +159,18 @@ class TestChecks:
                 ['2020-01-01', '2020-01-02', 'taxref', 'proof', '42', 'AA'],  # KO: invalid uuid
                 ['2020-01-01', '2020-01-02', 'A' * 80, 'proof', '42', uuid],  # KO: invalid length
             ],
-            columns=['concatened_date_min', 'concatened_date_max', 'taxref', 'proof',
-                     'digitizer', 'sinp'],
+            columns=[field.source_column for field in fields.values()],
         )
-        selected_columns = {
-            'date_min': 'concatened_date_min',
-            'orig_date_min': 'datemin',
-            'date_max': 'concatened_date_max',
-            'orig_date_max': 'datemax',
-            'meta_v_taxref': 'taxref',  # Unicode(length=50)
-            'digital_proof': 'proof',  # UnicodeText
-            'id_digitiser': 'digitizer',  # Integer
-            'unique_id_sinp': 'sinp',  # UUID
-        }
-        synthese_fields = get_synthese_fields(selected_columns)
-        errors = list(check_types(df, imprt, selected_columns, synthese_fields))
+        errors = list(check_types(df, fields))
         assert_errors(errors, expected=[
-            Error(error_code='INVALID_DATE', column='datemax', invalid_rows=frozenset([1])),
-            Error(error_code='INVALID_INTEGER', column='digitizer', invalid_rows=frozenset([2])),
-            Error(error_code='INVALID_UUID', column='sinp', invalid_rows=frozenset([3])),
-            Error(error_code='INVALID_CHAR_LENGTH', column='taxref', invalid_rows=frozenset([4])),
+            Error(error_code='INVALID_DATE', column='datetime_max', invalid_rows=frozenset([1])),
+            Error(error_code='INVALID_INTEGER', column='id_digitiser', invalid_rows=frozenset([2])),
+            Error(error_code='INVALID_UUID', column='unique_id_sinp', invalid_rows=frozenset([3])),
+            Error(error_code='INVALID_CHAR_LENGTH', column='meta_v_taxref', invalid_rows=frozenset([4])),
         ])
 
     def test_concat_dates(self, imprt):
+        fields = get_fields(["date_min", "hour_min", "date_max", "hour_max"])
         df = pd.DataFrame([
                 ['2020-01-01', '12:00:00', '2020-01-02', '14:00:00'],
                 ['2020-01-01',         '', '2020-01-02', '14:00:00'],
@@ -181,23 +184,20 @@ class TestChecks:
                 [          '', '12:00:00', '2020-01-02', '14:00:00'],
                 [     'bogus', '12:00:00', '2020-01-02', '14:00:00'],
             ],
-            columns=['datemin', 'heuremin', 'datemax', 'heuremax'],
+            columns=[field.source_field for field in fields.values()],
         )
-        selected_columns = {
-            'date_min': 'datemin',
-            'hour_min': 'heuremin',
-            'date_max': 'datemax',
-            'hour_max': 'heuremax',
-        }
-        synthese_fields = get_synthese_fields(selected_columns)
-        clean_missing_values(df, selected_columns)  # replace '' with np.nan
-        concat_dates(df, selected_columns, synthese_fields)
-        errors = list(check_types(df, imprt, selected_columns, synthese_fields))
+        clean_missing_values(df, fields)  # replace '' with np.nan
+        concat_dates(df, fields)
+        errors = list(check_required_values(df, fields))
         assert_errors(errors, expected=[
-            Error(error_code='INVALID_DATE', column='datemin', invalid_rows=frozenset([9, 10])),
+            Error(error_code='MISSING_VALUE', column='datetime_min', invalid_rows=frozenset([9])),
+        ])
+        errors = list(check_types(df, fields))
+        assert_errors(errors, expected=[
+            Error(error_code='INVALID_DATE', column='datetime_min', invalid_rows=frozenset([10])),
         ])
         pd.testing.assert_frame_equal(
-            df.loc[:, ['concatened_date_min', 'concatened_date_max']],
+            df.loc[:, [fields["datetime_min"].synthese_field, fields["datetime_max"].synthese_field]],
             pd.DataFrame([
                 [datetime(2020, 1, 1, 12), datetime(2020, 1, 2, 14)],
                 [datetime(2020, 1, 1,  0), datetime(2020, 1, 2, 14)],
@@ -210,25 +210,28 @@ class TestChecks:
                 [datetime(2020, 1, 1,  0), datetime(2020, 1, 1,  0)],
                 [                  pd.NaT, datetime(2020, 1, 2, 14)],
                 [                  pd.NaT, datetime(2020, 1, 2, 14)],
-            ], columns=['concatened_date_min', 'concatened_date_max']),
+            ], columns=[fields[name].synthese_field for name in ("datetime_min", "datetime_max")]),
         )
 
     def test_check_dates(self):
+        fields = get_fields(["datetime_min", "datetime_max"])
         df = pd.DataFrame([
                 [datetime(2020, 1, 1), datetime(2020, 1, 1)],
                 [datetime(2020, 1, 2), datetime(2020, 1, 1)],
             ],
-            columns=['concatened_date_min', 'concatened_date_max'],
+            columns=[field.synthese_field for field in fields.values()],
         )
-        selected_columns = {
-            'orig_date_min': 'datemin',
-        }
-        errors = list(check_dates(df, selected_columns))
+        errors = list(check_dates(df, fields))
         assert_errors(errors, expected=[
-            Error(error_code='DATE_MIN_SUP_DATE_MAX', column='datemin', invalid_rows=frozenset([1])),
+            Error(
+                error_code='DATE_MIN_SUP_DATE_MAX',
+                column="datetime_min",
+                invalid_rows=frozenset([1]),
+            ),
         ])
 
     def test_check_uuid(self, imprt, synthese_data):
+        fields = get_fields(["unique_id_sinp"])
         uuid1 = UUID('82ff094c-c3b3-11eb-9804-bfdc95e73f38')
         uuid2 = UUID('acad9eb6-c773-11eb-8b3e-f3419e53c26b')
         existing_uuid = synthese_data[0].unique_id_sinp
@@ -240,52 +243,43 @@ class TestChecks:
                 [None],
                 [None],
             ],
-            columns=['sinp'],
+            columns=[field.synthese_field for field in fields.values()],
         )
-        selected_columns = {
-            'unique_id_sinp': 'sinp',
-        }
-        errors = list(check_uuid(df, selected_columns))
+        errors = list(check_uuid(df, fields, generate=False))
         assert_errors(errors, expected=[
-            Error(error_code='DUPLICATE_UUID', column='sinp', invalid_rows=frozenset([0, 1])),
-            Error(error_code='EXISTING_UUID', column='sinp', invalid_rows=frozenset([3])),
+            Error(error_code='DUPLICATE_UUID', column='unique_id_sinp', invalid_rows=frozenset([0, 1])),
+            Error(error_code='EXISTING_UUID', column='unique_id_sinp', invalid_rows=frozenset([3])),
         ])
+
+        uuid_field = fields["unique_id_sinp"].synthese_field
 
         df = pd.DataFrame([
                 [None],
                 [uuid1],
             ],
-            columns=['sinp'],
+            columns=[uuid_field],
         )
-        selected_columns = {
-            'unique_id_sinp': 'sinp',
-            'unique_id_sinp_generate': 'true',
-        }
-        list(check_uuid(df, selected_columns))
-        generated_sinp_field = selected_columns['unique_id_sinp']
+        list(check_uuid(df, fields, generate=True))
         pd.testing.assert_series_equal(
-            df[generated_sinp_field].notnull(),
-            pd.Series([True, True], name=generated_sinp_field),
+            df[uuid_field].notnull(),
+            pd.Series([True, True], name=uuid_field),
         )
 
 
         df = pd.DataFrame([[], []])
-        selected_columns = {
-            'unique_id_sinp_generate': 'true',
-        }
-        list(check_uuid(df, selected_columns))
-        generated_sinp_field = selected_columns['unique_id_sinp']
+        list(check_uuid(df, fields, generate=True))
         pd.testing.assert_series_equal(
-            df[generated_sinp_field].notnull(),
-            pd.Series([True, True], name=generated_sinp_field),
+            df[uuid_field].notnull(),
+            pd.Series([True, True], name=uuid_field),
         )
         pd.testing.assert_series_equal(
-            df[generated_sinp_field].duplicated(keep=False),
-            pd.Series([False, False], name=generated_sinp_field),
+            df[uuid_field].duplicated(keep=False),
+            pd.Series([False, False], name=uuid_field),
         )
 
     def test_check_counts(self, imprt):
-        default_min_value = current_app.config["IMPORT"]["DEFAULT_COUNT_VALUE"]
+        default_value = current_app.config["IMPORT"]["DEFAULT_COUNT_VALUE"]
+        fields = get_fields(["count_min", "count_max"])
         df = pd.DataFrame([
                 [None, None],
                 [1, None],
@@ -293,60 +287,82 @@ class TestChecks:
                 [1, 2],
                 [2, 1],
             ],
-            columns=['min', 'max'],
+            columns=[field.source_field for field in fields.values()],
         )
-        errors = list(check_counts(df, {
-            'count_min': 'min',
-            'count_max': 'max',
-        }))
+        errors = list(check_counts(df, fields))
         assert_errors(errors, expected=[
-            Error(error_code='COUNT_MIN_SUP_COUNT_MAX', column='min', invalid_rows=frozenset([4])),
+            Error(error_code='COUNT_MIN_SUP_COUNT_MAX', column='count_min', invalid_rows=frozenset([4])),
         ])
         pd.testing.assert_frame_equal(
-            df,
+            df.loc[:, [field.synthese_field for field in fields.values()]],
             pd.DataFrame([
-                [default_min_value, default_min_value],
-                [1, 1],
-                [default_min_value, 2],
-                [1, 2],
-                [2, 1],
-            ], columns=['min', 'max'], dtype=float),
+                    [default_value, default_value],
+                    [1, 1],
+                    [default_value, 2],
+                    [1, 2],
+                    [2, 1],
+                ],
+                columns=[field.synthese_field for field in fields.values()],
+                dtype=float,
+            )
+        )
+
+        fields = get_fields(["count_min", "count_max"])
+        count_min_field = fields["count_min"]
+        count_max_field = fields["count_max"]
+        df = pd.DataFrame([
+                [None],
+                [2],
+            ],
+            columns=[count_min_field.source_field],
+        )
+        list(check_counts(df, {"count_min": count_min_field}))
+        pd.testing.assert_frame_equal(
+            df.loc[:, [count_min_field.synthese_field, count_max_field.synthese_field]],
+            pd.DataFrame([
+                    [default_value, default_value],
+                    [2, 2],
+                ],
+                columns=[
+                    count_min_field.synthese_field,
+                    count_max_field.synthese_field,
+                ],
+                dtype=float,
+            ),
         )
 
         df = pd.DataFrame([
                 [None],
                 [2],
             ],
-            columns=['min',],
+            columns=[count_max_field.source_field],
         )
-        list(check_counts(df, {
-            'count_min': 'min',
-        }))
+        list(check_counts(df, {"count_max": count_max_field}))
         pd.testing.assert_frame_equal(
-            df,
+            df.loc[:, [count_min_field.synthese_field, count_max_field.synthese_field]],
             pd.DataFrame([
-                [default_min_value, default_min_value],
-                [2, 2],
-            ], columns=['min', '_count_max'], dtype=float),
+                    [default_value, default_value],
+                    [2, 2],
+                ],
+                columns=[
+                    count_min_field.synthese_field,
+                    count_max_field.synthese_field,
+                ],
+                dtype=float,
+            ),
         )
 
-        df = pd.DataFrame([
-                [None],
-                [2],
-            ],
-            columns=['max'],
-        )
-        list(check_counts(df, {
-            'count_max': 'max',
-        }))
-        pd.testing.assert_frame_equal(
-            df.loc[:, ['_count_min', 'max']],
-            pd.DataFrame([
-                [None, None],
-                [default_min_value, 2],
-            ], columns=['_count_min', 'max']),
-        )
-
-        df = pd.DataFrame()
+        df = pd.DataFrame([[], []])
         list(check_counts(df, {}))
-        pd.testing.assert_frame_equal(df, pd.DataFrame())
+        pd.testing.assert_frame_equal(
+            df.loc[:, [count_min_field.synthese_field, count_max_field.synthese_field]],
+            pd.DataFrame([
+                    [default_value, default_value],
+                    [default_value, default_value],
+                ],
+                columns=[
+                    count_min_field.synthese_field,
+                    count_max_field.synthese_field,
+                ],
+            ),
+        )

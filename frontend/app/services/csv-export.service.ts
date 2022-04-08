@@ -15,22 +15,11 @@ export class CsvExportService {
   ) { }
 
   onCSV(id_import) {
+    // TODO: get filename from Content-Disposition
     let filename = "invalid_data.csv";
     this._ds.getErrorCSV(id_import).subscribe(
       res => {
         saveAs(res, filename);
-      },
-      error => {
-        if (error.statusText === "Unknown Error")
-          this._commonService.regularToaster(
-            "error",
-            "Une erreur s'est produite : contactez l'administrateur du site"
-          );
-        else
-          this._commonService.regularToaster(
-            "error",
-            "Une erreur s'est produite : contactez l'administrateur du site"
-          );
       }
     );
   }

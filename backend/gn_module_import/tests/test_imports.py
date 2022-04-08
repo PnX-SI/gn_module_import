@@ -1,5 +1,8 @@
+from io import StringIO
 from pathlib import Path
 from functools import partial
+from operator import or_
+from functools import reduce
 
 import pytest
 from flask import url_for
@@ -21,8 +24,8 @@ from geonature.core.gn_meta.models import TDatasets
 
 from pypnusershub.db.models import User, Organisme
 
-from gn_module_import.models import TImports, FieldMapping, ContentMapping
-from gn_module_import.utils.imports import get_table_class, get_import_table_name
+from gn_module_import.models import TImports, ImportSyntheseData, FieldMapping, ContentMapping
+from gn_module_import.utils.imports import insert_import_data_in_database#, get_table_class, get_import_table_name
 
 from .jsonschema_definitions import jsonschema_definitions
 
@@ -31,12 +34,12 @@ tests_path = Path(__file__).parent
 
 
 valid_file_expected_errors = {
-    ("DUPLICATE_ENTITY_SOURCE_PK", "id_synthese", frozenset([3, 4])),
-    ("COUNT_MIN_SUP_COUNT_MAX", "nombre_min", frozenset([5])),
-    ("DATE_MIN_SUP_DATE_MAX", "date_debut", frozenset([6])),
-    ("MISSING_VALUE", "date_debut", frozenset([8, 10])),
-    ("MISSING_VALUE", "date_fin", frozenset([10])),
-    ("INVALID_DATE", "date_debut", frozenset([7, 8, 10])),
+    ("DUPLICATE_ENTITY_SOURCE_PK", "entity_source_pk_value", frozenset([3, 4])),
+    ("COUNT_MIN_SUP_COUNT_MAX", "count_min", frozenset([5])),
+    ("DATE_MIN_SUP_DATE_MAX", "datetime_min", frozenset([6])),
+    ("MISSING_VALUE", "datetime_min", frozenset([8, 10])),
+    ("MISSING_VALUE", "datetime_max", frozenset([10])),
+    ("INVALID_DATE", "datetime_min", frozenset([7])),
 }
 
 
@@ -97,27 +100,40 @@ def decoded_import(client, uploaded_import):
 
 
 @pytest.fixture()
-def mapped_import(client, decoded_import):
+def field_mapped_import(client, decoded_import):
     with db.session.begin_nested():
         decoded_import.fieldmapping = (
             FieldMapping.query.filter_by(label="Synthese GeoNature").one().values
-        )
-        decoded_import.contentmapping = (
-            ContentMapping.query.filter_by(label="Nomenclatures SINP (labels)")
-            .one()
-            .values
         )
     return decoded_import
 
 
 @pytest.fixture()
-def prepared_import(client, mapped_import):
-    set_logged_user_cookie(client, mapped_import.authors[0])
-    r = client.post(url_for("import.prepare_import", import_id=mapped_import.id_import))
+def loaded_import(client, field_mapped_import):
+    with db.session.begin_nested():
+        field_mapped_import.source_count = insert_import_data_in_database(field_mapped_import)
+    return field_mapped_import
+
+
+@pytest.fixture()
+def content_mapped_import(client, loaded_import):
+    with db.session.begin_nested():
+        loaded_import.contentmapping = (
+            ContentMapping.query.filter_by(label="Nomenclatures SINP (labels)")
+            .one()
+            .values
+        )
+    return loaded_import
+
+
+@pytest.fixture()
+def prepared_import(client, content_mapped_import):
+    set_logged_user_cookie(client, content_mapped_import.authors[0])
+    r = client.post(url_for("import.prepare_import", import_id=content_mapped_import.id_import))
     assert r.status_code == 200
     unset_logged_user_cookie(client)
-    db.session.refresh(mapped_import)
-    return mapped_import
+    db.session.refresh(content_mapped_import)
+    return content_mapped_import
 
 
 @pytest.fixture()
@@ -270,6 +286,7 @@ class TestImports:
             url_for("import.delete_import", import_id=imprt.id_import)
         )
         assert r.status_code == 404
+        assert 0 == ImportSyntheseData.query.filter_by(imprt=imprt).count()
 
     def test_import_upload(self, users, datasets):
         with open(tests_path / "files" / "simple_file.csv", "rb") as f:
@@ -363,7 +380,7 @@ class TestImports:
         assert imprt.source_file is not None
         assert imprt.source_count == None
         assert imprt.full_file_name == "utf8_file.csv"
-        assert imprt.columns == {}
+        assert imprt.columns == None
         assert len(imprt.errors) == 0
 
     def test_import_decode(self, users, new_import):
@@ -412,13 +429,13 @@ class TestImports:
         assert r.status_code == BadRequest.code
         assert "Duplicates column names" in r.json["description"]
 
-        with open(tests_path / "files" / "wrong_line_length.csv", "rb") as f:
-            imprt.source_file = f.read()
-        r = self.client.post(
-            url_for("import.decode_file", import_id=imprt.id_import), data=data
-        )
-        assert r.status_code == BadRequest.code
-        assert "Expected" in r.json["description"]
+        #with open(tests_path / "files" / "wrong_line_length.csv", "rb") as f:
+        #    imprt.source_file = f.read()
+        #r = self.client.post(
+        #    url_for("import.decode_file", import_id=imprt.id_import), data=data
+        #)
+        #assert r.status_code == BadRequest.code
+        #assert "Expected" in r.json["description"]
 
         with open(tests_path / "files" / "utf8_file.csv", "rb") as f:
             imprt.source_file = f.read()
@@ -463,8 +480,19 @@ class TestImports:
         assert r.status_code == 200
         assert "cd_nom" in r.json
 
-    def test_import_values(self, users, decoded_import):
-        imprt = decoded_import
+    def test_import_loading(self, users, field_mapped_import):
+        imprt = field_mapped_import
+
+        set_logged_user_cookie(self.client, users["user"])
+        r = self.client.post(
+            url_for("import.load_import", import_id=imprt.id_import)
+        )
+        assert r.status_code == 200
+        assert r.json['source_count'] > 0
+        assert ImportSyntheseData.query.filter_by(id_import=imprt.id_import).count() == r.json['source_count']
+
+    def test_import_values(self, users, loaded_import):
+        imprt = loaded_import
 
         r = self.client.get(
             url_for("import.get_import_values", import_id=imprt.id_import)
@@ -478,16 +506,6 @@ class TestImports:
         assert r.status_code == Forbidden.code
 
         set_logged_user_cookie(self.client, users["user"])
-        r = self.client.get(
-            url_for("import.get_import_values", import_id=imprt.id_import)
-        )
-        assert r.status_code == Conflict.code  # no field mapping yet
-
-        with db.session.begin_nested():
-            imprt.fieldmapping = (
-                FieldMapping.query.filter_by(label="Synthese GeoNature").one().values
-            )
-
         r = self.client.get(
             url_for("import.get_import_values", import_id=imprt.id_import)
         )
@@ -552,6 +570,28 @@ class TestImports:
         assert r.json["n_valid_data"] == imprt.source_count - n_invalid_data
         assert r.json["n_invalid_data"] == n_invalid_data
 
+    def test_import_invalid_rows(self, users, prepared_import):
+        imprt = prepared_import
+        r = self.client.get(
+            url_for("import.get_import_invalid_rows_as_csv", import_id=imprt.id_import)
+        )
+        assert r.status_code == Unauthorized.code
+
+        set_logged_user_cookie(self.client, users["stranger_user"])
+        r = self.client.get(
+            url_for("import.get_import_invalid_rows_as_csv", import_id=imprt.id_import)
+        )
+        assert r.status_code == Forbidden.code
+
+        set_logged_user_cookie(self.client, users["user"])
+        r = self.client.get(
+            url_for("import.get_import_invalid_rows_as_csv", import_id=imprt.id_import)
+        )
+        assert r.status_code == 200
+        csvfile = StringIO(r.data.decode('utf-8'))
+        invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
+        assert len(csvfile.readlines()) == 1 + len(invalid_rows)  # 1 = header
+
     def test_import_errors(self, users, imported_import):
         imprt = imported_import
 
@@ -611,18 +651,17 @@ class TestImports:
             url_for("import.decode_file", import_id=imprt.id_import), data=data
         )
         assert r.status_code == 200
-        imprt_json = r.get_json()
-        assert imprt_json["date_update_import"]
-        assert imprt_json["encoding"] == "utf-8"
-        assert imprt_json["format_source_file"] == "csv"
-        assert imprt_json["srid"] == 4326
-        assert imprt_json["source_count"] == test_file_line_count
-        assert imprt_json["import_table"]
-        assert imprt_json["columns"]
-        assert len(imprt_json["columns"]) > 0
-        imprt = TImports.query.get(imprt.id_import)
-        ImportEntry = get_table_class(get_import_table_name(imprt))
-        assert db.session.query(ImportEntry).count() == imprt_json["source_count"]
+        validate_json(
+            r.json,
+            {"definitions": jsonschema_definitions, "$ref": "#/definitions/import"},
+        )
+        assert imprt.date_update_import
+        assert imprt.encoding == "utf-8"
+        assert imprt.format_source_file == "csv"
+        assert imprt.srid == 4326
+        assert imprt.columns
+        assert len(imprt.columns) > 0
+        assert ImportSyntheseData.query.filter_by(imprt=imprt).count() == 0
 
         # Field mapping step
         fieldmapping = FieldMapping.query.filter_by(label="Synthese GeoNature").one()
@@ -631,12 +670,19 @@ class TestImports:
             data=fieldmapping.values,
         )
         assert r.status_code == 200
-        data = r.get_json()
         validate_json(
-            data,
+            r.json,
             {"definitions": jsonschema_definitions, "$ref": "#/definitions/import"},
         )
-        assert data["fieldmapping"] == fieldmapping.values
+        assert r.json["fieldmapping"] == fieldmapping.values
+
+        # Loading step
+        r = self.client.post(
+            url_for("import.load_import", import_id=imprt.id_import)
+        )
+        assert r.status_code == 200
+        assert r.json["source_count"] == test_file_line_count
+        assert ImportSyntheseData.query.filter_by(imprt=imprt).count() == test_file_line_count
 
         # Content mapping step
         contentmapping = ContentMapping.query.filter_by(
@@ -663,26 +709,29 @@ class TestImports:
             r.json,
             {"definitions": jsonschema_definitions, "$ref": "#/definitions/import"},
         )
-        ImportEntry = get_table_class(get_import_table_name(imprt))
-        assert db.session.query(ImportEntry).count() == imprt_json["source_count"]
-
+        invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
         # (error code, error column name, frozenset of erroneous rows)
         obtained_errors = {
             (error.type.name, error.column, frozenset(error.rows))
             for error in imprt.errors
         }
         assert obtained_errors == valid_file_expected_errors
+        assert ImportSyntheseData.query.filter_by(imprt=imprt, valid=True).count() == test_file_line_count - len(invalid_rows)
+
+        # Get errors
+        r = self.client.get(
+            url_for("import.get_import_errors", import_id=imprt.id_import)
+        )
+        assert r.status_code == 200
+        assert len(r.json) == len(valid_file_expected_errors)
 
         # Get valid data (preview)
         r = self.client.get(
             url_for("import.preview_valid_data", import_id=imprt.id_import)
         )
         assert r.status_code == 200
-        n_invalid_data = len(
-            {row for _, _, rows in valid_file_expected_errors for row in rows}
-        )
-        assert r.json["n_valid_data"] == imprt.source_count - n_invalid_data
-        assert r.json["n_invalid_data"] == n_invalid_data
+        assert r.json["n_valid_data"] == imprt.source_count - len(invalid_rows)
+        assert r.json["n_invalid_data"] == len(invalid_rows)
 
         # Get invalid data
         r = self.client.get(

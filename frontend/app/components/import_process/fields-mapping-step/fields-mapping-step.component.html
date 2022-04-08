@@ -174,13 +174,13 @@
                 </fieldset>
             </form>
             <form [formGroup]="syntheseForm">
-                <div *ngFor="let theme of targetFields">
+                <div *ngFor="let themefields of targetFields">
                     <fieldset>
                         <legend class="px-1">
-                            {{theme.theme.fr_label_theme}}
+                            {{themefields.theme.fr_label_theme}}
                         </legend>
                         <div class="row m-0">
-                            <ng-container *ngFor="let field of theme.fields">
+                            <ng-container *ngFor="let field of themefields.fields">
                                 <div
                                     class="col-6"
                                 >

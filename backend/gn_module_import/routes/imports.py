@@ -1,10 +1,17 @@
 from datetime import datetime
+from io import BytesIO
 
-from flask import request, current_app, jsonify, Response
+import pandas as pd
+import numpy as np
+
+from flask import request, current_app, jsonify
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden
 import sqlalchemy as sa
-from sqlalchemy.orm import joinedload, Load
-from sqlalchemy.sql.expression import select
+from sqlalchemy.orm import joinedload, Load, load_only, undefer
+from sqlalchemy.sql.expression import select, update, insert, literal
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.sql import column
+from geoalchemy2.functions import ST_Transform, ST_GeomFromWKB
 
 from ref_geo.models import LAreas
 
@@ -15,9 +22,14 @@ from geonature.core.gn_synthese.models import (
     TSources,
     corAreaSynthese,
 )
+from geonature.core.gn_commons.models import TModules
 
+from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
+
+from gn_module_import import MODULE_CODE
 from gn_module_import.models import (
     TImports,
+    ImportSyntheseData,
     ImportUserError,
     BibFields,
     FieldMapping,
@@ -25,16 +37,6 @@ from gn_module_import.models import (
 )
 from gn_module_import.checks import run_all_checks
 from gn_module_import.blueprint import blueprint
-from gn_module_import.utils.imports import (
-    get_table_class,
-    drop_import_table,
-    load_import_to_dataframe,
-    save_dataframe_to_database,
-    get_import_table_name,
-    geom_to_wkb,
-    stream_csv,
-    get_synthese_columns_mapping,
-)
 from gn_module_import.utils import get_missing_fields
 from gn_module_import.transform.set_geometry import GeometrySetter
 from gn_module_import.transform.set_altitudes import set_altitudes
@@ -101,9 +103,9 @@ def get_import_columns_name(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
-    if not imprt.import_table:
+    if not imprt.columns:
         raise Conflict(description="Data have not been decoded.")
-    return jsonify(list(imprt.columns.keys()))
+    return jsonify(imprt.columns)
 
 
 @blueprint.route("/imports/<int:import_id>/values", methods=["GET"])
@@ -118,39 +120,42 @@ def get_import_values(scope, import_id):
     # check that the user has read permission to this particular import instance:
     if not imprt.has_instance_permission(scope):
         raise Forbidden
-    if not imprt.import_table:
-        raise Conflict(description="Data have not been decoded.")
-    if not imprt.fieldmapping:
-        raise Conflict("Field mapping must have been set before executing this action.")
-    ImportEntry = get_table_class(get_import_table_name(imprt))
-    nomenclated_fields = {
-        field.name_field: field
-        for field in (
-            BibFields.query
-            .filter(BibFields.mnemonique != None)
-            .options(joinedload("nomenclature_type").joinedload("nomenclatures"))
-            .all()
-        )
-    }
+    if not imprt.source_count:
+        raise Conflict(description="Data have not been loaded {}.".format(imprt.source_count))
+    #if not imprt.fieldmapping:
+    #    raise Conflict("Field mapping must have been set before executing this action.")
+    #ImportEntry = get_table_class(get_import_table_name(imprt))
+    nomenclated_fields = (
+        BibFields.query
+        .filter(BibFields.mnemonique != None)
+        .options(joinedload("nomenclature_type").joinedload("nomenclatures"))
+        .all()
+    )
     # Note: response format is validated with jsonschema in tests
     response = {}
-    for target, source in imprt.fieldmapping.items():
-        if source not in imprt.columns.keys():
+    for field in nomenclated_fields:
+        if field.name_field not in imprt.fieldmapping:
+            # this nomenclated field is not mapped
+            continue
+        source = imprt.fieldmapping[field.name_field]
+        if source not in imprt.columns:
             # the file do not contain this field expected by the mapping
             continue
-        if target not in nomenclated_fields:
-            continue
-        nomenclature_type = nomenclated_fields[target].nomenclature_type
         # TODO: vérifier que l’on a pas trop de valeurs différentes ?
+        column = field.source_column
         values = [
-            v
-            for v, in db.session.query(ImportEntry.columns[source])
-            .distinct()
-            .all()
+            getattr(data, column)
+            for data in (
+                ImportSyntheseData.query
+                .filter_by(imprt=imprt)
+                .options(load_only(column))
+                .distinct(getattr(ImportSyntheseData, column))
+                .all()
+            )
         ]
-        response[target] = {
-            "nomenclature_type": nomenclature_type.as_dict(),
-            "nomenclatures": [n.as_dict() for n in nomenclature_type.nomenclatures],
+        response[field.name_field] = {
+            "nomenclature_type": field.nomenclature_type.as_dict(),
+            "nomenclatures": [n.as_dict() for n in field.nomenclature_type.nomenclatures],
             "values": values,
         }
     return jsonify(response)
@@ -167,6 +172,8 @@ def set_import_field_mapping(scope, import_id):
     except ValueError as e:
         raise BadRequest(*e.args)
     imprt.fieldmapping = request.json
+    imprt.source_count = None
+    imprt.synthese_data = []
     db.session.commit()
     return jsonify(imprt.as_dict())
 
@@ -182,6 +189,8 @@ def set_import_content_mapping(scope, import_id):
     except ValueError as e:
         raise BadRequest(*e.args)
     imprt.contentmapping = request.json
+    imprt.errors = []
+    # TODO: set gn_is_valid = None
     db.session.commit()
     return jsonify(imprt.as_dict())
 
@@ -197,85 +206,165 @@ def prepare_import(scope, import_id):
         raise Forbidden
 
     # Check preconditions to execute this action
-    if not imprt.import_table:
-        raise Conflict("Import file must have been decoded before executing this action.")
-    if not imprt.fieldmapping:
-        raise Conflict("Field mapping must have been set before executing this action.")
+    if not imprt.source_count:
+        raise Conflict("Field data must have been loaded before executing this action.")
     if not imprt.contentmapping:
         raise Conflict("Content mapping must have been set before executing this action.")
 
-    missing_fields = get_missing_fields(imprt)
-    if missing_fields:
-        raise BadRequest(
-            description="Erreur de correspondance des champs. "
-            "Certains champs obligatoires sont manquants : " + ", ".join(missing_fields)
-        )
-
-    # Clean all errors
+    # Remove previous errors and mark all rows as invalid
     imprt.errors = []
+    db.session.query(ImportSyntheseData).filter_by(id_import=imprt.id_import).update(
+        {"valid": False}
+    )
 
-    # Note: this mapping may be modified during data cleaning, when computed columns are added
-    selected_columns = {
-        target: source
-        for target, source in imprt.fieldmapping.items()
-        if source in imprt.columns.keys()
+    # Set nomenclatures using content mapping
+    for field in BibFields.query.filter(BibFields.mnemonique!=None).all():
+        source_field = getattr(ImportSyntheseData, field.source_field)
+        # This CTE return the list of source value / cd_nomenclature for a given nomenclature type
+        cte = (
+            select([column('key').label('value'), column('value').label('cd_nomenclature')])
+            .select_from(sa.func.JSON_EACH_TEXT(TImports.contentmapping[field.mnemonique]))
+            .where(TImports.id_import==imprt.id_import)
+            .cte("cte")
+        )
+        # This statement join the cte results with nomenclatures in order to set the id_nomenclature
+        stmt = (
+            update(ImportSyntheseData)
+            .where(ImportSyntheseData.imprt==imprt)
+            .where(source_field==cte.c.value)
+            .where(TNomenclatures.cd_nomenclature==cte.c.cd_nomenclature)
+            .where(BibNomenclaturesTypes.mnemonique==field.mnemonique)
+            .where(TNomenclatures.id_type==BibNomenclaturesTypes.id_type)
+            .values({field.synthese_field: TNomenclatures.id_nomenclature})
+        )
+        db.session.execute(stmt)
+        if current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]:
+            # Set default nomenclature for empty user fields
+            (
+                ImportSyntheseData.query
+                .filter(ImportSyntheseData.imprt==imprt)
+                .filter(sa.or_(source_field==None, source_field==""))
+                .update(
+                    values={
+                        field.synthese_field: sa.func.gn_synthese.get_default_nomenclature_value(
+                            field.mnemonique,
+                        ),
+                    },
+                    synchronize_session=False,
+                )
+            )
+        # TODO: Check nomenclature errors (synthese_field NULL)
+        # TODO: Check conditional values
+
+    selected_fields = [
+        field_name
+        for field_name, source_field in imprt.fieldmapping.items()
+        if source_field in imprt.columns
+    ]
+    fields = {
+        field.name_field: field
+        for field in (
+            BibFields.query
+            .filter(BibFields.name_field.in_(selected_fields))
+            .filter(BibFields.mnemonique==None)  # nomenclated fields handled with SQL
+            .all()
+        )
     }
-    synthese_fields = (
-        BibFields.query.filter_by(synthese_field=True)
-        .filter(BibFields.name_field.in_(selected_columns))
+    source_cols = (
+        [
+            "id_import",
+            "line_no",
+            "valid",
+        ] + [
+            field.source_column
+            for field in fields.values()
+        ]
+    )
+    records = (
+        db.session.query(
+            *[ImportSyntheseData.__table__.c[col] for col in source_cols]
+        )
+        .filter(
+            ImportSyntheseData.imprt==imprt,
+        )
         .all()
     )
+    df = pd.DataFrame.from_records(
+        records,
+        columns=source_cols,
+    )
 
-    # 1) load the table in a dataframe
-    # 2) apply some check and transformation on the dataframe
-    # 3) save the dataframe in database
-    # 4) apply some other checks and transformation on the database
-    #    (geometry, altitudes, nomenclatures)
+    df["valid"] = True
+    run_all_checks(df, imprt, fields)
 
-    df = load_import_to_dataframe(imprt)
-
-    df["gn_is_valid"] = True
-    df["gn_invalid_reason"] = ""
-
-    run_all_checks(df, imprt, selected_columns, synthese_fields)
-
-    df["_geom"] = df[df["_geom"].notna()]["_geom"].apply(geom_to_wkb)
-    save_dataframe_to_database(imprt, df)
-
+    file_srid = imprt.srid
     local_srid = db.session.execute(sa.func.Find_SRID('ref_geo', 'l_areas', 'geom')).scalar()
-    geometry_setter = GeometrySetter(
-        imprt,
-        local_srid=local_srid,
-        code_commune_col=selected_columns.get("codecommune"),
-        code_maille_col=selected_columns.get("codemaille"),
-        code_dep_col=selected_columns.get("codedepartement"),
-    )
-    geometry_setter.set_geometry()
+    geom_col = df[df["_geom"].notna()]["_geom"]
+    if file_srid == 4326:
+        df["the_geom_4326"] = geom_col.apply(lambda geom: ST_GeomFromWKB(geom.wkb, file_srid))
+        fields["the_geom_4326"] = BibFields.query.filter_by(name_field="the_geom_4326").one()
+    elif file_srid == local_srid:
+        df["the_geom_local"] = geom_col.apply(lambda geom: ST_GeomFromWKB(geom.wkb, file_srid))
+        fields["the_geom_local"] = BibFields.query.filter_by(name_field="the_geom_local").one()
+    else:
+        df["the_geom_4326"] = geom_col.apply(lambda geom: ST_Transform(ST_GeomFromWKB(geom.wkb, file_srid), 4326))
+        fields["the_geom_4326"] = BibFields.query.filter_by(name_field="the_geom_4326").one()
 
-    is_generate_alt = selected_columns.get("altitudes_generate") == "true"
-    set_altitudes(
-        selected_columns,
-        import_id,
-        get_import_table_name(imprt),
-        "gn_pk",
-        is_generate_alt,
-        "gn_the_geom_local",
+    updated_cols = [
+        "id_import",
+        "line_no",
+        "valid",
+    ]
+    updated_cols += [
+        field.synthese_field
+        for field in fields.values()
+        if field.synthese_field
+    ]
+    df.replace({np.nan: None}, inplace=True)
+    df.replace({pd.NaT: None}, inplace=True)
+    records = df[df["valid"] == True][updated_cols].to_dict(orient='records')
+    insert_stmt = pg_insert(ImportSyntheseData)
+    insert_stmt = (
+        insert_stmt
+        .values(records)
+        .on_conflict_do_update(
+            index_elements=updated_cols[:2],
+            set_={col: insert_stmt.excluded[col] for col in updated_cols[2:]},
+        )
+    )
+    db.session.execute(insert_stmt)
+
+    if "the_geom_4326" not in fields:
+        assert "the_geom_local" in fields
+        source_col = "the_geom_local"
+        dest_col = "the_geom_4326"
+        dest_srid = 4326
+    else:
+        assert "the_geom_4326" in fields
+        source_col = "the_geom_4326"
+        dest_col = "the_geom_local"
+        dest_srid = local_srid
+    (
+        ImportSyntheseData.query
+        .filter(
+            ImportSyntheseData.imprt == imprt,
+            ImportSyntheseData.valid == True,
+            getattr(ImportSyntheseData, source_col) != None,
+        )
+        .update(
+            values={
+                dest_col: ST_Transform(getattr(ImportSyntheseData, source_col), dest_srid),
+            },
+            synchronize_session=False,
+        )
     )
 
-    nomenclature_transformer = NomenclatureTransformer()
-    nomenclature_transformer.init(
-        imprt.contentmapping, selected_columns, get_import_table_name(imprt)
-    )
-    nomenclature_transformer.set_nomenclature_ids()
-    nomenclature_transformer.set_default_nomenclature_ids(where_user_val_none=True)
-    nomenclature_transformer.find_nomenclatures_errors(import_id)
-    nomenclature_transformer.check_conditionnal_values(import_id)
-    if current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]:
-        nomenclature_transformer.set_default_nomenclature_ids()
-
-    # database have been modified (new columns, …), reload the Table object
-    db.metadata.remove(get_table_class(get_import_table_name(imprt)))
-    get_table_class(get_import_table_name(imprt))
+    # TODO: the geom point
+    # TODO: maille
+    # TODO: generate uuid (?)
+    # TODO: generate altitude
+    # TODO: missing nomenclature (?)
+    # TODO: nomenclature conditional checks
 
     db.session.commit()
 
@@ -288,36 +377,47 @@ def preview_valid_data(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
-    ImportEntry = get_table_class(get_import_table_name(imprt))
-    synthese_field = [f.name_field for f in BibFields.query.filter_by(synthese_field=True)]
-    total_columns = {
-        target: source
-        for target, source in imprt.fieldmapping.items()
-        if source in imprt.columns.keys() and target in synthese_field
-    }
-    total_columns.update(
-        {
-            "the_geom_4326": "gn_the_geom_4326",
-            "the_geom_local": "gn_the_geom_local",
-            "the_geom_point": "gn_the_geom_point",
-            "id_area_attachment": "id_area_attachment",
-        }
+    fields = (
+        BibFields.query
+        .filter(
+            BibFields.synthese_field != None,
+            BibFields.name_field.in_(imprt.fieldmapping.keys()),
+        )
+        .all()
     )
-    target_columns, source_columns = zip(*get_synthese_columns_mapping(imprt, cast=False).items())
-    select_valid_data = (
-        select(source_columns)
-        .where(ImportEntry.c.gn_is_valid == True)
+    columns = [field.name_field for field in fields]
+    valid_data = (
+        ImportSyntheseData.query
+        .filter_by(
+            imprt=imprt,
+            valid=True,
+        )
+        .options(
+            load_only(*columns),
+        )
         .limit(100)
     )
-    valid_bbox = get_valid_bbox(ImportEntry.c.gn_the_geom_4326)
-    n_valid_data = db.session.query(ImportEntry).filter_by(gn_is_valid=True).count()
-    n_invalid_data = db.session.query(ImportEntry).filter_by(gn_is_valid=False).count()
+    valid_bbox = get_valid_bbox(imprt)
+    n_valid_data = (
+        ImportSyntheseData.query
+        .filter_by(
+            imprt=imprt,
+            valid=True,
+        )
+        .count()
+    )
+    n_invalid_data = (
+        ImportSyntheseData.query
+        .filter_by(
+            imprt=imprt,
+            valid=False,
+        )
+        .count()
+    )
     return jsonify(
         {
-            # 'columns': [ col for col in total_columns.values() ],
-            "columns": target_columns,
-            # "valid_data": valid_data_list,
-            "valid_data": [list(row) for row in db.session.execute(select_valid_data)],
+            "columns": columns,
+            "valid_data": [o.as_dict(fields=columns) for o in valid_data],
             "n_valid_data": n_valid_data,
             "n_invalid_data": n_invalid_data,
             "valid_bbox": valid_bbox,
@@ -333,24 +433,37 @@ def get_import_invalid_rows_as_csv(scope, import_id):
 
     Export invalid data in CSV.
     """
-    imprt = TImports.query.get_or_404(import_id)
+    imprt = TImports.query.options(undefer("source_file")).get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
 
-    if not imprt.import_table:
-        raise BadRequest("Import file has not been decoded.")
-
-    ImportEntry = get_table_class(get_import_table_name(imprt))
-    # TODO source columns: gn_invalid_reason + original columns
-    source_columns = get_synthese_columns_mapping(imprt, cast=False).values()
-    invalid_data = db.session.execute(
-        select(source_columns)
-        .where(ImportEntry.c.gn_is_valid == False)
+    invalid_rows = (
+        ImportSyntheseData.query
+        .filter_by(imprt=imprt, valid=False)
+        .options(load_only("line_no"))
+        .order_by(ImportSyntheseData.line_no)
+        .all()
     )
+    invalid_rows = { row.line_no for row in invalid_rows }
+    if imprt.source_count and imprt.source_count == len(invalid_rows):
+        raise BadRequest("Import file has not been processed.")
 
     filename = imprt.full_file_name.rsplit(".", 1)[0]  # remove extension
-    response = Response(stream_csv(invalid_data), mimetype="text/csv")
-    response.headers.set("Content-Disposition", "attachment", filename=f"{filename}_errors.csv")
+    filename = f"{filename}_errors.csv"
+
+    def generate_invalid_rows_csv():
+        inputfile = BytesIO(imprt.source_file)
+        yield inputfile.readline()  # header
+        line_no = 0
+        for row in inputfile:
+            line_no += 1
+            if line_no in invalid_rows:
+                yield row
+    response = current_app.response_class(
+        generate_invalid_rows_csv(),
+        mimetype=f"text/csv; charset={imprt.encoding}; header=present",
+    )
+    response.headers.set("Content-Disposition", "attachment", filename=filename)
     return response
 
 
@@ -365,28 +478,28 @@ def import_valid_data(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
-    ImportEntry = get_table_class(get_import_table_name(imprt))
     valid_data_count = (
-        db.session.query(ImportEntry)
-        .filter(ImportEntry.c.gn_is_valid == True)
+        ImportSyntheseData.query
+        .filter_by(imprt=imprt, valid=True)
         .count()
     )
     if not valid_data_count:
         raise BadRequest("Not valid data to import")
 
-    source_name = f"Import(id={imprt.id_import})"
-    if db.session.query(TSources.query.filter_by(name_source=source_name).exists()).scalar():
-        return BadRequest(description="This import has been already finalized.")
-
-    # Get the name of the field to use as pk. Fallback to gn_pk.
-    entity_source_pk_field = imprt.fieldmapping.get("entity_source_pk_value", "gn_pk")
-
-    source = TSources(
-        name_source=source_name,
-        desc_source="Imported data from import module (id={import_id})",
-        entity_source_pk_field=entity_source_pk_field,
-    )
-    db.session.add(source)
+    source = TSources.query.filter_by(name_source=imprt.source_name).one_or_none()
+    if source:
+        if current_app.config["DEBUG"]:
+            Synthese.query.filter_by(source=source).delete()
+        else:
+            return BadRequest(description="This import has been already finalized.")
+    else:
+        entity_source_pk_field = BibFields.query.filter_by(name_field="entity_source_pk_value").one()
+        source = TSources(
+            name_source=imprt.source_name,
+            desc_source="Imported data from import module (id={import_id})",
+            entity_source_pk_field=entity_source_pk_field.synthese_field,
+        )
+        db.session.add(source)
 
     logger.info(f"[Import {imprt.id_import}] Disable synthese triggers")
 
@@ -399,13 +512,34 @@ def import_valid_data(scope, import_id):
 
     logger.info(f"[Import {imprt.id_import}] Insert data in synthese")
 
-    ImportEntry = get_table_class(get_import_table_name(imprt))
-    target_columns, source_columns = zip(*get_synthese_columns_mapping(imprt).items())
-    insert_stmt = Synthese.__table__.insert().from_select(
-        names=target_columns,
-        select=select(
-            source_columns,
-        ).where(ImportEntry.c.gn_is_valid == True),
+    generated_fields = {"datetime_min", "datetime_max", "the_geom_4326", "the_geom_local", "the_geom_point"}
+    # TODO: altitude? uuid? (when not in mapping)
+    fields = (
+        BibFields.query
+        .filter(
+            BibFields.synthese_field != None,
+            BibFields.name_field.in_(
+                imprt.fieldmapping.keys() | generated_fields
+            ),
+        )
+        .all()
+    )
+    select_stmt = (
+        ImportSyntheseData.query
+        .filter_by(imprt=imprt, valid=True)
+        .with_entities(*[
+            getattr(ImportSyntheseData, field.synthese_field)
+            for field in fields
+        ])
+        .add_columns(
+            literal(source.id_source),
+            literal(TModules.query.filter_by(module_code=MODULE_CODE).one().id_module),
+        )
+    )
+    names = [ field.synthese_field for field in fields ] + [ "id_source", "id_module" ]
+    insert_stmt = insert(Synthese).from_select(
+        names=names,
+        select=select_stmt,
     )
     db.session.execute(insert_stmt)
 
@@ -493,14 +627,11 @@ def delete_import(scope, import_id):
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     ImportUserError.query.filter_by(imprt=imprt).delete()
+    ImportSyntheseData.query.filter_by(imprt=imprt).delete()
     if imprt.is_finished:
-        # delete imported data if the import is already finished
-        name_source = "Import(id=" + import_id + ")"
-        source = TSources.query.filter_by(name_source=name_source).one()
+        source = TSources.query.filter_by(name_source=imprt.source_name).one()
         Synthese.query.filter_by(source=source).delete()
         db.session.delete(source)
-    if imprt.import_table:
-        drop_import_table(imprt)
     db.session.delete(imprt)
     db.session.commit()
     return jsonify()

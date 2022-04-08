@@ -1,3 +1,5 @@
+from typing import Dict
+
 import pandas as pd
 import numpy as np
 
@@ -8,29 +10,27 @@ from geonature.core.gn_synthese.models import Synthese
 from gn_module_import.models import BibFields
 
 
-def clean_missing_values(df, selected_columns):
+def clean_missing_values(df, fields: Dict[str, BibFields]):
     """
     Replace empty and blank cells by NaN
     """
-    for target_field, source_field in selected_columns.items():
-        df[source_field] = (
-            df[source_field]
-            .replace(to_replace='', value=np.nan)
-            .fillna(value=np.nan)
-        )
+    cols = [
+        field.source_field
+        for field in fields.values()
+        if field.source_field
+    ]
+    df.loc[:, cols] = df.loc[:, cols].replace(to_replace='', value=np.nan)
+    df.loc[:, cols] = df.loc[:, cols].fillna(value=np.nan)
 
 
-def check_required_values(df, imprt, selected_columns, synthese_fields):
-    required_fields = { f for f in synthese_fields
-                        if not Synthese.__table__.c[f.name_field].nullable }
-    for required_field in required_fields:
-        target_field = required_field.name_field
-        source_field = selected_columns[target_field]
-        orig_source_field = selected_columns.get(f'orig_{target_field}', source_field)
-        invalid_rows = df[df[source_field].isna()]
+def check_required_values(df, fields: Dict[str, BibFields]):
+    for field_name, field in fields.items():
+        if not field.mandatory:
+            continue
+        invalid_rows = df[df[field.source_column].isna()]
         if len(invalid_rows):
             yield {
                 'error_code': 'MISSING_VALUE',
-                'column': orig_source_field,
+                'column': field_name,
                 'invalid_rows': invalid_rows,
             }
