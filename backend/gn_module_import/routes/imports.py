@@ -37,6 +37,7 @@ from gn_module_import.utils import (
     import_data_to_synthese,
     populate_cor_area_synthese,
     detect_encoding,
+    detect_separator,
     insert_import_data_in_database,
     get_file_size,
 )
@@ -117,7 +118,6 @@ def upload_file(scope, import_id):
         raise BadRequest(
             description=f"File too big ({size} > {max_file_size})."
         )  # FIXME better error signaling?
-    detected_encoding = detect_encoding(f)
     if imprt is None:
         try:
             dataset_id = int(request.form["datasetId"])
@@ -133,9 +133,13 @@ def upload_file(scope, import_id):
         imprt = TImports(dataset=dataset)
         imprt.authors.append(author)
         db.session.add(imprt)
+    imprt.detected_encoding = detect_encoding(f)
+    imprt.detected_separator = detect_separator(
+        f,
+        encoding=imprt.encoding or imprt.detected_encoding,
+    )
     imprt.source_file = f.read()
     imprt.full_file_name = f.filename
-    imprt.detected_encoding = detected_encoding
 
     # reset decode step
     imprt.columns = None
@@ -176,6 +180,11 @@ def decode_file(scope, import_id):
         imprt.srid = int(request.json["srid"])
     except ValueError:
         raise BadRequest(description="SRID must be an integer.")
+    if 'separator' not in request.json:
+        raise BadRequest(description='Missing separator')
+    if request.json['separator'] not in TImports.AVAILABLE_SEPARATORS:
+        raise BadRequest(description='Unknown separator')
+    imprt.separator = request.json['separator']
     imprt.date_update_import = datetime.now()
     db.session.commit()  # commit parameters
 
@@ -183,10 +192,7 @@ def decode_file(scope, import_id):
         csvfile = StringIO(imprt.source_file.decode(imprt.encoding))
     except UnicodeError as e:
         raise BadRequest(description=str(e))
-    headline = csvfile.readline()
-    csvfile.seek(0)
-    dialect = csv.Sniffer().sniff(headline)
-    csvreader = csv.reader(csvfile, delimiter=dialect.delimiter)
+    csvreader = csv.reader(csvfile, delimiter=imprt.separator)
     columns = next(csvreader)
     duplicates = set([col for col in columns if columns.count(col) > 1])
     if duplicates:

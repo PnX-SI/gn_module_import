@@ -138,11 +138,13 @@ class TImports(InstancePermissionMixin, db.Model):
         "iso-8859-15",
     }
     AVAILABLE_FORMATS = ["csv", "geojson"]
+    AVAILABLE_SEPARATORS = [",", ";"]
 
     id_import = db.Column(db.Integer, primary_key=True, autoincrement=True)
     format_source_file = db.Column(db.Unicode, nullable=True)
     srid = db.Column(db.Integer, nullable=True)
     separator = db.Column(db.Unicode, nullable=True)
+    detected_separator = db.Column(db.Unicode, nullable=True)
     encoding = db.Column(db.Unicode, nullable=True)
     detected_encoding = db.Column(db.Unicode, nullable=True)
     # import_table = db.Column(db.Unicode, nullable=True)
@@ -241,6 +243,7 @@ class TImports(InstancePermissionMixin, db.Model):
         else:
             import_as_dict["available_encodings"] = sorted(TImports.AVAILABLE_ENCODINGS)
         import_as_dict["available_formats"] = TImports.AVAILABLE_FORMATS
+        import_as_dict["available_separators"] = TImports.AVAILABLE_SEPARATORS
         if self.full_file_name and "." in self.full_file_name:
             extension = self.full_file_name.rsplit(".", 1)[-1]
             if extension in TImports.AVAILABLE_FORMATS:

@@ -191,6 +191,7 @@ jsonschema_definitions = {
             "authors_name": {"type": "string"},
             "available_encodings": {"type": "array", "items": {"type": "string"}},
             "available_formats": {"type": "array", "items": {"type": "string"}},
+            "available_separators": {"type": "array", "items": {"type": "string"}},
             #"columns": {
             #    "type": ["null", "array"],
             #    "items": {"type": "string"},
@@ -227,6 +228,7 @@ jsonschema_definitions = {
             "authors_name",
             "available_encodings",
             "available_formats",
+            "available_separators",
             "columns",
             "fieldmapping",
             "contentmapping",

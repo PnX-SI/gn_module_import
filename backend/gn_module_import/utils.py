@@ -35,14 +35,25 @@ def get_file_size(f):
 
 
 def detect_encoding(f):
+    position = f.tell()
+    f.seek(0)
     detector = UniversalDetector()
     for row in f:
         detector.feed(row)
         if detector.done:
             break
-    f.seek(0)
     detector.close()
+    f.seek(position)
     return detector.result["encoding"]
+
+
+def detect_separator(f, encoding):
+    position = f.tell()
+    f.seek(0)
+    sample = f.readline().decode(encoding)
+    dialect = csv.Sniffer().sniff(sample)
+    f.seek(position)
+    return dialect.delimiter
 
 
 def get_valid_bbox(imprt):

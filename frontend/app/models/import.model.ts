@@ -26,6 +26,7 @@ export interface Import {
     format_source_file: string;
     srid: number;
     separator: string;
+    detected_separator: string;
     encoding: string;
     detected_encoding: string;
     import_table: string;
@@ -50,6 +51,7 @@ export interface Import {
     authors_name: string;
     available_encodings?: [string];
     available_formats?: [string];
+    available_separators?: [string];
     detected_format?: string;
 
     errors?: [ImportError];

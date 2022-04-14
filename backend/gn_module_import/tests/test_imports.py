@@ -91,6 +91,7 @@ def decoded_import(client, uploaded_import):
             "encoding": "utf-8",
             "format": "csv",
             "srid": 4326,
+            "separator": ";",
         },
     )
     assert r.status_code == 200
@@ -389,6 +390,7 @@ class TestImports:
             "encoding": "utf-16",
             "format": "csv",
             "srid": 2154,
+            "separator": ";",
         }
 
         r = self.client.post(
@@ -437,6 +439,13 @@ class TestImports:
         #assert r.status_code == BadRequest.code
         #assert "Expected" in r.json["description"]
 
+        wrong_separator_data = data.copy()
+        wrong_separator_data['separator'] = 'sep'
+        r = self.client.post(
+            url_for('import.decode_file', import_id=imprt.id_import), data=wrong_separator_data
+        )
+        assert r.status_code == BadRequest.code
+
         with open(tests_path / "files" / "utf8_file.csv", "rb") as f:
             imprt.source_file = f.read()
         r = self.client.post(
@@ -450,6 +459,7 @@ class TestImports:
             "encoding": "utf-8",
             "format": "csv",
             "srid": 4326,
+            "separator": ";",
         }
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.post(
@@ -638,6 +648,7 @@ class TestImports:
         assert imprt_json["date_update_import"]
         assert imprt_json["detected_encoding"] == "utf-8"
         assert imprt_json["detected_format"] == "csv"
+        assert imprt_json["detected_separator"] == ";"
         assert imprt_json["full_file_name"] == test_file_name
         assert imprt_json["id_dataset"] == datasets["own_dataset"].id_dataset
 
@@ -646,6 +657,7 @@ class TestImports:
             "encoding": "utf-8",
             "format": "csv",
             "srid": 4326,
+            "separator": ";",
         }
         r = self.client.post(
             url_for("import.decode_file", import_id=imprt.id_import), data=data
@@ -658,6 +670,7 @@ class TestImports:
         assert imprt.date_update_import
         assert imprt.encoding == "utf-8"
         assert imprt.format_source_file == "csv"
+        assert imprt.separator == ";"
         assert imprt.srid == 4326
         assert imprt.columns
         assert len(imprt.columns) > 0

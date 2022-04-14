@@ -33,6 +33,7 @@ export class DecodeFileStepComponent implements OnInit {
       encoding: [null, Validators.required],
       format: [null, Validators.required],
       srid: [null, Validators.required],
+      separator: [null, Validators.required],
     });
   }
 
@@ -51,6 +52,11 @@ export class DecodeFileStepComponent implements OnInit {
     }
     if (this.importData.srid) {
       this.paramsForm.patchValue({ srid: this.importData.srid });
+    }
+    if (this.importData.separator) {
+        this.paramsForm.patchValue({separator: this.importData.separator})
+    } else if (this.importData.detected_separator) {
+      this.paramsForm.patchValue({ separator: this.importData.detected_separator });
     }
   }
 
