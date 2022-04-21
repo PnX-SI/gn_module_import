@@ -42,7 +42,7 @@ def downgrade():
     """)
     op.execute("""
         ALTER TABLE gn_imports.t_mappings_fields
-        DROP COLUMN is_added BOOLEAN NOT NULL DEFAULT FALSE
+        ADD COLUMN is_added BOOLEAN NOT NULL DEFAULT FALSE
     """)
     op.execute("""
         ALTER TABLE gn_imports.t_user_error_list
