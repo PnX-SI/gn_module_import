@@ -70,7 +70,7 @@ export class ImportStepComponent implements OnInit {
     openErrorSheet() {
         const url = new URL(window.location.href);
         url.hash = this._router.serializeUrl(
-            this._router.createUrlTree(['../errors'], {relativeTo: this._route})
+            this._router.createUrlTree(['import', this.importData.id_import, 'errors'])
         );
         window.open(url.href, "_blank");
     }
@@ -92,23 +92,7 @@ export class ImportStepComponent implements OnInit {
                 } else this._router.navigate([`${ModuleConfig.MODULE_URL}`]);*/
             },
             error => {
-                console.log("import error");
                 this.spinner = false;
-                this._commonService.regularToaster("error", error.error.description);
-
-                /*if (error.statusText === "Unknown Error") {
-                    // show error message if no connexion
-                    this._commonService.regularToaster(
-                        "error",
-                        "Une erreur s'est produite : contactez l'administrateur du site"
-                    );
-                } else {
-                    // show error message if other server error
-                    this._commonService.regularToaster(
-                        "error",
-                        error.error.message + " = " + error.error.details
-                    );
-                }*/
             }
         );
     }
