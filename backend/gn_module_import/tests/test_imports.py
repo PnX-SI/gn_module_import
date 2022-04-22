@@ -25,7 +25,7 @@ from geonature.core.gn_meta.models import TDatasets
 from pypnusershub.db.models import User, Organisme
 
 from gn_module_import.models import TImports, ImportSyntheseData, FieldMapping, ContentMapping
-from gn_module_import.utils.imports import insert_import_data_in_database#, get_table_class, get_import_table_name
+from gn_module_import.utils import insert_import_data_in_database#, get_table_class, get_import_table_name
 
 from .jsonschema_definitions import jsonschema_definitions
 

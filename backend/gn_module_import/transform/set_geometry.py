@@ -43,46 +43,6 @@ class GeometrySetter:
         - check if geom fit with the bounding box
         - calculate the attachment geoms
         """
-        logger.info(
-            "creating  geometry columns and transform them (srid and points):"
-        )
-        self.add_geom_column()
-        #  take the column 'source column' to fill the appropriate column
-        if self.import_srid == 4326:
-            self.set_geom_srid("_geom", "gn_the_geom_4326", 4326)
-            self.transform_geom(
-                source_column='_geom',
-                source_srid=self.import_srid,
-                target_column="gn_the_geom_local",
-                target_srid=self.local_srid,
-            )
-        elif self.import_srid == self.local_srid:
-            self.set_geom_srid('_geom', "gn_the_geom_local", self.local_srid)
-            self.transform_geom(
-                source_column='_geom',
-                source_srid=self.import_srid,
-                target_column="gn_the_geom_4326",
-                target_srid="4326",
-            )
-        else:
-            self.transform_geom(
-                source_column='_geom',
-                source_srid=self.import_srid,
-                target_column="gn_the_geom_4326",
-                target_srid="4326",
-            )
-            self.transform_geom(
-                source_column='_geom',
-                source_srid=self.import_srid,
-                target_column="gn_the_geom_local",
-                target_srid=self.local_srid,
-            )
-
-        self.calculate_geom_point(
-            source_geom_column="gn_the_geom_4326",
-            target_geom_column="gn_the_geom_point",
-        )
-        from gn_module_import.utils.imports import get_table_class, get_import_table_name
         self.check_geom_validity()
         if current_app.config["IMPORT"]["ENABLE_BOUNDING_BOX_CHECK"]:
             #  check bounding box
@@ -167,86 +127,6 @@ class GeometrySetter:
                         ", ".join(dep_errors["code_error"])
                     ),
                 )
-
-    def check_geom_validity(self):
-        """
-        Set an error where geom is not valid
-        """
-        query = """
-        UPDATE {table}
-        SET gn_is_valid = 'False',
-        gn_invalid_reason = 'INVALID_GEOMETRY'
-        WHERE ST_IsValid(gn_the_geom_4326) IS FALSE
-        RETURNING gn_pk;
-        """.format(
-            table=self.table_name
-        )
-        invalid_geom_rows = DB.session.execute(query).fetchall()
-        if len(invalid_geom_rows) > 0:
-            set_user_error(
-                self.id_import,
-                error_code="INVALID_GEOMETRY",
-                id_rows=list(map(lambda r: r.gn_pk, invalid_geom_rows)),
-                comment="Des géométrie fournies s'auto-intersectent",
-            )
-
-    def add_geom_column(self):
-        """
-        Add geom columns to the temp table
-        """
-        query = """
-            ALTER TABLE {schema_name}.{table_name}
-            DROP COLUMN IF EXISTS gn_the_geom_4326,
-            DROP COLUMN IF EXISTS gn_the_geom_local,
-            DROP COLUMN IF EXISTS gn_the_geom_point,
-            DROP COLUMN IF EXISTS id_area_attachment,
-            ADD COLUMN id_area_attachment integer;
-            SELECT public.AddGeometryColumn('{schema_name}', '{table_name}', 'gn_the_geom_4326', 4326, 'Geometry', 2 );
-            SELECT public.AddGeometryColumn('{schema_name}', '{table_name}', 'gn_the_geom_local', {local_srid}, 'Geometry', 2 );
-            SELECT public.AddGeometryColumn('{schema_name}', '{table_name}', 'gn_the_geom_point', 4326, 'POINT', 2 );
-            """.format(
-            schema_name=self.table_name.split(".")[0],
-            table_name=self.table_name.split(".")[1],
-            local_srid=self.local_srid,
-        )
-        DB.session.execute(query)
-
-    def set_geom_srid(self, source_column, target_column, srid):
-        """
-        Take the dataframe source column to set the appropriate geom column
-        """
-        print(f"SET GIVEN GEOM {target_column}")
-        query = """
-                UPDATE {table_name} 
-                SET {target_column} = ST_SetSRID({source_column}, {srid})
-                WHERE gn_is_valid = 'True' AND {source_column} IS NOT NULL;
-                """.format(
-            table_name=self.table_name, target_column=target_column,
-            source_column=source_column, srid=srid,
-        )
-        res = DB.session.execute(query)
-        print("RESULT", res.rowcount)
-
-    def transform_geom(self, source_column, source_srid, target_column, target_srid):
-        """
-        Make the projection translation from a source to a target column
-        """
-        query = """
-        UPDATE {table_name} 
-        SET {target_column} = ST_transform(
-                ST_SetSRID({source_column}, {source_srid}), 
-                {target_srid}
-            )
-        WHERE gn_is_valid = 'True';
-        """.format(
-            table_name=self.table_name,
-            source_column=source_column,
-            source_srid=source_srid,
-            target_column=target_column,
-            target_srid=target_srid,
-        )
-        DB.session.execute(query)
-
     def calculate_geom_point(self, source_geom_column, target_geom_column):
         # FIXME: what if source col is NULL?????
         query = """
@@ -258,20 +138,6 @@ class GeometrySetter:
             table_name=self.table_name,
             target_geom_column=target_geom_column,
             source_geom_column=source_geom_column,
-        )
-        DB.session.execute(query)
-
-    def set_text(self):
-        """
-        Retransform the geom col in text (otherwise dask not working)
-        """
-        query = """
-                ALTER TABLE {table_name}
-                ALTER COLUMN gn_the_geom_local TYPE text,
-                ALTER COLUMN gn_the_geom_4326 TYPE text,
-                ALTER COLUMN gn_the_geom_point TYPE text;
-            """.format(
-            table_name=self.table_name
         )
         DB.session.execute(query)
 

@@ -13,7 +13,7 @@ from geonature.utils.env import db
 
 from gn_module_import.models import TImports
 from gn_module_import.blueprint import blueprint
-from gn_module_import.utils.imports import (
+from gn_module_import.utils import (
     detect_encoding,
     insert_import_data_in_database,
 )

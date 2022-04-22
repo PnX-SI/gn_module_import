@@ -37,11 +37,7 @@ from gn_module_import.models import (
 )
 from gn_module_import.checks import run_all_checks
 from gn_module_import.blueprint import blueprint
-from gn_module_import.utils import get_missing_fields
-from gn_module_import.transform.set_geometry import GeometrySetter
-from gn_module_import.transform.set_altitudes import set_altitudes
-from gn_module_import.transform.nomenclatures.nomenclatures import NomenclatureTransformer
-from gn_module_import.utils.imports import get_valid_bbox
+from gn_module_import.utils import get_valid_bbox
 from gn_module_import.logs import logger
 
 
@@ -122,9 +118,6 @@ def get_import_values(scope, import_id):
         raise Forbidden
     if not imprt.source_count:
         raise Conflict(description="Data have not been loaded {}.".format(imprt.source_count))
-    #if not imprt.fieldmapping:
-    #    raise Conflict("Field mapping must have been set before executing this action.")
-    #ImportEntry = get_table_class(get_import_table_name(imprt))
     nomenclated_fields = (
         BibFields.query
         .filter(BibFields.mnemonique != None)
