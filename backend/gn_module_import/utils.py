@@ -174,6 +174,8 @@ def update_import_data_from_dataframe(imprt, fields, df):
     db.session.query(ImportSyntheseData).filter_by(id_import=imprt.id_import).update(
         {"valid": False}
     )
+    if not len(df[df["valid"] == True]):
+        return
     updated_cols = [
         "id_import",
         "line_no",
