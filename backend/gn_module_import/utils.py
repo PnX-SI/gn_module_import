@@ -286,9 +286,14 @@ def import_data_to_synthese(imprt, source):
         .add_columns(
             literal(source.id_source),
             literal(TModules.query.filter_by(module_code=MODULE_CODE).one().id_module),
+            literal(imprt.id_dataset),
         )
     )
-    names = [field.synthese_field for field in fields] + ["id_source", "id_module"]
+    names = [field.synthese_field for field in fields] + [
+        "id_source",
+        "id_module",
+        "id_dataset",
+    ]
     insert_stmt = insert(Synthese).from_select(
         names=names,
         select=select_stmt,
