@@ -147,7 +147,7 @@ def check_dates(df, fields: Dict[str, BibFields]):
     
 
 
-def _run_all_checks(df, imprt, fields: Dict[str, BibFields]):
+def _run_all_checks(imprt, fields: Dict[str, BibFields], df):
     clean_missing_values(df, fields)
     concat_dates(df, fields)
     yield from check_required_values(df, fields)
@@ -172,8 +172,9 @@ def _run_all_checks(df, imprt, fields: Dict[str, BibFields]):
     # TODO: check referential cd_nom, cd_hab
 
 
-def run_all_checks(df, imprt, fields: Dict[str, BibFields]):
-    for error in _run_all_checks(df, imprt, fields):
+def run_all_checks(imprt, fields: Dict[str, BibFields], df):
+    df["valid"] = True
+    for error in _run_all_checks(imprt, fields, df):
         if error['invalid_rows'].empty:
             continue
         try:
