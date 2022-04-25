@@ -73,8 +73,8 @@ def insert_import_data_in_database(imprt):
     extra_columns = set(columns) - set(imprt.fieldmapping.values())
     csvfile = StringIO(imprt.source_file.decode(imprt.encoding))
     csvreader = csv.DictReader(
-        csvfile, fieldnames=columns, delimiter=";"
-    )  # imprt.delimiter)
+        csvfile, fieldnames=columns, delimiter=imprt.separator
+    )
     header = next(csvreader, None)  # skip header
     for key, value in header.items():  # FIXME
         assert key == value
