@@ -214,6 +214,8 @@ def decode_file(scope, import_id):
 )
 def load_import(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
+    if not imprt.has_instance_permission(scope):
+        raise Forbidden
     if imprt.source_file is None:
         raise BadRequest(description="A file must be first uploaded.")
     if imprt.fieldmapping is None:
@@ -548,7 +550,6 @@ def delete_import(scope, import_id):
     Delete an import.
     """
     imprt = TImports.query.get_or_404(import_id)
-    # check that the user has delete permission to this particular import instance:
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     ImportUserError.query.filter_by(imprt=imprt).delete()
