@@ -547,8 +547,8 @@ def delete_import(scope, import_id):
         raise Forbidden
     ImportUserError.query.filter_by(imprt=imprt).delete()
     ImportSyntheseData.query.filter_by(imprt=imprt).delete()
-    if imprt.is_finished:
-        source = TSources.query.filter_by(name_source=imprt.source_name).one()
+    source = TSources.query.filter_by(name_source=imprt.source_name).one_or_none()
+    if source:
         Synthese.query.filter_by(source=source).delete()
         db.session.delete(source)
     db.session.delete(imprt)
