@@ -108,6 +108,8 @@ def upload_file(scope, import_id):
         imprt = TImports.query.get_or_404(import_id)
         if not imprt.has_instance_permission(scope):
             raise Forbidden
+        if not imprt.dataset.active:
+            raise Forbidden("Le jeu de données est fermé.")
     else:
         imprt = None
     f = request.files["file"]
@@ -130,6 +132,8 @@ def upload_file(scope, import_id):
             raise Forbidden(
                 description="Vous n’avez pas les permissions sur ce jeu de données."
             )
+        if not dataset.active:
+            raise Forbidden("Le jeu de données est fermé.")
         imprt = TImports(dataset=dataset)
         imprt.authors.append(author)
         db.session.add(imprt)
@@ -159,6 +163,8 @@ def decode_file(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
+    if not imprt.dataset.active:
+        raise Forbidden("Le jeu de données est fermé.")
     if imprt.source_file is None:
         raise BadRequest(description="A file must be first uploaded.")
     if "encoding" not in request.json:
@@ -216,6 +222,8 @@ def load_import(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
+    if not imprt.dataset.active:
+        raise Forbidden("Le jeu de données est fermé.")
     if imprt.source_file is None:
         raise BadRequest(description="A file must be first uploaded.")
     if imprt.fieldmapping is None:
@@ -322,6 +330,8 @@ def set_import_field_mapping(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
+    if not imprt.dataset.active:
+        raise Forbidden("Le jeu de données est fermé.")
     try:
         FieldMapping.validate_values(request.json)
     except ValueError as e:
@@ -341,6 +351,8 @@ def set_import_content_mapping(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
+    if not imprt.dataset.active:
+        raise Forbidden("Le jeu de données est fermé.")
     try:
         ContentMapping.validate_values(request.json)
     except ValueError as e:
@@ -363,6 +375,8 @@ def prepare_import(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
+    if not imprt.dataset.active:
+        raise Forbidden("Le jeu de données est fermé.")
 
     # Check preconditions to execute this action
     if not imprt.source_count:
@@ -506,6 +520,8 @@ def import_valid_data(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
+    if not imprt.dataset.active:
+        raise Forbidden("Le jeu de données est fermé.")
     valid_data_count = ImportSyntheseData.query.filter_by(
         imprt=imprt, valid=True
     ).count()
@@ -552,6 +568,8 @@ def delete_import(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
+    if not imprt.dataset.active:
+        raise Forbidden("Le jeu de données est fermé.")
     ImportUserError.query.filter_by(imprt=imprt).delete()
     ImportSyntheseData.query.filter_by(imprt=imprt).delete()
     source = TSources.query.filter_by(name_source=imprt.source_name).one_or_none()
