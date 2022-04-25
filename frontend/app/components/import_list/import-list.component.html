@@ -64,7 +64,7 @@
                             ngx-datatable-cell-template
                         >
                             <span
-                                *ngIf="row.in_error; else elseBlock"
+                                *ngIf="row.errors_exists; else elseBlock"
                                 class="badge font-size-medium"
                             >
                                 Import en erreur
@@ -105,7 +105,7 @@
                             ngx-datatable-cell-template
                         >
                             <button
-                                *ngIf="row.in_error"
+                                *ngIf="row.errors_exists"
                                 matTooltip="Rapport d'erreur"
                                 mat-icon-button
                                 color="warn"
@@ -115,7 +115,7 @@
                                 <mat-icon>warning</mat-icon>
                             </button>
                             <button
-                                *ngIf="(row.is_finished) && ((row.source_count - row.import_count) > 0)"
+                                *ngIf="row.errors_exists"
                                 mat-icon-button
                                 color="primary"
                                 style="margin-top: -10px;"

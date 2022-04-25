@@ -8,6 +8,8 @@ from sqlalchemy.orm import relationship, deferred, joinedload
 from sqlalchemy.types import ARRAY
 from sqlalchemy.dialects.postgresql import HSTORE, JSON, UUID, JSONB
 from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.orm import column_property
+from sqlalchemy.sql.expression import exists
 from flask_sqlalchemy import BaseQuery
 from jsonschema.exceptions import ValidationError as JSONValidationError
 from jsonschema import validate as validate_json
@@ -167,7 +169,6 @@ class TImports(InstancePermissionMixin, db.Model):
     )
     is_finished = db.Column(db.Boolean, nullable=False, default=False)
     processing = db.Column(db.Boolean, nullable=False, default=False)
-    in_error = db.Column(db.Boolean)
     dataset = db.relationship("TDatasets", lazy="joined")
     source_file = deferred(db.Column(db.LargeBinary))
     columns = db.Column(ARRAY(db.Unicode))
@@ -197,6 +198,10 @@ class TImports(InstancePermissionMixin, db.Model):
             action: self.has_instance_permission(scope)
             for action, scope in scopes_by_action.items()
         }
+
+    errors_exists = column_property(
+        exists().where(ImportUserError.id_import == id_import)
+    )
 
     @property
     def source_name(self):

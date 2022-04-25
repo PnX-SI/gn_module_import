@@ -57,7 +57,6 @@ def get_import_list(scope):
             Load(TImports).raiseload("*"),
             joinedload("authors"),
             joinedload("dataset"),
-            joinedload("errors"),
         )
         .filter_by_scope(scope)
         .order_by(TImports.id_import)
@@ -65,7 +64,6 @@ def get_import_list(scope):
     )
 
     fields = [
-        "errors.pk",
         "dataset.dataset_name",
         "authors",
     ]

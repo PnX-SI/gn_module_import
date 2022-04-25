@@ -43,7 +43,7 @@ valid_file_expected_errors = {
 }
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="function")
 def imports(users):
     def create_import(authors=[]):
         with db.session.begin_nested():
