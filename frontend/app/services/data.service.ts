@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
-import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { AppConfig } from "@geonature_config/app.config";
 import { ModuleConfig } from "../module.config";
 import { Import, ImportError, ImportValues, SynthesisThemeFields } from "../models/import.model";
@@ -12,8 +12,14 @@ const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 export class DataService {
   constructor(private _http: HttpClient) { }
 
-  getImportList(page=1): Observable<Array<Import>> {
-    return this._http.get<Array<Import>>(`${urlApi}/imports/?page=${page}`);
+  getImportList(page=1, search=null): Observable<Array<Import>> {
+    const url = `${urlApi}/imports/`
+    let values = {page: page}
+    if (search) {
+        values["search"] = search
+    }
+    let params = new HttpParams({fromObject:values})
+    return this._http.get<Array<Import>>(url, { params: params });
   }
 
   getOneImport(id_import): Observable<Import> {

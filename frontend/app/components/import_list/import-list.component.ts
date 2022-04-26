@@ -29,6 +29,7 @@ export class ImportListComponent implements OnInit {
     public total: number
     public offset: number
     public limit: number
+    public search_string: string = ''
 
     constructor(
         public _cruvedStore: CruvedStoreService,
@@ -44,11 +45,15 @@ export class ImportListComponent implements OnInit {
 
     ngOnInit() {
 
-        this.onImportList();
+        this.onImportList(1, null);
 
 
         this.search.valueChanges.subscribe(value => {
-            this.updateFilter(value);
+            setTimeout(() => {
+                if (value == this.search.value) {
+                    this.updateFilter(value);
+                }
+            }, 500)
         });
     }
 
@@ -58,31 +63,14 @@ export class ImportListComponent implements OnInit {
 
     updateFilter(val: any) {
         const value = val.toString().toLowerCase().trim();
-
+        this.onImportList(1, value)
+        this.search_string = value
         // listes des colonnes selon lesquelles filtrer
-        const cols = this.config.LIST_COLUMNS_FRONTEND.filter(item => {
-            return item['filter'];
-        });
-
-        // Un resultat est retenu si au moins une colonne contient le mot-cle
-        this.filteredHistory = this.history.filter(item => {
-            for (let i = 0; i < cols.length; i++) {
-                if (
-                    (item[cols[i]['prop']] && item[cols[i]['prop']]
-                        .toString()
-                        .toLowerCase()
-                        .indexOf(value) !== -1) ||
-                    !value
-                ) {
-                    return true;
-                }
-            }
-        });
     }
 
-    private onImportList() {
+    private onImportList(page, search) {
 
-        this._ds.getImportList().subscribe(
+        this._ds.getImportList(page, search).subscribe(
             res => {
                 this.history = res["imports"];
                 this.filteredHistory = this.history;
@@ -125,7 +113,7 @@ export class ImportListComponent implements OnInit {
     }
 
     setPage(e) {
-        this._ds.getImportList(e.offset + 1).subscribe(res => {
+        this._ds.getImportList(e.offset + 1, this.search_string).subscribe(res => {
                 this.history = res["imports"];
                 this.filteredHistory = this.history;
                 this.empty = res.length == 0;

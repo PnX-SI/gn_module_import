@@ -7,6 +7,7 @@ import csv
 from flask import request, current_app, jsonify, g
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden
 import sqlalchemy as sa
+from sqlalchemy import or_, func
 from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
 from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.sql.expression import collate
@@ -29,6 +30,7 @@ from gn_module_import.models import (
     FieldMapping,
     ContentMapping,
 )
+from pypnusershub.db.models import User
 from gn_module_import.checks import run_all_checks
 from gn_module_import.blueprint import blueprint
 from gn_module_import.utils import (
@@ -66,13 +68,27 @@ def get_import_list(scope):
     """
     page = request.args.get("page", default=1, type=int)
     limit = request.args.get("limit", default=IMPORTS_PER_PAGE, type=int)
+    search = request.args.get("search", default=None, type=str)
+    filters = []
+    if search:
+        filters.append(TImports.full_file_name.ilike(f"%{search}%"))
+        filters.append(TImports.dataset.has(func.lower(TDatasets.dataset_name).contains(func.lower(search))))
+        filters.append(TImports.authors.any(or_(
+                User.prenom_role.ilike(f"%{search}%"),
+                User.nom_role.ilike(f"%{search}%"),
+            ),
+        ))
+        filters.append(TImports.authors.any(func.lower(User.nom_role).contains(func.lower(search))))
+
     imports = (
-        TImports.query.options(
+        TImports.query
+        .options(
             Load(TImports).raiseload("*"),
             joinedload("authors"),
             joinedload("dataset"),
         )
         .filter_by_scope(scope)
+        .filter(or_(*filters))
         .order_by(TImports.id_import)
         .paginate(page=page, error_out=False, max_per_page=limit)
     )

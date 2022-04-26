@@ -70,6 +70,7 @@ DEFAULT_LIST_COLUMN = [
     },
 ]
 
+
 UPLOAD_DIRECTORY = "upload"
 
 ARCHIVES_SCHEMA_NAME = "gn_import_archives"
