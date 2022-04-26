@@ -12,8 +12,8 @@ const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 export class DataService {
   constructor(private _http: HttpClient) { }
 
-  getImportList(): Observable<Array<Import>> {
-    return this._http.get<Array<Import>>(`${urlApi}/imports/`);
+  getImportList(page=1): Observable<Array<Import>> {
+    return this._http.get<Array<Import>>(`${urlApi}/imports/?page=${page}`);
   }
 
   getOneImport(id_import): Observable<Import> {

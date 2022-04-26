@@ -233,14 +233,14 @@ class TestImports:
         assert r.status_code == 200
         json_data = r.get_json()
         validate_json(
-            json_data,
+            json_data["imports"],
             {
                 "definitions": jsonschema_definitions,
                 "type": "array",
                 "items": {"$ref": "#/definitions/import"},
             },
         )
-        imports_ids = {imprt["id_import"] for imprt in json_data}
+        imports_ids = {imprt["id_import"] for imprt in json_data["imports"]}
         expected_imports_ids = {
             imports[imprt].id_import for imprt in ["own_import", "associate_import"]
         }
