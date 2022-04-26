@@ -62,7 +62,7 @@ DEFAULT_LIST_COLUMN = [
         "filter": True,
     },
     {
-        "prop": "author_name",
+        "prop": "authors_name",
         "name": "Auteur",
         "max_width": 320,
         "show": True,

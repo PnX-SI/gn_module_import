@@ -43,6 +43,7 @@ from gn_module_import.utils import (
 )
 
 
+MAX_PER_PAGE = 3
 @blueprint.route("/imports/", methods=["GET"])
 @permissions.check_cruved_scope(
     "R", get_scope=True, module_code="IMPORT", object_code="IMPORT"
@@ -53,6 +54,8 @@ def get_import_list(scope):
 
     Get all imports to which logged-in user has access.
     """
+    page = request.args.get("page", default=1, type=int)
+    limit = request.args.get("limit", default=MAX_PER_PAGE, type=int)
     imports = (
         TImports.query.options(
             Load(TImports).raiseload("*"),
@@ -61,15 +64,16 @@ def get_import_list(scope):
         )
         .filter_by_scope(scope)
         .order_by(TImports.id_import)
-        .all()
+        .paginate(page=page, error_out=False, max_per_page=limit)
     )
 
     fields = [
         "dataset.dataset_name",
         "authors",
     ]
-
-    return jsonify([imprt.as_dict(fields=fields) for imprt in imports])
+    data = {"imports": [imprt.as_dict(fields=fields) for imprt in imports.items],
+            "count": imports.total, "limit": limit, "offset": page - 1}
+    return jsonify(data)
 
 
 @blueprint.route("/imports/<int:import_id>/", methods=["GET"])
