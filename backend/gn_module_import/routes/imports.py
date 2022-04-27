@@ -155,7 +155,7 @@ def upload_file(scope, import_id):
     "C", get_scope=True, module_code="IMPORT", object_code="IMPORT"
 )
 def decode_file(scope, import_id):
-    imprt = TImports.query.get_or_404(import_id)
+    imprt = TImports.query.options(undefer("source_file")).get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.dataset.active:
