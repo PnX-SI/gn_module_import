@@ -63,33 +63,28 @@
                             let-row="row"
                             ngx-datatable-cell-template
                         >
-                            <div *ngIf="!row.date_end_import || row?.dataset?.active">
-                                <button
-                                    [disabled]="!row?.cruved?.U"
-                                    mat-raised-button
-                                    color="primary"
-                                    *ngIf="!row.processing"
-                                    class="clickable btn-dark"
-                                    style="margin-top: -10px;"
-                                    (click)="onFinishImport(row)"
-                                >
-                                    Reprendre
-                                </button>
-                            </div>
-
                             <p *ngIf="row.date_end_import">{{row.date_end_import |date:'dd-MM-yyyy'}}</p>
-
                         </ng-template>
                     </ngx-datatable-column>
                     <ngx-datatable-column
-                        maxWidth="200"
-                        name="Rapport d'erreur"
+                        name="Actions"
                         [sortable]="true"
                     >
                         <ng-template
                             let-row="row"
                             ngx-datatable-cell-template
                         >
+                            <button
+                                [disabled]="!row?.cruved?.U || !row?.dataset?.active"
+                                matTooltip="Modifier l’import"
+                                mat-icon-button
+                                color="primary"
+                                *ngIf="!row.processing"
+                                style="margin-top: -10px;"
+                                (click)="onFinishImport(row)"
+                            >
+                                <mat-icon>edit</mat-icon>
+                            </button>
                             <button
                                 *ngIf="row.errors_exists"
                                 matTooltip="Rapport d'erreur"
@@ -108,25 +103,15 @@
                                 (click)="_csvExport.onCSV(row.id_import)"
                                 matTooltip='Téléchargement des données invalides'
                             >
-                            <mat-icon>download</mat-icon>
-                        </button>
-                        </ng-template>
-                    </ngx-datatable-column>
-                    <ngx-datatable-column
-                        maxWidth="80"
-                        name="Suppr."
-                    >
-                        <ng-template
-                            let-row="row"
-                            ngx-datatable-cell-template
-                        >
+                                <mat-icon>download</mat-icon>
+                            </button>
                             <button
-                                [disabled]="!row?.cruved?.D || row?.dataset?.active"
+                                [disabled]="!row?.cruved?.D || !row?.dataset?.active"
                                 mat-icon-button
                                 color=warn
                                 style="margin-top: -10px;"
                                 (click)="openDeleteModal(row, deleteModal)"
-                                matTooltip="Supprimer l'import"
+                                matTooltip="Supprimer l’import"
                             >
                                 <mat-icon>delete</mat-icon>
                             </button>
