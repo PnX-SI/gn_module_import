@@ -123,7 +123,7 @@ class ImportQuery(BaseQuery):
             raise Exception(f"Unexpected scope {scope}")
 
 
-@serializable(fields=["authors.nom_complet"])
+@serializable(fields=["authors.nom_complet", "dataset.dataset_name", "dataset.active"])
 class TImports(InstancePermissionMixin, db.Model):
     __tablename__ = "t_imports"
     __table_args__ = {"schema": "gn_imports"}

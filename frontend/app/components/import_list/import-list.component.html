@@ -70,7 +70,7 @@
                                 Import en erreur
                             </span>
                             <ng-template #elseBlock>
-                                <div *ngIf="!row.is_finished">
+                                <div *ngIf="!row.is_finished || row?.dataset?.active">
                                     <button
                                         [disabled]="!row?.cruved?.U"
                                         mat-raised-button
@@ -135,7 +135,7 @@
                             ngx-datatable-cell-template
                         >
                             <button
-                                [disabled]="!row?.cruved?.D"
+                                [disabled]="!row?.cruved?.D || row?.dataset?.active"
                                 mat-icon-button
                                 color=warn
                                 style="margin-top: -10px;"

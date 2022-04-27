@@ -21,6 +21,11 @@ export interface ImportError {
     comment: string;
 }
 
+export interface Dataset {
+    dataset_name: string;
+    active: boolean;
+}
+
 export interface Import {
 	id_import: number;
     format_source_file: string;
@@ -55,7 +60,7 @@ export interface Import {
     detected_format?: string;
 
     errors?: [ImportError];
-    dataset?: any; // TODO Dataset
+    dataset?: Dataset;
 }
 
 export interface NomenclatureType {

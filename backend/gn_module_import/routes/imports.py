@@ -64,12 +64,7 @@ def get_import_list(scope):
         .all()
     )
 
-    fields = [
-        "dataset.dataset_name",
-        "authors",
-    ]
-
-    return jsonify([imprt.as_dict(fields=fields) for imprt in imports])
+    return jsonify([imprt.as_dict() for imprt in imports])
 
 
 @blueprint.route("/imports/<int:import_id>/", methods=["GET"])
