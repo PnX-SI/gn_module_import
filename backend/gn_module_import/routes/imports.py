@@ -81,7 +81,7 @@ def get_one_import(scope, import_id):
     # check that the user has read permission to this particular import instance:
     if not imprt.has_instance_permission(scope):
         raise Forbidden
-    return jsonify(imprt.as_dict(fields=["errors"]))
+    return jsonify(imprt.as_dict())
 
 
 @blueprint.route("/imports/upload", defaults={"import_id": None}, methods=["POST"])
@@ -208,6 +208,27 @@ def decode_file(scope, import_id):
     return jsonify(imprt.as_dict())
 
 
+@blueprint.route("/imports/<int:import_id>/fieldmapping", methods=["POST"])
+@permissions.check_cruved_scope(
+    "C", get_scope=True, module_code="IMPORT", object_code="IMPORT"
+)
+def set_import_field_mapping(scope, import_id):
+    imprt = TImports.query.get_or_404(import_id)
+    if not imprt.has_instance_permission(scope):
+        raise Forbidden
+    if not imprt.dataset.active:
+        raise Forbidden("Le jeu de données est fermé.")
+    try:
+        FieldMapping.validate_values(request.json)
+    except ValueError as e:
+        raise BadRequest(*e.args)
+    imprt.fieldmapping = request.json
+    imprt.source_count = None
+    imprt.synthese_data = []
+    db.session.commit()
+    return jsonify(imprt.as_dict())
+
+
 @blueprint.route("/imports/<int:import_id>/load", methods=["POST"])
 @permissions.check_cruved_scope(
     "C", get_scope=True, module_code="IMPORT", object_code="IMPORT"
@@ -246,20 +267,6 @@ def get_import_columns_name(scope, import_id):
     if not imprt.columns:
         raise Conflict(description="Data have not been decoded.")
     return jsonify(imprt.columns)
-
-
-@blueprint.route("/imports/<int:import_id>/errors", methods=["GET"])
-@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT")
-def get_import_errors(scope, import_id):
-    """
-    .. :quickref: Import; Get errors of an import.
-
-    Get errors of an import.
-    """
-    imprt = TImports.query.options(joinedload("errors")).get_or_404(import_id)
-    if not imprt.has_instance_permission(scope):
-        raise Forbidden
-    return jsonify([error.as_dict(fields=["type"]) for error in imprt.errors])
 
 
 @blueprint.route("/imports/<int:import_id>/values", methods=["GET"])
@@ -314,27 +321,6 @@ def get_import_values(scope, import_id):
             "values": values,
         }
     return jsonify(response)
-
-
-@blueprint.route("/imports/<int:import_id>/fieldmapping", methods=["POST"])
-@permissions.check_cruved_scope(
-    "C", get_scope=True, module_code="IMPORT", object_code="IMPORT"
-)
-def set_import_field_mapping(scope, import_id):
-    imprt = TImports.query.get_or_404(import_id)
-    if not imprt.has_instance_permission(scope):
-        raise Forbidden
-    if not imprt.dataset.active:
-        raise Forbidden("Le jeu de données est fermé.")
-    try:
-        FieldMapping.validate_values(request.json)
-    except ValueError as e:
-        raise BadRequest(*e.args)
-    imprt.fieldmapping = request.json
-    imprt.source_count = None
-    imprt.synthese_data = []
-    db.session.commit()
-    return jsonify(imprt.as_dict())
 
 
 @blueprint.route("/imports/<int:import_id>/contentmapping", methods=["POST"])
@@ -457,6 +443,20 @@ def preview_valid_data(scope, import_id):
             "valid_bbox": valid_bbox,
         }
     )
+
+
+@blueprint.route("/imports/<int:import_id>/errors", methods=["GET"])
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT")
+def get_import_errors(scope, import_id):
+    """
+    .. :quickref: Import; Get errors of an import.
+
+    Get errors of an import.
+    """
+    imprt = TImports.query.options(joinedload("errors")).get_or_404(import_id)
+    if not imprt.has_instance_permission(scope):
+        raise Forbidden
+    return jsonify([error.as_dict(fields=["type"]) for error in imprt.errors])
 
 
 @blueprint.route("/imports/<int:import_id>/invalid_rows", methods=["GET"])
