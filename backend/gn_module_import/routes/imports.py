@@ -186,7 +186,6 @@ def decode_file(scope, import_id):
     if request.json['separator'] not in TImports.AVAILABLE_SEPARATORS:
         raise BadRequest(description='Unknown separator')
     imprt.separator = request.json['separator']
-    imprt.date_update_import = datetime.now()
     db.session.commit()  # commit parameters
 
     try:
@@ -544,6 +543,8 @@ def import_valid_data(scope, import_id):
     import_data_to_synthese(imprt, source)
     toggle_synthese_triggers(enable=True)
     populate_cor_area_synthese(imprt, source)
+
+    imprt.date_end_import = datetime.now()
 
     db.session.commit()
 

@@ -169,7 +169,6 @@ class TImports(InstancePermissionMixin, db.Model):
         lazy="joined",
         secondary=cor_role_import,
     )
-    is_finished = db.Column(db.Boolean, nullable=False, default=False)
     processing = db.Column(db.Boolean, nullable=False, default=False)
     dataset = db.relationship("TDatasets", lazy="joined")
     source_file = deferred(db.Column(db.LargeBinary))
@@ -228,8 +227,6 @@ class TImports(InstancePermissionMixin, db.Model):
             return True
 
     def as_dict(self, import_as_dict):
-        if import_as_dict["date_end_import"] is None:
-            import_as_dict["date_end_import"] = "En cours"
         import_as_dict["authors_name"] = "; ".join(
             [author.nom_complet for author in self.authors]
         )
