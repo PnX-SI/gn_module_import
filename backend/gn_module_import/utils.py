@@ -298,26 +298,20 @@ def import_data_to_synthese(imprt, source):
             literal(source.id_source),
             literal(TModules.query.filter_by(module_code=MODULE_CODE).one().id_module),
             literal(imprt.id_dataset),
+            literal("I"),
         )
     )
     names = [field.synthese_field for field in fields] + [
         "id_source",
         "id_module",
         "id_dataset",
+        "last_action",
     ]
     insert_stmt = insert(Synthese).from_select(
         names=names,
         select=select_stmt,
     )
     db.session.execute(insert_stmt)
-
-    Synthese.query.filter_by(id_source=source.id_source, meta_update_date=None).update(
-        {
-            "last_action": "I",
-            "meta_create_date": datetime.now(),
-            "meta_update_date": datetime.now(),
-        }
-    )
 
 
 def populate_cor_area_synthese(imprt, source):
