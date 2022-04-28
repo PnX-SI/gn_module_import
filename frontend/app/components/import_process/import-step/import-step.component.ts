@@ -87,13 +87,10 @@ export class ImportStepComponent implements OnInit {
         this.spinner = true;
         this._ds.finalizeImport(this.importData.id_import).subscribe(
             importData => {
-                console.log("import done");
                 this.spinner = false;
                 this.importProcessService.setImportData(importData);
-                /*if (res.source_count > ModuleConfig.MAX_LINE_LIMIT) {
-                    this.nbLignes = res.source_count;
-                    this._modalService.open(this.modalRedir);
-                } else this._router.navigate([`${ModuleConfig.MODULE_URL}`]);*/
+                this._commonService.regularToaster("info", "Données importées !");
+                this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
             },
             error => {
                 this.spinner = false;
