@@ -164,7 +164,7 @@ export class FieldMappingService {
         - one of the code not empty: others not required
         - wkt and X/Y filled => error
         */
-    let position = false;
+    let xy = false;
     let attachment = false;
     let wkt_errors = {};
     let longitude_errors = {};
@@ -173,32 +173,17 @@ export class FieldMappingService {
     let codecommune_errors = {};
     let codedepartement_errors = {};
     // check for position
-    if (g.value.WKT != null || g.value.longitude != null || g.value.latitude != null) {
-      position = true;
-      if (g.value.WKT != null) {
-        // if WKT set, ensure x/y are not set
-        if (g.value.longitude != null) longitude_errors['conflict'] = "Vous ne pouvez pas indiquer de longitude si un WKT est spécifié.";
-        if (g.value.latitude != null) latitude_errors['conflict'] = "Vous ne pouvez pas indiquer de latitude si un WKT est spécifié.";
-      } else {
-        // ensure both x/y are set
-        if (g.value.longitude == null) longitude_errors['required'] = true;
-        if (g.value.latitude == null) latitude_errors['required'] = true;
-      }
+    if ( g.value.longitude != null || g.value.latitude != null) {
+      xy = true;
+      // ensure both x/y are set
+      if (g.value.longitude == null) longitude_errors['required'] = true;
+      if (g.value.latitude == null) latitude_errors['required'] = true;
     }
     // check for attachment
     if (g.value.codemaille != null || g.value.codecommune != null || g.value.codedepartement != null) {
       attachment = true;
-      // ensure only one code is set
-      if ((g.value.codemaille != null && g.value.codecommune != null)
-          || (g.value.codecommune != null && g.value.codedepartement != null)
-          || (g.value.codemaille != null && g.value.codedepartement != null)) {
-        let conflict_msg = "Vous ne devez spécifier qu’un seul code de rattachement.";
-        if (g.value.codemaille != null) codemaille_errors['conflict'] = conflict_msg;
-        if (g.value.codecommune != null) codecommune_errors['conflict'] = conflict_msg;
-        if (g.value.codedepartement != null) codedepartement_errors['conflict'] = conflict_msg;
-      }
     }
-    if (position == false && attachment == false) {
+    if (g.value.WKT == null && xy == false && attachment == false) {
       wkt_errors['required'] = true;
       longitude_errors['required'] = true;
       latitude_errors['required'] = true;
