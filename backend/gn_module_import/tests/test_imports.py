@@ -762,6 +762,7 @@ class TestImports:
             data,
             {"definitions": jsonschema_definitions, "$ref": "#/definitions/import"},
         )
+        assert 0 == ImportSyntheseData.query.filter_by(imprt=imprt).count()
 
         # Delete step
         r = self.client.delete(

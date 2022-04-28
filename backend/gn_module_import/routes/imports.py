@@ -551,6 +551,8 @@ def import_valid_data(scope, import_id):
     populate_cor_area_synthese(imprt, source)
 
     imprt.date_end_import = datetime.now()
+    imprt.synthese_data = []
+    imprt.source_count = 0
 
     db.session.commit()
 
