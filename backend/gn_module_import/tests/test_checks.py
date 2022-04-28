@@ -66,18 +66,18 @@ class TestChecks:
         pd.testing.assert_frame_equal(df, expected_df)
 
     def test_check_required_values(self):
-        fields = get_fields(['precision', 'WKT', 'cd_nom'])
+        fields = get_fields(['precision', 'cd_nom', 'nom_cite'])
         df = pd.DataFrame(
             [
                 ['a', np.nan, 'c'],
                 [np.nan, 'b', np.nan],
             ],
-            columns=[field.source_field for field in fields.values()],
+            columns=[field.source_column for field in fields.values()],
         )
         errors = check_required_values(df, fields)
         assert_errors(errors, expected=[
-            Error(error_code='MISSING_VALUE', column='WKT', invalid_rows=frozenset([0])),
-            Error(error_code='MISSING_VALUE', column='cd_nom', invalid_rows=frozenset([1])),
+            Error(error_code='MISSING_VALUE', column='cd_nom', invalid_rows=frozenset([0])),
+            Error(error_code='MISSING_VALUE', column='nom_cite', invalid_rows=frozenset([1])),
         ])
 
     def test_check_geography(self, imprt):

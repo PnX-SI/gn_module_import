@@ -398,8 +398,6 @@ def prepare_import(scope, import_id):
     update_import_data_from_dataframe(imprt, fields, df)
     complete_others_geom_columns(imprt, fields)
 
-    # TODO: the geom point
-    # TODO: maille
     # TODO: generate uuid (?)
     # TODO: generate altitude
     # TODO: missing nomenclature (?)

@@ -9,20 +9,27 @@ from sqlalchemy import func
 from chardet.universaldetector import UniversalDetector
 from sqlalchemy.sql.expression import select, update, insert, literal
 from sqlalchemy.sql import column
+from sqlalchemy.orm import aliased
 import sqlalchemy as sa
 import pandas as pd
 import numpy as np
-from sqlalchemy.dialects.postgresql import insert as pg_insert
-from geoalchemy2.functions import ST_Transform, ST_GeomFromWKB
+from sqlalchemy.dialects.postgresql import insert as pg_insert, array_agg, aggregate_order_by
+from geoalchemy2.functions import ST_Transform, ST_GeomFromWKB, ST_Centroid
 
 from geonature.utils.env import db
 
 from gn_module_import import MODULE_CODE
-from gn_module_import.models import TImports, BibFields, ImportSyntheseData
+from gn_module_import.models import (
+    TImports,
+    BibFields,
+    ImportSyntheseData,
+    ImportUserError,
+    ImportUserErrorType,
+)
 
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_synthese.models import Synthese, corAreaSynthese
-from ref_geo.models import LAreas
+from ref_geo.models import LAreas, BibAreasTypes
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
 
 
@@ -235,11 +242,98 @@ def set_the_geom_column(imprt, fields, df):
         ).one()
 
 
+def set_geom_from_area_code(imprt, source_column, area_type_filter):
+    # Find area in CTE, then update corresponding column in statement
+    cte = (
+        ImportSyntheseData.query
+        .filter(
+            ImportSyntheseData.imprt == imprt,
+            ImportSyntheseData.valid == True,
+            ImportSyntheseData.the_geom_4326 == None,
+        )
+        .join(
+            LAreas, LAreas.area_code == source_column,
+        )
+        .join(
+            LAreas.area_type, aliased=True,
+        )
+        .filter(area_type_filter)
+        .with_entities(
+            ImportSyntheseData.id_import,
+            ImportSyntheseData.line_no,
+            LAreas.id_area,
+            LAreas.geom,
+        )
+        .cte("cte")
+    )
+    stmt = (
+        update(ImportSyntheseData)
+        .values({
+            ImportSyntheseData.id_area_attachment: cte.c.id_area,
+            ImportSyntheseData.the_geom_local: cte.c.geom,
+            ImportSyntheseData.the_geom_4326: ST_Transform(cte.c.geom, 4326),
+        })
+        .where(ImportSyntheseData.id_import == cte.c.id_import)
+        .where(ImportSyntheseData.line_no == cte.c.line_no)
+    )
+    db.session.execute(stmt)
+
+
+def report_empty_geom(imprt, error_type, error_column, whereclause=None):
+    cte = (
+        update(ImportSyntheseData)
+        .values({
+            ImportSyntheseData.valid: False,
+        })
+        .where(ImportSyntheseData.imprt == imprt)
+        .where(ImportSyntheseData.valid == True)
+        .where(ImportSyntheseData.the_geom_4326 == None)
+    )
+    if whereclause is not None:
+        cte = cte.where(whereclause)
+    cte = (
+        cte
+        .returning(ImportSyntheseData.line_no)
+        .cte("cte")
+    )
+    error = (
+        select([
+            literal(imprt.id_import),
+            ImportUserErrorType.query.filter_by(
+                name=error_type,
+            )
+            .with_entities(ImportUserErrorType.pk)
+            .label("id_type"),
+            array_agg(
+                aggregate_order_by(cte.c.line_no, cte.c.line_no),
+            )
+            .label("rows"),
+            literal(error_column),
+        ])
+        .alias("error")
+    )
+    stmt = (
+        insert(ImportUserError)
+        .from_select(
+            names=[
+                ImportUserError.id_import,
+                ImportUserError.id_type,
+                ImportUserError.rows,
+                ImportUserError.column,
+            ],
+            select=(
+                select([error])
+                .where(error.c.rows != None)
+            ),
+        )
+    )
+    db.session.execute(stmt)
+
+
 def complete_others_geom_columns(imprt, fields):
     local_srid = db.session.execute(
         sa.func.Find_SRID("ref_geo", "l_areas", "geom")
     ).scalar()
-    # TODO: the_geom_point
     if "the_geom_4326" not in fields:
         assert "the_geom_local" in fields
         source_col = "the_geom_local"
@@ -251,15 +345,55 @@ def complete_others_geom_columns(imprt, fields):
         dest_col = "the_geom_local"
         dest_srid = local_srid
     (
-        ImportSyntheseData.query.filter(
+        ImportSyntheseData.query
+        .filter(
             ImportSyntheseData.imprt == imprt,
             ImportSyntheseData.valid == True,
             getattr(ImportSyntheseData, source_col) != None,
-        ).update(
+        )
+        .update(
             values={
                 dest_col: ST_Transform(
                     getattr(ImportSyntheseData, source_col), dest_srid
                 ),
+            },
+            synchronize_session=False,
+        )
+    )
+    for name_field, area_type_filter in [
+        ("codecommune", BibAreasTypes.type_code == "COM"),
+        ("codedepartement", BibAreasTypes.type_code == "DEP"),
+        ("codemaille", BibAreasTypes.type_code.in_(["M1", "M5", "M10"]))
+    ]:
+        if name_field not in fields:
+            continue
+        field = fields[name_field]
+        source_column = getattr(ImportSyntheseData, field.source_field)
+        # Set geom from area of the given type and with matching area_code:
+        set_geom_from_area_code(imprt, source_column, area_type_filter)
+        # Mark rows with code specified but geom still empty as invalid:
+        report_empty_geom(
+            imprt,
+            error_type="INVALID_ATTACHMENT_CODE",
+            error_column=field.name_field,  # TODO: convert to csv col name
+            whereclause=sa.and_(source_column != None, source_column != ""),
+        )
+    # Mark rows with no geometry as invalid:
+    report_empty_geom(
+        imprt,
+        error_type="NO-GEOM",
+        error_column="Colonnes géométriques",
+    )
+    # Set the_geom_point:
+    (
+        ImportSyntheseData.query
+        .filter(
+            ImportSyntheseData.imprt == imprt,
+            ImportSyntheseData.valid == True,
+        )
+        .update(
+            values={
+                ImportSyntheseData.the_geom_point: ST_Centroid(ImportSyntheseData.the_geom_4326),
             },
             synchronize_session=False,
         )
@@ -283,6 +417,7 @@ def import_data_to_synthese(imprt, source):
         "the_geom_4326",
         "the_geom_local",
         "the_geom_point",
+        "id_area_attachment",
     }
     # TODO: altitude? uuid? (when not in mapping)
     fields = BibFields.query.filter(
