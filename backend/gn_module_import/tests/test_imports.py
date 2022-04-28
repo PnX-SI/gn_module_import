@@ -621,6 +621,23 @@ class TestImports:
             url_for("import.get_import_errors", import_id=imprt.id_import)
         )
         assert r.status_code == 200
+        invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
+        # (error code, error column name, frozenset of erroneous rows)
+        obtained_errors = {
+            (error.type.name, error.column, frozenset(error.rows or []))
+            for error in imprt.errors
+        }
+        assert obtained_errors == valid_file_expected_errors
+        validate_json(
+            r.json,
+            {
+                "definitions": jsonschema_definitions,
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/error",
+                },
+            },
+        )
         assert len(r.json) == len(valid_file_expected_errors)
 
     def test_import_valid_file(self, users, datasets):
@@ -725,7 +742,7 @@ class TestImports:
         invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
         # (error code, error column name, frozenset of erroneous rows)
         obtained_errors = {
-            (error.type.name, error.column, frozenset(error.rows))
+            (error.type.name, error.column, frozenset(error.rows or []))
             for error in imprt.errors
         }
         assert obtained_errors == valid_file_expected_errors

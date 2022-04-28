@@ -24,6 +24,7 @@ from pypnnomenclature.models import BibNomenclaturesTypes, TNomenclatures
 from pypnusershub.db.models import User
 from apptax.taxonomie.models import Taxref
 from pypn_habref_api.models import Habref
+from ref_geo.models import LAreas
 
 
 """
@@ -493,9 +494,10 @@ class ImportSyntheseData(db.Model):
     meta_validation_date = db.Column(db.DateTime)
     meta_create_date = db.Column(db.DateTime)
     meta_update_date = db.Column(db.DateTime)
+    id_area_attachment = db.Column(db.Integer, ForeignKey(LAreas.id_area))
+    area_attachment = db.relationship(LAreas)
     # missing fields:
     # sample_number_proof = db.Column(db.UnicodeText)
-    # id_area_attachment = db.Column(db.Integer)
     # last_action = db.Column(db.Unicode)
 
 

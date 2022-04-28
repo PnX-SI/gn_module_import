@@ -232,6 +232,35 @@ jsonschema_definitions = {
             "contentmapping",
         ],
     },
+    "error": {
+        "type": "object",
+        "properties": {
+            "pk": {"type": "integer"},
+            "id_import": {"type": "integer"},
+            "id_type": {"type": "integer"},
+            "type": {"$ref": "#/definitions/error_type"},
+            "column": {"type": "string"},
+            "rows": {
+                "type": "array",
+                "items": {"type": "integer"},
+            },
+            "comment": {"type": ["null", "string"]},
+        },
+        "minProperties": 7,
+        "additionalProperties": False,
+    },
+    "error_type": {
+        "type": "object",
+        "properties": {
+            "pk": {"type": "integer"},
+            "category": {"type": "string"},
+            "name": {"type": "string"},
+            "description": {"type": "string"},
+            "level": {"type": "string"},
+        },
+        "minProperties": 5,
+        "additionalProperties": False,
+    },
     "mapping": {
         "type": "object",
         "properties": {
