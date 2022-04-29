@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 from sqlalchemy.dialects.postgresql import insert as pg_insert, array_agg, aggregate_order_by
 from geoalchemy2.functions import ST_Transform, ST_GeomFromWKB, ST_Centroid
-
+from werkzeug.exceptions import BadRequest
 from geonature.utils.env import db
 
 from gn_module_import import MODULE_CODE
@@ -60,6 +60,8 @@ def detect_separator(f, encoding):
     position = f.tell()
     f.seek(0)
     sample = f.readline().decode(encoding)
+    if sample == '\n': #files that do not start with column names
+         raise BadRequest("File must start with columns")
     dialect = csv.Sniffer().sniff(sample)
     f.seek(position)
     return dialect.delimiter

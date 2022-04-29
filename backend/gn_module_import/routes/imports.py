@@ -146,6 +146,10 @@ def upload_file(scope, import_id):
         raise BadRequest(
             description=f"File too big ({size} > {max_file_size})."
         )  # FIXME better error signaling?
+    if size == 0:
+        raise BadRequest(
+            description="Impossible to upload empty files"
+        )
     if imprt is None:
         try:
             dataset_id = int(request.form["datasetId"])

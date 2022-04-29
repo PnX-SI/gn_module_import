@@ -25,6 +25,8 @@ export class UploadFileStepComponent implements OnInit {
   public fileName: string;
   public isUploadRunning: boolean = false;
   public maxFileSize: number = 0;
+  public emptyError: boolean = true;
+  public columnFirstError: boolean = true;
 
   constructor(
     private ds: DataService,
@@ -62,6 +64,7 @@ export class UploadFileStepComponent implements OnInit {
   }
 
   onFileSelected(file: File) {
+    this.emptyError = this.columnFirstError = false;
     this.file = file;
     this.fileName = file.name;
     this.uploadForm.setValue({
@@ -92,6 +95,14 @@ export class UploadFileStepComponent implements OnInit {
             error => {
               this.isUploadRunning = false;
               this.commonService.regularToaster("error", error.error.description);
+              if (error.status === 400) {
+                  if (error.error && error.error.description === "Impossible to upload empty files") {
+                      this.emptyError = true
+                  }
+                  if (error.error && error.error.description === "File must start with columns") {
+                      this.columnFirstError = true
+                  }
+              }
             },
         );
   }
