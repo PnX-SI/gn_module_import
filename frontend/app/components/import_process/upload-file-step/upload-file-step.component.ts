@@ -24,6 +24,7 @@ export class UploadFileStepComponent implements OnInit {
   public file: File | null = null;
   public fileName: string;
   public isUploadRunning: boolean = false;
+  public maxFileSize: number = 0;
 
   constructor(
     private ds: DataService,
@@ -40,6 +41,7 @@ export class UploadFileStepComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.maxFileSize = ModuleConfig.MAX_FILE_SIZE
     this.step = this.route.snapshot.data.step;
     this.importData = this.importProcessService.getImportData();
     if (this.importData === null) {
@@ -55,7 +57,7 @@ export class UploadFileStepComponent implements OnInit {
     } else if (this.importData && this.uploadForm.pristine) {
       return true;
     } else {
-      return this.uploadForm.valid;
+      return this.uploadForm.valid && this.file && this.file.size < this.maxFileSize * 1024 * 1024;
     }
   }
 

@@ -27,6 +27,9 @@
                     </div>
                 </div>
             </form>
+            <div class="text-danger" *ngIf="file && maxFileSize * 1024 * 1024 < file.size">
+                Le fichier sélectionné est trop volumineux. La taille maximale est de {{maxFileSize}}Mo
+            </div>
             <!-- Navigation buttons -->
             <div class="navigate-btn">
                 <button
