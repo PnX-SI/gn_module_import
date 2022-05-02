@@ -6,8 +6,10 @@ import csv
 
 from flask import request, current_app, jsonify, g
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden
-from sqlalchemy.orm import joinedload, Load, load_only, undefer
 import sqlalchemy as sa
+from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
+from sqlalchemy.orm.attributes import set_committed_value
+from sqlalchemy.sql.expression import collate
 
 from geonature.utils.env import db
 from geonature.core.gn_permissions import decorators as permissions
@@ -16,6 +18,8 @@ from geonature.core.gn_synthese.models import (
     TSources,
 )
 from geonature.core.gn_meta.models import TDatasets
+
+from pypnnomenclature.models import TNomenclatures
 
 from gn_module_import.models import (
     TImports,
@@ -298,7 +302,11 @@ def get_import_values(scope, import_id):
         )
     nomenclated_fields = (
         BibFields.query.filter(BibFields.mnemonique != None)
-        .options(joinedload("nomenclature_type").joinedload("nomenclatures"))
+        .join(BibFields.nomenclature_type)
+        .options(
+            contains_eager(BibFields.nomenclature_type),
+        )
+        .order_by(BibFields.id_theme, BibFields.order_field)
         .all()
     )
     # Note: response format is validated with jsonschema in tests
@@ -322,6 +330,13 @@ def get_import_values(scope, import_id):
                 .all()
             )
         ]
+        set_committed_value(
+            field.nomenclature_type,
+            "nomenclatures",
+            TNomenclatures.query.filter_by(
+                nomenclature_type=field.nomenclature_type
+            ).order_by(collate(TNomenclatures.cd_nomenclature, "fr_numeric")),
+        )
         response[field.name_field] = {
             "nomenclature_type": field.nomenclature_type.as_dict(),
             "nomenclatures": [
