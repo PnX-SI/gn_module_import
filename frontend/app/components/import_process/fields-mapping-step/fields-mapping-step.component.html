@@ -207,6 +207,7 @@
                                             <option [ngValue]="null"></option>
                                             <option
                                                 *ngFor="let sourceField of sourceFields.sort()"
+                                                [ngClass]="{'in_use': mappedSourceFields.has(sourceField)}"
                                                 [value]="sourceField"
                                             >
                                                 {{ sourceField }}

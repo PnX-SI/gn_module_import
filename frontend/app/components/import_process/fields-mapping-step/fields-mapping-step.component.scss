@@ -89,8 +89,7 @@ tr:nth-child(even) {
   padding: 30px 40px
 }
 
-
-.isSelected {
-  color: #b1b0b0
+select option.in_use {
+  color: #787878;
+  font-style: italic;
 }
-
