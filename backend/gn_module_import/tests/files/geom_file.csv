@@ -1,16 +1,14 @@
-date_debut;cd_nom;nom_cite;observateurs;geometrie_wkt_4326;x_centroid_4326;y_centroid_4326;commune;département;maille;erreur attendue
+date_min;cd_nom;nom_cite;observateurs;WKT;latitude;longitude;codecommune;codedepartement;codemaille;erreur attendue
 2017-01-01;67111;Ablette;Toto;;;;05101;;;Valide (codecommune)
 2017-01-01;67111;Ablette;Toto;;;;code com invalide;;;INVALID_ATTACHMENT_CODE (codecommune)
 2017-01-01;67111;Ablette;Toto;;;;;05;;Valide (codedépartement)
 2017-01-01;67111;Ablette;Toto;;;;;code dep invalide;;INVALID_ATTACHMENT_CODE (codedepartement)
-2017-01-01;67111;Ablette;Toto;;;;;;1kmL93E976N6422;Valide (codemaille)
-2017-01-01;67111;Ablette;Toto;;;;;;5kmL93E0975N6420;Valide (codemaille)
-2017-01-01;67111;Ablette;Toto;;;;;;5kmL93E0975N6420;Valide (codemaille)
+2017-01-01;67111;Ablette;Toto;;;;;;10kmL93E097N642;Valide (codemaille)
 2017-01-01;67111;Ablette;Toto;;;;;;code maille invalide;INVALID_ATTACHMENT_CODE (codemaille)
-2017-01-01;67111;Ablette;Toto;;;;05101;5;1kmL93E976N6422;MULTIPLE_CODE_ATTACHMENT
-2017-01-01;67111;Ablette;Toto;POINT(6.5 44.85);;;05101;5;1kmL93E976N6422;Valide (WKT) (FIXME ?)
-2017-01-01;67111;Ablette;Toto;;44.85;6.5;05101;5;1kmL93E976N6422;Valide (X/Y) (FIXME ?)
-2017-01-01;67111;Ablette;Toto;POINT(6.5 44.85);44.85;6.5;05101;5;1kmL93E976N6422;MULTIPLE_ATTACHMENT_TYPE_CODE
+2017-01-01;67111;Ablette;Toto;;;;05101;05;10kmL93E097N642;MULTIPLE_CODE_ATTACHMENT
+2017-01-01;67111;Ablette;Toto;POINT(6.5 44.85);;;05101;05;10kmL93E097N642;Valide (WKT) (FIXME ?)
+2017-01-01;67111;Ablette;Toto;;44.85;6.5;05101;05;10kmL93E097N642;Valide (X/Y) (FIXME ?)
+2017-01-01;67111;Ablette;Toto;POINT(6.5 44.85);44.85;6.5;05101;05;10kmL93E097N642;MULTIPLE_ATTACHMENT_TYPE_CODE
 2017-01-01;67111;Ablette;Toto;POINT(6.5 44.85);;;;;;Valide (WKT)
 2017-01-01;67111;Ablette;Toto;;44.85;6.5;;;;Valide (X/Y)
 2017-01-01;67111;Ablette;Toto;POINT(6.5 44.85);44.85;6.5;;;;MULTIPLE_ATTACHMENT_TYPE_CODE

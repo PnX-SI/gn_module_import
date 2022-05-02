@@ -24,8 +24,8 @@ from geonature.core.gn_meta.models import TDatasets
 
 from pypnusershub.db.models import User, Organisme
 
-from gn_module_import.models import TImports, ImportSyntheseData, FieldMapping, ContentMapping
-from gn_module_import.utils import insert_import_data_in_database#, get_table_class, get_import_table_name
+from gn_module_import.models import TImports, ImportSyntheseData, FieldMapping, ContentMapping, BibFields
+from gn_module_import.utils import insert_import_data_in_database
 
 from .jsonschema_definitions import jsonschema_definitions
 
@@ -60,6 +60,11 @@ def imports(users):
 
 
 @pytest.fixture()
+def import_file_name():
+    return "valid_file.csv"
+
+
+@pytest.fixture()
 def new_import(users, datasets):
     with db.session.begin_nested():
         imprt = TImports(
@@ -71,9 +76,9 @@ def new_import(users, datasets):
 
 
 @pytest.fixture()
-def uploaded_import(new_import):
+def uploaded_import(new_import, import_file_name):
     with db.session.begin_nested():
-        with open(tests_path / "files" / "valid_file.csv", "rb") as f:
+        with open(tests_path / "files" / import_file_name, "rb") as f:
             new_import.source_file = f.read()
             new_import.full_file_name = "valid_file.csv"
     return new_import
@@ -101,11 +106,17 @@ def decoded_import(client, uploaded_import):
 
 
 @pytest.fixture()
-def field_mapped_import(client, decoded_import):
+def fieldmapping(import_file_name):
+    if import_file_name == "valid_file.csv":
+        return FieldMapping.query.filter_by(label="Synthese GeoNature").one().values
+    else:
+        return {f.name_field: f.name_field for f in BibFields.query.filter_by(display=True)}
+
+
+@pytest.fixture()
+def field_mapped_import(client, decoded_import, fieldmapping):
     with db.session.begin_nested():
-        decoded_import.fieldmapping = (
-            FieldMapping.query.filter_by(label="Synthese GeoNature").one().values
-        )
+        decoded_import.fieldmapping = fieldmapping
     return decoded_import
 
 
@@ -786,3 +797,18 @@ class TestImports:
             url_for("import.delete_import", import_id=imprt.id_import)
         )
         assert r.status_code == 200
+
+    @pytest.mark.parametrize("import_file_name", ["geom_file.csv"])
+    def test_import_geometry_file(self, prepared_import):
+        obtained_errors = {
+            (error.type.name, error.column, frozenset(error.rows or []))
+            for error in prepared_import.errors
+        }
+        assert obtained_errors == {
+            ("INVALID_ATTACHMENT_CODE", "codecommune", frozenset([2])),
+            ("INVALID_ATTACHMENT_CODE", "codedepartement", frozenset([4])),
+            ("INVALID_ATTACHMENT_CODE", "codemaille", frozenset([6])),
+            ("MULTIPLE_CODE_ATTACHMENT", "Champs géométriques", frozenset([7])),
+            ("MULTIPLE_ATTACHMENT_TYPE_CODE", "Champs géométriques", frozenset([10, 13])),
+            ("NO-GEOM", "Champs géométriques", frozenset([14])),
+        }
