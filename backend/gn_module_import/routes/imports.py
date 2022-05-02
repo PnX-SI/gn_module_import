@@ -417,7 +417,7 @@ def prepare_import(scope, import_id):
 
     # Checks in SQL
     complete_others_geom_columns(imprt, fields)
-    do_nomenclatures_mapping(imprt)
+    do_nomenclatures_mapping(imprt, fields)
     set_cd_nom(imprt, fields)
     set_cd_hab(imprt, fields)
 

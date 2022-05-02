@@ -125,9 +125,9 @@ def insert_import_data_in_database(imprt):
     return line_no
 
 
-def do_nomenclatures_mapping(imprt):
+def do_nomenclatures_mapping(imprt, fields):
     # Set nomenclatures using content mapping
-    for field in BibFields.query.filter(BibFields.mnemonique != None).all():
+    for field in filter(lambda field: field.mnemonique != None, fields.values()):
         source_field = getattr(ImportSyntheseData, field.source_field)
         # This CTE return the list of source value / cd_nomenclature for a given nomenclature type
         cte = (
@@ -152,7 +152,11 @@ def do_nomenclatures_mapping(imprt):
             .values({field.synthese_field: TNomenclatures.id_nomenclature})
         )
         db.session.execute(stmt)
-        if current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]:
+        # TODO: Check nomenclature errors (synthese_field NULL)
+        # TODO: Check conditional values
+    if current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]:
+        for field in BibFields.query.filter(BibFields.mnemonique != None).all():
+            fields[field.name_field] = field
             # Set default nomenclature for empty user fields
             (
                 ImportSyntheseData.query.filter(ImportSyntheseData.imprt == imprt)
@@ -166,8 +170,7 @@ def do_nomenclatures_mapping(imprt):
                     synchronize_session=False,
                 )
             )
-        # TODO: Check nomenclature errors (synthese_field NULL)
-        # TODO: Check conditional values
+
 
 
 def load_import_data_in_dataframe(imprt, fields):
