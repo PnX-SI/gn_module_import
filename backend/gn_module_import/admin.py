@@ -41,10 +41,7 @@ class MappingView(CruvedProtectedMixin, ModelView):
 
 def FieldMappingValuesValidator(form, field):
     try:
-        FieldMapping.validate_values({
-            entry['key']: entry['value']
-            for entry in field.data
-        })
+        FieldMapping.validate_values(field.data)
     except ValueError as e:
         raise StopValidation(*e.args)
 
