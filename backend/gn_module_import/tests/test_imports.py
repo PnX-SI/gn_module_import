@@ -256,6 +256,13 @@ class TestImports:
         }
         assert imports_ids == expected_imports_ids
 
+    def test_search_import(self, users, imports, uploaded_import):
+        set_logged_user_cookie(self.client, users["user"])
+        r = self.client.get(url_for("import.get_import_list")+"?search=valid_file")
+        assert r.status_code == 200
+        json_data = r.get_json()
+        assert json_data["count"] == 1
+
     def test_get_import(self, users, imports):
         def get(import_name):
             return self.client.get(
