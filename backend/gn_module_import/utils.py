@@ -152,8 +152,8 @@ def do_nomenclatures_mapping(imprt, fields):
             .values({field.synthese_field: TNomenclatures.id_nomenclature})
         )
         db.session.execute(stmt)
-        # TODO: Check nomenclature errors (synthese_field NULL)
         # TODO: Check conditional values
+
     if current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]:
         for field in BibFields.query.filter(BibFields.mnemonique != None).all():
             fields[field.name_field] = field
@@ -171,6 +171,20 @@ def do_nomenclatures_mapping(imprt, fields):
                 )
             )
 
+    for field in filter(lambda field: field.mnemonique != None, fields.values()):
+        source_field = getattr(ImportSyntheseData, field.source_field)
+        synthese_field = getattr(ImportSyntheseData, field.synthese_field)
+        # Note: with a correct contentmapping, no errors should occur.
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_NOMENCLATURE",
+            error_column=field.name_field,
+            whereclause=sa.and_(
+                source_field != None,
+                source_field != "",
+                synthese_field == None,
+            )
+        )
 
 
 def load_import_data_in_dataframe(imprt, fields):
