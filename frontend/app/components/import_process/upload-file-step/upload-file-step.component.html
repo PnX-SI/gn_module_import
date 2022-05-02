@@ -30,7 +30,7 @@
             <div class="text-danger" *ngIf="file && maxFileSize * 1024 * 1024 < file.size">
                 Le fichier sélectionné est trop volumineux. La taille maximale est de {{maxFileSize}}Mo
             </div>
-            <div class="text-danger" *ngIf="emptyError">
+            <div class="text-danger" *ngIf="emptyError || file && !file.size">
                 Le fichier sélectionné est vide
             </div>
             <div class="text-danger" *ngIf="columnFirstError">

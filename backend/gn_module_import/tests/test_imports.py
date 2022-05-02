@@ -378,6 +378,35 @@ class TestImports:
         assert imprt.source_file is not None
         assert imprt.full_file_name == "simple_file.csv"
 
+
+    def test_import_error(self, users, datasets):
+        set_logged_user_cookie(self.client, users["user"])
+        with open(tests_path / "files" / "empty.csv", "rb") as f:
+            data = {
+                "file": (f, "empty.csv"),
+                "datasetId": datasets["own_dataset"].id_dataset,
+            }
+            r = self.client.post(
+                url_for("import.upload_file"),
+                data=data,
+                headers=Headers({"Content-Type": "multipart/form-data"}),
+            )
+            assert r.status_code == 400
+            assert r.json["description"] == "Impossible to upload empty files"
+
+        with open(tests_path / "files" / "starts_with_empty_line.csv", "rb") as f:
+            data = {
+                "file": (f, "starts_with_empty_line.csv"),
+                "datasetId": datasets["own_dataset"].id_dataset,
+            }
+            r = self.client.post(
+                url_for("import.upload_file"),
+                data=data,
+                headers=Headers({"Content-Type": "multipart/form-data"}),
+            )
+            assert r.status_code == 400
+            assert r.json["description"] == "File must start with columns"
+
     def test_import_upload_after_preparation(self, prepared_import):
         imprt = prepared_import
         # TODO: check old table does not exist

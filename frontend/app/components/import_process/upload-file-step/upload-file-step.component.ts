@@ -25,8 +25,8 @@ export class UploadFileStepComponent implements OnInit {
   public fileName: string;
   public isUploadRunning: boolean = false;
   public maxFileSize: number = 0;
-  public emptyError: boolean = true;
-  public columnFirstError: boolean = true;
+  public emptyError: boolean = false;
+  public columnFirstError: boolean = false;
 
   constructor(
     private ds: DataService,
@@ -59,7 +59,7 @@ export class UploadFileStepComponent implements OnInit {
     } else if (this.importData && this.uploadForm.pristine) {
       return true;
     } else {
-      return this.uploadForm.valid && this.file && this.file.size < this.maxFileSize * 1024 * 1024;
+      return this.uploadForm.valid && this.file && this.file.size < this.maxFileSize * 1024 * 1024 && this.file.size;
     }
   }
 
