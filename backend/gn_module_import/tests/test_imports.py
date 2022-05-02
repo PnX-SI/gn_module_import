@@ -812,3 +812,15 @@ class TestImports:
             ("MULTIPLE_ATTACHMENT_TYPE_CODE", "Champs géométriques", frozenset([10, 13])),
             ("NO-GEOM", "Champs géométriques", frozenset([14])),
         }
+
+    @pytest.mark.parametrize("import_file_name", ["cd_file.csv"])
+    def test_import_cd_file(self, prepared_import):
+        obtained_errors = {
+            (error.type.name, error.column, frozenset(error.rows or []))
+            for error in prepared_import.errors
+        }
+        assert obtained_errors == {
+            ("MISSING_VALUE", "cd_nom", frozenset([1, 4, 5])),
+            ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([2, 6, 8])),
+            ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([4, 6, 7])),
+        }

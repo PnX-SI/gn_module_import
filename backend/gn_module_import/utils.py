@@ -31,6 +31,8 @@ from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_synthese.models import Synthese, corAreaSynthese
 from ref_geo.models import LAreas, BibAreasTypes
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
+from apptax.taxonomie.models import Taxref
+from pypn_habref_api.models import Habref
 
 
 def get_file_size(f):
@@ -242,6 +244,45 @@ def set_the_geom_column(imprt, fields, df):
         ).one()
 
 
+def set_column_from_referential(imprt, field, reference, error_type):
+    source_field = getattr(ImportSyntheseData, field.source_field)
+    synthese_field = getattr(ImportSyntheseData, field.synthese_field)
+    stmt = (
+        update(ImportSyntheseData)
+        .values({
+            synthese_field: reference,
+        })
+        .where(
+            source_field == sa.cast(reference, sa.Unicode)
+        )
+    )
+    db.session.execute(stmt)
+    report_erroneous_rows(
+        imprt,
+        error_type=error_type,
+        error_column=field.name_field,
+        whereclause=sa.and_(
+            source_field != None,
+            source_field != "",
+            synthese_field == None,
+        )
+    )
+
+
+def set_cd_nom(imprt, fields):
+    if "cd_nom" not in fields:
+        return
+    field = fields["cd_nom"]
+    set_column_from_referential(imprt, field, Taxref.cd_nom, "CD_NOM_NOT_FOUND")
+
+
+def set_cd_hab(imprt, fields):
+    if "cd_hab" not in fields:
+        return
+    field = fields["cd_hab"]
+    set_column_from_referential(imprt, field, Habref.cd_hab, "CD_HAB_NOT_FOUND")
+
+
 def set_geom_from_area_code(imprt, source_column, area_type_filter):
     # Find area in CTE, then update corresponding column in statement
     cte = (
@@ -279,7 +320,7 @@ def set_geom_from_area_code(imprt, source_column, area_type_filter):
     db.session.execute(stmt)
 
 
-def report_empty_geom(imprt, error_type, error_column, whereclause=None):
+def report_erroneous_rows(imprt, error_type, error_column, whereclause):
     cte = (
         update(ImportSyntheseData)
         .values({
@@ -287,12 +328,7 @@ def report_empty_geom(imprt, error_type, error_column, whereclause=None):
         })
         .where(ImportSyntheseData.imprt == imprt)
         .where(ImportSyntheseData.valid == True)
-        .where(ImportSyntheseData.the_geom_4326 == None)
-    )
-    if whereclause is not None:
-        cte = cte.where(whereclause)
-    cte = (
-        cte
+        .where(whereclause)
         .returning(ImportSyntheseData.line_no)
         .cte("cte")
     )
@@ -372,17 +408,22 @@ def complete_others_geom_columns(imprt, fields):
         # Set geom from area of the given type and with matching area_code:
         set_geom_from_area_code(imprt, source_column, area_type_filter)
         # Mark rows with code specified but geom still empty as invalid:
-        report_empty_geom(
+        report_erroneous_rows(
             imprt,
             error_type="INVALID_ATTACHMENT_CODE",
             error_column=field.name_field,  # TODO: convert to csv col name
-            whereclause=sa.and_(source_column != None, source_column != ""),
+            whereclause=sa.and_(
+                ImportSyntheseData.the_geom_4326 == None,
+                source_column != None,
+                source_column != "",
+            ),
         )
     # Mark rows with no geometry as invalid:
-    report_empty_geom(
+    report_erroneous_rows(
         imprt,
         error_type="NO-GEOM",
         error_column="Colonnes géométriques",
+        whereclause=ImportSyntheseData.the_geom_4326 == None,
     )
     # Set the_geom_point:
     (

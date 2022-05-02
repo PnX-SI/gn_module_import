@@ -7,6 +7,7 @@ import csv
 from flask import request, current_app, jsonify, g
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden
 from sqlalchemy.orm import joinedload, Load, load_only, undefer
+import sqlalchemy as sa
 
 from geonature.utils.env import db
 from geonature.core.gn_permissions import decorators as permissions
@@ -40,6 +41,8 @@ from gn_module_import.utils import (
     detect_separator,
     insert_import_data_in_database,
     get_file_size,
+    set_cd_nom,
+    set_cd_hab,
 )
 
 IMPORTS_PER_PAGE = 15
@@ -384,19 +387,39 @@ def prepare_import(scope, import_id):
         field.name_field: field
         for field in (
             BibFields.query.filter(BibFields.name_field.in_(selected_fields))
-            .filter(
-                BibFields.mnemonique == None
-            )  # nomenclated fields handled with SQL FIXME
+            .filter(  # these fields are handled directly in SQL:
+                BibFields.mnemonique == None,
+                ~BibFields.name_field.in_(["cd_nom", "cd_hab"]),
+            )
             .all()
         )
     }
 
-    do_nomenclatures_mapping(imprt)
+    # Checks on dataframe
     df = load_import_data_in_dataframe(imprt, fields)
     run_all_checks(imprt, fields, df)
     set_the_geom_column(imprt, fields, df)
     update_import_data_from_dataframe(imprt, fields, df)
+
+    fields.update({
+        field.name_field: field
+        for field in (
+            BibFields.query.filter(BibFields.name_field.in_(selected_fields))
+            .filter(
+                sa.or_(
+                    BibFields.mnemonique != None,
+                    BibFields.name_field.in_(["cd_nom", "cd_hab"]),
+                )
+            )
+            .all()
+        )
+    })
+
+    # Checks in SQL
     complete_others_geom_columns(imprt, fields)
+    do_nomenclatures_mapping(imprt)
+    set_cd_nom(imprt, fields)
+    set_cd_hab(imprt, fields)
 
     # TODO: generate uuid (?)
     # TODO: generate altitude
