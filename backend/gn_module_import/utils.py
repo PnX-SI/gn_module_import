@@ -344,14 +344,13 @@ def report_erroneous_rows(imprt, error_type, error_column, whereclause):
             ImportSyntheseData.valid: False,
         })
         .where(ImportSyntheseData.imprt == imprt)
-        .where(ImportSyntheseData.valid == True)
         .where(whereclause)
         .returning(ImportSyntheseData.line_no)
         .cte("cte")
     )
     error = (
         select([
-            literal(imprt.id_import),
+            literal(imprt.id_import).label("id_import"),
             ImportUserErrorType.query.filter_by(
                 name=error_type,
             )
@@ -431,6 +430,7 @@ def complete_others_geom_columns(imprt, fields):
             error_column=field.name_field,  # TODO: convert to csv col name
             whereclause=sa.and_(
                 ImportSyntheseData.the_geom_4326 == None,
+                ImportSyntheseData.valid == True,
                 source_column != None,
                 source_column != "",
             ),
@@ -440,7 +440,10 @@ def complete_others_geom_columns(imprt, fields):
         imprt,
         error_type="NO-GEOM",
         error_column="Colonnes géométriques",
-        whereclause=ImportSyntheseData.the_geom_4326 == None,
+        whereclause=sa.and_(
+            ImportSyntheseData.the_geom_4326 == None,
+            ImportSyntheseData.valid == True,
+        ),
     )
     # Set the_geom_point:
     (
