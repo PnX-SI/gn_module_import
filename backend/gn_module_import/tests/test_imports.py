@@ -41,6 +41,12 @@ valid_file_expected_errors = {
     ("INVALID_DATE", "datetime_min", frozenset([7])),
 }
 
+def comparable_errors(imprt):
+    return {
+        (error.type.name, error.column, frozenset(error.rows or []))
+        for error in imprt.errors
+    }
+
 
 @pytest.fixture(scope="function")
 def imports(users):
@@ -620,11 +626,9 @@ class TestImports:
             url_for("import.preview_valid_data", import_id=imprt.id_import)
         )
         assert r.status_code == 200
-        n_invalid_data = len(
-            {row for _, _, rows in valid_file_expected_errors for row in rows}
-        )
-        assert r.json["n_valid_data"] == imprt.source_count - n_invalid_data
-        assert r.json["n_invalid_data"] == n_invalid_data
+        invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
+        assert r.json["n_valid_data"] == imprt.source_count - len(invalid_rows)
+        assert r.json["n_invalid_data"] == len(invalid_rows)
 
     def test_import_invalid_rows(self, users, prepared_import):
         imprt = prepared_import
@@ -668,12 +672,7 @@ class TestImports:
         )
         assert r.status_code == 200
         invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
-        # (error code, error column name, frozenset of erroneous rows)
-        obtained_errors = {
-            (error.type.name, error.column, frozenset(error.rows or []))
-            for error in imprt.errors
-        }
-        assert obtained_errors == valid_file_expected_errors
+        assert comparable_errors(imprt) == valid_file_expected_errors
         validate_json(
             r.json,
             {
@@ -786,12 +785,7 @@ class TestImports:
             {"definitions": jsonschema_definitions, "$ref": "#/definitions/import"},
         )
         invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
-        # (error code, error column name, frozenset of erroneous rows)
-        obtained_errors = {
-            (error.type.name, error.column, frozenset(error.rows or []))
-            for error in imprt.errors
-        }
-        assert obtained_errors == valid_file_expected_errors
+        assert comparable_errors(imprt) == valid_file_expected_errors
         assert ImportSyntheseData.query.filter_by(imprt=imprt, valid=True).count() == test_file_line_count - len(invalid_rows)
 
         # Get errors
@@ -835,11 +829,7 @@ class TestImports:
 
     @pytest.mark.parametrize("import_file_name", ["geom_file.csv"])
     def test_import_geometry_file(self, prepared_import):
-        obtained_errors = {
-            (error.type.name, error.column, frozenset(error.rows or []))
-            for error in prepared_import.errors
-        }
-        assert obtained_errors == {
+        assert comparable_errors(prepared_import) == {
             ("INVALID_ATTACHMENT_CODE", "codecommune", frozenset([2])),
             ("INVALID_ATTACHMENT_CODE", "codedepartement", frozenset([4])),
             ("INVALID_ATTACHMENT_CODE", "codemaille", frozenset([6])),
@@ -850,11 +840,7 @@ class TestImports:
 
     @pytest.mark.parametrize("import_file_name", ["cd_file.csv"])
     def test_import_cd_file(self, prepared_import):
-        obtained_errors = {
-            (error.type.name, error.column, frozenset(error.rows or []))
-            for error in prepared_import.errors
-        }
-        assert obtained_errors == {
+        assert comparable_errors(prepared_import) == {
             ("MISSING_VALUE", "cd_nom", frozenset([1, 4, 5])),
             ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([2, 6, 8])),
             ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([4, 6, 7])),
