@@ -176,8 +176,10 @@ class TestMappings:
     def test_add_field_mapping(self, users, mappings):
         fieldmapping = {
             "WKT": "geometrie",
-            "cd_hab": "cdhab",
+            "nom_cite": "nomcite",
             "cd_nom": "cdnom",
+            "cd_hab": "cdhab",
+            "observers": "observateurs",
         }
         url = url_for('import.add_mapping', mappingtype='field')
 
@@ -199,7 +201,13 @@ class TestMappings:
         assert r.status_code == BadRequest.code
 
         r = self.client.post(url, data=fieldmapping)
-        assert r.status_code == 200
+        assert r.status_code == BadRequest.code  # missing date_min
+
+        fieldmapping.update({
+            "date_min": "date_debut",
+        })
+        r = self.client.post(url, data=fieldmapping)
+        assert r.status_code == 200, r.json
         assert r.json['label'] == mappings['content_public'].label
         assert r.json['type'] == 'FIELD'
         assert r.json['values'] == fieldmapping
