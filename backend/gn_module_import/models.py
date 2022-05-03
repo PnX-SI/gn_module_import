@@ -170,7 +170,7 @@ class TImports(InstancePermissionMixin, db.Model):
         lazy="joined",
         secondary=cor_role_import,
     )
-    processing = db.Column(db.Boolean, nullable=False, default=False)
+    processed = db.Column("processing", db.Boolean, nullable=False, default=False)
     dataset = db.relationship("TDatasets", lazy="joined")
     source_file = deferred(db.Column(db.LargeBinary))
     columns = db.Column(ARRAY(db.Unicode))

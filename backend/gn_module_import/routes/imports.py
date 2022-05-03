@@ -158,6 +158,7 @@ def upload_file(scope, import_id):
     imprt.source_count = None
     imprt.synthese_data = []
     imprt.errors = []
+    imprt.processed = False
 
     db.session.commit()
     return jsonify(imprt.as_dict())
@@ -215,6 +216,7 @@ def decode_file(scope, import_id):
     imprt.source_count = None
     imprt.synthese_data = []
     imprt.errors = []
+    imprt.processed = False
 
     db.session.commit()
 
@@ -238,6 +240,8 @@ def set_import_field_mapping(scope, import_id):
     imprt.fieldmapping = request.json
     imprt.source_count = None
     imprt.synthese_data = []
+    imprt.errors = []
+    imprt.processed = False
     db.session.commit()
     return jsonify(imprt.as_dict())
 
@@ -256,6 +260,9 @@ def load_import(scope, import_id):
         raise BadRequest(description="A file must be first uploaded.")
     if imprt.fieldmapping is None:
         raise BadRequest(description="File fields must be first mapped.")
+    imprt.errors = []
+    imprt.synthese_data = []
+    imprt.processed = False
     line_no = insert_import_data_in_database(imprt)
     if not line_no:
         raise BadRequest("File with 0 lines.")
@@ -363,7 +370,8 @@ def set_import_content_mapping(scope, import_id):
         raise BadRequest(*e.args)
     imprt.contentmapping = request.json
     imprt.errors = []
-    # TODO: set gn_is_valid = None
+    # TODO: set valid = False on all rows
+    imprt.processed = False
     db.session.commit()
     return jsonify(imprt.as_dict())
 
@@ -385,10 +393,6 @@ def prepare_import(scope, import_id):
     # Check preconditions to execute this action
     if not imprt.source_count:
         raise Conflict("Field data must have been loaded before executing this action.")
-    if not imprt.contentmapping:
-        raise Conflict(
-            "Content mapping must have been set before executing this action."
-        )
 
     # Remove previous errors
     imprt.errors = []
@@ -440,6 +444,8 @@ def prepare_import(scope, import_id):
     # TODO: generate altitude
     # TODO: missing nomenclature (?)
     # TODO: nomenclature conditional checks
+
+    imprt.processed = True
 
     db.session.commit()
 
