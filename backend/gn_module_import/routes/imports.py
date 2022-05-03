@@ -47,6 +47,7 @@ from gn_module_import.utils import (
     get_file_size,
     set_cd_nom,
     set_cd_hab,
+    check_duplicates_source_pk,
 )
 
 IMPORTS_PER_PAGE = 15
@@ -439,6 +440,7 @@ def prepare_import(scope, import_id):
     do_nomenclatures_mapping(imprt, fields)
     set_cd_nom(imprt, fields)
     set_cd_hab(imprt, fields)
+    check_duplicates_source_pk(imprt, fields)
 
     # TODO: generate uuid (?)
     # TODO: generate altitude

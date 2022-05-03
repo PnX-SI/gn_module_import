@@ -300,6 +300,38 @@ def set_cd_hab(imprt, fields):
     set_column_from_referential(imprt, field, Habref.cd_hab, "CD_HAB_NOT_FOUND")
 
 
+def check_duplicates_source_pk(imprt, fields):
+    if "entity_source_pk_value" not in fields:
+        return
+    field = fields["entity_source_pk_value"]
+    synthese_field = getattr(ImportSyntheseData, field.synthese_field)
+    partitions = (
+        select([
+            array_agg(ImportSyntheseData.line_no).over(
+                partition_by=synthese_field,
+            ).label("duplicate_lines")
+        ])
+        .where(sa.and_(
+            ImportSyntheseData.imprt == imprt,
+            synthese_field != None,
+        ))
+        .alias("partitions")
+    )
+    duplicates = (
+        select([func.unnest(partitions.c.duplicate_lines).label("lines")])
+        .where(func.array_length(partitions.c.duplicate_lines, 1) > 1)
+        .alias("duplicates")
+    )
+    report_erroneous_rows(
+        imprt,
+        error_type="DUPLICATE_ENTITY_SOURCE_PK",
+        error_column=field.name_field,  # TODO: convert to csv col name
+        whereclause=(
+            ImportSyntheseData.line_no == duplicates.c.lines
+        ),
+    )
+
+
 def set_geom_from_area_code(imprt, source_column, area_type_filter):
     # Find area in CTE, then update corresponding column in statement
     cte = (

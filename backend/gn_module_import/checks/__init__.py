@@ -62,14 +62,6 @@ def check_uuid(df, fields: Dict[str, BibFields], generate: bool):
     # TODO: vérifier qu’on a bien toujours une valeur présente (check_required_values??)
 
 
-def check_entity_source(df, fields: Dict[str, BibFields]):
-    if 'entity_source_pk_value' in fields:
-        yield from update_dicts(
-            _check_duplicate(df, fields['entity_source_pk_value'].source_column),
-            column="entity_source_pk_value",
-            error_code='DUPLICATE_ENTITY_SOURCE_PK')
-
-
 def check_altitude(df, fields: Dict[str, BibFields], generate: bool):
     # TODO: generate altitude
     if 'altitude_min' in fields and 'altitude_max' in fields:
@@ -161,7 +153,6 @@ def _run_all_checks(imprt, fields: Dict[str, BibFields], df):
         fields,
         generate=imprt.fieldmapping.get('unique_id_sinp_generate', False),
     )
-    yield from check_entity_source(df, fields)
     yield from check_altitude(
         df,
         fields,
