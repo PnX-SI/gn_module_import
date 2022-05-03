@@ -29,52 +29,52 @@
                         </select>
                     </div>
 
-                    <div class="d-flex flex-row justify-content-between mt-3">
+                    <div class="d-flex flex-row justify-content-center mt-3">
 
-                        <div class="d-flex justify-content-center align-content-between">
+                        <div class="d-flex justify-content-center align-content-between row w-100">
                             <button
                                 *ngIf="canCreateMapping"
-                                class="mb-3"
+                                class="mb-1 col-xl-2 w-75"
                                 mat-raised-button
                                 color="primary"
                                 (click)="showCreateMappingForm()"
                             >
-                                Nouveau modèle d'import
+                                Nouveau modèle
                             </button>
                             <button
                                 *ngIf="canRenameMapping"
-                                class="btn-sm mb-3 ml-1"
+                                class="btn-sm mb-1 ml-1 col-xl-2 w-75"
                                 mat-raised-button
                                 color="primary"
                                 (click)="showRenameMappingForm()"
                                 [disabled]="!renameMappingEnabled()"
                             >
-                                Renomer le modèle d'import
+                                Renomer le modèle
                             </button>
                             <button
                                 *ngIf="canDeleteMapping"
-                                class="btn-sm mb-3 ml-1"
+                                class="btn-sm mb-1 ml-1 col-xl-2 w-75"
                                 mat-raised-button
                                 color="warn"
                                 (click)="deleteMapping()"
                                 [disabled]="!deleteMappingEnabled()"
                             >
-                                Supprimer le modèle d'import
+                                Supprimer le modèle
                             </button>
-                        </div>
-
-
-                        <div
-                            *ngIf="this.IMPORT_CONFIG.DISPLAY_CHECK_BOX_MAPPED_FIELD"
-                            class="form-check"
-                        >
-                            <input
-                                type="checkbox"
-                                [(ngModel)]="displayAllValues"
-                                [ngModelOptions]="{standalone: true}"
+                            <div
+                                    *ngIf="this.IMPORT_CONFIG.DISPLAY_CHECK_BOX_MAPPED_FIELD"
+                                    class="form-check col-xl-3 w-75"
                             >
-                            Afficher les champs automatiquement associés
+                                <input
+                                        type="checkbox"
+                                        [(ngModel)]="displayAllValues"
+                                        [ngModelOptions]="{standalone: true}"
+                                >
+                                Afficher les champs automatiquement associés
+                            </div>
                         </div>
+
+
                     </div>
 
                     <div
