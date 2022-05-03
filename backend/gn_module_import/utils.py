@@ -333,6 +333,7 @@ def check_duplicates_source_pk(imprt, fields):
         .where(sa.and_(
             ImportSyntheseData.imprt == imprt,
             synthese_field != None,
+            synthese_field != "",
         ))
         .alias("partitions")
     )

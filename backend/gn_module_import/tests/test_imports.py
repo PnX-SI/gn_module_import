@@ -845,3 +845,9 @@ class TestImports:
             ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([2, 6, 8])),
             ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([4, 6, 7])),
         }
+
+    @pytest.mark.parametrize("import_file_name", ["source_pk_file.csv"])
+    def test_import_source_pk_file(self, prepared_import):
+        assert comparable_errors(prepared_import) == {
+            ("DUPLICATE_ENTITY_SOURCE_PK", "entity_source_pk_value", frozenset([4, 5])),
+        }
