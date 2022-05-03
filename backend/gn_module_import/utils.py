@@ -300,6 +300,23 @@ def set_cd_hab(imprt, fields):
     set_column_from_referential(imprt, field, Habref.cd_hab, "CD_HAB_NOT_FOUND")
 
 
+def check_mandatory_fields(imprt, fields):
+    for field in fields.values():
+        if not field.mandatory or not field.synthese_field:
+            continue
+        source_field = getattr(ImportSyntheseData, field.source_column)
+        whereclause = sa.or_(
+            source_field == None,
+            source_field == "",
+        )
+        report_erroneous_rows(
+            imprt,
+            error_type="MISSING_VALUE",
+            error_column=field.name_field,  # TODO: convert to csv col name
+            whereclause=whereclause,
+        )
+
+
 def check_duplicates_source_pk(imprt, fields):
     if "entity_source_pk_value" not in fields:
         return

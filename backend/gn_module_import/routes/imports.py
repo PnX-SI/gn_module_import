@@ -47,6 +47,7 @@ from gn_module_import.utils import (
     get_file_size,
     set_cd_nom,
     set_cd_hab,
+    check_mandatory_fields,
     check_duplicates_source_pk,
 )
 
@@ -398,20 +399,26 @@ def prepare_import(scope, import_id):
     # Remove previous errors
     imprt.errors = []
 
-    selected_fields = [
+    selected_fields_names = [
         field_name
         for field_name, source_field in imprt.fieldmapping.items()
         if source_field in imprt.columns
     ]
+    selected_fields = (
+        BibFields.query
+        .filter(BibFields.name_field.in_(selected_fields_names))
+        .all()
+    )
+
     fields = {
         field.name_field: field
-        for field in (
-            BibFields.query.filter(BibFields.name_field.in_(selected_fields))
-            .filter(  # these fields are handled directly in SQL:
-                BibFields.mnemonique == None,
-                ~BibFields.name_field.in_(["cd_nom", "cd_hab"]),
-            )
-            .all()
+        for field in selected_fields
+        if (  # handled in SQL, exclude from dataframe
+            field.source_field is not None
+            and
+            field.mnemonique is None
+            and
+            field.name_field not in ["cd_nom", "cd_hab"]
         )
     }
 
@@ -421,19 +428,7 @@ def prepare_import(scope, import_id):
     set_the_geom_column(imprt, fields, df)
     update_import_data_from_dataframe(imprt, fields, df)
 
-    fields.update({
-        field.name_field: field
-        for field in (
-            BibFields.query.filter(BibFields.name_field.in_(selected_fields))
-            .filter(
-                sa.or_(
-                    BibFields.mnemonique != None,
-                    BibFields.name_field.in_(["cd_nom", "cd_hab"]),
-                )
-            )
-            .all()
-        )
-    })
+    fields.update({ field.name_field: field for field in selected_fields})
 
     # Checks in SQL
     complete_others_geom_columns(imprt, fields)
@@ -441,6 +436,7 @@ def prepare_import(scope, import_id):
     set_cd_nom(imprt, fields)
     set_cd_hab(imprt, fields)
     check_duplicates_source_pk(imprt, fields)
+    check_mandatory_fields(imprt, fields)
 
     # TODO: generate uuid (?)
     # TODO: generate altitude

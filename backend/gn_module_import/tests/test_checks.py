@@ -190,7 +190,7 @@ class TestChecks:
         concat_dates(df, fields)
         errors = list(check_required_values(df, fields))
         assert_errors(errors, expected=[
-            Error(error_code='MISSING_VALUE', column='datetime_min', invalid_rows=frozenset([9])),
+            Error(error_code='MISSING_VALUE', column='date_min', invalid_rows=frozenset([9])),
         ])
         errors = list(check_types(df, fields))
         assert_errors(errors, expected=[

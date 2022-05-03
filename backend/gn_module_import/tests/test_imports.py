@@ -37,8 +37,7 @@ valid_file_expected_errors = {
     ("DUPLICATE_ENTITY_SOURCE_PK", "entity_source_pk_value", frozenset([3, 4])),
     ("COUNT_MIN_SUP_COUNT_MAX", "count_min", frozenset([5])),
     ("DATE_MIN_SUP_DATE_MAX", "datetime_min", frozenset([6])),
-    ("MISSING_VALUE", "datetime_min", frozenset([8, 10])),
-    ("MISSING_VALUE", "datetime_max", frozenset([10])),
+    ("MISSING_VALUE", "date_min", frozenset([8, 10])),
     ("INVALID_DATE", "datetime_min", frozenset([7])),
 }
 

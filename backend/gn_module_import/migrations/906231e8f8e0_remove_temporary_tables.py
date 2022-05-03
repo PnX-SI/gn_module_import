@@ -134,7 +134,7 @@ def upgrade():
         'date_min',
         'date_min',
         TRUE,
-        TRUE,
+        FALSE,
         FALSE,
         FALSE,
         (SELECT id_theme FROM gn_imports.dict_fields WHERE name_field = 'date_min'),
@@ -147,7 +147,7 @@ def upgrade():
         'date_max',
         'date_max',
         TRUE,
-        TRUE,
+        FALSE,
         FALSE,
         FALSE,
         (SELECT id_theme FROM gn_imports.dict_fields WHERE name_field = 'date_max'),
@@ -161,8 +161,7 @@ def upgrade():
         gn_imports.dict_fields
     SET
         is_synthese_field = FALSE,
-        synthese_field = NULL,
-        mandatory = FALSE
+        synthese_field = NULL
     WHERE
         name_field IN ('date_min', 'date_max')
     """
@@ -442,8 +441,7 @@ def downgrade():
     UPDATE
         gn_imports.dict_fields
     SET
-        is_synthese_field = TRUE,
-        mandatory = (name_field = 'date_min')
+        is_synthese_field = TRUE
     WHERE
         name_field IN ('date_min', 'date_max')
     """
