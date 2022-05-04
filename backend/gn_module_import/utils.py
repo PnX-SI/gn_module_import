@@ -223,8 +223,7 @@ def update_import_data_from_dataframe(imprt, fields, df):
     updated_cols += [
         field.synthese_field for field in fields.values() if field.synthese_field
     ]
-    df.replace({np.nan: None}, inplace=True)
-    df.replace({pd.NaT: None}, inplace=True)
+    df.replace({np.nan: None, pd.NaT: None}, inplace=True)
     records = df[df["valid"] == True][updated_cols].to_dict(orient="records")
     insert_stmt = pg_insert(ImportSyntheseData)
     insert_stmt = insert_stmt.values(records).on_conflict_do_update(
@@ -300,6 +299,70 @@ def set_cd_hab(imprt, fields):
         return
     field = fields["cd_hab"]
     set_column_from_referential(imprt, field, Habref.cd_hab, "CD_HAB_NOT_FOUND")
+
+
+def set_altitudes(imprt, fields):
+    if not imprt.fieldmapping.get("altitudes_generate", False):
+        return
+    altitudes = (
+        select([
+            column("altitude_min"),
+            column("altitude_max"),
+        ])
+        .select_from(
+            func.ref_geo.fct_get_altitude_intersection(ImportSyntheseData.the_geom_local)
+        )
+        .lateral("altitudes")
+    )
+    cte = (
+        select([
+            ImportSyntheseData.id_import,
+            ImportSyntheseData.line_no,
+            altitudes.c.altitude_min,
+            altitudes.c.altitude_max,
+        ])
+        .where(ImportSyntheseData.the_geom_local != None)
+        .where(sa.or_(
+            ImportSyntheseData.src_altitude_min == None,
+            ImportSyntheseData.src_altitude_min == "",
+            ImportSyntheseData.src_altitude_max == None,
+            ImportSyntheseData.src_altitude_max == "",
+        ))
+        .cte("cte")
+    )
+    stmt = (
+        update(ImportSyntheseData)
+        .where(ImportSyntheseData.id_import == cte.c.id_import)
+        .where(ImportSyntheseData.line_no == cte.c.line_no)
+        .values({
+            ImportSyntheseData.altitude_min: sa.case(
+                whens=[
+                    (
+                        sa.or_(
+                            ImportSyntheseData.src_altitude_min == None,
+                            ImportSyntheseData.src_altitude_min == "",
+                        ),
+                        cte.c.altitude_min,
+                    ),
+                ],
+                else_=ImportSyntheseData.altitude_min,
+            ),
+            ImportSyntheseData.altitude_max: sa.case(
+                whens=[
+                    (
+                        sa.or_(
+                            ImportSyntheseData.src_altitude_max == None,
+                            ImportSyntheseData.src_altitude_max == "",
+                        ),
+                        cte.c.altitude_max,
+                    ),
+                ],
+                else_=ImportSyntheseData.altitude_max,
+            ),
+        })
+
+    )
+    db.session.execute(stmt)
 
 
 def check_mandatory_fields(imprt, fields):
