@@ -61,6 +61,7 @@ export class DataService {
   }
 
   createContentMapping(name: string, values: ContentMappingValues): Observable<ContentMapping> {
+      console.log(values)
     return this._http.post<ContentMapping>(`${urlApi}/contentmappings/?label=${name}`, values);
   }
 
@@ -80,12 +81,20 @@ export class DataService {
     return this._http.get<ContentMapping>(`${urlApi}/contentmappings/${id_mapping}/`);
   }
 
-  updateFieldMapping(id_mapping: number, values: FieldMappingValues): Observable<FieldMapping> {
-    return this._http.post<FieldMapping>(`${urlApi}/fieldmappings/${id_mapping}/`, values);
+  updateFieldMapping(id_mapping: number, values: FieldMappingValues, label: string = ''): Observable<FieldMapping> {
+    let url =  `${urlApi}/fieldmappings/${id_mapping}/`
+    if (label) {
+        url  = url + `?label=${label}`
+    }
+    return this._http.post<FieldMapping>(url, values);
   }
 
-  updateContentMapping(id_mapping: number, values: ContentMappingValues): Observable<ContentMapping> {
-    return this._http.post<ContentMapping>(`${urlApi}/contentmappings/${id_mapping}/`, values);
+  updateContentMapping(id_mapping: number, values: ContentMappingValues, label: string = ''): Observable<ContentMapping> {
+    let url =  `${urlApi}/contentmappings/${id_mapping}/`
+    if (label) {
+        url  = url + `?label=${label}`
+    }
+    return this._http.post<ContentMapping>(url, values);
   }
 
   renameFieldMapping(id_mapping: number, label: string): Observable<FieldMapping> {

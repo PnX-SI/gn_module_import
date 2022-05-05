@@ -58,6 +58,7 @@ export class FieldsMappingStepComponent implements OnInit {
   public renameMappingFormVisible: boolean = false; // show rename mapping form
   public createOrRenameMappingForm = new FormControl(null, [Validators.required]); // form to add a new mapping
   public modalCreateMappingForm = new FormControl('');
+  public updateAvailable: boolean = false;
   @ViewChild('saveMappingModal') saveMappingModal;
 
   constructor(
@@ -69,7 +70,7 @@ export class FieldsMappingStepComponent implements OnInit {
     private _router: Router,
     private _route: ActivatedRoute,
     private _modalService: NgbModal,
-    public cruvedStore: CruvedStoreService
+    public cruvedStore: CruvedStoreService,
   ) { }
 
   ngOnInit() {
@@ -96,7 +97,6 @@ export class FieldsMappingStepComponent implements OnInit {
       this.sourceFields = sourceFields;
       this.mappedSourceFields = new Set();
       this.unmappedSourceFields = new Set(sourceFields);
-
       if (this.importData.fieldmapping) {
         this.fillSyntheseFormWithMapping(this.importData.fieldmapping);
       }
@@ -131,7 +131,7 @@ export class FieldsMappingStepComponent implements OnInit {
         } else {
           validators = [];
         }
-        let control = new FormControl({}, validators);
+        let control = new FormControl(null, validators);
         control.valueChanges
             .subscribe(value => {
               this.onFieldMappingChange(field.name_field, value);
@@ -152,13 +152,6 @@ export class FieldsMappingStepComponent implements OnInit {
     return this.fieldMappingForm.value != null && this.fieldMappingForm.value.cruved.D;
   }
 
-  showCreateMappingForm() {
-    this.fieldMappingForm.reset();
-    this.createOrRenameMappingForm.reset();
-    this.createMappingFormVisible = true;
-    this.renameMappingFormVisible = false;
-    //this.displayAllValues = true; // XXX why?
-  }
 
   showRenameMappingForm() {
     this.createOrRenameMappingForm.setValue(this.fieldMappingForm.value.mapping_label);
@@ -171,21 +164,48 @@ export class FieldsMappingStepComponent implements OnInit {
     this.renameMappingFormVisible = false;
     this.createOrRenameMappingForm.reset();
   }
-
   createMapping() {
-    this.spinner = true;
-
-    this._ds.createFieldMapping(this.createOrRenameMappingForm.value, this.syntheseForm.value).pipe(
-      finalize(() => {
-        this.spinner = false;
-        this.createMappingFormVisible = false;
-      }),
-    ).subscribe((mapping: FieldMapping) => {
-        this.userFieldMappings.push(mapping);  // add the mapping to the list of known mapping (and so the select mapping form)
-        this.fieldMappingForm.setValue(mapping); // automatically activate the created mapping
-    }, (error: HttpErrorResponse) => {
-      this._commonService.regularToaster('error', error.error.description);
-    });
+      this.spinner = true
+      this._ds.createFieldMapping(this.modalCreateMappingForm.value, this.getFieldMappingValues()).pipe()
+          .subscribe( () => {
+              this.processNextStep()
+          },
+          () => {
+            this.spinner = false
+          }
+      )
+  }
+  updateMapping() {
+    this.spinner = true
+    let name = ''
+    if (this.modalCreateMappingForm.value != this.fieldMappingForm.value.label) {
+        name = this.modalCreateMappingForm.value
+    }
+    this._ds.updateFieldMapping(this.fieldMappingForm.value.id, this.getFieldMappingValues(), name).pipe()
+        .subscribe( () => {
+            this.processNextStep()
+        },
+        () => {
+            this.spinner = false
+        }
+    )
+  }
+  deleteMapping() {
+      this.spinner = true
+      let mapping_id = this.fieldMappingForm.value.id
+      this._ds.deleteFieldMapping(mapping_id).pipe()
+          .subscribe(() => {
+              this._commonService.regularToaster(
+                  "success",
+                  "Le mapping " + this.fieldMappingForm.value.label + " a bien été supprimé"
+              )
+              this.fieldMappingForm.setValue(null)
+              this.userFieldMappings = this.userFieldMappings.filter(mapping  => {return mapping.id !== mapping_id})
+              this.spinner = false
+          }, () => {
+              this.spinner = false
+          }
+          )
   }
 
   renameMapping(): void {
@@ -194,6 +214,7 @@ export class FieldsMappingStepComponent implements OnInit {
                        this.createOrRenameMappingForm.value).pipe(
       finalize(() => {
         this.spinner = false;
+        this.spinner = false;
         this.renameMappingFormVisible = false;
       }),
     ).subscribe((mapping: FieldMapping) => {
@@ -201,17 +222,6 @@ export class FieldsMappingStepComponent implements OnInit {
                       .findIndex((m: FieldMapping) => m.id == mapping.id);
       this.fieldMappingForm.setValue(mapping);
       this.userFieldMappings[index] = mapping;
-    });
-  }
-
-  deleteFieldMapping(): void {
-    this.spinner = true;
-    this._ds.deleteFieldMapping(this.fieldMappingForm.value.id).pipe(
-      finalize(() => this.spinner = false),
-    ).subscribe(() => {
-      this.fieldMappingForm.setValue(null);
-      //this.userFieldMappings = fieldMappings;
-      // TODO: remove mapping from userFieldMappings list
     });
   }
 
@@ -237,7 +247,6 @@ export class FieldsMappingStepComponent implements OnInit {
       if (!this.sourceFields.includes(source)) continue;  // this field mapping does not apply to this file
       control.setValue(source);
     }
-    this.syntheseForm.markAsDirty();
   }
 
   // a new source field have been selected for a given target field
@@ -277,37 +286,47 @@ export class FieldsMappingStepComponent implements OnInit {
 
   onNextStep() {
     if (!this.isNextStepAvailable()) { return; }
-    /*if (!this.syntheseForm.pristine) { // mapping model has been modified (or its a new model)
-      this._modalService.open(this.saveMappingModal); // ask if we should save the mapping
-    } else {*/
-    this.spinner = true;
-    of(this.importData).pipe(
-      concatMap((importData: Import) => {
-          if (this.syntheseForm.dirty) {
-              console.log("Updating import field mapping from form");
-              return this._ds.setImportFieldMapping(importData.id_import, this.getFieldMappingValues())
-          /*} else if (this.fieldMappingForm.dirty) {
-              console.log("Updating import field mapping from model");
-              return this._ds.setImportFieldMapping(importData.id_import, this.fieldMappingForm.value.values)*/
-          } else {
-              return of(importData);
+    let mappingValue = this.fieldMappingForm.value
+    if (this.syntheseForm.dirty && (this.canCreateMapping || mappingValue && mappingValue.cruved.U && !mappingValue.public)) {
+        if (mappingValue && !mappingValue.public) {
+            this.updateAvailable = true
+            this.modalCreateMappingForm.setValue(mappingValue.label)
+        }
+        else {
+            this.updateAvailable = false
+            this.modalCreateMappingForm.setValue('')
+        }
+        this._modalService.open(this.saveMappingModal, { size: 'lg' })
+    }
+    else {
+        this.spinner = true;
+        this.processNextStep()
+    }
+
+  }
+  processNextStep(){
+      of(this.importData).pipe(
+          concatMap((importData: Import) => {
+              if (this.syntheseForm.dirty) {
+                  return this._ds.setImportFieldMapping(importData.id_import, this.getFieldMappingValues())
+              } else {
+                  return of(importData);
+              }
+          }),
+          concatMap((importData: Import) => {
+              if (!importData.source_count) {
+                  return this._ds.loadImport(importData.id_import)
+              } else {
+                  return of(importData);
+              }
+          }),
+          finalize(() => this.spinner = false),
+      ).subscribe(
+          (importData: Import) => {
+              this.importProcessService.setImportData(importData);
+              this.importProcessService.navigateToNextStep(this.step);
           }
-      }),
-      concatMap((importData: Import) => {
-          if (!importData.source_count) {
-              console.log("Loading import data");
-              return this._ds.loadImport(importData.id_import)
-          } else {
-              return of(importData);
-          }
-      }),
-      finalize(() => this.spinner = false),
-    ).subscribe(
-      (importData: Import) => {
-        this.importProcessService.setImportData(importData);
-        this.importProcessService.navigateToNextStep(this.step);
-      }
-    )
+      )
   }
 
   getFieldMappingValues(): FieldMappingValues {
@@ -319,32 +338,4 @@ export class FieldsMappingStepComponent implements OnInit {
       }
       return values;
   }
-
-  saveMapping(mapping_name: string = null): Observable<FieldMapping> {
-    if (mapping_name) { // create a mapping with the given name
-      return this._ds.createFieldMapping(mapping_name, this.getFieldMappingValues());
-    } else { // reuse the currently selected mapping
-      return this._ds.updateFieldMapping(this.fieldMappingForm.value.id, this.getFieldMappingValues());
-    }
-  }
-
-  // TODO
-  /*submitMapping(save: boolean = false, mapping_name: string = '') {
-    this.spinner = true;
-    this.saveAndUpdateMapping(permanent_mapping, mapping_name).pipe(
-      concatMap((mapping: Mapping) => {
-        if (this.importData.id_field_mapping != mapping.id_mapping) {
-          return this._ds.setImportFieldMapping(this.importData.id_import, mapping.id_mapping);
-        } else {
-          return of(this.importData);
-        }
-      }),
-      finalize(() => this.spinner = false),
-    ).subscribe((importData: Import) => {
-      this.importProcessService.setImportData(importData);
-      this.importProcessService.navigateToLastStep();
-    }, (error: HttpErrorResponse) => {
-      this._commonService.regularToaster('error', error.error.description);
-    });
-  }*/
 }

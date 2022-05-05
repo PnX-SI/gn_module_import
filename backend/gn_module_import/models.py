@@ -564,11 +564,11 @@ class MappingQuery(BaseQuery):
             return self.filter(sa.false())
         elif scope in (1, 2):
             filters = [
-                Mapping.public == True,
-                Mapping.owners.any(id_role=user.id_role),
+                MappingTemplate.public == True,
+                MappingTemplate.owners.any(id_role=user.id_role),
             ]
             if scope == 2 and user.id_organisme is not None:
-                filters.append(Mapping.owners.any(id_organisme=user.id_organisme))
+                filters.append(MappingTemplate.owners.any(id_organisme=user.id_organisme))
             return self.filter(sa.or_(*filters)).distinct()
         elif scope == 3:
             return self

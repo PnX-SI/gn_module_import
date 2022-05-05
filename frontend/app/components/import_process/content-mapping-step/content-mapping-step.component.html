@@ -33,13 +33,14 @@
                     <div class="row">
                         <div class="col">
                             <button
-                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
-                                class="d-flex justify-content-center align-content-between mb-3"
+                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.D != '0'"
+                                class="btn-sm mb-3 ml-1"
                                 mat-raised-button
-                                color="primary"
-                                (click)="_cm.createMapping(newMappingNameForm)"
+                                color="warn"
+                                (click)="deleteMapping()"
+                                [disabled]="!deleteMappingEnabled()"
                             >
-                                Nouveau modèle d'import
+                                Supprimer le modèle d'import
                             </button>
                         </div>
                         <!--<div
@@ -237,20 +238,36 @@
         </div>
         <div class="modal-body">
             Attention, le modèle a été modifié, voulez-vous sauvegarder ces modifications
+            <form>
+                <div class="form-group">
+                    <label for="mappingName">Nom du modèle</label>
+                    <input [formControl]="modalCreateMappingForm" class="form-control" id="mappingName" placeholder="Nom du mapping">
+                    <span *ngIf="!modalCreateMappingForm.value" class="text-warning"> Un nom doit être renseigné pour pouvoir créer un modèle </span>
+                    <span *ngIf="selectMappingContentForm.value && modalCreateMappingForm.value == selectMappingContentForm.value.label" class="text-warning"> Changer de nom pour pouvoir créer un modèle </span>
+                </div>
+            </form>
         </div>
         <div class="modal-footer">
             <button
                 type="button"
                 mat-raised-button
                 color="accent"
-                (click)="saveMappingUpdate(false); modal.close()"
+                (click)="processNextStep(); modal.close()"
             >Ne pas enregistrer </button>
+            <button
+                *ngIf="updateAvailable"
+                type="button"
+                mat-raised-button
+                color="primary"
+                (click)="updateMapping(); modal.close()"
+            >Mettre à jour le modèle d'import</button>
             <button
                 type="button"
                 mat-raised-button
                 color="primary"
-                (click)="saveMappingUpdate(true); modal.close()"
-            >Enregistrer les modifications du modèle d'import</button>
+                (click)="createMapping(); modal.close()"
+                [disabled]="!modalCreateMappingForm.value || selectMappingContentForm.value && modalCreateMappingForm.value == selectMappingContentForm.value.label"
+            >Enregistrer un nouveau modèle d'import</button>
         </div>
     </ng-template>
 

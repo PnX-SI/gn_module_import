@@ -28,433 +28,220 @@ import { ImportProcessService } from "../import-process.service";
   encapsulation: ViewEncapsulation.None
 })
 export class ContentMappingStepComponent implements OnInit {
-  public step: Step;
-  public selectMappingContentForm = new FormControl();
-  public importData: Import;
-  public userContentMappings: Array<ContentMapping>;
-  public importValues: ImportValues;
-  public showForm: boolean = false;
-  public contentTargetForm: FormGroup;
-  public spinner: boolean = false;
-  public mappedFields: Set<string> = new Set<string>();  // TODO
-  public unmappedFields: Set<string> = new Set<string>();  // TODO
+    public step: Step;
+    public selectMappingContentForm = new FormControl();
+    public importData: Import;
+    public userContentMappings: Array<ContentMapping>;
+    public importValues: ImportValues;
+    public showForm: boolean = false;
+    public contentTargetForm: FormGroup;
+    public spinner: boolean = false;
+    public updateAvailable: boolean = false;
+    public modalCreateMappingForm = new FormControl('');
+    public mappedFields: Set<string> = new Set<string>();  // TODO
+    public unmappedFields: Set<string> = new Set<string>();  // TODO
 
-  @ViewChild("modalConfirm") modalConfirm: any;
-  @ViewChild("modalRedir") modalRedir: any;
+    @ViewChild("modalConfirm") modalConfirm: any;
+    @ViewChild("modalRedir") modalRedir: any;
 
-  constructor(
-    //private stepService: StepsService,
-    private _fb: FormBuilder,
-    private _ds: DataService,
-    private _synthese_ds: SyntheseDataService,
-    public _cm: ContentMappingService,
-    private _commonService: CommonService,
-    private _router: Router,
-    private _route: ActivatedRoute,
-    private _modalService: NgbModal,
-    public cruvedStore: CruvedStoreService,
-    private importProcessService: ImportProcessService,
-  ) { }
+    constructor(
+        //private stepService: StepsService,
+        private _fb: FormBuilder,
+        private _ds: DataService,
+        private _synthese_ds: SyntheseDataService,
+        public _cm: ContentMappingService,
+        private _commonService: CommonService,
+        private _router: Router,
+        private _route: ActivatedRoute,
+        private _modalService: NgbModal,
+        public cruvedStore: CruvedStoreService,
+        private importProcessService: ImportProcessService,
+    ) {
+    }
 
-  ngOnInit() {
-    this.step = this._route.snapshot.data.step;
-    this.importData = this.importProcessService.getImportData();
-    this.contentTargetForm = this._fb.group({});
-
-    forkJoin({
-        contentMappings: this._ds.getContentMappings(),
-        importValues: this._ds.getImportValues(this.importData.id_import),
-    }).subscribe(({contentMappings, importValues}) => {
-        this.userContentMappings = contentMappings;
-
-        this.selectMappingContentForm.valueChanges.subscribe(mapping => {
-            this.onSelectMapping(mapping);
-        });
-
-        this.importValues = importValues;
+    ngOnInit() {
+        this.step = this._route.snapshot.data.step;
+        this.importData = this.importProcessService.getImportData();
         this.contentTargetForm = this._fb.group({});
+
+        forkJoin({
+            contentMappings: this._ds.getContentMappings(),
+            importValues: this._ds.getImportValues(this.importData.id_import),
+        }).subscribe(({contentMappings, importValues}) => {
+            this.userContentMappings = contentMappings;
+
+            this.selectMappingContentForm.valueChanges.subscribe(mapping => {
+                this.onSelectMapping(mapping);
+            });
+
+            this.importValues = importValues;
+            this.contentTargetForm = this._fb.group({});
+            for (let targetField of Object.keys(this.importValues)) {
+                this.importValues[targetField].values.forEach((value, index) => {
+                    let control = new FormControl(null, [Validators.required]);
+                    let control_name = targetField + '-' + index;
+                    this.contentTargetForm.addControl(control_name, control);
+                    if (!this.importData.contentmapping) {
+                        // Search for a nomenclature with a label equals to the user value.
+                        let nomenclature = this.importValues[targetField].nomenclatures.find(
+                            n => n.label_default == value
+                        );
+                        if (nomenclature) {
+                            control.setValue(nomenclature);
+                        }
+                    }
+                });
+            }
+            if (this.importData.contentmapping) {
+                this.fillContentFormWithMapping(this.importData.contentmapping);
+            }
+            this.showForm = true;
+        });
+    }
+
+    // Used by select component to compare content mappings
+    areMappingContentEqual(mc1: ContentMapping, mc2: ContentMapping): boolean {
+        return (mc1 == null && mc2 == null) || (mc1 != null && mc2 != null && mc1.id === mc2.id);
+    }
+
+    areNomenclaturesEqual(n1: Nomenclature, n2: Nomenclature): boolean {
+        return (n1 == null && n2 == null) || (n1 != null && n2 != null && n1.cd_nomenclature === n2.cd_nomenclature);
+    }
+
+    onSelectMapping(mapping: ContentMapping) {
+        this.contentTargetForm.reset();
+        if (mapping) {
+            this.fillContentFormWithMapping(mapping.values);
+        }
+    }
+
+    fillContentFormWithMapping(mappingvalues: ContentMappingValues) {
         for (let targetField of Object.keys(this.importValues)) {
+            let type_mnemo = this.importValues[targetField].nomenclature_type.mnemonique;
+            if (!(type_mnemo in mappingvalues)) continue;
             this.importValues[targetField].values.forEach((value, index) => {
-                let control = new FormControl(null, [Validators.required]);
-                let control_name = targetField + '-' + index;
-                this.contentTargetForm.addControl(control_name, control);
-                if (!this.importData.contentmapping) {
-                  // Search for a nomenclature with a label equals to the user value.
-                  let nomenclature = this.importValues[targetField].nomenclatures.find(
-                    n => n.label_default == value
-                  );
-                  if (nomenclature) {
-                    control.setValue(nomenclature);
-                    this.contentTargetForm.markAsDirty();
-                  }
+                if (value in mappingvalues[type_mnemo]) {
+                    let control = this.contentTargetForm.get(targetField + '-' + index);
+                    let nomenclature = this.importValues[targetField].nomenclatures.find(
+                        n => n.cd_nomenclature === mappingvalues[type_mnemo][value]
+                    );
+                    if (nomenclature) {
+                        control.setValue(nomenclature);
+                    }
                 }
             });
         }
-        if (this.importData.contentmapping) {
-          this.fillContentFormWithMapping(this.importData.contentmapping);
-        }
-        this.showForm = true;
-    });
-  }
-
-   // Used by select component to compare content mappings
-  areMappingContentEqual(mc1: ContentMapping, mc2: ContentMapping): boolean {
-    return (mc1 == null && mc2 == null) || (mc1 != null && mc2 != null && mc1.id === mc2.id);
-  }
-
-  areNomenclaturesEqual(n1: Nomenclature, n2: Nomenclature): boolean {
-    return (n1 == null && n2 == null) || (n1 != null && n2 != null && n1.cd_nomenclature === n2.cd_nomenclature);
-  }
-
-  onSelectMapping(mapping: ContentMapping) {
-      console.log("reset");
-      this.contentTargetForm.reset();
-      this.fillContentFormWithMapping(mapping.values);
-  }
-
-  fillContentFormWithMapping(mappingvalues: ContentMappingValues) {
-    for (let targetField of Object.keys(this.importValues)) {
-      let type_mnemo = this.importValues[targetField].nomenclature_type.mnemonique;
-      if (!(type_mnemo in mappingvalues)) continue;
-      this.importValues[targetField].values.forEach((value, index) => {
-        if (value in mappingvalues[type_mnemo]) {
-          let control = this.contentTargetForm.get(targetField + '-' + index);
-          let nomenclature = this.importValues[targetField].nomenclatures.find(
-            n => n.cd_nomenclature === mappingvalues[type_mnemo][value]
-          );
-          if (nomenclature) {
-            control.setValue(nomenclature);
-          }
-        }
-      });
     }
-  }
 
-  onSelectNomenclature(targetFieldValue: string) {
-    let formControl = this.contentTargetForm.controls[targetFieldValue];
-  }
-
-  onPreviousStep() {
-    this.importProcessService.navigateToPreviousStep(this.step);
-  }
-
-  isNextStepAvailable(): boolean {
-    return this.contentTargetForm.valid;
-  }
-
-  onNextStep() {
-    if (!this.isNextStepAvailable()) { return; }
-    this.spinner = true;
-    of(this.importData).pipe(
-      concatMap((importData: Import) => {
-        if (this.contentTargetForm.dirty) {
-          console.log("Updating import content mapping");
-          let values: ContentMappingValues = this.computeContentMappingValues();
-          return this._ds.setImportContentMapping(importData.id_import, values);
-        } else {
-          return of(importData);
-        }
-      }),
-      concatMap((importData: Import) => {
-        console.log("Prepare import");
-        return this._ds.prepareImport(importData.id_import);
-      }),
-      finalize(() => this.spinner = false),
-    ).subscribe(
-      (importData: Import) => {
-        this.importProcessService.setImportData(importData);
-        this.importProcessService.navigateToNextStep(this.step);
-      }
-    )
-    /*if (!this.contentTargetForm.pristine) {
-      // TODO: check cruved before updating mapping
-      // this.selectMappingContentForm.value.id_mapping
-      console.log("create mapping");
-      this._ds.createMapping('', 'content').subscribe(mapping => {
-        console.log("mapping created", mapping.id_mapping);
-        this.updateMappingContents(mapping.id_mapping).subscribe(mappingvalues => {
-          console.log("mapping updated, set import mapping");
-          this._ds.setImportContentMapping(this.importData.id_import, mapping.id_mapping).subscribe(importData => {
-            console.log("import updated");
-            this.importProcessService.setImportData(importData);
-            this.importProcessService.navigateToLastStep();
-          });
-        });
-      });
-      this.submit(false);
-    } else {
-      this.importProcessService.navigateToNextStep(this.step);
-    }*/
-  }
-
-  computeContentMappingValues(): ContentMappingValues {
-    let values = {} as ContentMappingValues;
-    for (let targetField of Object.keys(this.importValues)) {
-      let _values = {}
-      this.importValues[targetField].values.forEach((value, index) => {
-        let control = this.contentTargetForm.controls[targetField + '-' + index];
-        _values[value] = control.value.cd_nomenclature;
-      });
-      values[this.importValues[targetField].nomenclature_type.mnemonique] = _values;
+    onSelectNomenclature(targetFieldValue: string) {
+        let formControl = this.contentTargetForm.controls[targetFieldValue];
     }
-    return values;
-  }
 
-  /*submit(save: boolean, mapping_label: string = null) {
-    console.log("save", save, "mapping_label", mapping_label);
-    this.spinner = true;
-    let values: ContentMappingValues = this.computeContentMappingValues();
-    of(1).pipe(
-      concatMap(() => {
-        if (save) {
-          if (mapping_label) { // create a new mapping
-            console.log("create new mapping");
-            return this._ds.createContentMapping(mapping_label, values).mapTo(values);
-          } else { // update existing mapping
-            let mapping: ContentMapping = this.selectMappingContentForm.value;
-            console.log("update mapping", mapping.label);
-            mapping.values = values;
-            return this._ds.updateContentMapping(mapping.id, values).mapTo(values);
-          }
-        } else { // update the currently selected mapping
-          console.log("do not create or update mapping");
-          return of(values);
-        }
-      }),
-      concatMap((values: ContentMappingValues) => {
-        console.log("updating import content mapping");
-        return this._ds.setImportContentMapping(this.importData.id_import, values);
-      }),
-      concatMap((importData: Import) => {
-        console.log("prepare import"); // TODO: move this in prepare step
-        return this._ds.prepareImport(importData.id_import);
-      }),
-      finalize(() => this.spinner = false),
-    ).subscribe((importData: Import) => {
-      this.importProcessService.setImportData(importData);
-      this.importProcessService.navigateToLastStep();
-    }, (error: HttpErrorResponse) => {
-      this._commonService.regularToaster('error', error.error.description);
-    });
-  }*/
+    onPreviousStep() {
+        this.importProcessService.navigateToPreviousStep(this.step);
+    }
 
-  /*getNomencInf() {
-    this._ds
-      .getNomencInfo(this.stepData.importId, this.idFieldMapping)
-      .subscribe(
-        res => {
-          res["content_mapping_info"].forEach(user_col => {
-            user_col.user_values.values = user_col.user_values.values.filter(val => val.value !== null)
-          });
-          this.stepData.contentMappingInfo = res["content_mapping_info"];
-
-          this.generateContentForm();
-          // fill the form
-          if (this.stepData.id_content_mapping) {
-
-            this._ds.getMapping(this.stepData.id_content_mapping).subscribe(mapping => {
-              let mapping_already_there = false;
-              this._cm.userContentMappings.forEach(curMapping => {
-                if (curMapping.id_mapping == this.stepData.id_content_mapping) {
-                  mapping_already_there = true;
-                }
-              });
-              if (!mapping_already_there) {
-                this._cm.userContentMappings.push(mapping)
-              }
-              this.mappingListForm.setValue(mapping);
-              this.fillMapping(this.stepData.id_content_mapping);
-
+    isNextStepAvailable(): boolean {
+        return this.contentTargetForm.valid;
+    }
+    deleteMappingEnabled() {
+        // a mapping have been selected and we have delete right on it
+        return this.selectMappingContentForm.value != null && this.selectMappingContentForm.value.cruved.D;
+    }
+    createMapping() {
+        this.spinner = true
+        this._ds.createContentMapping(this.modalCreateMappingForm.value, this.computeContentMappingValues()).pipe()
+            .subscribe(() => {
+                this.processNextStep()
+            }, () => {
+                this.spinner = false
             })
+    }
 
+    updateMapping() {
+        this.spinner = true
+        let name = ''
+        if (this.modalCreateMappingForm.value != this.selectMappingContentForm.value.label) {
+            name = this.modalCreateMappingForm.value
+        }
+        this._ds.updateContentMapping(this.selectMappingContentForm.value.id, this.computeContentMappingValues(), name).pipe()
+            .subscribe(() => {
+                    this.processNextStep()
+                }, () => {
+                    this.spinner = false
+                }
+            )
+    }
+    deleteMapping() {
+      this.spinner = true
+      let mapping_id = this.selectMappingContentForm.value.id
+      this._ds.deleteContentMapping(mapping_id).pipe()
+          .subscribe(() => {
+              this._commonService.regularToaster(
+                  "success",
+                  "Le mapping " + this.selectMappingContentForm.value.label + " a bien été supprimé"
+              )
+              this.selectMappingContentForm.setValue(null)
+              this.userContentMappings = this.userContentMappings.filter(mapping  => {return mapping.id !== mapping_id})
+              this.spinner = false
+          }, () => {
+              this.spinner = false
           }
-        },
-        error => {
-          if (error.statusText === "Unknown Error") {
-            // show error message if no connexion
-            this._commonService.regularToaster(
-              "error",
-              "Une erreur s'est produite : contactez l'administrateur du site"
-            );
-          } else {
-            // show error message if other server error
-            console.log(error);
-            this._commonService.regularToaster("error", error.error.message);
-          }
+          )
+    }
+    onNextStep() {
+        if (!this.isNextStepAvailable()) {
+            return;
         }
-      );
-  }
-
-  saveMappingName(value) {
-    // save new mapping in bib_mapping
-    // then select the mapping name in the select
-    let mappingType = "CONTENT";
-    const mappingForm = {
-      mappingName: this.newMappingNameForm.value
-    };
-    this._ds.postMappingName(mappingForm, mappingType).subscribe(
-      id_mapping => {
-        this._cm.newMapping = false;
-        this._cm.getMappingNamesList(id_mapping, this.mappingListForm);
-        this.newMappingNameForm.reset();
-        //this.enableMapping(targetForm);
-      },
-      error => {
-        if (error.statusText === "Unknown Error") {
-          // show error message if no connexion
-          this._commonService.regularToaster(
-            "error",
-            "Une erreur s'est produite : contactez l'administrateur du site"
-          );
-        } else {
-          console.log(error);
-          this._commonService.regularToaster("error", error.error);
-        }
-      }
-    );
-  }
-
-  generateContentForm() {
-    this.n_aMapper = 0;
-    this.stepData.contentMappingInfo.forEach(ele => {
-      ele["nomenc_values_def"].forEach(nomenc => {
-        this.contentTargetForm.addControl(nomenc.id, new FormControl(""));
-        ++this.n_aMapper;
-      });
-    });
-    this.showForm = true;
-  }
-
-  onSelectChange(selectedVal, group, formControlName) {
-    this.stepData.contentMappingInfo.map(ele => {
-      if (ele.nomenc_abbr === group.nomenc_abbr) {
-        ele.user_values.values = ele.user_values.values.filter(value => {
-          return !(value.value == selectedVal.value);
-        });
-      }
-    });
-  }
-
-  onSelectDelete(deletedVal, group, formControlName) {
-    this.stepData.contentMappingInfo.map(ele => {
-      if (ele.nomenc_abbr === group.nomenc_abbr) {
-        let temp_array = ele.user_values.values;
-        temp_array.push(deletedVal);
-        ele.user_values.values = temp_array.slice(0);
-      }
-    });
-
-    // modify contentTargetForm control values
-    let values = this.contentTargetForm.controls[formControlName].value;
-    values = values.filter(value => {
-      return value.id != deletedVal.id;
-    });
-    this.contentTargetForm.controls[formControlName].setValue(values);
-  }
-
-  //isEnabled(value_def_id: string) {
-  //  return true;
-  //  //(!this.contentTargetForm.controls[value_def_id].value)
-  //  //  || this.contentTargetForm.controls[value_def_id].value.length == 0;
-  //}
-
-  //containsEnabled(contentMapping: any) {
-  //  //return contentMapping.nomenc_values_def.find(value_def => this.isEnabled(value_def.id));
-  //  return (
-  //    contentMapping.user_values.values.filter(val => val.value).length > 0
-  //  );
-  //}
-
-  //updateEnabled(e) {
-  //  // this.onMappingChange(this.id_mapping);
-  //  this._cm.displayMapped = !this._cm.displayMapped;
-  //}
-
-  onMappingName(): void {
-    this.mappingListForm.valueChanges.subscribe(mapping => {
-
-      if (mapping && mapping.id_mapping) {
-        this.disabled = false;
-        this.fillMapping(mapping.id_mapping);
-      } else {
-        this.n_mappes = -1;
-        this.contentTargetForm.reset();
-        for (let contentMapping of this.stepData.contentMappingInfo) {
-          contentMapping.isCollapsed = false;
-        }
-        this.disabled = true;
-      }
-    });
-  }
-
-  getId(userValue, nomencId) {
-    this.stepData.contentMappingInfo.forEach(contentMapping => {
-      // find nomenc
-      contentMapping.nomenc_values_def.forEach(ele => {
-        if (ele.id == nomencId) {
-          this.nomencName = contentMapping.nomenc_abbr;
-        }
-      });
-    });
-
-    return this.idInfo;
-  }
-
-  fillMapping(id_mapping) {
-    this.id_mapping = id_mapping;
-    this._ds.getMappingContents(id_mapping).subscribe(mappingContents => {
-      this.contentTargetForm.reset();
-      if (mappingContents[0] != "empty") {
-
-        this.n_mappes = 0;
-        for (let content of mappingContents) {
-          let arrayVal: any = [];
-
-          for (let val of content) {
-            if (val["source_value"] != "") {
-              let id_info = this.getId(
-                val["source_value"],
-                val["id_target_value"]
-              );
-              arrayVal.push({ id: id_info, value: val["source_value"] });
+        let contentMapping = this.selectMappingContentForm.value
+        if (this.contentTargetForm.dirty && (this.cruvedStore.cruved.IMPORT.module_objects.MAPPING.cruved.C > 0 || contentMapping && contentMapping.cruved.U && !contentMapping.public)) {
+            if (contentMapping && !contentMapping.public) {
+                this.modalCreateMappingForm.setValue(contentMapping.label)
+                this.updateAvailable = true
+            } else {
+                this.modalCreateMappingForm.setValue('')
+                this.updateAvailable = false
             }
-          }
-          const formControl = this.contentTargetForm.get(
-            String(content[0]["id_target_value"])
-          );
-
-          if (formControl) {
-            formControl.setValue(arrayVal)
-            this.n_mappes = this.n_mappes + 1;
-          }
-
-        }
-      } else {
-        this.contentTargetForm.reset();
-        this.n_mappes = -1;
-      }
-      this.n_aMapper = 0;
-      for (let contentMapping of this.stepData.contentMappingInfo) {
-        this.n_aMapper += contentMapping.user_values.values.filter(
-          val => val.value
-        ).length;
-        this.n_mappes -= contentMapping.user_values.values.filter(
-          val => val.value
-        ).length;
-      }
-      // at the end set the formgroup as pristine
-      this.contentTargetForm.markAsPristine();
-    }),
-      error => {
-        if (error.statusText === "Unknown Error") {
-          // show error message if no connexion
-          this._commonService.regularToaster(
-            "error",
-            "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-          );
+            this._modalService.open(this.modalConfirm, {size: 'lg'})
         } else {
-          this._commonService.regularToaster("error", error.error.message);
+            this.spinner = true;
+            this.processNextStep()
         }
-      };
-  }*/
+
+    }
+
+    processNextStep() {
+        of(this.importData).pipe(
+            concatMap((importData: Import) => {
+                if (this.contentTargetForm.dirty) {
+                    let values: ContentMappingValues = this.computeContentMappingValues();
+                    return this._ds.setImportContentMapping(importData.id_import, values);
+                } else {
+                    return of(importData);
+                }
+            }),
+            concatMap((importData: Import) => {
+                return this._ds.prepareImport(importData.id_import);
+            }),
+            finalize(() => this.spinner = false),
+        ).subscribe(
+            (importData: Import) => {
+                this.importProcessService.setImportData(importData);
+                this.importProcessService.navigateToNextStep(this.step);
+            }
+        )
+    }
+
+    computeContentMappingValues(): ContentMappingValues {
+        let values = {} as ContentMappingValues;
+        for (let targetField of Object.keys(this.importValues)) {
+            let _values = {}
+            this.importValues[targetField].values.forEach((value, index) => {
+                let control = this.contentTargetForm.controls[targetField + '-' + index];
+                _values[value] = control.value.cd_nomenclature;
+            });
+            values[this.importValues[targetField].nomenclature_type.mnemonique] = _values;
+        }
+        return values;
+    }
 }

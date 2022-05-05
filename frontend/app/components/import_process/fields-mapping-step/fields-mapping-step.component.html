@@ -18,7 +18,7 @@
                             id="mappingSelection"
                             [formControl]="fieldMappingForm"
                             [compareWith]="areMappingFieldEqual"
-                            [disableControl]="userFieldMappings.length <= 1"
+                            [disableControl]="!userFieldMappings.length"
                         >
                             <option [ngValue]="null"> </option>
                             <option
@@ -33,15 +33,6 @@
 
                         <div class="d-flex justify-content-center align-content-between row w-100">
                             <button
-                                *ngIf="canCreateMapping"
-                                class="mb-1 col-xl-2 w-75"
-                                mat-raised-button
-                                color="primary"
-                                (click)="showCreateMappingForm()"
-                            >
-                                Nouveau modèle
-                            </button>
-                            <button
                                 *ngIf="canRenameMapping"
                                 class="btn-sm mb-1 ml-1 col-xl-2 w-75"
                                 mat-raised-button
@@ -49,7 +40,7 @@
                                 (click)="showRenameMappingForm()"
                                 [disabled]="!renameMappingEnabled()"
                             >
-                                Renommer le modèle
+                                Renomer le modèle d'import
                             </button>
                             <button
                                 *ngIf="canDeleteMapping"
@@ -59,19 +50,21 @@
                                 (click)="deleteMapping()"
                                 [disabled]="!deleteMappingEnabled()"
                             >
-                                Supprimer le modèle
+                                Supprimer le modèle d'import
                             </button>
-                            <div
-                                    *ngIf="this.IMPORT_CONFIG.DISPLAY_CHECK_BOX_MAPPED_FIELD"
-                                    class="form-check col-xl-3 w-75"
+                        </div>
+
+
+                        <div
+                            *ngIf="this.IMPORT_CONFIG.DISPLAY_CHECK_BOX_MAPPED_FIELD"
+                            class="form-check col-xl-3 w-75"
+                        >
+                            <input
+                                type="checkbox"
+                                [(ngModel)]="displayAllValues"
+                                [ngModelOptions]="{standalone: true}"
                             >
-                                <input
-                                        type="checkbox"
-                                        [(ngModel)]="displayAllValues"
-                                        [ngModelOptions]="{standalone: true}"
-                                >
-                                Afficher les champs automatiquement associés
-                            </div>
+                            Afficher les champs automatiquement associés
                         </div>
 
 
@@ -145,7 +138,7 @@
                             role="alert"
                             style="text-align: center;"
                         >
-                           {{ mappedTargetFields.size }} champs cibles ont été associés à un champs source.
+                           {{ mappedTargetFields.size }} champs cibles ont été associé à un champs source.
                         </div>
                         <div
                             *ngIf="unmappedSourceFields.size == 0"
@@ -163,7 +156,7 @@
                         >
                             <a data-toggle="collapse" href="#unmappedSourceFields" aria-expanded="false" aria-controls="unmappedSourceFields">
                               {{ unmappedSourceFields.size }} champs
-                            </a> du fichier d’import ne sont actuellement associés à aucun champs cible et seront donc ignorés.
+                            </a> du fichier d’import ne sont actuellement associé à aucun champs cible et seront donc ignorés.
                             <div class="collapse" id="unmappedSourceFields">
                               <ul style="text-align: left;">
                                 <li *ngFor="let sourceField of unmappedSourceFields">{{ sourceField }}</li>
@@ -307,10 +300,12 @@
     </div>
     <div class="modal-body">
         Attention, le modèle a été modifié, voulez-vous sauvegarder ces modifications ?
-        <form *ngIf="this.fieldMappingForm.value">
+        <form>
           <div class="form-group">
-            <label for="mappingName">Nom du mapping</label>
+            <label for="mappingName">Nom du modèle</label>
             <input [formControl]="modalCreateMappingForm" class="form-control" id="mappingName" placeholder="Nom du mapping">
+            <span *ngIf="!modalCreateMappingForm.value" class="text-warning"> Un nom doit être renseigné pour pouvoir créer un modèle </span>
+            <span *ngIf="fieldMappingForm.value && modalCreateMappingForm.value == fieldMappingForm.value.label" class="text-warning"> Changer de nom pour pouvoir enregistrer le modèle </span>
           </div>
         </form>
     </div>
@@ -319,21 +314,22 @@
             type="button"
             mat-raised-button
             color="accent"
-            (click)="modal.close(); submitMapping(false)"
+            (click)="modal.close(); processNextStep()"
         > Continuer sans enregistrer </button>
         <button
-            *ngIf="this.fieldMappingForm.value && this.createOrRenameMappingForm.value == ''"
+            *ngIf="this.updateAvailable"
             type="button"
             mat-raised-button
             color="primary"
-            (click)="modal.close(); submitMapping(true)"
+            (click)="modal.close(); updateMapping(true)"
         > Mettre à jour le modèle existant </button>
         <button
             *ngIf="this.fieldMappingForm.value == null || this.createOrRenameMappingForm.value != ''"
             type="button"
             mat-raised-button
             color="primary"
-            (click)="modal.close(); submitMapping(true, createOrRenameMappingForm.value)"
+            (click)="modal.close(); createMapping()"
+            [disabled]="!modalCreateMappingForm.value || fieldMappingForm.value && modalCreateMappingForm.value == fieldMappingForm.value.label"
         > Enregistrer un nouveau modèle </button>
     </div>
 </ng-template>
