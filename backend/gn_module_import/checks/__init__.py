@@ -36,34 +36,7 @@ def _check_ordering(df, min_field, max_field):
     yield dict(invalid_rows=invalid_rows)
 
 
-def check_uuid(df, fields: Dict[str, BibFields], generate: bool):
-    if generate:
-        uuid_field = BibFields.query.filter_by(name_field="unique_id_sinp").one()
-        df[uuid_field.synthese_field] = [uuid4() for _ in range(len(df.index))]
-    if 'unique_id_sinp' in fields:
-        uuid_field = fields['unique_id_sinp']
-        yield from update_dicts(
-            _check_duplicate(df, uuid_field.synthese_field),
-            column=uuid_field.name_field,
-            error_code='DUPLICATE_UUID')
-        # FIXME: this can not scale!!!!
-        existing_uuids = set(chain.from_iterable(
-                            Synthese.query \
-                            .filter(Synthese.unique_id_sinp.isnot(None)) \
-                            .with_entities(Synthese.unique_id_sinp) \
-                            .all()))
-        invalid_rows = df[df[uuid_field.synthese_field].isin(existing_uuids)]
-        yield {
-            'error_code': 'EXISTING_UUID',
-            'column': uuid_field.name_field,
-            'invalid_rows': invalid_rows,
-        }
-    # TODO: vérifier les champs uuid autre que unique_id_sinp
-    # TODO: vérifier qu’on a bien toujours une valeur présente (check_required_values??)
-
-
 def check_altitude(df, fields: Dict[str, BibFields], generate: bool):
-    # TODO: generate altitude
     if 'altitude_min' in fields and 'altitude_max' in fields:
         yield from update_dicts(
             _check_ordering(df, fields['altitude_min'].source_field, fields['altitude_max'].source_field),
@@ -148,11 +121,6 @@ def _run_all_checks(imprt, fields: Dict[str, BibFields], df):
     yield from check_types(df, fields)
     yield from check_dates(df, fields)
     yield from check_geography(df, fields, file_srid=imprt.srid)
-    yield from check_uuid(
-        df,
-        fields,
-        generate=imprt.fieldmapping.get('unique_id_sinp_generate', False),
-    )
     yield from check_altitude(
         df,
         fields,
@@ -160,7 +128,6 @@ def _run_all_checks(imprt, fields: Dict[str, BibFields], df):
     )
     yield from check_depth(df, fields)
     yield from check_counts(df, fields)
-    # TODO: check referential cd_nom, cd_hab
 
 
 def run_all_checks(imprt, fields: Dict[str, BibFields], df):

@@ -50,6 +50,7 @@ from gn_module_import.utils import (
     set_cd_nom,
     set_cd_hab,
     set_altitudes,
+    set_uuid,
     check_mandatory_fields,
     check_duplicates_source_pk,
 )
@@ -458,6 +459,7 @@ def prepare_import(scope, import_id):
     set_cd_hab(imprt, fields)
     check_duplicates_source_pk(imprt, fields)
     set_altitudes(imprt, fields)
+    set_uuid(imprt, fields)
     check_mandatory_fields(imprt, fields)
 
     # TODO: generate uuid (?)

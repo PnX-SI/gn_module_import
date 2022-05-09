@@ -230,53 +230,6 @@ class TestChecks:
             ),
         ])
 
-    def test_check_uuid(self, imprt, synthese_data):
-        fields = get_fields(["unique_id_sinp"])
-        uuid1 = UUID('82ff094c-c3b3-11eb-9804-bfdc95e73f38')
-        uuid2 = UUID('acad9eb6-c773-11eb-8b3e-f3419e53c26b')
-        existing_uuid = synthese_data[0].unique_id_sinp
-        df = pd.DataFrame([
-                [uuid1],
-                [uuid1],
-                [uuid2],
-                [existing_uuid],
-                [None],
-                [None],
-            ],
-            columns=[field.synthese_field for field in fields.values()],
-        )
-        errors = list(check_uuid(df, fields, generate=False))
-        assert_errors(errors, expected=[
-            Error(error_code='DUPLICATE_UUID', column='unique_id_sinp', invalid_rows=frozenset([0, 1])),
-            Error(error_code='EXISTING_UUID', column='unique_id_sinp', invalid_rows=frozenset([3])),
-        ])
-
-        uuid_field = fields["unique_id_sinp"].synthese_field
-
-        df = pd.DataFrame([
-                [None],
-                [uuid1],
-            ],
-            columns=[uuid_field],
-        )
-        list(check_uuid(df, fields, generate=True))
-        pd.testing.assert_series_equal(
-            df[uuid_field].notnull(),
-            pd.Series([True, True], name=uuid_field),
-        )
-
-
-        df = pd.DataFrame([[], []])
-        list(check_uuid(df, fields, generate=True))
-        pd.testing.assert_series_equal(
-            df[uuid_field].notnull(),
-            pd.Series([True, True], name=uuid_field),
-        )
-        pd.testing.assert_series_equal(
-            df[uuid_field].duplicated(keep=False),
-            pd.Series([False, False], name=uuid_field),
-        )
-
     def test_check_counts(self, imprt):
         default_value = current_app.config["IMPORT"]["DEFAULT_COUNT_VALUE"]
         fields = get_fields(["count_min", "count_max"])

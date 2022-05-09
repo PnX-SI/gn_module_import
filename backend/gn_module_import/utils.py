@@ -365,6 +365,66 @@ def set_altitudes(imprt, fields):
     db.session.execute(stmt)
 
 
+def get_duplicates_query(imprt, synthese_field, whereclause=sa.true()):
+    whereclause = sa.and_(
+        ImportSyntheseData.imprt == imprt,
+        whereclause,
+    )
+    partitions = (
+        select([
+            array_agg(ImportSyntheseData.line_no).over(
+                partition_by=synthese_field,
+            ).label("duplicate_lines")
+        ])
+        .where(whereclause)
+        .alias("partitions")
+    )
+    duplicates = (
+        select([func.unnest(partitions.c.duplicate_lines).label("lines")])
+        .where(func.array_length(partitions.c.duplicate_lines, 1) > 1)
+        .alias("duplicates")
+    )
+    return duplicates
+
+
+def set_uuid(imprt, fields):
+    if "unique_id_sinp" in fields:
+        field = fields["unique_id_sinp"]
+        synthese_field = getattr(ImportSyntheseData, field.synthese_field)
+        duplicates = get_duplicates_query(imprt, synthese_field, whereclause=synthese_field != None)
+        report_erroneous_rows(
+            imprt,
+            error_type="DUPLICATE_UUID",
+            error_column=field.name_field,  # TODO: convert to csv col name
+            whereclause=(
+                ImportSyntheseData.line_no == duplicates.c.lines
+            ),
+        )
+        report_erroneous_rows(
+            imprt,
+            error_type="EXISTING_UUID",
+            error_column=field.name_field,  # TODO: convert to csv col name
+            whereclause=sa.and_(
+                ImportSyntheseData.unique_id_sinp == Synthese.unique_id_sinp,
+                Synthese.id_dataset == imprt.id_dataset,
+            ),
+        )
+    if imprt.fieldmapping.get("unique_id_sinp_generate", False):
+        stmt = (
+            update(ImportSyntheseData)
+            .values({
+                'unique_id_sinp': func.uuid_generate_v4(),
+            })
+            .where(ImportSyntheseData.imprt == imprt)
+            .where(sa.or_(
+                ImportSyntheseData.src_unique_id_sinp == None,
+                ImportSyntheseData.src_unique_id_sinp == '',
+            ))
+            .where(ImportSyntheseData.unique_id_sinp == None)
+        )
+        db.session.execute(stmt)
+
+
 def check_mandatory_fields(imprt, fields):
     for field in fields.values():
         if not field.mandatory or not field.synthese_field:
@@ -387,23 +447,13 @@ def check_duplicates_source_pk(imprt, fields):
         return
     field = fields["entity_source_pk_value"]
     synthese_field = getattr(ImportSyntheseData, field.synthese_field)
-    partitions = (
-        select([
-            array_agg(ImportSyntheseData.line_no).over(
-                partition_by=synthese_field,
-            ).label("duplicate_lines")
-        ])
-        .where(sa.and_(
-            ImportSyntheseData.imprt == imprt,
+    duplicates = get_duplicates_query(
+        imprt,
+        synthese_field,
+        whereclause=sa.and_(
             synthese_field != None,
             synthese_field != "",
-        ))
-        .alias("partitions")
-    )
-    duplicates = (
-        select([func.unnest(partitions.c.duplicate_lines).label("lines")])
-        .where(func.array_length(partitions.c.duplicate_lines, 1) > 1)
-        .alias("duplicates")
+        ),
     )
     report_erroneous_rows(
         imprt,
@@ -475,7 +525,7 @@ def report_erroneous_rows(imprt, error_type, error_column, whereclause):
                 aggregate_order_by(cte.c.line_no, cte.c.line_no),
             )
             .label("rows"),
-            literal(error_column),
+            literal(error_column).label("error_column"),
         ])
         .alias("error")
     )

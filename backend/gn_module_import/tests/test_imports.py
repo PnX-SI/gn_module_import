@@ -22,6 +22,7 @@ from geonature.core.gn_permissions.models import (
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_meta.models import TDatasets
 from geonature.tests.test_ref_geo import has_french_dem
+from geonature.tests.fixtures import synthese_data
 
 from pypnusershub.db.models import User, Organisme
 
@@ -877,3 +878,13 @@ class TestImports:
                 (None, None),
             ]
             assert altitudes == expected_altitudes
+
+    @pytest.mark.parametrize("import_file_name", ["uuid_file.csv"])
+    def test_import_uuid_file(self, synthese_data, prepared_import):
+        assert comparable_errors(prepared_import) == {
+            ("DUPLICATE_UUID", "unique_id_sinp", frozenset([2, 3])),
+            ("EXISTING_UUID", "unique_id_sinp", frozenset([4])),
+            ("INVALID_UUID", "unique_id_sinp", frozenset([5])),
+        }
+        generated_line = ImportSyntheseData.query.filter_by(imprt=prepared_import, line_no=6).one()
+        assert generated_line.unique_id_sinp != None
