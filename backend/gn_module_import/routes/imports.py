@@ -53,6 +53,7 @@ from gn_module_import.utils import (
     set_uuid,
     check_mandatory_fields,
     check_duplicates_source_pk,
+    check_date
 )
 
 IMPORTS_PER_PAGE = 15
@@ -460,6 +461,7 @@ def prepare_import(scope, import_id):
     check_duplicates_source_pk(imprt, fields)
     set_altitudes(imprt, fields)
     set_uuid(imprt, fields)
+    check_date(imprt, fields)
     check_mandatory_fields(imprt, fields)
 
     # TODO: generate uuid (?)
