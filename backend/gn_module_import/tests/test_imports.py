@@ -38,9 +38,6 @@ tests_path = Path(__file__).parent
 valid_file_expected_errors = {
     ("DUPLICATE_ENTITY_SOURCE_PK", "entity_source_pk_value", frozenset([3, 4])),
     ("COUNT_MIN_SUP_COUNT_MAX", "count_min", frozenset([5])),
-    ("DATE_MIN_SUP_DATE_MAX", "datetime_min", frozenset([6])),
-    ("MISSING_VALUE", "date_min", frozenset([8, 10])),
-    ("INVALID_DATE", "datetime_min", frozenset([7])),
 }
 
 def comparable_errors(imprt):
@@ -899,9 +896,11 @@ class TestImports:
     @pytest.mark.parametrize("import_file_name", ["dates.csv"])
     def test_import_dates_file(self, prepared_import):
         assert comparable_errors(prepared_import) == {
-            ('DATE_MIN_SUP_DATE_MAX', 'datetime_min', frozenset({3})),
+            ('DATE_MIN_SUP_DATE_MAX', 'datetime_min', frozenset({3,9})),
             ('DATE_MIN_TOO_HIGH', 'datetime_min', frozenset({2,3})),
             ('DATE_MAX_TOO_HIGH', 'datetime_max', frozenset({4})),
+            ('MISSING_VALUE', 'date_min', frozenset({11})),
+            ('INVALID_DATE', 'datetime_min', frozenset({12})),
         }
 
     @pytest.mark.parametrize("import_file_name", ["depth.csv"])
