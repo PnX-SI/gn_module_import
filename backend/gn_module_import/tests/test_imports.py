@@ -859,20 +859,27 @@ class TestImports:
 
     @pytest.mark.parametrize("import_file_name", ["altitude_file.csv"])
     def test_import_altitude_file(self, prepared_import):
+        french_dem = has_french_dem()
+        if french_dem:
+            alti_min_sup_alti_max = frozenset([3,5,8])
+        else:
+            alti_min_sup_alti_max = frozenset([8])
         assert comparable_errors(prepared_import) == {
-            ("ALTI_MIN_SUP_ALTI_MAX", "altitude_min", frozenset([6])),
-            ("INVALID_INTEGER", "altitude_min", frozenset([7,9])),
-            ("INVALID_INTEGER", "altitude_max", frozenset([8,9])),
+            ("ALTI_MIN_SUP_ALTI_MAX", "altitude_min", alti_min_sup_alti_max),
+            ("INVALID_INTEGER", "altitude_min", frozenset([9,11])),
+            ("INVALID_INTEGER", "altitude_max", frozenset([10,11])),
         }
         if has_french_dem():
             altitudes = [(s.altitude_min, s.altitude_max) for s in prepared_import.synthese_data]
             expected_altitudes = [
                 (1389, 1389),
                 (  10, 1389),
+                (5000, 1389),
+                (1389, 5000),
                 (1389,   10),
                 (  10,   10),
                 (  10,   20),
-                (None, None),
+                (  20,   10),
                 (None, None),
                 (None, None),
                 (None, None),
@@ -895,4 +902,10 @@ class TestImports:
             ('DATE_MIN_SUP_DATE_MAX', 'datetime_min', frozenset({3})),
             ('DATE_MIN_TOO_HIGH', 'datetime_min', frozenset({2,3})),
             ('DATE_MAX_TOO_HIGH', 'datetime_max', frozenset({4})),
+        }
+
+    @pytest.mark.parametrize("import_file_name", ["depth.csv"])
+    def test_import_depth_file(self, prepared_import):
+        assert comparable_errors(prepared_import) == {
+            ('DEPTH_MIN_SUP_ALTI_MAX', 'depth_min', frozenset({6})),
         }

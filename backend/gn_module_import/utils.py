@@ -498,6 +498,40 @@ def check_dates(imprt, fields):
     )
 
 
+def check_altitudes(imprt, fields):
+    if "altitude_min" not in fields or "altitude_max" not in fields:
+        return
+    alti_min_field = fields["altitude_min"]
+    alti_max_field = fields["altitude_max"]
+    alti_min_synthese_field = getattr(ImportSyntheseData, alti_min_field.synthese_field)
+    alti_max_synthese_field = getattr(ImportSyntheseData, alti_max_field.synthese_field)
+    report_erroneous_rows(
+        imprt,
+        error_type="ALTI_MIN_SUP_ALTI_MAX",
+        error_column=alti_min_field.name_field,  # TODO: convert to csv col name
+        whereclause=(
+            alti_min_synthese_field > alti_max_synthese_field
+        ),
+    )
+
+
+def check_depths(imprt, fields):
+    if "depth_min" not in fields or "depth_max" not in fields:
+        return
+    depth_min_field = fields["depth_min"]
+    depth_max_field = fields["depth_max"]
+    depth_min_synthese_field = getattr(ImportSyntheseData, depth_min_field.synthese_field)
+    depth_max_synthese_field = getattr(ImportSyntheseData, depth_max_field.synthese_field)
+    report_erroneous_rows(
+        imprt,
+        error_type="DEPTH_MIN_SUP_ALTI_MAX",  # Yes, there is a typo in db...
+        error_column=depth_min_field.name_field,  # TODO: convert to csv col name
+        whereclause=(
+            depth_min_synthese_field > depth_max_synthese_field
+        ),
+    )
+
+
 def set_geom_from_area_code(imprt, source_column, area_type_filter):
     # Find area in CTE, then update corresponding column in statement
     cte = (

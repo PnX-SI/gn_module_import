@@ -36,22 +36,6 @@ def _check_ordering(df, min_field, max_field):
     yield dict(invalid_rows=invalid_rows)
 
 
-def check_altitude(df, fields: Dict[str, BibFields], generate: bool):
-    if 'altitude_min' in fields and 'altitude_max' in fields:
-        yield from update_dicts(
-            _check_ordering(df, fields['altitude_min'].source_field, fields['altitude_max'].source_field),
-            column="altitude_min",
-            error_code='ALTI_MIN_SUP_ALTI_MAX')
-
-
-def check_depth(df, fields: Dict[str, BibFields]):
-    if 'depth_min' in fields and 'depth_max' in fields:
-        yield from update_dicts(
-            _check_ordering(df, fields['depth_min'].source_field, fields['depth_max'].source_field),
-            column="depth_min",
-            error_code='DEPTH_MIN_SUP_DEPTH_MAX')
-
-
 def check_counts(df, fields: Dict[str, BibFields]):
     default_count = current_app.config["IMPORT"]["DEFAULT_COUNT_VALUE"]
     if 'count_min' in fields:
@@ -110,12 +94,6 @@ def _run_all_checks(imprt, fields: Dict[str, BibFields], df):
     # TODO: conditional check
     yield from check_types(df, fields)
     yield from check_geography(df, fields, file_srid=imprt.srid)
-    yield from check_altitude(
-        df,
-        fields,
-        generate=imprt.fieldmapping.get('altitudes_generate', False),
-    )
-    yield from check_depth(df, fields)
     yield from check_counts(df, fields)
 
 
