@@ -102,16 +102,6 @@ def check_counts(df, fields: Dict[str, BibFields]):
             df[count_max_field.synthese_field] = default_count
 
 
-def check_dates(df, fields: Dict[str, BibFields]):
-    datetime_min_field  = fields["datetime_min"].synthese_field
-    datetime_max_field  = fields["datetime_max"].synthese_field
-    yield from update_dicts(
-        _check_ordering(df, datetime_min_field, datetime_max_field),
-        column="datetime_min",
-        error_code='DATE_MIN_SUP_DATE_MAX')
-    
-
-
 def _run_all_checks(imprt, fields: Dict[str, BibFields], df):
     clean_missing_values(df, fields)
     concat_dates(df, fields)
@@ -119,7 +109,6 @@ def _run_all_checks(imprt, fields: Dict[str, BibFields], df):
     # TODO: check nomenclatures
     # TODO: conditional check
     yield from check_types(df, fields)
-    yield from check_dates(df, fields)
     yield from check_geography(df, fields, file_srid=imprt.srid)
     yield from check_altitude(
         df,

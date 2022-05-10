@@ -463,25 +463,41 @@ def check_duplicates_source_pk(imprt, fields):
             ImportSyntheseData.line_no == duplicates.c.lines
         ),
     )
-def check_date(imprt, fields):
+
+
+def check_dates(imprt, fields):
     date_min_field = fields["datetime_min"]
     date_max_field = fields["datetime_max"]
     date_min_synthese_field = getattr(ImportSyntheseData, date_min_field.synthese_field)
     date_max_synthese_field = getattr(ImportSyntheseData, date_max_field.synthese_field)
-    whereclause_datemin = date_min_synthese_field > date.today()
-    whereclause_datemax = sa.and_(date_max_synthese_field > date.today(), date_min_synthese_field <= date.today())
+    today = date.today()
     report_erroneous_rows(
         imprt,
         error_type="DATE_MIN_TOO_HIGH",
         error_column=date_min_field.name_field,  # TODO: convert to csv col name
-        whereclause=whereclause_datemin,
+        whereclause=(
+            date_min_synthese_field > today
+        ),
     )
     report_erroneous_rows(
         imprt,
         error_type="DATE_MAX_TOO_HIGH",
         error_column=date_max_field.name_field,  # TODO: convert to csv col name
-        whereclause=whereclause_datemax,
+        whereclause=sa.and_(
+            date_max_synthese_field > today,
+            date_min_synthese_field <= today,
+        ),
     )
+    report_erroneous_rows(
+        imprt,
+        error_type="DATE_MIN_SUP_DATE_MAX",
+        error_column=date_min_field.name_field,  # TODO: convert to csv col name
+        whereclause=(
+            date_min_synthese_field > date_max_synthese_field
+        ),
+    )
+
+
 def set_geom_from_area_code(imprt, source_column, area_type_filter):
     # Find area in CTE, then update corresponding column in statement
     cte = (

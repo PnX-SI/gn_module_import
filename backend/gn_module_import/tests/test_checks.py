@@ -213,23 +213,6 @@ class TestChecks:
             ], columns=[fields[name].synthese_field for name in ("datetime_min", "datetime_max")]),
         )
 
-    def test_check_dates(self):
-        fields = get_fields(["datetime_min", "datetime_max"])
-        df = pd.DataFrame([
-                [datetime(2020, 1, 1), datetime(2020, 1, 1)],
-                [datetime(2020, 1, 2), datetime(2020, 1, 1)],
-            ],
-            columns=[field.synthese_field for field in fields.values()],
-        )
-        errors = list(check_dates(df, fields))
-        assert_errors(errors, expected=[
-            Error(
-                error_code='DATE_MIN_SUP_DATE_MAX',
-                column="datetime_min",
-                invalid_rows=frozenset([1]),
-            ),
-        ])
-
     def test_check_counts(self, imprt):
         default_value = current_app.config["IMPORT"]["DEFAULT_COUNT_VALUE"]
         fields = get_fields(["count_min", "count_max"])

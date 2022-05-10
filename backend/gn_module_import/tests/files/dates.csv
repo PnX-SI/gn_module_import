@@ -1,6 +1,5 @@
 date_min;date_max;nom_cite;observateurs;WKT;cd_nom;entity_source_pk_value;Erreur(s) attendue(s)
 2017-01-01;2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;;Valide
 2117-01-01;2117-01-01;Ablette;Toto;POINT(6.5 44.85);67111;;DATE_MIN_TOO_HIGH
-2117-01-01;2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;;DATE_MIN_SUP_DATE_MAX
+2117-01-01;2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;;DATE_MIN_TOO_HIGH, DATE_MIN_SUP_DATE_MAX
 2017-01-01;2117-01-01;Ablette;Toto;POINT(6.5 44.85);67111;;DATE_MAX_TOO_HIGH
-

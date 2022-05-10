@@ -890,9 +890,9 @@ class TestImports:
         assert generated_line.unique_id_sinp != None
 
     @pytest.mark.parametrize("import_file_name", ["dates.csv"])
-    def test_import_date_higher(self, prepared_import):
+    def test_import_dates_file(self, prepared_import):
         assert comparable_errors(prepared_import) == {
-        ('DATE_MIN_SUP_DATE_MAX', 'datetime_min', frozenset({3})),
-        ('DATE_MIN_TOO_HIGH', 'datetime_min', frozenset({2})),
-        ('DATE_MAX_TOO_HIGH', 'datetime_max', frozenset({4}))
+            ('DATE_MIN_SUP_DATE_MAX', 'datetime_min', frozenset({3})),
+            ('DATE_MIN_TOO_HIGH', 'datetime_min', frozenset({2,3})),
+            ('DATE_MAX_TOO_HIGH', 'datetime_max', frozenset({4})),
         }
