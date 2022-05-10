@@ -38,6 +38,7 @@ export class ContentMappingStepComponent implements OnInit {
     public spinner: boolean = false;
     public updateAvailable: boolean = false;
     public modalCreateMappingForm = new FormControl('');
+    public mappingSelected: boolean = false;
     public mappedFields: Set<string> = new Set<string>();  // TODO
     public unmappedFields: Set<string> = new Set<string>();  // TODO
 
@@ -112,6 +113,9 @@ export class ContentMappingStepComponent implements OnInit {
         this.contentTargetForm.reset();
         if (mapping) {
             this.fillContentFormWithMapping(mapping.values);
+            this.mappingSelected = true
+        } else {
+          this.mappingSelected = false
         }
     }
 
@@ -213,7 +217,7 @@ export class ContentMappingStepComponent implements OnInit {
     processNextStep() {
         of(this.importData).pipe(
             concatMap((importData: Import) => {
-                if (this.contentTargetForm.dirty) {
+                if (this.contentTargetForm.dirty || this.mappingSelected) {
                     let values: ContentMappingValues = this.computeContentMappingValues();
                     return this._ds.setImportContentMapping(importData.id_import, values);
                 } else {

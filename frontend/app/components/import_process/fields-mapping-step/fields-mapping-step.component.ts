@@ -59,6 +59,7 @@ export class FieldsMappingStepComponent implements OnInit {
   public createOrRenameMappingForm = new FormControl(null, [Validators.required]); // form to add a new mapping
   public modalCreateMappingForm = new FormControl('');
   public updateAvailable: boolean = false;
+  public mappingSelected: boolean = false;
   @ViewChild('saveMappingModal') saveMappingModal;
 
   constructor(
@@ -229,8 +230,10 @@ export class FieldsMappingStepComponent implements OnInit {
     this.hideCreateOrRenameMappingForm();
     if (mapping == null) {
       this.syntheseForm.reset();
+        this.mappingSelected = false
     } else {
       this.fillSyntheseFormWithMapping(mapping.values);
+      this.mappingSelected = true
     }
   }
 
@@ -307,7 +310,7 @@ export class FieldsMappingStepComponent implements OnInit {
   processNextStep(){
       of(this.importData).pipe(
           concatMap((importData: Import) => {
-              if (this.syntheseForm.dirty) {
+              if (this.mappingSelected || this.syntheseForm.dirty) {
                   return this._ds.setImportFieldMapping(importData.id_import, this.getFieldMappingValues())
               } else {
                   return of(importData);
