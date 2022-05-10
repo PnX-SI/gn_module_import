@@ -41,7 +41,7 @@ ImportError = occurance d’un genre d’erreur, associé à une ou plusieurs li
 
 @serializable
 class ImportUserErrorType(db.Model):
-    __tablename__ = "dict_errors"
+    __tablename__ = "bib_errors_types"
     __table_args__ = {"schema": "gn_imports"}
 
     pk = db.Column("id_error", db.Integer, primary_key=True)
@@ -503,7 +503,7 @@ class ImportSyntheseData(db.Model):
 
 @serializable
 class BibThemes(db.Model):
-    __tablename__ = "dict_themes"
+    __tablename__ = "bib_themes"
     __table_args__ = {"schema": "gn_imports"}
 
     id_theme = db.Column(db.Integer, primary_key=True)
@@ -516,7 +516,7 @@ class BibThemes(db.Model):
 
 @serializable
 class BibFields(db.Model):
-    __tablename__ = "dict_fields"
+    __tablename__ = "bib_fields"
     __table_args__ = {"schema": "gn_imports"}
 
     id_field = db.Column(db.Integer, primary_key=True)
