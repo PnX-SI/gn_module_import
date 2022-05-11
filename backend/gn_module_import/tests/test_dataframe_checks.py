@@ -12,7 +12,7 @@ from geonature.core.gn_synthese.models import Synthese
 from geonature.tests.fixtures import synthese_data
 
 from gn_module_import.models import TImports, BibFields
-from gn_module_import.checks import *
+from gn_module_import.checks.dataframe import *
 
 
 Error = namedtuple('Error', ['error_code', 'column', 'invalid_rows'], defaults=([],))

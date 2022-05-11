@@ -1,20 +1,22 @@
 from typing import Dict
 from functools import partial
 
-import geopandas as gpd
+import sqlalchemy as sa
+from geoalchemy2.functions import ST_Transform, ST_GeomFromWKB
 import pandas as pd
-from shapely import wkt, wkb
+from shapely import wkt
 from shapely.geometry import Point, Polygon
 from shapely.ops import transform
-import numpy as np
-from pyproj import CRS, Transformer, Proj
+from pyproj import CRS, Transformer
+
+from geonature.utils.env import db
 
 from gn_module_import.models import BibFields
 
 
 def get_srid_bounding_box(srid):
     """
-    calculate the local bounding box and 
+    calculate the local bounding box and
     return a shapely polygon of this BB with local coordq
     """
     xmin, ymin, xmax, ymax = CRS.from_epsg(srid).area_of_use.bounds
@@ -58,7 +60,6 @@ def check_geography(
 
     df['_geom'] = None
 
-    geom_fields = []
     if 'WKT' in fields:
         wkt_field = fields['WKT'].source_field
         wkt_mask = df[wkt_field].notnull()
@@ -129,10 +130,10 @@ def check_geography(
         codedepartement_mask = pd.Series(False, index=df.index)
 
     # Check for multiple code when no wkt or xy
-    multiple_code = df[~wkt_mask & ~xy_mask \
-                        & ((codecommune_mask & codemaille_mask) \
-                         | (codecommune_mask & codedepartement_mask) \
-                         | (codemaille_mask & codedepartement_mask))]
+    multiple_code = df[~wkt_mask & ~xy_mask
+                       & ((codecommune_mask & codemaille_mask)
+                          | (codecommune_mask & codedepartement_mask)
+                          | (codemaille_mask & codedepartement_mask))]
     if len(multiple_code):
         errors.append({
             'error_code': 'MULTIPLE_CODE_ATTACHMENT',
@@ -140,13 +141,8 @@ def check_geography(
             'invalid_rows': multiple_code,
         })
 
-    code_mask = ~wkt_mask & ~xy_mask & (
-                         (codecommune_mask & ~codemaille_mask & ~codedepartement_mask)
-                       | (~codecommune_mask & codemaille_mask & ~codedepartement_mask)
-                       | (~codecommune_mask & ~codemaille_mask & codedepartement_mask))
-
     # Rows with no geom
-    no_geom = df[~wkt_mask & ~xy_mask & ~codecommune_mask \
+    no_geom = df[~wkt_mask & ~xy_mask & ~codecommune_mask
                  & ~codemaille_mask & ~codedepartement_mask]
     if len(no_geom):
         errors.append({
@@ -156,3 +152,32 @@ def check_geography(
         })
 
     return errors
+
+
+def set_the_geom_column(imprt, fields, df):
+    file_srid = imprt.srid
+    local_srid = db.session.execute(
+        sa.func.Find_SRID("ref_geo", "l_areas", "geom")
+    ).scalar()
+    geom_col = df[df["_geom"].notna()]["_geom"]
+    if file_srid == 4326:
+        df["the_geom_4326"] = geom_col.apply(
+            lambda geom: ST_GeomFromWKB(geom.wkb, file_srid)
+        )
+        fields["the_geom_4326"] = BibFields.query.filter_by(
+            name_field="the_geom_4326"
+        ).one()
+    elif file_srid == local_srid:
+        df["the_geom_local"] = geom_col.apply(
+            lambda geom: ST_GeomFromWKB(geom.wkb, file_srid)
+        )
+        fields["the_geom_local"] = BibFields.query.filter_by(
+            name_field="the_geom_local"
+        ).one()
+    else:
+        df["the_geom_4326"] = geom_col.apply(
+            lambda geom: ST_Transform(ST_GeomFromWKB(geom.wkb, file_srid), 4326)
+        )
+        fields["the_geom_4326"] = BibFields.query.filter_by(
+            name_field="the_geom_4326"
+        ).one()

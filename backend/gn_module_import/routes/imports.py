@@ -6,7 +6,6 @@ import csv
 
 from flask import request, current_app, jsonify, g
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden
-import sqlalchemy as sa
 from sqlalchemy import or_, func
 from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
 from sqlalchemy.orm.attributes import set_committed_value
@@ -31,15 +30,11 @@ from gn_module_import.models import (
     ContentMapping,
 )
 from pypnusershub.db.models import User
-from gn_module_import.checks import run_all_checks
 from gn_module_import.blueprint import blueprint
 from gn_module_import.utils import (
     get_valid_bbox,
-    do_nomenclatures_mapping,
     load_import_data_in_dataframe,
     update_import_data_from_dataframe,
-    set_the_geom_column,
-    complete_others_geom_columns,
     toggle_synthese_triggers,
     import_data_to_synthese,
     populate_cor_area_synthese,
@@ -47,6 +42,12 @@ from gn_module_import.utils import (
     detect_separator,
     insert_import_data_in_database,
     get_file_size,
+)
+from gn_module_import.checks.dataframe import run_all_checks
+from gn_module_import.checks.dataframe.geography import set_the_geom_column
+from gn_module_import.checks.sql import (
+    do_nomenclatures_mapping,
+    complete_others_geom_columns,
     set_cd_nom,
     set_cd_hab,
     set_altitudes,
@@ -77,13 +78,17 @@ def get_import_list(scope):
     filters = []
     if search:
         filters.append(TImports.full_file_name.ilike(f"%{search}%"))
-        filters.append(TImports.dataset.has(func.lower(TDatasets.dataset_name).contains(func.lower(search))))
+        filters.append(TImports.dataset.has(
+            func.lower(TDatasets.dataset_name).contains(func.lower(search)),
+        ))
         filters.append(TImports.authors.any(or_(
                 User.prenom_role.ilike(f"%{search}%"),
                 User.nom_role.ilike(f"%{search}%"),
             ),
         ))
-        filters.append(TImports.authors.any(func.lower(User.nom_role).contains(func.lower(search))))
+        filters.append(TImports.authors.any(
+            func.lower(User.nom_role).contains(func.lower(search)),
+        ))
 
     imports = (
         TImports.query
@@ -453,7 +458,7 @@ def prepare_import(scope, import_id):
     set_the_geom_column(imprt, fields, df)
     update_import_data_from_dataframe(imprt, fields, df)
 
-    fields.update({ field.name_field: field for field in selected_fields})
+    fields.update({field.name_field: field for field in selected_fields})
 
     # Checks in SQL
     complete_others_geom_columns(imprt, fields)
