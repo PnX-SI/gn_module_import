@@ -61,7 +61,6 @@ export class DataService {
   }
 
   createContentMapping(name: string, values: ContentMappingValues): Observable<ContentMapping> {
-      console.log(values)
     return this._http.post<ContentMapping>(`${urlApi}/contentmappings/?label=${name}`, values);
   }
 

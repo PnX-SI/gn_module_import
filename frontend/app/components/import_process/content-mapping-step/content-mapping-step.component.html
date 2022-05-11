@@ -33,11 +33,21 @@
                     <div class="row">
                         <div class="col">
                             <button
+                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.U != '0'"
+                                class="btn-sm mb-3 ml-1"
+                                mat-raised-button
+                                color="primary"
+                                (click)="showRenameMappingForm()"
+                                [disabled]="!deleteMappingEnabled()"
+                            >
+                                Renommer le modèle d'import
+                            </button>
+                            <button
                                 *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.D != '0'"
                                 class="btn-sm mb-3 ml-1"
                                 mat-raised-button
                                 color="warn"
-                                (click)="deleteMapping()"
+                                (click)="openDeleteModal()"
                                 [disabled]="!deleteMappingEnabled()"
                             >
                                 Supprimer le modèle d'import
@@ -54,6 +64,36 @@
                             >
                             Afficher les champs automatiquement associés
                         </div>-->
+                    </div>
+                    <div
+                            *ngIf="renameMappingFormVisible"
+                            class="d-flex flex-row justify-content-between form_group"
+                            id="updateMap"
+                    >
+                        <input
+                                type="text"
+                                class="form-control mr-2"
+                                value="Inconnu"
+                                [formControl]="createOrRenameMappingForm"
+                        >
+                        <button
+                                class="d-flex justify-content-center align-content-between mr-2 button-success"
+                                (click)="renameMapping()"
+                                mat-raised-button
+                                matTooltip="Modifier le nom du modèle d'import"
+                                [disabled]="!createOrRenameMappingForm.valid || selectMappingContentForm.value.label.trim() == this.createOrRenameMappingForm.value.trim()"
+                        >
+                            <mat-icon>check</mat-icon>
+                        </button>
+                        <button
+                                matTooltip="Annuler la modification du nom du modèle d'import"
+                                class="d-flex justify-content-center align-content-between"
+                                (click)="hideCreateOrRenameMappingForm()"
+                                mat-raised-button
+                                color="warn"
+                        >
+                            Annuler
+                        </button>
                     </div>
                     <div *ngIf="unmappedFields.size > 0 || mappedFields.size > 0">
                         <div
@@ -237,7 +277,12 @@
             </button>
         </div>
         <div class="modal-body">
-            Attention, le modèle a été modifié, voulez-vous sauvegarder ces modifications
+            <span *ngIf="!this.updateAvailable; else elseBlock">Souhaitez sauvegarder vos correspondances dans un modèle pour les réutiliser lors d’un futur import ?</span>
+            <ng-template #elseBlock>
+            <span>
+                Le modèle de correspondance a été modifié ; souhaitez-vous mettre à jour le modèle existant ou créer un nouveau modèle ?
+            </span>
+            </ng-template>
             <form>
                 <div class="form-group">
                     <label for="mappingName">Nom du modèle</label>
@@ -300,4 +345,30 @@
                 (click)="onRedirect(); modal.close()"
             > OK </button>
         </div>
+    </ng-template>
+    <ng-template
+            #deleteConfirmModal
+            let-modalDelete
+    >
+        <div class="modal-header">
+            Confirmation
+        </div>
+        <div class="modal-body">
+            Voulez vous supprimer le modèle ?
+        </div>
+        <div class="modal-footer">
+            <button
+                    type="button"
+                    mat-raised-button
+                    color="accent"
+                    (click)="modalDelete.close()"
+            > Annuler </button>
+            <button
+                    type="button"
+                    mat-raised-button
+                    color="warn"
+                    (click)="modalDelete.close(); deleteMapping()"
+            > Supprimer le modèle </button>
+        </div>
+
     </ng-template>

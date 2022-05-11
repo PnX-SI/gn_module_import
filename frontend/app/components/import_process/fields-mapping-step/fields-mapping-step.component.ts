@@ -61,6 +61,7 @@ export class FieldsMappingStepComponent implements OnInit {
   public updateAvailable: boolean = false;
   public mappingSelected: boolean = false;
   @ViewChild('saveMappingModal') saveMappingModal;
+  @ViewChild('deleteConfirmModal') deleteConfirmModal;
 
   constructor(
     private _ds: DataService,
@@ -155,7 +156,7 @@ export class FieldsMappingStepComponent implements OnInit {
 
 
   showRenameMappingForm() {
-    this.createOrRenameMappingForm.setValue(this.fieldMappingForm.value.mapping_label);
+    this.createOrRenameMappingForm.setValue(this.fieldMappingForm.value.label);
     this.createMappingFormVisible = false;
     this.renameMappingFormVisible = true;
   }
@@ -190,6 +191,9 @@ export class FieldsMappingStepComponent implements OnInit {
             this.spinner = false
         }
     )
+  }
+  openDeleteModal() {
+      this._modalService.open(this.deleteConfirmModal)
   }
   deleteMapping() {
       this.spinner = true

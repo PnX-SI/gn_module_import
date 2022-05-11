@@ -15,7 +15,7 @@ import { SyntheseDataService } from "@geonature_common/form/synthese-form/synthe
 import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
 import { ModuleConfig } from "../../../module.config";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
-import { ContentMapping, ContentMappingValues } from "../../../models/mapping.model";
+import {ContentMapping, ContentMappingValues, FieldMapping} from "../../../models/mapping.model";
 import { Step } from "../../../models/enums.model";
 import { Import, ImportValues, Nomenclature } from "../../../models/import.model";
 import { ImportProcessService } from "../import-process.service";
@@ -38,12 +38,15 @@ export class ContentMappingStepComponent implements OnInit {
     public spinner: boolean = false;
     public updateAvailable: boolean = false;
     public modalCreateMappingForm = new FormControl('');
+    public createOrRenameMappingForm = new FormControl(null, [Validators.required]);
     public mappingSelected: boolean = false;
+    public renameMappingFormVisible: boolean = false;
     public mappedFields: Set<string> = new Set<string>();  // TODO
     public unmappedFields: Set<string> = new Set<string>();  // TODO
 
     @ViewChild("modalConfirm") modalConfirm: any;
     @ViewChild("modalRedir") modalRedir: any;
+    @ViewChild("deleteConfirmModal") deleteConfirmModal: any;
 
     constructor(
         //private stepService: StepsService,
@@ -136,6 +139,27 @@ export class ContentMappingStepComponent implements OnInit {
             });
         }
     }
+    showRenameMappingForm() {
+        this.createOrRenameMappingForm.setValue(this.selectMappingContentForm.value.label);
+        this.renameMappingFormVisible = true;
+    }
+
+    renameMapping(): void {
+        this.spinner = true;
+        this._ds.renameContentMapping(this.selectMappingContentForm.value.id,
+            this.createOrRenameMappingForm.value).pipe(
+            finalize(() => {
+                this.spinner = false;
+                this.spinner = false;
+                this.renameMappingFormVisible = false;
+            }),
+        ).subscribe((mapping: ContentMapping) => {
+            let index = this.userContentMappings
+                .findIndex((m: ContentMapping) => m.id == mapping.id);
+            this.selectMappingContentForm.setValue(mapping);
+            this.userContentMappings[index] = mapping;
+        });
+    }
 
     onSelectNomenclature(targetFieldValue: string) {
         let formControl = this.contentTargetForm.controls[targetFieldValue];
@@ -175,6 +199,9 @@ export class ContentMappingStepComponent implements OnInit {
                     this.spinner = false
                 }
             )
+    }
+    openDeleteModal() {
+        this._modalService.open(this.deleteConfirmModal)
     }
     deleteMapping() {
       this.spinner = true
