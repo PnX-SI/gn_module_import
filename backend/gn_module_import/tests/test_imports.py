@@ -25,6 +25,7 @@ from geonature.tests.test_ref_geo import has_french_dem
 from geonature.tests.fixtures import synthese_data
 
 from pypnusershub.db.models import User, Organisme
+from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
 
 from gn_module_import.models import TImports, ImportSyntheseData, FieldMapping, ContentMapping, BibFields
 from gn_module_import.utils import insert_import_data_in_database
@@ -64,16 +65,39 @@ def imports(users):
 
 
 @pytest.fixture()
-def import_file_name():
-    return "valid_file.csv"
+def no_default_nomenclatures(app):
+    previous_value = app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]
+    app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"] = False
+    yield
+    app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"] = previous_value
 
 
 @pytest.fixture()
-def new_import(users, datasets):
+def import_file_name():
+    return "valid_file.csv"
+
+@pytest.fixture()
+def import_dataset(datasets, import_file_name):
+    ds = datasets["own_dataset"]
+    if import_file_name == "nomenclatures_file.csv":
+        previous_data_origin = ds.nomenclature_data_origin
+        ds.nomenclature_data_origin = TNomenclatures.query.filter(
+            TNomenclatures.nomenclature_type.has(
+                BibNomenclaturesTypes.mnemonique == "DS_PUBLIQUE"
+            ),
+            TNomenclatures.mnemonique == "Privée",
+        ).one()
+    yield ds
+    if import_file_name == "nomenclatures_file.csv":
+        ds.nomenclature_data_origin = previous_data_origin
+
+
+@pytest.fixture()
+def new_import(users, import_dataset):
     with db.session.begin_nested():
         imprt = TImports(
             authors=[users["user"]],
-            id_dataset=datasets["own_dataset"].id_dataset,
+            id_dataset=import_dataset.id_dataset,
         )
         db.session.add(imprt)
     return imprt
@@ -910,8 +934,9 @@ class TestImports:
         }
 
     @pytest.mark.parametrize("import_file_name", ["nomenclatures_file.csv"])
-    def test_import_nomenclatures_file(self, prepared_import):
+    def test_import_nomenclatures_file(self, prepared_import, no_default_nomenclatures):
         assert comparable_errors(prepared_import) == {
             ('INVALID_NOMENCLATURE', 'id_nomenclature_exist_proof', frozenset({2})),
             ('INVALID_EXISTING_PROOF_VALUE', 'id_nomenclature_exist_proof', frozenset({4,5,6,7})),
+            ('CONDITIONAL_MANDATORY_FIELD_ERROR', 'id_nomenclature_blurring', frozenset({11})),
         }

@@ -123,9 +123,20 @@ def check_nomenclatures(imprt, fields):
                 sa.and_(~oui_filter, proof_set_filter),
             ),
         )
-    if current_app.config['IMPORT']['CHECK_PRIVATE_JDD_BLURING']:
-        # TODO
-        pass
+    if (
+        current_app.config['IMPORT']['CHECK_PRIVATE_JDD_BLURING']
+        and not current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]
+        and imprt.dataset.nomenclature_data_origin.mnemonique == "Privée"
+    ):
+        blurring_field = BibFields.query.filter_by(name_field="id_nomenclature_blurring").one()
+        report_erroneous_rows(
+            imprt,
+            error_type="CONDITIONAL_MANDATORY_FIELD_ERROR",
+            error_column=blurring_field.name_field,
+            whereclause=(
+                getattr(ImportSyntheseData, blurring_field.synthese_field) == None
+            ),
+        )
     if current_app.config['IMPORT']['CHECK_REF_BIBLIO_LITTERATURE']:
         # TODO
         pass
