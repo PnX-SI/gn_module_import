@@ -908,3 +908,10 @@ class TestImports:
         assert comparable_errors(prepared_import) == {
             ('DEPTH_MIN_SUP_ALTI_MAX', 'depth_min', frozenset({6})),
         }
+
+    @pytest.mark.parametrize("import_file_name", ["nomenclatures_file.csv"])
+    def test_import_nomenclatures_file(self, prepared_import):
+        assert comparable_errors(prepared_import) == {
+            ('INVALID_NOMENCLATURE', 'id_nomenclature_exist_proof', frozenset({2})),
+            ('INVALID_EXISTING_PROOF_VALUE', 'id_nomenclature_exist_proof', frozenset({4,5,6,7})),
+        }

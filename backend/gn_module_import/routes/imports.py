@@ -47,6 +47,7 @@ from gn_module_import.checks.dataframe import run_all_checks
 from gn_module_import.checks.dataframe.geography import set_the_geom_column
 from gn_module_import.checks.sql import (
     do_nomenclatures_mapping,
+    check_nomenclatures,
     complete_others_geom_columns,
     set_cd_nom,
     set_cd_hab,
@@ -463,6 +464,7 @@ def prepare_import(scope, import_id):
     # Checks in SQL
     complete_others_geom_columns(imprt, fields)
     do_nomenclatures_mapping(imprt, fields)
+    check_nomenclatures(imprt, fields)
     set_cd_nom(imprt, fields)
     set_cd_hab(imprt, fields)
     check_duplicates_source_pk(imprt, fields)

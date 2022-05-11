@@ -86,6 +86,51 @@ def do_nomenclatures_mapping(imprt, fields):
         )
 
 
+def check_nomenclatures(imprt, fields):
+    if current_app.config['IMPORT']['CHECK_EXIST_PROOF']:
+        nomenclature_field = BibFields.query.filter_by(name_field="id_nomenclature_exist_proof").one()
+        digital_proof_field = fields.get("digital_proof")
+        non_digital_proof_field = fields.get("non_digital_proof")
+        if digital_proof_field is None and non_digital_proof_field is None:
+            return
+        oui = (
+            TNomenclatures.query
+            .filter(
+                TNomenclatures.nomenclature_type.has(BibNomenclaturesTypes.mnemonique == "PREUVE_EXIST"),
+                TNomenclatures.mnemonique == "Oui",
+            )
+            .one()
+        )
+        oui_filter = (getattr(ImportSyntheseData, nomenclature_field.synthese_field) == oui.id_nomenclature)
+        proof_set_filters = []
+        if digital_proof_field is not None:
+            proof_set_filters.append(sa.and_(
+                getattr(ImportSyntheseData, digital_proof_field.synthese_field) != None,
+                getattr(ImportSyntheseData, digital_proof_field.synthese_field) != "",
+            ))
+        if non_digital_proof_field is not None:
+            proof_set_filters.append(sa.and_(
+                getattr(ImportSyntheseData, non_digital_proof_field.synthese_field) != None,
+                getattr(ImportSyntheseData, non_digital_proof_field.synthese_field) != "",
+            ))
+        proof_set_filter = sa.or_(*proof_set_filters) if proof_set_filters else sa.false()
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_EXISTING_PROOF_VALUE",
+            error_column=nomenclature_field.name_field,
+            whereclause=sa.or_(
+                sa.and_(oui_filter, ~proof_set_filter),
+                sa.and_(~oui_filter, proof_set_filter),
+            ),
+        )
+    if current_app.config['IMPORT']['CHECK_PRIVATE_JDD_BLURING']:
+        # TODO
+        pass
+    if current_app.config['IMPORT']['CHECK_REF_BIBLIO_LITTERATURE']:
+        # TODO
+        pass
+
+
 def set_the_geom_column(imprt, fields, df):
     file_srid = imprt.srid
     local_srid = db.session.execute(

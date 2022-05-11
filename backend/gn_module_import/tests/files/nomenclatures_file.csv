@@ -1,0 +1,11 @@
+date_min;nom_cite;observateurs;WKT;cd_nom;id_nomenclature_exist_proof;digital_proof;non_digital_proof;Erreur(s) attendue(s)
+2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;;;;-
+2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;?;;;INVALID_NOMENCLATURE
+2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;Non;;;-
+2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;Non;A;;INVALID_EXISTING_PROOF_VALUE
+2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;Non;;B;INVALID_EXISTING_PROOF_VALUE
+2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;Non;A;B;INVALID_EXISTING_PROOF_VALUE
+2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;Oui;;;INVALID_EXISTING_PROOF_VALUE
+2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;Oui;A;;
+2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;Oui;;B;
+2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;Oui;A;B;
