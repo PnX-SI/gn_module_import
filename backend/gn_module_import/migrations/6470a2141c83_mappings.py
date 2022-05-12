@@ -106,7 +106,7 @@ def upgrade():
         cte1.fieldmapping::jsonb || cte2.fieldmapping::jsonb
     FROM
         cte1
-    JOIN
+    LEFT JOIN
         cte2 USING(id_mapping)
     """)
     op.execute("""
@@ -134,6 +134,34 @@ def upgrade():
         ref_nomenclatures.bib_nomenclatures_types nt ON cte.id_type = nt.id_type
     GROUP BY
         id_mapping
+    """)
+    op.execute("""
+    DELETE FROM
+	gn_imports.t_mappings
+    USING
+	    gn_imports.t_mappings m
+    LEFT OUTER JOIN
+	gn_imports.t_fieldmappings fm ON m.id = fm.id
+    WHERE
+	    gn_imports.t_mappings.id = m.id
+	    AND
+	m."type" = 'FIELD'
+	AND
+	fm.id is NULL
+    """)
+    op.execute("""
+    DELETE FROM
+	gn_imports.t_mappings
+    USING
+	    gn_imports.t_mappings m
+    LEFT OUTER JOIN
+	gn_imports.t_contentmappings cm ON m.id = cm.id
+    WHERE
+	    gn_imports.t_mappings.id = m.id
+	    AND
+	m."type" = 'CONTENT'
+	AND
+	cm.id is NULL
     """)
     op.drop_table("t_mappings_fields", schema="gn_imports")
     op.drop_table("t_mappings_values", schema="gn_imports")

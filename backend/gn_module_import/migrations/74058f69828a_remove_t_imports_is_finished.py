@@ -41,7 +41,7 @@ def downgrade():
         is_finished = EXISTS (
             SELECT *
             FROM gn_synthese.synthese synthese
-            JOIN gn_synthese.t_source source ON synthese.id_source = source.id_source
+            JOIN gn_synthese.t_sources source ON synthese.id_source = source.id_source
             WHERE source.name_source = 'Import(id=' || i.id_import || ')'
         )
     """
