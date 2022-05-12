@@ -939,4 +939,5 @@ class TestImports:
             ('INVALID_NOMENCLATURE', 'id_nomenclature_exist_proof', frozenset({2})),
             ('INVALID_EXISTING_PROOF_VALUE', 'id_nomenclature_exist_proof', frozenset({4,5,6,7})),
             ('CONDITIONAL_MANDATORY_FIELD_ERROR', 'id_nomenclature_blurring', frozenset({11})),
+            ('CONDITIONAL_MANDATORY_FIELD_ERROR', 'id_nomenclature_source_status', frozenset({13})),
         }

@@ -138,8 +138,28 @@ def check_nomenclatures(imprt, fields):
             ),
         )
     if current_app.config['IMPORT']['CHECK_REF_BIBLIO_LITTERATURE']:
-        # TODO
-        pass
+        litterature = (
+            TNomenclatures.query
+            .filter(
+                TNomenclatures.nomenclature_type.has(BibNomenclaturesTypes.mnemonique == "STATUT_SOURCE"),
+                TNomenclatures.cd_nomenclature == "Li",
+            )
+            .one()
+        )
+        source_status_field = BibFields.query.filter_by(name_field="id_nomenclature_source_status").one()
+        ref_biblio_field = BibFields.query.filter_by(name_field="reference_biblio").one()
+        report_erroneous_rows(
+            imprt,
+            error_type="CONDITIONAL_MANDATORY_FIELD_ERROR",
+            error_column=source_status_field.name_field,
+            whereclause=sa.and_(
+                getattr(ImportSyntheseData, source_status_field.synthese_field) == litterature.id_nomenclature,
+                sa.or_(
+                    getattr(ImportSyntheseData, ref_biblio_field.synthese_field) == None,
+                    getattr(ImportSyntheseData, ref_biblio_field.synthese_field) == "",
+                ),
+            ),
+        )
 
 
 def set_the_geom_column(imprt, fields, df):
