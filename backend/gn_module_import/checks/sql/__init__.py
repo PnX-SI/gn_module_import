@@ -17,7 +17,7 @@ from gn_module_import.models import (
     ImportUserErrorType,
 )
 
-from geonature.core.gn_synthese.models import Synthese
+from geonature.core.gn_synthese.models import Synthese, TSources
 from ref_geo.models import LAreas, BibAreasTypes
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
 from apptax.taxonomie.models import Taxref
@@ -339,6 +339,7 @@ def set_uuid(imprt, fields):
             whereclause=sa.and_(
                 ImportSyntheseData.unique_id_sinp == Synthese.unique_id_sinp,
                 Synthese.id_dataset == imprt.id_dataset,
+                ~Synthese.source.has(TSources.name_source == imprt.source_name),
             ),
         )
     if imprt.fieldmapping.get("unique_id_sinp_generate", False):
