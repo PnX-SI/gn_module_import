@@ -73,7 +73,6 @@ DEFAULT_LIST_COLUMN = [
 
 UPLOAD_DIRECTORY = "upload"
 
-ARCHIVES_SCHEMA_NAME = "gn_import_archives"
 
 IMPORTS_SCHEMA_NAME = "gn_imports"
 
@@ -116,7 +115,6 @@ DISPLAY_CHECK_BOX_MAPPED_FIELD = True
 class GnModuleSchemaConf(Schema):
     LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, load_default=DEFAULT_LIST_COLUMN)
     UPLOAD_DIRECTORY = fields.String(load_default=UPLOAD_DIRECTORY)
-    ARCHIVES_SCHEMA_NAME = fields.String(load_default=ARCHIVES_SCHEMA_NAME)
     IMPORTS_SCHEMA_NAME = fields.String(load_default=IMPORTS_SCHEMA_NAME)
     PREFIX = fields.String(load_default=PREFIX)
     SRID = fields.List(fields.Dict, load_default=SRID)
