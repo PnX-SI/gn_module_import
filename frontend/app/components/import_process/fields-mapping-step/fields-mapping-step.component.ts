@@ -204,7 +204,7 @@ export class FieldsMappingStepComponent implements OnInit {
                   "success",
                   "Le mapping " + this.fieldMappingForm.value.label + " a bien été supprimé"
               )
-              this.fieldMappingForm.setValue(null)
+              this.fieldMappingForm.setValue(null,  {emitEvent: false})
               this.userFieldMappings = this.userFieldMappings.filter(mapping  => {return mapping.id !== mapping_id})
               this.spinner = false
           }, () => {

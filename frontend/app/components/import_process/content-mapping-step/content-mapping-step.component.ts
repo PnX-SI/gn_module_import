@@ -212,7 +212,7 @@ export class ContentMappingStepComponent implements OnInit {
                   "success",
                   "Le mapping " + this.selectMappingContentForm.value.label + " a bien été supprimé"
               )
-              this.selectMappingContentForm.setValue(null)
+              this.selectMappingContentForm.setValue(null,  {emitEvent: false})
               this.userContentMappings = this.userContentMappings.filter(mapping  => {return mapping.id !== mapping_id})
               this.spinner = false
           }, () => {
