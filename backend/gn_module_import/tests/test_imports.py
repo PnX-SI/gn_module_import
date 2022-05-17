@@ -930,7 +930,7 @@ class TestImports:
     @pytest.mark.parametrize("import_file_name", ["digital_proof.csv"])
     def test_import_digital_proofs_file(self, prepared_import):
         assert comparable_errors(prepared_import) == {
-            ('INVALID_URL_PROOF', 'datetime_min', frozenset({2, 4, 5})),
+            ('INVALID_URL_PROOF', 'digital_proof', frozenset({2, 4, 5})),
         }
 
     @pytest.mark.parametrize("import_file_name", ["depth.csv"])

@@ -474,7 +474,10 @@ def check_digital_proof_urls(imprt, fields):
         error_type="INVALID_URL_PROOF",
         error_column=digital_proof_field.name_field,
         whereclause=(
-            digital_proof_synthese_field.op('!~')(r"^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$")
+            sa.and_(digital_proof_synthese_field != '',
+                    digital_proof_synthese_field.op('!~')(
+                        r"^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$")
+                    )
         ),
     )
 
