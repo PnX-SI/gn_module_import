@@ -465,6 +465,25 @@ def check_depths(imprt, fields):
     )
 
 
+def check_digital_proof_urls(imprt, fields):
+    if "digital_proof" not in fields:
+        return
+    digital_proof_field = fields["digital_proof"]
+    digital_proof_synthese_field = getattr(ImportSyntheseData, digital_proof_field.synthese_field)
+    report_erroneous_rows(
+        imprt,
+        error_type="INVALID_URL_PROOF",
+        error_column=digital_proof_field.name_field,
+        whereclause=(
+            sa.and_(digital_proof_synthese_field is not None,
+                    digital_proof_synthese_field != '',
+                    digital_proof_synthese_field.op('!~')(
+                        r"^(?:(?:https?|ftp):\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$")
+                    )
+        ),
+    )
+
+
 def set_geom_from_area_code(imprt, source_column, area_type_filter):
     # Find area in CTE, then update corresponding column in statement
     cte = (

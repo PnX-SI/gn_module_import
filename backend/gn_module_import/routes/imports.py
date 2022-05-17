@@ -58,6 +58,7 @@ from gn_module_import.checks.sql import (
     check_dates,
     check_altitudes,
     check_depths,
+    check_digital_proof_urls,
 )
 
 IMPORTS_PER_PAGE = 15
@@ -473,6 +474,7 @@ def prepare_import(scope, import_id):
     set_uuid(imprt, fields)
     check_dates(imprt, fields)
     check_depths(imprt, fields)
+    check_digital_proof_urls(imprt, fields)
     check_mandatory_fields(imprt, fields)
 
     # TODO: generate uuid (?)
