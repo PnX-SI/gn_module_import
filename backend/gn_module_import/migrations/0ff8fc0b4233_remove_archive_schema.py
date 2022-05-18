@@ -22,7 +22,8 @@ def upgrade():
     conn = op.get_bind()
     inspector = sa.inspect(conn.engine)
     archive_tables = inspector.get_table_names(schema="gn_import_archives")
-    imprt = Table('t_imports', MetaData(), autoload_with=conn.engine, schema='gn_imports')
+    metadata = MetaData(bind=op.get_bind())
+    imprt = Table('t_imports', metadata, autoload=True, schema='gn_imports')
     for archive_table in archive_tables:
         #Read table with pandas
         arch_df = pd.read_sql_table(archive_table, con=conn, schema="gn_import_archives")
