@@ -80,18 +80,8 @@ export class ImportListComponent implements OnInit {
                 this.offset = res["offset"]
             },
             error => {
-                if (error.statusText === "Unknown Error") {
-                    // show error message if no connexion
-                    this._commonService.regularToaster(
-                        "error",
-                        "Une erreur s'est produite : contactez l'administrateur du site"
-                    )
-                } else if (error.status === 404) {
+                if (error.status === 404) {
                     this._commonService.regularToaster("warning", "Aucun import trouvé");
-
-                } else {
-                    // show error message if other server error
-                    this._commonService.regularToaster("error", error.error.message);
                 }
             }
         );
@@ -122,18 +112,8 @@ export class ImportListComponent implements OnInit {
                 this.offset = res["offset"]
             },
             error => {
-                if (error.statusText === "Unknown Error") {
-                    // show error message if no connexion
-                    this._commonService.regularToaster(
-                        "error",
-                        "Une erreur s'est produite : contactez l'administrateur du site"
-                    )
-                } else if (error.status === 404) {
+                if (error.status === 404) {
                     this._commonService.regularToaster("warning", "Aucun import trouvé");
-
-                } else {
-                    // show error message if other server error
-                    this._commonService.regularToaster("error", error.error.message);
                 }
             }
         );
