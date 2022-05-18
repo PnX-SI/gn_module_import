@@ -107,7 +107,7 @@ def run_all_checks(imprt, fields: Dict[str, BibFields], df):
         except NoResultFound:
             raise Exception(f"Error code '{error_code}' not found.")
         invalid_rows = error['invalid_rows']
-        df["valid"][invalid_rows.index] = False  # FIXME slice vs copy
+        df.loc[invalid_rows.index, "valid"] = False
         #df['gn_invalid_reason'][invalid_rows.index.intersection(df['gn_invalid_reason'].isnull())] = \
         #        f'{error_type.name}'  # FIXME comment
         ordered_invalid_rows = sorted(invalid_rows["line_no"])
