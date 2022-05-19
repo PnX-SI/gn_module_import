@@ -35,6 +35,7 @@ setuptools.setup(
             'blueprint = gn_module_import.blueprint:blueprint',
             'config_schema = gn_module_import.conf_schema_toml:GnModuleSchemaConf',
             'migrations = gn_module_import:migrations',
+            'tasks = gn_module_import.tasks',
         ],
     },
     classifiers=['Development Status :: 1 - Planning',

@@ -1,4 +1,3 @@
-from datetime import datetime
 from io import BytesIO
 import codecs
 from io import StringIO
@@ -33,33 +32,12 @@ from pypnusershub.db.models import User
 from gn_module_import.blueprint import blueprint
 from gn_module_import.utils import (
     get_valid_bbox,
-    load_import_data_in_dataframe,
-    update_import_data_from_dataframe,
-    toggle_synthese_triggers,
-    import_data_to_synthese,
-    populate_cor_area_synthese,
     detect_encoding,
     detect_separator,
     insert_import_data_in_database,
     get_file_size,
 )
-from gn_module_import.checks.dataframe import run_all_checks
-from gn_module_import.checks.dataframe.geography import set_the_geom_column
-from gn_module_import.checks.sql import (
-    do_nomenclatures_mapping,
-    check_nomenclatures,
-    complete_others_geom_columns,
-    set_cd_nom,
-    set_cd_hab,
-    set_altitudes,
-    set_uuid,
-    check_mandatory_fields,
-    check_duplicates_source_pk,
-    check_dates,
-    check_altitudes,
-    check_depths,
-    check_digital_proof_urls,
-)
+from gn_module_import.tasks import do_import_checks, do_import_in_synthese
 
 IMPORTS_PER_PAGE = 15
 
@@ -437,60 +415,12 @@ def prepare_import(scope, import_id):
     # Remove previous errors
     imprt.errors = []
 
-    selected_fields_names = [
-        field_name
-        for field_name, source_field in imprt.fieldmapping.items()
-        if source_field in imprt.columns
-    ]
-    selected_fields = (
-        BibFields.query
-        .filter(BibFields.name_field.in_(selected_fields_names))
-        .all()
-    )
-
-    fields = {
-        field.name_field: field
-        for field in selected_fields
-        if (  # handled in SQL, exclude from dataframe
-            field.source_field is not None
-            and
-            field.mnemonique is None
-            and
-            field.name_field not in ["cd_nom", "cd_hab"]
-        )
-    }
-
-    # Checks on dataframe
-    df = load_import_data_in_dataframe(imprt, fields)
-    run_all_checks(imprt, fields, df)
-    set_the_geom_column(imprt, fields, df)
-    update_import_data_from_dataframe(imprt, fields, df)
-
-    fields.update({field.name_field: field for field in selected_fields})
-
-    # Checks in SQL
-    complete_others_geom_columns(imprt, fields)
-    do_nomenclatures_mapping(imprt, fields)
-    check_nomenclatures(imprt, fields)
-    set_cd_nom(imprt, fields)
-    set_cd_hab(imprt, fields)
-    check_duplicates_source_pk(imprt, fields)
-    set_altitudes(imprt, fields)
-    check_altitudes(imprt, fields)
-    set_uuid(imprt, fields)
-    check_dates(imprt, fields)
-    check_depths(imprt, fields)
-    check_digital_proof_urls(imprt, fields)
-    check_mandatory_fields(imprt, fields)
-
-    # TODO: generate uuid (?)
-    # TODO: generate altitude
-    # TODO: missing nomenclature (?)
-    # TODO: nomenclature conditional checks
-
-    imprt.processed = True
-
+    # Run background import checks
+    sig = do_import_checks.s(imprt.id_import)
+    task = sig.freeze()
+    imprt.task_id = task.task_id
     db.session.commit()
+    sig.delay()
 
     return jsonify(imprt.as_dict())
 
@@ -607,39 +537,19 @@ def import_valid_data(scope, import_id):
         raise Forbidden
     if not imprt.dataset.active:
         raise Forbidden("Le jeu de données est fermé.")
+    if not imprt.processed:
+        raise Forbidden("L’import n’a pas été préalablement vérifié.")
     valid_data_count = ImportSyntheseData.query.filter_by(
         imprt=imprt, valid=True
     ).count()
     if not valid_data_count:
         raise BadRequest("Not valid data to import")
 
-    source = TSources.query.filter_by(name_source=imprt.source_name).one_or_none()
-    if source:
-        if current_app.config["DEBUG"]:
-            Synthese.query.filter_by(source=source).delete()
-        else:
-            return BadRequest(description="This import has been already finalized.")
-    else:
-        entity_source_pk_field = BibFields.query.filter_by(
-            name_field="entity_source_pk_value"
-        ).one()
-        source = TSources(
-            name_source=imprt.source_name,
-            desc_source="Imported data from import module (id={import_id})",
-            entity_source_pk_field=entity_source_pk_field.synthese_field,
-        )
-        db.session.add(source)
-
-    toggle_synthese_triggers(enable=False)
-    import_data_to_synthese(imprt, source)
-    toggle_synthese_triggers(enable=True)
-    populate_cor_area_synthese(imprt, source)
-
-    imprt.date_end_import = datetime.now()
-    imprt.synthese_data = []
-    imprt.source_count = 0
-
+    sig = do_import_in_synthese.s(imprt.id_import)
+    task = sig.freeze()
+    imprt.task_id = task.task_id
     db.session.commit()
+    sig.delay()
 
     return jsonify(imprt.as_dict())
 

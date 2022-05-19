@@ -3,6 +3,7 @@ from pathlib import Path
 from functools import partial
 from operator import or_
 from functools import reduce
+from unittest.mock import patch
 
 import pytest
 from flask import url_for
@@ -23,7 +24,7 @@ from geonature.core.gn_permissions.models import (
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_meta.models import TDatasets
 from geonature.tests.test_ref_geo import has_french_dem
-from geonature.tests.fixtures import synthese_data
+from geonature.tests.fixtures import synthese_data, celery_eager
 
 from pypnusershub.db.models import User, Organisme
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
@@ -213,7 +214,7 @@ def imported_import(client, prepared_import):
     return prepared_import
 
 
-@pytest.mark.usefixtures("client_class", "temporary_transaction")
+@pytest.mark.usefixtures("client_class", "temporary_transaction", "celery_eager")
 class TestImports:
     def test_import_permissions(self):
         with db.session.begin_nested():

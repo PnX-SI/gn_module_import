@@ -15,10 +15,12 @@ from flask_sqlalchemy import BaseQuery
 from jsonschema.exceptions import ValidationError as JSONValidationError
 from jsonschema import validate as validate_json
 from geoalchemy2 import Geometry
+from celery.result import AsyncResult
 
 from utils_flask_sqla.serializers import serializable
 
 from geonature.utils.env import db
+from geonature.utils.celery import celery_app
 from geonature.core.gn_permissions.tools import get_scopes_by_action
 
 from pypnnomenclature.models import BibNomenclaturesTypes, TNomenclatures
@@ -178,6 +180,7 @@ class TImports(InstancePermissionMixin, db.Model):
     # keys are target names, values are source names
     fieldmapping = db.Column(MutableDict.as_mutable(JSON))
     contentmapping = db.Column(MutableDict.as_mutable(JSON))
+    task_id = db.Column(sa.String(155))
 
     @hybrid_property
     def source_name(self):
@@ -214,6 +217,17 @@ class TImports(InstancePermissionMixin, db.Model):
         exists().where(ImportUserError.id_import == id_import)
     )
 
+    @property
+    def task_progress(self):
+        if self.task_id is None:
+            return None
+        result = AsyncResult(self.task_id, app=celery_app)
+        if result.state in ["PENDING", "STARTED"]:
+            return 0
+        elif result.state == "PROGRESS":
+            return result.result["progress"]
+        else:
+            return -1
 
     def has_instance_permission(self, scope, user=None):
         if user is None:

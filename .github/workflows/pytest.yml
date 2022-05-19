@@ -48,6 +48,15 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
     - name: Add postgis_raster database extension
@@ -87,7 +96,8 @@ jobs:
           -e file:dependencies/GeoNature/backend/dependencies/TaxHub#egg=taxhub \
           -e file:dependencies/GeoNature/backend/dependencies/Utils-Flask-SQLAlchemy#egg=utils-flask-sqlalchemy \
           -e file:dependencies/GeoNature/backend/dependencies/Utils-Flask-SQLAlchemy-Geo#egg=utils-flask-sqlalchemy-geo \
-          -e file:dependencies/GeoNature/backend/dependencies/RefGeo#egg=pypn-ref-geo
+          -e file:dependencies/GeoNature/backend/dependencies/RefGeo#egg=pypn-ref-geo \
+          celery[redis]
     - name: Install database
       run: |
         geonature db upgrade geonature@head -x local-srid=2154
@@ -108,6 +118,7 @@ jobs:
         pytest -v --cov --cov-report xml
       env:
         GEONATURE_CONFIG_FILE: dependencies/GeoNature/config/test_config.toml
+        GEONATURE_SETTINGS: gn_module_import.test_config
     - name: Upload coverage to Codecov
       if: ${{ matrix.name == 'Debian 11' }}
       uses: codecov/codecov-action@v2
