@@ -3,12 +3,13 @@ from collections.abc import Mapping
 
 from flask import g
 import sqlalchemy as sa
-from sqlalchemy import ForeignKey
+from sqlalchemy import func, ForeignKey
 from sqlalchemy.orm import relationship, deferred, joinedload
 from sqlalchemy.types import ARRAY
 from sqlalchemy.dialects.postgresql import HSTORE, JSON, UUID, JSONB
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import column_property
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.sql.expression import exists
 from flask_sqlalchemy import BaseQuery
 from jsonschema.exceptions import ValidationError as JSONValidationError
@@ -178,6 +179,14 @@ class TImports(InstancePermissionMixin, db.Model):
     fieldmapping = db.Column(MutableDict.as_mutable(JSON))
     contentmapping = db.Column(MutableDict.as_mutable(JSON))
 
+    @hybrid_property
+    def source_name(self):
+        return f"Import(id={self.id_import})"
+
+    @source_name.expression
+    def source_name(cls):
+        return func.concat("Import(id=", func.cast(cls.id_import, sa.String), ")")
+
     errors = db.relationship(
         "ImportUserError",
         back_populates="imprt",
@@ -205,9 +214,6 @@ class TImports(InstancePermissionMixin, db.Model):
         exists().where(ImportUserError.id_import == id_import)
     )
 
-    @property
-    def source_name(self):
-        return "Import(id={})".format(self.id_import)
 
     def has_instance_permission(self, scope, user=None):
         if user is None:
