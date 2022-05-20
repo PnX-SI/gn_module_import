@@ -429,6 +429,22 @@ def check_dates(imprt, fields):
             date_min_synthese_field > date_max_synthese_field
         ),
     )
+    report_erroneous_rows(
+        imprt,
+        error_type="DATE_MIN_TOO_LOW",
+        error_column=date_min_field.name_field,  # TODO: convert to csv col name
+        whereclause=(
+            date_min_synthese_field < date(1900, 1, 1)
+        ),
+    )
+    report_erroneous_rows(
+        imprt,
+        error_type="DATE_MAX_TOO_LOW",
+        error_column=date_max_field.name_field,  # TODO: convert to csv col name
+        whereclause=(
+            date_max_synthese_field < date(1900, 1, 1)
+        ),
+    )
 
 
 def check_altitudes(imprt, fields):

@@ -11,3 +11,5 @@ date_min;date_max;hour_min;hour_max;nom_cite;observateurs;WKT;cd_nom;Erreur(s) a
 2017-01-01;2017-01-02;21:00;20:00;Ablette;Toto;POINT(6.5 44.85);67111;Valide
 ;2017-01-01;;;Ablette;Toto;POINT(6.5 44.85);67111;MISSING_VALUE (date_min)
 aaa;2017-01-01;;;Ablette;Toto;POINT(6.5 44.85);67111;INVALIDE_DATE (datetime_min)
+1817-01-01;2017-01-01;;;Ablette;Toto;POINT(6.5 44.85);67111;DATE_MIN_TOO_LOW
+1817-01-01;1817-01-01;;;Ablette;Toto;POINT(6.5 44.85);67111;DATE_MIN_TOO_LOW, DATE_MAX_TOO_LOW

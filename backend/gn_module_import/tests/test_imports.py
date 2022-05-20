@@ -946,6 +946,8 @@ class TestImports:
             ('DATE_MAX_TOO_HIGH', 'datetime_max', frozenset({4})),
             ('MISSING_VALUE', 'date_min', frozenset({11})),
             ('INVALID_DATE', 'datetime_min', frozenset({12})),
+            ('DATE_MIN_TOO_LOW', 'datetime_min', frozenset({13,14})),
+            ('DATE_MAX_TOO_LOW', 'datetime_max', frozenset({14})),
         })
 
     @pytest.mark.parametrize("import_file_name", ["digital_proof.csv"])
