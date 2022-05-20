@@ -10,6 +10,7 @@ from werkzeug.datastructures import Headers
 from werkzeug.exceptions import Unauthorized, Forbidden, BadRequest, Conflict
 from jsonschema import validate as validate_json
 from sqlalchemy import func
+from sqlalchemy.sql.expression import select
 
 from geonature.utils.env import db
 from geonature.tests.utils import set_logged_user_cookie, unset_logged_user_cookie
@@ -41,11 +42,21 @@ valid_file_expected_errors = {
     ("COUNT_MIN_SUP_COUNT_MAX", "count_min", frozenset([5])),
 }
 
-def comparable_errors(imprt):
-    return {
+
+def assert_import_errors(imprt, expected_errors):
+    errors = {
         (error.type.name, error.column, frozenset(error.rows or []))
         for error in imprt.errors
     }
+    assert errors == expected_errors
+    stmt = (
+        select([ImportSyntheseData.line_no])
+        .where(ImportSyntheseData.imprt == imprt)
+        .where(ImportSyntheseData.valid == False)
+    )
+    erroneous_rows = {line_no for line_no, in db.session.execute(stmt)}
+    expected_erroneous_rows = reduce(set.union, map(lambda e: set(e[2]), expected_errors))
+    assert erroneous_rows == expected_erroneous_rows
 
 
 @pytest.fixture(scope="function")
@@ -678,8 +689,8 @@ class TestImports:
         invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
         assert len(csvfile.readlines()) == 1 + len(invalid_rows)  # 1 = header
 
-    def test_import_errors(self, users, imported_import):
-        imprt = imported_import
+    def test_import_errors(self, users, prepared_import):
+        imprt = prepared_import
 
         r = self.client.get(
             url_for("import.get_import_errors", import_id=imprt.id_import)
@@ -698,7 +709,7 @@ class TestImports:
         )
         assert r.status_code == 200
         invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
-        assert comparable_errors(imprt) == valid_file_expected_errors
+        assert_import_errors(imprt, valid_file_expected_errors)
         validate_json(
             r.json,
             {
@@ -810,9 +821,7 @@ class TestImports:
             r.json,
             {"definitions": jsonschema_definitions, "$ref": "#/definitions/import"},
         )
-        invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
-        assert comparable_errors(imprt) == valid_file_expected_errors
-        assert ImportSyntheseData.query.filter_by(imprt=imprt, valid=True).count() == test_file_line_count - len(invalid_rows)
+        assert_import_errors(imprt, valid_file_expected_errors)
 
         # Get errors
         r = self.client.get(
@@ -826,6 +835,7 @@ class TestImports:
             url_for("import.preview_valid_data", import_id=imprt.id_import)
         )
         assert r.status_code == 200
+        invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
         assert r.json["n_valid_data"] == imprt.source_count - len(invalid_rows)
         assert r.json["n_invalid_data"] == len(invalid_rows)
 
@@ -855,28 +865,28 @@ class TestImports:
 
     @pytest.mark.parametrize("import_file_name", ["geom_file.csv"])
     def test_import_geometry_file(self, prepared_import):
-        assert comparable_errors(prepared_import) == {
+        assert_import_errors(prepared_import, {
             ("INVALID_ATTACHMENT_CODE", "codecommune", frozenset([2])),
             ("INVALID_ATTACHMENT_CODE", "codedepartement", frozenset([4])),
             ("INVALID_ATTACHMENT_CODE", "codemaille", frozenset([6])),
             ("MULTIPLE_CODE_ATTACHMENT", "Champs géométriques", frozenset([7])),
             ("MULTIPLE_ATTACHMENT_TYPE_CODE", "Champs géométriques", frozenset([10, 13])),
             ("NO-GEOM", "Champs géométriques", frozenset([14])),
-        }
+        })
 
     @pytest.mark.parametrize("import_file_name", ["cd_file.csv"])
     def test_import_cd_file(self, prepared_import):
-        assert comparable_errors(prepared_import) == {
+        assert_import_errors(prepared_import, {
             ("MISSING_VALUE", "cd_nom", frozenset([1, 4, 5])),
             ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([2, 6, 8])),
             ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([4, 6, 7])),
-        }
+        })
 
     @pytest.mark.parametrize("import_file_name", ["source_pk_file.csv"])
     def test_import_source_pk_file(self, prepared_import):
-        assert comparable_errors(prepared_import) == {
+        assert_import_errors(prepared_import, {
             ("DUPLICATE_ENTITY_SOURCE_PK", "entity_source_pk_value", frozenset([4, 5])),
-        }
+        })
 
     @pytest.mark.parametrize("import_file_name", ["altitude_file.csv"])
     def test_import_altitude_file(self, prepared_import):
@@ -885,11 +895,11 @@ class TestImports:
             alti_min_sup_alti_max = frozenset([3,5,8])
         else:
             alti_min_sup_alti_max = frozenset([8])
-        assert comparable_errors(prepared_import) == {
+        assert_import_errors(prepared_import, {
             ("ALTI_MIN_SUP_ALTI_MAX", "altitude_min", alti_min_sup_alti_max),
             ("INVALID_INTEGER", "altitude_min", frozenset([9,11])),
             ("INVALID_INTEGER", "altitude_max", frozenset([10,11])),
-        }
+        })
         if has_french_dem():
             altitudes = [(s.altitude_min, s.altitude_max) for s in prepared_import.synthese_data]
             expected_altitudes = [
@@ -909,41 +919,41 @@ class TestImports:
 
     @pytest.mark.parametrize("import_file_name", ["uuid_file.csv"])
     def test_import_uuid_file(self, synthese_data, prepared_import):
-        assert comparable_errors(prepared_import) == {
+        assert_import_errors(prepared_import, {
             ("DUPLICATE_UUID", "unique_id_sinp", frozenset([2, 3])),
             ("EXISTING_UUID", "unique_id_sinp", frozenset([4])),
             ("INVALID_UUID", "unique_id_sinp", frozenset([5])),
-        }
+        })
         generated_line = ImportSyntheseData.query.filter_by(imprt=prepared_import, line_no=6).one()
         assert generated_line.unique_id_sinp != None
 
     @pytest.mark.parametrize("import_file_name", ["dates.csv"])
     def test_import_dates_file(self, prepared_import):
-        assert comparable_errors(prepared_import) == {
+        assert_import_errors(prepared_import, {
             ('DATE_MIN_SUP_DATE_MAX', 'datetime_min', frozenset({3,9})),
             ('DATE_MIN_TOO_HIGH', 'datetime_min', frozenset({2,3})),
             ('DATE_MAX_TOO_HIGH', 'datetime_max', frozenset({4})),
             ('MISSING_VALUE', 'date_min', frozenset({11})),
             ('INVALID_DATE', 'datetime_min', frozenset({12})),
-        }
+        })
 
     @pytest.mark.parametrize("import_file_name", ["digital_proof.csv"])
     def test_import_digital_proofs_file(self, prepared_import):
-        assert comparable_errors(prepared_import) == {
+        assert_import_errors(prepared_import, {
             ('INVALID_URL_PROOF', 'digital_proof', frozenset({2, 4, 5})),
-        }
+        })
 
     @pytest.mark.parametrize("import_file_name", ["depth.csv"])
     def test_import_depth_file(self, prepared_import):
-        assert comparable_errors(prepared_import) == {
+        assert_import_errors(prepared_import, {
             ('DEPTH_MIN_SUP_ALTI_MAX', 'depth_min', frozenset({6})),
-        }
+        })
 
     @pytest.mark.parametrize("import_file_name", ["nomenclatures_file.csv"])
     def test_import_nomenclatures_file(self, prepared_import, no_default_nomenclatures):
-        assert comparable_errors(prepared_import) == {
+        assert_import_errors(prepared_import, {
             ('INVALID_NOMENCLATURE', 'id_nomenclature_exist_proof', frozenset({2})),
             ('INVALID_EXISTING_PROOF_VALUE', 'id_nomenclature_exist_proof', frozenset({4,5,6,7})),
             ('CONDITIONAL_MANDATORY_FIELD_ERROR', 'id_nomenclature_blurring', frozenset({11})),
             ('CONDITIONAL_MANDATORY_FIELD_ERROR', 'id_nomenclature_source_status', frozenset({13})),
-        }
+        })
