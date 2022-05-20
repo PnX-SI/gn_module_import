@@ -522,24 +522,29 @@ def set_geom_from_area_code(imprt, source_column, area_type_filter):
 
 
 def report_erroneous_rows(imprt, error_type, error_column, whereclause):
-    cte = (
-        update(ImportSyntheseData)
-        .values({
-            ImportSyntheseData.valid: False,
-        })
-        .where(ImportSyntheseData.imprt == imprt)
-        .where(whereclause)
-        .returning(ImportSyntheseData.line_no)
-        .cte("cte")
-    )
+    error_type = ImportUserErrorType.query.filter_by(name=error_type).one()
+    if error_type.level == "ERROR":
+        cte = (
+            update(ImportSyntheseData)
+            .values({
+                ImportSyntheseData.valid: False,
+            })
+            .where(ImportSyntheseData.imprt == imprt)
+            .where(whereclause)
+            .returning(ImportSyntheseData.line_no)
+            .cte("cte")
+        )
+    else:
+        cte = (
+            select([ImportSyntheseData.line_no])
+            .where(ImportSyntheseData.imprt == imprt)
+            .where(whereclause)
+            .cte("cte")
+        )
     error = (
         select([
             literal(imprt.id_import).label("id_import"),
-            ImportUserErrorType.query.filter_by(
-                name=error_type,
-            )
-            .with_entities(ImportUserErrorType.pk)
-            .label("id_type"),
+            literal(error_type.pk).label("id_type"),
             array_agg(
                 aggregate_order_by(cte.c.line_no, cte.c.line_no),
             )

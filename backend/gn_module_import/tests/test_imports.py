@@ -28,7 +28,14 @@ from geonature.tests.fixtures import synthese_data
 from pypnusershub.db.models import User, Organisme
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
 
-from gn_module_import.models import TImports, ImportSyntheseData, FieldMapping, ContentMapping, BibFields
+from gn_module_import.models import (
+    TImports,
+    ImportSyntheseData,
+    FieldMapping,
+    ContentMapping,
+    BibFields,
+    ImportUserErrorType,
+)
 from gn_module_import.utils import insert_import_data_in_database
 
 from .jsonschema_definitions import jsonschema_definitions
@@ -55,7 +62,11 @@ def assert_import_errors(imprt, expected_errors):
         .where(ImportSyntheseData.valid == False)
     )
     erroneous_rows = {line_no for line_no, in db.session.execute(stmt)}
-    expected_erroneous_rows = reduce(set.union, map(lambda e: set(e[2]), expected_errors))
+    expected_erroneous_rows = set()
+    for error_type, _, rows in expected_errors:
+        error_type = ImportUserErrorType.query.filter_by(name=error_type).one()
+        if error_type.level == "ERROR":
+            expected_erroneous_rows |= set(rows)
     assert erroneous_rows == expected_erroneous_rows
 
 
