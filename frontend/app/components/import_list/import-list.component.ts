@@ -30,6 +30,8 @@ export class ImportListComponent implements OnInit {
     public offset: number
     public limit: number
     public search_string: string = ''
+    public sort: string
+    public dir: string
 
     constructor(
         public _cruvedStore: CruvedStoreService,
@@ -45,7 +47,7 @@ export class ImportListComponent implements OnInit {
 
     ngOnInit() {
 
-        this.onImportList(1, null);
+        this.onImportList(1, "");
 
 
         this.search.valueChanges.subscribe(value => {
@@ -58,7 +60,7 @@ export class ImportListComponent implements OnInit {
     }
 
     ngOnDestroy() {
-        this._ds.getImportList().subscribe().unsubscribe();
+        this._ds.getImportList({}).subscribe().unsubscribe();
     }
 
     updateFilter(val: any) {
@@ -70,7 +72,7 @@ export class ImportListComponent implements OnInit {
 
     private onImportList(page, search) {
 
-        this._ds.getImportList(page, search).subscribe(
+        this._ds.getImportList({page:page, search:search}).subscribe(
             res => {
                 this.history = res["imports"];
                 this.filteredHistory = this.history;
@@ -101,9 +103,30 @@ export class ImportListComponent implements OnInit {
         this.deleteOne = row;
         this.modal.open(modalDelete);
     }
-
+    onSort(e) {
+        let sort = e.sorts[0]
+        let params = {page:1, search: this.search_string, sort: sort.prop, sort_dir:sort.dir}
+        this._ds.getImportList(params).subscribe(res => {
+            this.history = res["imports"];
+            this.filteredHistory = this.history;
+            this.empty = res.length == 0;
+            this.total = res["count"]
+            this.limit = res["limit"]
+            this.offset = res["offset"]
+            this.sort = sort.prop
+            this.dir = sort.dir
+        })
+    }
     setPage(e) {
-        this._ds.getImportList(e.offset + 1, this.search_string).subscribe(res => {
+        let params = {page: e.offset + 1, search: this.search_string}
+        if (this.sort) {
+            params["sort"] = this.sort
+        }
+        if (this.dir) {
+            params["sort_dir"] = this.dir
+        }
+        this._ds.getImportList(params)
+            .subscribe(res => {
                 this.history = res["imports"];
                 this.filteredHistory = this.history;
                 this.empty = res.length == 0;

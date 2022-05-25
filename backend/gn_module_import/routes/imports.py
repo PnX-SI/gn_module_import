@@ -5,7 +5,7 @@ import csv
 
 from flask import request, current_app, jsonify, g
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden
-from sqlalchemy import or_, func
+from sqlalchemy import or_, func, desc
 from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
 from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.sql.expression import collate
@@ -55,6 +55,8 @@ def get_import_list(scope):
     page = request.args.get("page", default=1, type=int)
     limit = request.args.get("limit", default=IMPORTS_PER_PAGE, type=int)
     search = request.args.get("search", default=None, type=str)
+    sort = request.args.get("sort", default="date_create_import", type=str)
+    sort_dir = request.args.get("sort_dir", default="desc", type=str)
     filters = []
     if search:
         filters.append(TImports.full_file_name.ilike(f"%{search}%"))
@@ -69,7 +71,13 @@ def get_import_list(scope):
         filters.append(TImports.authors.any(
             func.lower(User.nom_role).contains(func.lower(search)),
         ))
-
+    #Todo: order_by foreign keys
+    try:
+        order_by = getattr(TImports, sort)
+    except AttributeError:
+        order_by = TImports.id_import
+    if sort_dir == "desc":
+        order_by = desc(order_by)
     imports = (
         TImports.query
         .options(
@@ -79,7 +87,7 @@ def get_import_list(scope):
         )
         .filter_by_scope(scope)
         .filter(or_(*filters))
-        .order_by(TImports.id_import)
+        .order_by(order_by)
         .paginate(page=page, error_out=False, max_per_page=limit)
     )
 

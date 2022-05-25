@@ -12,12 +12,8 @@ const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 export class DataService {
   constructor(private _http: HttpClient) { }
 
-  getImportList(page=1, search=null): Observable<Array<Import>> {
+  getImportList(values): Observable<Array<Import>> {
     const url = `${urlApi}/imports/`
-    let values = {page: page}
-    if (search) {
-        values["search"] = search
-    }
     let params = new HttpParams({fromObject:values})
     return this._http.get<Array<Import>>(url, { params: params });
   }
