@@ -10,7 +10,7 @@ DEFAULT_LIST_COLUMN = [
         "name": "Id import",
         "max_width": 50,
         "show": True,
-        "filter": False,
+        "filter": True,
     },
     {
         "prop": "id_source",
@@ -38,7 +38,7 @@ DEFAULT_LIST_COLUMN = [
         "name": "Voir la fiche du JDD",
         "max_width": 400,
         "show": True,
-        "filter": True,
+        "filter": False,
     },
     {
         "prop": "taxa_count",
@@ -66,7 +66,7 @@ DEFAULT_LIST_COLUMN = [
         "name": "Auteur",
         "max_width": 320,
         "show": True,
-        "filter": True,
+        "filter": False,
     },
 ]
 

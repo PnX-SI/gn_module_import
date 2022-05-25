@@ -27,12 +27,14 @@
                     [offset]="offset"
                     [limit]="limit"
                     (page)="setPage($event)"
+                    (sort)="onSort($event)"
                 >
                     <ngx-datatable-column
                         *ngFor="let col of config.LIST_COLUMNS_FRONTEND"
                         name="{{col.name}}"
                         [prop]="col.prop"
                         [maxWidth]="col.max_width"
+                        [sortable]="col.filter"
                     >
                         <div *ngIf="col.prop=='dataset.dataset_name'">
                             <ng-template

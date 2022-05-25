@@ -318,6 +318,14 @@ class TestImports:
         json_data = r.get_json()
         assert json_data["count"] == 1
 
+    def test_order_import(self, users, imports, uploaded_import):
+        set_logged_user_cookie(self.client, users["user"])
+        r_des = self.client.get(url_for("import.get_import_list"))
+        r_asc = self.client.get(url_for("import.get_import_list") + "?sort=valid_file&sort_dir=asc")
+        import_ids_des = [imprt["id_import"] for imprt in r_des.get_json()["imports"]]
+        import_ids_asc = [imprt["id_import"] for imprt in r_asc.get_json()["imports"]]
+        assert  import_ids_des == import_ids_asc[-1::-1]
+
     def test_get_import(self, users, imports):
         def get(import_name):
             return self.client.get(
