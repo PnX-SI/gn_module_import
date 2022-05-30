@@ -110,6 +110,7 @@ def do_import_checks(self, import_id):
     else:
         logger.info("All done, committing…")
         imprt.processed = True
+        imprt.task_id = None
         db.session.commit()
 
 
@@ -148,4 +149,5 @@ def do_import_in_synthese(self, import_id):
         logger.info("All done, committing…")
         imprt.date_end_import = datetime.now()
         imprt.source_count = 0
+        imprt.task_id = None
         db.session.commit()
