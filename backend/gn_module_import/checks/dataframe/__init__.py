@@ -90,8 +90,6 @@ def _run_all_checks(imprt, fields: Dict[str, BibFields], df):
     clean_missing_values(df, fields)
     concat_dates(df, fields)
     yield from check_required_values(df, fields)
-    # TODO: check nomenclatures
-    # TODO: conditional check
     yield from check_types(df, fields)
     yield from check_geography(df, fields, file_srid=imprt.srid)
     yield from check_counts(df, fields)
@@ -111,10 +109,11 @@ def run_all_checks(imprt, fields: Dict[str, BibFields], df):
         #df['gn_invalid_reason'][invalid_rows.index.intersection(df['gn_invalid_reason'].isnull())] = \
         #        f'{error_type.name}'  # FIXME comment
         ordered_invalid_rows = sorted(invalid_rows["line_no"])
+        column = imprt.fieldmapping.get(error['column'], error['column'])
         error = ImportUserError(
             imprt=imprt,
             type=error_type,
-            column=error['column'],
+            column=column,
             rows=ordered_invalid_rows,
             comment=error.get('comment'),
         )

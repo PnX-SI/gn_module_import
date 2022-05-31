@@ -45,8 +45,8 @@ tests_path = Path(__file__).parent
 
 
 valid_file_expected_errors = {
-    ("DUPLICATE_ENTITY_SOURCE_PK", "entity_source_pk_value", frozenset([3, 4])),
-    ("COUNT_MIN_SUP_COUNT_MAX", "count_min", frozenset([5])),
+    ("DUPLICATE_ENTITY_SOURCE_PK", "id_synthese", frozenset([3, 4])),
+    ("COUNT_MIN_SUP_COUNT_MAX", "nombre_min", frozenset([5])),
 }
 
 

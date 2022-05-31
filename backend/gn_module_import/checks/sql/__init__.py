@@ -539,6 +539,7 @@ def set_geom_from_area_code(imprt, source_column, area_type_filter):
 
 def report_erroneous_rows(imprt, error_type, error_column, whereclause):
     error_type = ImportUserErrorType.query.filter_by(name=error_type).one()
+    error_column = imprt.fieldmapping.get(error_column, error_column)
     if error_type.level == "ERROR":
         cte = (
             update(ImportSyntheseData)
