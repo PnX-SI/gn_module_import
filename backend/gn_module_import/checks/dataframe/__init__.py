@@ -9,6 +9,7 @@ from geonature.utils.env import db
 from geonature.core.gn_synthese.models import Synthese
 
 from gn_module_import.models import ImportUserError, ImportUserErrorType, BibFields
+from gn_module_import.utils import generated_fields
 
 from .missing import clean_missing_values, check_required_values
 from .geography import check_geography
@@ -109,7 +110,8 @@ def run_all_checks(imprt, fields: Dict[str, BibFields], df):
         #df['gn_invalid_reason'][invalid_rows.index.intersection(df['gn_invalid_reason'].isnull())] = \
         #        f'{error_type.name}'  # FIXME comment
         ordered_invalid_rows = sorted(invalid_rows["line_no"])
-        column = imprt.fieldmapping.get(error['column'], error['column'])
+        column = generated_fields.get(error['column'], error['column'])
+        column = imprt.fieldmapping.get(column, column)
         error = ImportUserError(
             imprt=imprt,
             type=error_type,

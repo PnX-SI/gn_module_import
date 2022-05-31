@@ -24,6 +24,12 @@ from geonature.core.gn_synthese.models import Synthese, corAreaSynthese
 from ref_geo.models import LAreas
 
 
+generated_fields = {
+    "datetime_min": "date_min",
+    "datetime_max": "date_max",
+}
+
+
 def get_file_size(f):
     current_position = f.tell()
     f.seek(0, os.SEEK_END)

@@ -941,13 +941,13 @@ class TestImports:
     @pytest.mark.parametrize("import_file_name", ["dates.csv"])
     def test_import_dates_file(self, prepared_import):
         assert_import_errors(prepared_import, {
-            ('DATE_MIN_SUP_DATE_MAX', 'datetime_min', frozenset({3,9})),
-            ('DATE_MIN_TOO_HIGH', 'datetime_min', frozenset({2,3})),
-            ('DATE_MAX_TOO_HIGH', 'datetime_max', frozenset({4})),
+            ('DATE_MIN_SUP_DATE_MAX', 'date_min', frozenset({3,9})),
+            ('DATE_MIN_TOO_HIGH', 'date_min', frozenset({2,3})),
+            ('DATE_MAX_TOO_HIGH', 'date_max', frozenset({4})),
             ('MISSING_VALUE', 'date_min', frozenset({11})),
-            ('INVALID_DATE', 'datetime_min', frozenset({12})),
-            ('DATE_MIN_TOO_LOW', 'datetime_min', frozenset({13,14})),
-            ('DATE_MAX_TOO_LOW', 'datetime_max', frozenset({14})),
+            ('INVALID_DATE', 'date_min', frozenset({12})),
+            ('DATE_MIN_TOO_LOW', 'date_min', frozenset({13,14})),
+            ('DATE_MAX_TOO_LOW', 'date_max', frozenset({14})),
         })
 
     @pytest.mark.parametrize("import_file_name", ["digital_proof.csv"])

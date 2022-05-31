@@ -16,6 +16,7 @@ from gn_module_import.models import (
     ImportUserError,
     ImportUserErrorType,
 )
+from gn_module_import.utils import generated_fields
 
 from geonature.core.gn_synthese.models import Synthese, TSources
 from ref_geo.models import LAreas, BibAreasTypes
@@ -327,7 +328,7 @@ def set_uuid(imprt, fields):
         report_erroneous_rows(
             imprt,
             error_type="DUPLICATE_UUID",
-            error_column=field.name_field,  # TODO: convert to csv col name
+            error_column=field.name_field,
             whereclause=(
                 ImportSyntheseData.line_no == duplicates.c.lines
             ),
@@ -335,7 +336,7 @@ def set_uuid(imprt, fields):
         report_erroneous_rows(
             imprt,
             error_type="EXISTING_UUID",
-            error_column=field.name_field,  # TODO: convert to csv col name
+            error_column=field.name_field,
             whereclause=sa.and_(
                 ImportSyntheseData.unique_id_sinp == Synthese.unique_id_sinp,
                 Synthese.id_dataset == imprt.id_dataset,
@@ -370,7 +371,7 @@ def check_mandatory_fields(imprt, fields):
         report_erroneous_rows(
             imprt,
             error_type="MISSING_VALUE",
-            error_column=field.name_field,  # TODO: convert to csv col name
+            error_column=field.name_field,
             whereclause=whereclause,
         )
 
@@ -391,7 +392,7 @@ def check_duplicates_source_pk(imprt, fields):
     report_erroneous_rows(
         imprt,
         error_type="DUPLICATE_ENTITY_SOURCE_PK",
-        error_column=field.name_field,  # TODO: convert to csv col name
+        error_column=field.name_field,
         whereclause=(
             ImportSyntheseData.line_no == duplicates.c.lines
         ),
@@ -407,7 +408,7 @@ def check_dates(imprt, fields):
     report_erroneous_rows(
         imprt,
         error_type="DATE_MIN_TOO_HIGH",
-        error_column=date_min_field.name_field,  # TODO: convert to csv col name
+        error_column=date_min_field.name_field,
         whereclause=(
             date_min_synthese_field > today
         ),
@@ -415,7 +416,7 @@ def check_dates(imprt, fields):
     report_erroneous_rows(
         imprt,
         error_type="DATE_MAX_TOO_HIGH",
-        error_column=date_max_field.name_field,  # TODO: convert to csv col name
+        error_column=date_max_field.name_field,
         whereclause=sa.and_(
             date_max_synthese_field > today,
             date_min_synthese_field <= today,
@@ -424,7 +425,7 @@ def check_dates(imprt, fields):
     report_erroneous_rows(
         imprt,
         error_type="DATE_MIN_SUP_DATE_MAX",
-        error_column=date_min_field.name_field,  # TODO: convert to csv col name
+        error_column=date_min_field.name_field,
         whereclause=(
             date_min_synthese_field > date_max_synthese_field
         ),
@@ -432,7 +433,7 @@ def check_dates(imprt, fields):
     report_erroneous_rows(
         imprt,
         error_type="DATE_MIN_TOO_LOW",
-        error_column=date_min_field.name_field,  # TODO: convert to csv col name
+        error_column=date_min_field.name_field,
         whereclause=(
             date_min_synthese_field < date(1900, 1, 1)
         ),
@@ -440,7 +441,7 @@ def check_dates(imprt, fields):
     report_erroneous_rows(
         imprt,
         error_type="DATE_MAX_TOO_LOW",
-        error_column=date_max_field.name_field,  # TODO: convert to csv col name
+        error_column=date_max_field.name_field,
         whereclause=(
             date_max_synthese_field < date(1900, 1, 1)
         ),
@@ -457,7 +458,7 @@ def check_altitudes(imprt, fields):
     report_erroneous_rows(
         imprt,
         error_type="ALTI_MIN_SUP_ALTI_MAX",
-        error_column=alti_min_field.name_field,  # TODO: convert to csv col name
+        error_column=alti_min_field.name_field,
         whereclause=(
             alti_min_synthese_field > alti_max_synthese_field
         ),
@@ -474,7 +475,7 @@ def check_depths(imprt, fields):
     report_erroneous_rows(
         imprt,
         error_type="DEPTH_MIN_SUP_ALTI_MAX",  # Yes, there is a typo in db...
-        error_column=depth_min_field.name_field,  # TODO: convert to csv col name
+        error_column=depth_min_field.name_field,
         whereclause=(
             depth_min_synthese_field > depth_max_synthese_field
         ),
@@ -539,6 +540,7 @@ def set_geom_from_area_code(imprt, source_column, area_type_filter):
 
 def report_erroneous_rows(imprt, error_type, error_column, whereclause):
     error_type = ImportUserErrorType.query.filter_by(name=error_type).one()
+    error_column = generated_fields.get(error_column, error_column)
     error_column = imprt.fieldmapping.get(error_column, error_column)
     if error_type.level == "ERROR":
         cte = (
@@ -633,7 +635,7 @@ def complete_others_geom_columns(imprt, fields):
         report_erroneous_rows(
             imprt,
             error_type="INVALID_ATTACHMENT_CODE",
-            error_column=field.name_field,  # TODO: convert to csv col name
+            error_column=field.name_field,
             whereclause=sa.and_(
                 ImportSyntheseData.the_geom_4326 == None,
                 ImportSyntheseData.valid == True,

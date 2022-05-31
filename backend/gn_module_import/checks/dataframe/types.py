@@ -136,7 +136,7 @@ def check_types(df, fields: Dict[str, BibFields]):
             field_type=field_type,
             source_col=field.source_column,
             dest_col=field.synthese_field,
-            required=False,#field.mandatory,  # FIXME duplicate with check_required_values?
+            required=False,
         ):
             error.update({
                 'column': name,
