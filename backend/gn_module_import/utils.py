@@ -179,7 +179,10 @@ def import_data_to_synthese(imprt, source):
         "the_geom_point",
         "id_area_attachment",
     }
-    # TODO: altitude? uuid? (when not in mapping)
+    if imprt.fieldmapping.get("unique_id_sinp_generate", False):
+        generated_fields |= {"unique_id_sinp"}
+    if imprt.fieldmapping.get("altitudes_generate", False):
+        generated_fields |= {"altitude_min", "altitude_max"}
     fields = BibFields.query.filter(
         BibFields.synthese_field != None,
         BibFields.name_field.in_(imprt.fieldmapping.keys() | generated_fields),
