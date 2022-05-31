@@ -84,7 +84,7 @@ def check_geography(
         if len(invalid_xy):
             errors.append({
                 'error_code': 'INVALID_GEOMETRIE',
-                'column': 'latitude, longitude',
+                'column': 'longitude',
                 'invalid_rows': invalid_xy,
             })
     else:
@@ -101,7 +101,7 @@ def check_geography(
         })
 
     # Check out-of-bound geo-referencement
-    for mask, column in [(wkt_mask, 'WKT'), (xy_mask, 'latitude, longitude')]:
+    for mask, column in [(wkt_mask, 'WKT'), (xy_mask, 'longitude')]:
         bound = df[mask & df['_geom'].notnull()]['_geom'] \
                         .apply(partial(check_bound, bounding_box=file_srid_bounding_box))
         out_of_bound = df[mask & ~bound]
