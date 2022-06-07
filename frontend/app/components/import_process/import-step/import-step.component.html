@@ -1,4 +1,29 @@
-    <div *ngIf="tableReady">
+<div *ngIf="!importData.processed; else elseBlock" class="card">
+    <h4 class="card-header">
+        <mat-icon>check</mat-icon>
+        Validation
+    </h4>
+    <div class="card-body">
+        <div *ngIf="!progressBar">
+        <p>Avant de procéder à l'import de vos données, il est nécessaire de valider la conformité de ces dernières</p>
+        <button (click)="performChecks()"
+                mat-raised-button
+                color="primary">
+            Lancer la vérification
+        </button>
+        </div>
+        <div *ngIf="progressBar">
+            <div class="d-flex justify-content-center align-items-center">
+                <div class="text-controls d-flex align-items-center flex-column pb-2">
+                    <p> Contrôles en cours sur les données </p>
+                    <mat-progress-bar class="progress-bar" [value]="progress"></mat-progress-bar>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<ng-template #elseBlock>
+    <div *ngIf="tableReady" >
         <h3 class="title mb-0">
             Récapitulatif avant import
         </h3>
@@ -39,7 +64,7 @@
         </div>
 
 
-        <div class="card card-margin">
+        <div class="card card-margin" *ngIf="!importDone">
             <h4 class="card-header">
                 <mat-icon>room</mat-icon>
                 Zone géographique
@@ -58,8 +83,9 @@
 
     </div>
 
-    <div
-        *ngIf="tableReady"
+
+<div
+        *ngIf="tableReady && !importDone"
         class="card"
     >
         <div class="card-header">
@@ -84,17 +110,18 @@
                 [limit]="15"
                 [selectionType]='single'
             >
-                <!-- <ngx-datatable-column
-                    *ngFor="let col of columns"
-                    name="{{col.name}}"
-                    prop="{{col.prop}}"
-                >
-                </ngx-datatable-column> -->
             </ngx-datatable>
 
             <br />
+            <div
+                    *ngIf="importRunning"
+                    class="d-flex flex-column justify-content-center align-items-center w-100 mb-3"
+            >
+                    <p> Import des données en cours</p>
+                    <mat-spinner [color]="color" [diameter]="50" class="upload-spinner"></mat-spinner>
+            </div>
 
-            <div class="d-flex flex-row justify-content-between">
+            <div class="d-flex flex-row justify-content-between progressBar" *ngIf="!importRunning">
                 <button
                     (click)="onPreviousStep()"
                     class="d-flex justify-content-center align-content-between"
@@ -105,7 +132,7 @@
                     Précédent
                 </button>
                 <button
-                    *ngIf="nValidData > 0"
+                    *ngIf="nValidData > 0 && !importDone"
                     class="d-flex justify-content-center align-content-between button-success"
                     (click)="onImport()"
                     mat-raised-button
@@ -115,6 +142,24 @@
 
                 </button>
             </div>
+        </div>
+    </div>
+</ng-template>
+
+<div *ngIf="importDone" class="card">
+        <div class="card-header">
+            <h5 class="card-title">
+                <mat-icon>check</mat-icon>
+                Import terminé
+            </h5>
+        </div>
+        <div class="card-body">
+            <p>Vos {{nValidData}} observations ont bien été importées</p>
+            <button mat-raised-button
+                    color="primary"
+                    (click)="onRedirect()" >
+                Retour à la liste des imports
+            </button>
         </div>
     </div>
 

@@ -28,7 +28,7 @@ constructor(
       lastAvailableStep = Step.Decode;
     } else if (!this.importData.source_count) {
       lastAvailableStep = Step.FieldMapping;
-    } else if (!this.importData.processed) {
+    } else if (!this.importData.contentmapping) {
       lastAvailableStep = Step.ContentMapping;
     }
     return lastAvailableStep;

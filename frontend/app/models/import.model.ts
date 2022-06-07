@@ -58,7 +58,8 @@ export interface Import {
     available_formats?: [string];
     available_separators?: [string];
     detected_format?: string;
-
+    task_progress?: number;
+    task_id?: string;
     errors?: [ImportError];
     dataset?: Dataset;
 }

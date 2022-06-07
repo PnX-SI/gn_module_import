@@ -240,21 +240,16 @@ export class ContentMappingStepComponent implements OnInit {
         }
 
     }
-
     processNextStep() {
         of(this.importData).pipe(
             concatMap((importData: Import) => {
-                if (this.contentTargetForm.dirty || this.mappingSelected) {
+                if (this.contentTargetForm.dirty || this.mappingSelected || Object.keys(this.importValues).length === 0) {
                     let values: ContentMappingValues = this.computeContentMappingValues();
                     return this._ds.setImportContentMapping(importData.id_import, values);
                 } else {
                     return of(importData);
                 }
-            }),
-            concatMap((importData: Import) => {
-                return this._ds.prepareImport(importData.id_import);
-            }),
-            finalize(() => this.spinner = false),
+            })
         ).subscribe(
             (importData: Import) => {
                 this.importProcessService.setImportData(importData);
