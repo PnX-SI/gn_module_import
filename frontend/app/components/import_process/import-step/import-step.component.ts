@@ -32,6 +32,11 @@ export class ImportStepComponent implements OnInit {
     public warningCount: number;
     public invalidRowCount: number;
     public tableReady: boolean = true;
+    public progress: number = 0;
+    public importRunning: boolean = false;
+    public importDone: boolean = false;
+    public progressBar: boolean = false;
+    private timeout: number = 100;
 
     @ViewChild("modalRedir") modalRedir: any;
 
@@ -49,28 +54,41 @@ export class ImportStepComponent implements OnInit {
       this.step = this._route.snapshot.data.step;
       this.importData = this.importProcessService.getImportData();
       // TODO : parallel requests, spinner
-      this._ds.getImportErrors(this.importData.id_import).subscribe(
-        importErrors => {
-          this.errorCount = importErrors.filter(error => error.type.level == "ERROR").length;
-          this.warningCount = importErrors.filter(error => error.type.level == "WARNING").length;
-        },
-        err => {
-          this.spinner = false;
-        });
-      this._ds.getValidData(this.importData.id_import).subscribe(res => {
-        this.spinner = false;
-        this.nValidData = res.n_valid_data;
-        this.nInvalidData = res.n_invalid_data;
-        this.validData = res.valid_data;
-        this.validBbox = res.valid_bbox;
-        if (this.validData.length > 0) {
-          this.columns = Object.keys(this.validData[0]).map(el => {
-            return { prop: el, name: el };
-          });
-        }
-      })
+      this.setImportData()
+      if (this.importData.task_progress !== null && this.importData.task_id !== null) {
+          if (this.importData.processed) {
+              this.importDone = false
+              this.importRunning = true
+              this.checkImportState(this.importData)
+          }
+          else {
+              this.progressBar = true
+              this.verifyChecksDone()
+          }
+      }
     }
-
+    setImportData() {
+        this._ds.getImportErrors(this.importData.id_import).subscribe(
+            importErrors => {
+                this.errorCount = importErrors.filter(error => error.type.level == "ERROR").length;
+                this.warningCount = importErrors.filter(error => error.type.level == "WARNING").length;
+            },
+            err => {
+                this.spinner = false;
+            });
+        this._ds.getValidData(this.importData.id_import).subscribe(res => {
+            this.spinner = false;
+            this.nValidData = res.n_valid_data;
+            this.nInvalidData = res.n_invalid_data;
+            this.validData = res.valid_data;
+            this.validBbox = res.valid_bbox;
+            if (this.validData.length > 0) {
+                this.columns = Object.keys(this.validData[0]).map(el => {
+                    return { prop: el, name: el };
+                });
+            }
+        })
+    }
     openErrorSheet() {
         const url = new URL(window.location.href);
         url.hash = this._router.serializeUrl(
@@ -82,60 +100,69 @@ export class ImportStepComponent implements OnInit {
     onPreviousStep() {
       this.importProcessService.navigateToPreviousStep(this.step);
     }
-
+    verifyChecksDone() {
+        this._ds.getOneImport(this.importData.id_import)
+            .pipe()
+            .subscribe((importData: Import) => {
+                if (importData.task_progress === null && importData.task_id===null) {
+                    this.progressBar = false
+                    this.importProcessService.setImportData(importData);
+                    this.importData = importData;
+                    this.progress = 0
+                    this.timeout = 100
+                    this.setImportData()
+                } else if (importData.task_progress === -1){
+                    this.timeout = 100
+                    this.progress = 0
+                    this.progressBar = false
+                } else {
+                    this.progress = 100 * importData.task_progress
+                    if (this.timeout < 1000) {
+                        this.timeout += 100;
+                    }
+                    setTimeout(() => this.verifyChecksDone(), this.timeout)
+                }
+            })
+    }
+    performChecks() {
+        this._ds.prepareImport(this.importData.id_import).subscribe( () => {
+            this.progressBar = true;
+            this.verifyChecksDone()
+        })
+    }
+    checkImportState(data) {
+        this._ds.getOneImport(this.importData.id_import)
+            .pipe()
+            .subscribe((importData: Import) => {
+                if (importData.task_progress === null && importData.task_id===null) {
+                    this.importRunning = false
+                    this.importProcessService.setImportData(importData);
+                    this.importDone = true
+                    this._commonService.regularToaster("info", "Données importées !");
+                } else if (importData.task_progress === -1){
+                    this.importRunning = false
+                } else {
+                    this.progress = 100 * importData.task_progress
+                    if (this.timeout < 1000) {
+                        this.timeout += 100;
+                    }
+                    setTimeout(() => this.checkImportState(data), this.timeout)
+                }
+            })
+    }
     onImport() {
-        this.spinner = true;
         this._ds.finalizeImport(this.importData.id_import).subscribe(
             importData => {
-                this.spinner = false;
-                this.importProcessService.setImportData(importData);
-                this._commonService.regularToaster("info", "Données importées !");
-                this._router.navigate([`${ModuleConfig.MODULE_URL}`]);
+                this.importRunning = true
+                this.checkImportState(importData)
             },
             error => {
-                this.spinner = false;
+                this.importRunning = false;
             }
         );
     }
 
-    /*onRedirect() {
+    onRedirect() {
         this._router.navigate([ModuleConfig.MODULE_URL]);
-    }*/
-
-    /*getValidData() {
-        this.spinner = true;
-        this._ds.getValidData(this.idImport).subscribe(
-            res => {
-                this.spinner = false;
-                this.total_columns = res.total_columns;
-                this.nValidData = res.n_valid_data;
-                this.nInvalidData = res.n_invalid_data;
-                this.validData = res.valid_data;
-                this.validBbox = res.valid_bbox;
-                this.columns = [];
-
-                if (this.validData.length > 0) {
-                    this.columns = Object.keys(this.validData[0]).map(el => {
-                        return { prop: el, name: el }
-
-                    });
-                }
-                this.tableReady = true;
-
-            },
-            error => {
-                this.spinner = false;
-                if (error.statusText === "Unknown Error") {
-                    // show error message if no connexion
-                    this._commonService.regularToaster(
-                        "error",
-                        "ERROR: IMPOSSIBLE TO CONNECT TO SERVER (check your connexion)"
-                    );
-                } else {
-                    // show error message if other server error
-                    this._commonService.regularToaster("error", error.error.message);
-                }
-            }
-        );
-    }*/
+    }
 }

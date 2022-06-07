@@ -121,7 +121,6 @@ def do_import_in_synthese(self, import_id):
     if imprt is None or imprt.task_id != self.request.id:
         logger.warning("Task cancelled, doing nothing.")
         return
-
     source = TSources.query.filter_by(name_source=imprt.source_name).one_or_none()
     if not source:
         entity_source_pk_field = BibFields.query.filter_by(
@@ -140,7 +139,6 @@ def do_import_in_synthese(self, import_id):
     toggle_synthese_triggers(enable=True)
     populate_cor_area_synthese(imprt, source)
     ImportSyntheseData.query.filter_by(imprt=imprt).delete()
-
     imprt = TImports.query.with_for_update(of=TImports).get(import_id)
     if imprt is None or imprt.task_id != self.request.id:
         logger.warning("Task cancelled, rollback changes.")
