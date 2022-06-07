@@ -24,6 +24,8 @@ export class ModalDeleteImport implements OnInit {
     this._ds.deleteImport(this.row.id_import).subscribe(
       () => {
         this._commonService.regularToaster("success", "Import supprimé.");
+        this.onDelete.emit();
+        this.c();
       },
       error => {
         this._commonService.regularToaster("error", error.error.description);
