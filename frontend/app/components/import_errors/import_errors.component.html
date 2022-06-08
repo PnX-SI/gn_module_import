@@ -23,8 +23,8 @@
             </div>
 
         
-            <h3 class="underlined"> Erreurs</h3>
-            <div *ngIf="importErrors; then errors; else waitingerrors"></div>
+            <h3 class="underlined" *ngIf="importErrors"> Erreurs</h3>
+            <div *ngIf="importErrors; then errors"></div>
             <ng-template #errors>
                 <p> La soumission comporte <b> {{importErrors.length}}</b>  erreur(s) </p>
                 <table class="table table-striped table-bordered">
@@ -48,8 +48,30 @@
                    </tbody>
                 </table>        
             </ng-template>
-            <ng-template #waitingerrors>
-                <mat-spinner class="upload-spinner"></mat-spinner>
+            <h3 class="underlined" *ngIf="importWarnings"> Alertes </h3>
+            <div *ngIf="importWarnings; then warnings"></div>
+            <ng-template #warnings>
+                <p> La soumission comporte <b> {{importWarnings.length}}</b>  alertes(s) </p>
+                <table class="table table-striped table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Type d'alert </th>
+                        <th>Champ </th>
+                        <th>Description alert</th>
+                        <th>Nombre d'erreur(s)</th>
+                        <th>Numéro des lignes en erreur </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr *ngFor="let warning of importWarnings">
+                        <td> {{warning.type.name}} </td>
+                        <td> {{warning.column}} </td>
+                        <td> {{warning.type.description}} <i *ngIf="warning.comment"> <br> {{warning.comment}} </i> </td>
+                        <td> {{warning.rows.length || ''}} </td>
+                        <td> {{warning.rows.join(', ')}} </td>
+                    </tr>
+                    </tbody>
+                </table>
             </ng-template>
         </div><!-- end card-body -->
     </div><!-- end card -->

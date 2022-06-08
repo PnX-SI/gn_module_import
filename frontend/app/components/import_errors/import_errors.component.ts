@@ -15,6 +15,7 @@ import { DataService } from '../../services/data.service';
 export class ImportErrorsComponent implements OnInit {
     public importData: Import;
     public importErrors: Array<ImportError> = null;
+    public importWarnings: Array<ImportError> = null;
 
     constructor(
         private _router: Router,
@@ -27,7 +28,10 @@ export class ImportErrorsComponent implements OnInit {
     ngOnInit() {
       this.importData = this._route.snapshot.data.importData;
       this._ds.getImportErrors(this.importData.id_import).subscribe(
-        errors => { this.importErrors = errors; },
+        errors => {
+            this.importErrors = errors.filter(err => {return err.type.level === "ERROR" });
+            this.importWarnings = errors.filter(err => {return err.type.level === "WARNING"})
+            },
       );
     }
 }
