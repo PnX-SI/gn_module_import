@@ -83,7 +83,7 @@ def check_geography(
         invalid_xy = df[xy_mask & df['_geom'].isnull()]
         if len(invalid_xy):
             errors.append({
-                'error_code': 'INVALID_GEOMETRIE',
+                'error_code': 'INVALID_GEOMETRY',
                 'column': 'longitude',
                 'invalid_rows': invalid_xy,
             })

@@ -139,7 +139,7 @@ class TestChecks:
             Error(error_code='MULTIPLE_ATTACHMENT_TYPE_CODE', column='Champs géométriques', invalid_rows=frozenset([7])),
             Error(error_code='MULTIPLE_CODE_ATTACHMENT', column='Champs géométriques', invalid_rows=frozenset([8,9,10, 11])),
             Error(error_code='INVALID_WKT', column='WKT', invalid_rows=frozenset([15])),
-            Error(error_code='INVALID_GEOMETRIE', column='longitude', invalid_rows=frozenset([16])),
+            Error(error_code='INVALID_GEOMETRY', column='longitude', invalid_rows=frozenset([16])),
         ])
 
     def test_check_types(self, imprt):
