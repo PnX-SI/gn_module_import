@@ -92,7 +92,7 @@ export class FieldsMappingStepComponent implements OnInit {
       this.targetFields = targetFields;
       this.mappedTargetFields = new Set();
       this.unmappedTargetFields = new Set();
-      this.syntheseForm = this._fb.group({}); //, { validator: this._fm.geoFormValidator });
+      this.syntheseForm = this._fb.group({});
       this.populateSyntheseForm();
       this.syntheseForm.setValidators([this._fm.geoFormValidator]);
       this.syntheseForm.updateValueAndValidity();
