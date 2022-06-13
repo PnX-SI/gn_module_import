@@ -414,6 +414,7 @@ def prepare_import(scope, import_id):
 
     # Remove previous errors
     imprt.errors = []
+    imprt.processed = False
 
     # Run background import checks
     sig = do_import_checks.s(imprt.id_import)
