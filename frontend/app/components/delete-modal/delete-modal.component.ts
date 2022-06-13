@@ -26,11 +26,6 @@ export class ModalDeleteImport implements OnInit {
         this._commonService.regularToaster("success", "Import supprimé.");
         this.onDelete.emit();
         this.c();
-      },
-      error => {
-        this._commonService.regularToaster("error", error.error.description);
-        this.onDelete.emit();
-        this.c();
       }
     );
   }
