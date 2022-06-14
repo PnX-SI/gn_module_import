@@ -234,25 +234,31 @@ def decode_file(scope, import_id):
     if request.json['separator'] not in TImports.AVAILABLE_SEPARATORS:
         raise BadRequest(description='Unknown separator')
     imprt.separator = request.json['separator']
-    db.session.commit()  # commit parameters
 
-    try:
-        csvfile = StringIO(imprt.source_file.decode(imprt.encoding))
-    except UnicodeError as e:
-        raise BadRequest(description=str(e))
-    csvreader = csv.reader(csvfile, delimiter=imprt.separator)
-    columns = next(csvreader)
-    duplicates = set([col for col in columns if columns.count(col) > 1])
-    if duplicates:
-        raise BadRequest(f"Duplicates column names: {duplicates}")
-
-    imprt.columns = columns
     imprt.source_count = None
     imprt.synthese_data = []
     imprt.errors = []
     imprt.processed = False
 
-    db.session.commit()
+    db.session.commit()  # commit parameters
+
+    decode = request.args.get("decode", 1)
+    try:
+        decode = int(decode)
+    except ValueError:
+        raise BadRequest(description="decode parameter must but an int")
+    if decode:
+        try:
+            csvfile = StringIO(imprt.source_file.decode(imprt.encoding))
+        except UnicodeError as e:
+            raise BadRequest(description=str(e))
+        csvreader = csv.reader(csvfile, delimiter=imprt.separator)
+        columns = next(csvreader)
+        duplicates = set([col for col in columns if columns.count(col) > 1])
+        if duplicates:
+            raise BadRequest(f"Duplicates column names: {duplicates}")
+        imprt.columns = columns
+        db.session.commit()
 
     return jsonify(imprt.as_dict())
 
