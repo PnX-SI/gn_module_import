@@ -138,7 +138,7 @@ def load_import_data_in_dataframe(imprt, fields):
     df = pd.DataFrame.from_records(
         records,
         columns=source_cols,
-    )
+    ).astype("object")
     return df
 
 
