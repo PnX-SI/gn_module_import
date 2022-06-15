@@ -75,7 +75,7 @@ def get_import_list(scope):
     try:
         order_by = getattr(TImports, sort)
     except AttributeError:
-        order_by = TImports.id_import
+        raise BadRequest(f"Import field '{sort}' does not exist.")
     if sort_dir == "desc":
         order_by = desc(order_by)
     imports = (
