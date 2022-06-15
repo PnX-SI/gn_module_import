@@ -27,6 +27,7 @@ export class UploadFileStepComponent implements OnInit {
   public maxFileSize: number = 0;
   public emptyError: boolean = false;
   public columnFirstError: boolean = false;
+  public maxFileNameLength: number = 255;
 
   constructor(
     private ds: DataService,
@@ -38,7 +39,7 @@ export class UploadFileStepComponent implements OnInit {
   ) {
     this.uploadForm = this.fb.group({
       file: [null, Validators.required],
-      fileName: [null, [Validators.required, Validators.maxLength(50)]],
+      fileName: [null, [Validators.required, Validators.maxLength(this.maxFileNameLength)]],
     });
   }
 

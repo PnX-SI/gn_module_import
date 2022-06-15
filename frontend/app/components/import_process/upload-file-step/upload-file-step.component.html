@@ -36,6 +36,9 @@
             <div class="text-danger" *ngIf="columnFirstError">
                 La première ligne du fichier doit correspondre au nom des colonnes
             </div>
+            <div class="text-danger" *ngIf="fileName && fileName.length > maxFileNameLength">
+                Le nom du fichier est trop long. Il doit faire moins de {{maxFileNameLength}} caractères.
+            </div>
             <!-- Navigation buttons -->
             <div class="navigate-btn">
                 <button
