@@ -57,7 +57,6 @@ export class ImportProcessResolver implements Resolve<Import>{
         if (this.importProcessService.getLastAvailableStep() < step) {
           // this step is not available yet
           // note: this check is here and not in guard as we need resolved importData
-          console.log("step not available yet");
           return EMPTY;
         } else {
           return importData;
