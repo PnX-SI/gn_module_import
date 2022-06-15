@@ -18,6 +18,7 @@
                             (change)="onFileSelected($event.target.files[0])"
                             id="selectedFile"
                             name="file"
+                            [accept]="acceptedExtensions"
                         >
                         <label
                             class="custom-file-label"

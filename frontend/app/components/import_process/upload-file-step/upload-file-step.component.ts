@@ -28,6 +28,7 @@ export class UploadFileStepComponent implements OnInit {
   public emptyError: boolean = false;
   public columnFirstError: boolean = false;
   public maxFileNameLength: number = 255;
+  public acceptedExtensions: string = ModuleConfig.ALLOWED_EXTENSIONS.toString();
 
   constructor(
     private ds: DataService,
@@ -74,7 +75,6 @@ export class UploadFileStepComponent implements OnInit {
     });
     this.uploadForm.markAsDirty();
   }
-
   onNextStep() {
       if (this.uploadForm.pristine) {
           this.importProcessService.navigateToNextStep(this.step);
