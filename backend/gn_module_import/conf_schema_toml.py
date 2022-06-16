@@ -146,4 +146,4 @@ class GnModuleSchemaConf(Schema):
     CHECK_REF_BIBLIO_LITTERATURE = fields.Boolean(load_default=True)
     CHECK_EXIST_PROOF = fields.Boolean(load_default=True)
     CHECK_TYPE_INFO_GEO = fields.Boolean(load_default=True)
-
+    DEFAULT_GENERATE_MISSING_UUID = fields.Boolean(load_default=True)
