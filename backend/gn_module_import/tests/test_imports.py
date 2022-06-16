@@ -89,15 +89,20 @@ def imports(users):
 
 @pytest.fixture()
 def no_default_nomenclatures(app):
-    previous_value = app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]
+    previous_value = app.config["IMPORT"][
+        "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"
+    ]
     app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"] = False
     yield
-    app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"] = previous_value
+    app.config["IMPORT"][
+        "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"
+    ] = previous_value
 
 
 @pytest.fixture()
 def import_file_name():
     return "valid_file.csv"
+
 
 @pytest.fixture()
 def import_dataset(datasets, import_file_name):
@@ -177,7 +182,9 @@ def field_mapped_import(client, decoded_import, fieldmapping):
 @pytest.fixture()
 def loaded_import(client, field_mapped_import):
     with db.session.begin_nested():
-        field_mapped_import.source_count = insert_import_data_in_database(field_mapped_import)
+        field_mapped_import.source_count = insert_import_data_in_database(
+            field_mapped_import
+        )
     return field_mapped_import
 
 
@@ -195,7 +202,9 @@ def content_mapped_import(client, loaded_import):
 @pytest.fixture()
 def prepared_import(client, content_mapped_import):
     set_logged_user_cookie(client, content_mapped_import.authors[0])
-    r = client.post(url_for("import.prepare_import", import_id=content_mapped_import.id_import))
+    r = client.post(
+        url_for("import.prepare_import", import_id=content_mapped_import.id_import)
+    )
     assert r.status_code == 200
     unset_logged_user_cookie(client)
     db.session.refresh(content_mapped_import)
@@ -313,7 +322,7 @@ class TestImports:
 
     def test_search_import(self, users, imports, uploaded_import):
         set_logged_user_cookie(self.client, users["user"])
-        r = self.client.get(url_for("import.get_import_list")+"?search=valid_file")
+        r = self.client.get(url_for("import.get_import_list") + "?search=valid_file")
         assert r.status_code == 200
         json_data = r.get_json()
         assert json_data["count"] == 1
@@ -322,11 +331,13 @@ class TestImports:
         set_logged_user_cookie(self.client, users["user"])
         r_des = self.client.get(url_for("import.get_import_list"))
         assert r_des.status_code == 200, r_des.data
-        r_asc = self.client.get(url_for("import.get_import_list") + "?sort=date_create_import&sort_dir=asc")
+        r_asc = self.client.get(
+            url_for("import.get_import_list") + "?sort=date_create_import&sort_dir=asc"
+        )
         assert r_asc.status_code == 200, r_asc.data
         import_ids_des = [imprt["id_import"] for imprt in r_des.get_json()["imports"]]
         import_ids_asc = [imprt["id_import"] for imprt in r_asc.get_json()["imports"]]
-        assert  import_ids_des == import_ids_asc[-1::-1]
+        assert import_ids_des == import_ids_asc[-1::-1]
 
     def test_get_import(self, users, imports):
         def get(import_name):
@@ -443,7 +454,6 @@ class TestImports:
         assert imprt.source_file is not None
         assert imprt.full_file_name == "simple_file.csv"
 
-
     def test_import_error(self, users, datasets):
         set_logged_user_cookie(self.client, users["user"])
         with open(tests_path / "files" / "empty.csv", "rb") as f:
@@ -542,18 +552,19 @@ class TestImports:
         assert r.status_code == BadRequest.code
         assert "Duplicates column names" in r.json["description"]
 
-        #with open(tests_path / "files" / "wrong_line_length.csv", "rb") as f:
+        # with open(tests_path / "files" / "wrong_line_length.csv", "rb") as f:
         #    imprt.source_file = f.read()
-        #r = self.client.post(
+        # r = self.client.post(
         #    url_for("import.decode_file", import_id=imprt.id_import), data=data
-        #)
-        #assert r.status_code == BadRequest.code
-        #assert "Expected" in r.json["description"]
+        # )
+        # assert r.status_code == BadRequest.code
+        # assert "Expected" in r.json["description"]
 
         wrong_separator_data = data.copy()
-        wrong_separator_data['separator'] = 'sep'
+        wrong_separator_data["separator"] = "sep"
         r = self.client.post(
-            url_for('import.decode_file', import_id=imprt.id_import), data=wrong_separator_data
+            url_for("import.decode_file", import_id=imprt.id_import),
+            data=wrong_separator_data,
         )
         assert r.status_code == BadRequest.code
 
@@ -605,12 +616,13 @@ class TestImports:
         imprt = field_mapped_import
 
         set_logged_user_cookie(self.client, users["user"])
-        r = self.client.post(
-            url_for("import.load_import", import_id=imprt.id_import)
-        )
+        r = self.client.post(url_for("import.load_import", import_id=imprt.id_import))
         assert r.status_code == 200
-        assert r.json['source_count'] > 0
-        assert ImportSyntheseData.query.filter_by(id_import=imprt.id_import).count() == r.json['source_count']
+        assert r.json["source_count"] > 0
+        assert (
+            ImportSyntheseData.query.filter_by(id_import=imprt.id_import).count()
+            == r.json["source_count"]
+        )
 
     def test_import_values(self, users, loaded_import):
         imprt = loaded_import
@@ -707,7 +719,7 @@ class TestImports:
             url_for("import.get_import_invalid_rows_as_csv", import_id=imprt.id_import)
         )
         assert r.status_code == 200
-        csvfile = StringIO(r.data.decode('utf-8'))
+        csvfile = StringIO(r.data.decode("utf-8"))
         invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
         assert len(csvfile.readlines()) == 1 + len(invalid_rows)  # 1 = header
 
@@ -811,12 +823,13 @@ class TestImports:
         assert r.json["fieldmapping"] == fieldmapping.values
 
         # Loading step
-        r = self.client.post(
-            url_for("import.load_import", import_id=imprt.id_import)
-        )
+        r = self.client.post(url_for("import.load_import", import_id=imprt.id_import))
         assert r.status_code == 200
         assert r.json["source_count"] == test_file_line_count
-        assert ImportSyntheseData.query.filter_by(imprt=imprt).count() == test_file_line_count
+        assert (
+            ImportSyntheseData.query.filter_by(imprt=imprt).count()
+            == test_file_line_count
+        )
 
         # Content mapping step
         contentmapping = ContentMapping.query.filter_by(
@@ -887,52 +900,74 @@ class TestImports:
 
     @pytest.mark.parametrize("import_file_name", ["geom_file.csv"])
     def test_import_geometry_file(self, prepared_import):
-        assert_import_errors(prepared_import, {
-            ("INVALID_ATTACHMENT_CODE", "codecommune", frozenset([2])),
-            ("INVALID_ATTACHMENT_CODE", "codedepartement", frozenset([4])),
-            ("INVALID_ATTACHMENT_CODE", "codemaille", frozenset([6])),
-            ("MULTIPLE_CODE_ATTACHMENT", "Champs géométriques", frozenset([7])),
-            ("MULTIPLE_ATTACHMENT_TYPE_CODE", "Champs géométriques", frozenset([10, 13])),
-            ("NO-GEOM", "Champs géométriques", frozenset([14])),
-        })
+        assert_import_errors(
+            prepared_import,
+            {
+                ("INVALID_ATTACHMENT_CODE", "codecommune", frozenset([2])),
+                ("INVALID_ATTACHMENT_CODE", "codedepartement", frozenset([4])),
+                ("INVALID_ATTACHMENT_CODE", "codemaille", frozenset([6])),
+                ("MULTIPLE_CODE_ATTACHMENT", "Champs géométriques", frozenset([7])),
+                (
+                    "MULTIPLE_ATTACHMENT_TYPE_CODE",
+                    "Champs géométriques",
+                    frozenset([10, 13]),
+                ),
+                ("NO-GEOM", "Champs géométriques", frozenset([14])),
+            },
+        )
 
     @pytest.mark.parametrize("import_file_name", ["cd_file.csv"])
     def test_import_cd_file(self, prepared_import):
-        assert_import_errors(prepared_import, {
-            ("MISSING_VALUE", "cd_nom", frozenset([1, 4, 5])),
-            ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([2, 6, 8])),
-            ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([4, 6, 7])),
-        })
+        assert_import_errors(
+            prepared_import,
+            {
+                ("MISSING_VALUE", "cd_nom", frozenset([1, 4, 5])),
+                ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([2, 6, 8])),
+                ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([4, 6, 7])),
+            },
+        )
 
     @pytest.mark.parametrize("import_file_name", ["source_pk_file.csv"])
     def test_import_source_pk_file(self, prepared_import):
-        assert_import_errors(prepared_import, {
-            ("DUPLICATE_ENTITY_SOURCE_PK", "entity_source_pk_value", frozenset([4, 5])),
-        })
+        assert_import_errors(
+            prepared_import,
+            {
+                (
+                    "DUPLICATE_ENTITY_SOURCE_PK",
+                    "entity_source_pk_value",
+                    frozenset([4, 5]),
+                ),
+            },
+        )
 
     @pytest.mark.parametrize("import_file_name", ["altitude_file.csv"])
     def test_import_altitude_file(self, prepared_import):
         french_dem = has_french_dem()
         if french_dem:
-            alti_min_sup_alti_max = frozenset([3,5,8])
+            alti_min_sup_alti_max = frozenset([3, 5, 8])
         else:
             alti_min_sup_alti_max = frozenset([8])
-        assert_import_errors(prepared_import, {
-            ("ALTI_MIN_SUP_ALTI_MAX", "altitude_min", alti_min_sup_alti_max),
-            ("INVALID_INTEGER", "altitude_min", frozenset([9,11])),
-            ("INVALID_INTEGER", "altitude_max", frozenset([10,11])),
-        })
+        assert_import_errors(
+            prepared_import,
+            {
+                ("ALTI_MIN_SUP_ALTI_MAX", "altitude_min", alti_min_sup_alti_max),
+                ("INVALID_INTEGER", "altitude_min", frozenset([9, 11])),
+                ("INVALID_INTEGER", "altitude_max", frozenset([10, 11])),
+            },
+        )
         if has_french_dem():
-            altitudes = [(s.altitude_min, s.altitude_max) for s in prepared_import.synthese_data]
+            altitudes = [
+                (s.altitude_min, s.altitude_max) for s in prepared_import.synthese_data
+            ]
             expected_altitudes = [
                 (1389, 1389),
-                (  10, 1389),
+                (10, 1389),
                 (5000, 1389),
                 (1389, 5000),
-                (1389,   10),
-                (  10,   10),
-                (  10,   20),
-                (  20,   10),
+                (1389, 10),
+                (10, 10),
+                (10, 20),
+                (20, 10),
                 (None, None),
                 (None, None),
                 (None, None),
@@ -941,43 +976,72 @@ class TestImports:
 
     @pytest.mark.parametrize("import_file_name", ["uuid_file.csv"])
     def test_import_uuid_file(self, synthese_data, prepared_import):
-        assert_import_errors(prepared_import, {
-            ("DUPLICATE_UUID", "unique_id_sinp", frozenset([2, 3])),
-            ("EXISTING_UUID", "unique_id_sinp", frozenset([4])),
-            ("INVALID_UUID", "unique_id_sinp", frozenset([5])),
-        })
-        generated_line = ImportSyntheseData.query.filter_by(imprt=prepared_import, line_no=6).one()
+        assert_import_errors(
+            prepared_import,
+            {
+                ("DUPLICATE_UUID", "unique_id_sinp", frozenset([2, 3])),
+                ("EXISTING_UUID", "unique_id_sinp", frozenset([4])),
+                ("INVALID_UUID", "unique_id_sinp", frozenset([5])),
+            },
+        )
+        generated_line = ImportSyntheseData.query.filter_by(
+            imprt=prepared_import, line_no=6
+        ).one()
         assert generated_line.unique_id_sinp != None
 
     @pytest.mark.parametrize("import_file_name", ["dates.csv"])
     def test_import_dates_file(self, prepared_import):
-        assert_import_errors(prepared_import, {
-            ('DATE_MIN_SUP_DATE_MAX', 'date_min', frozenset({3,9})),
-            ('DATE_MIN_TOO_HIGH', 'date_min', frozenset({2,3})),
-            ('DATE_MAX_TOO_HIGH', 'date_max', frozenset({4})),
-            ('MISSING_VALUE', 'date_min', frozenset({11})),
-            ('INVALID_DATE', 'date_min', frozenset({12})),
-            ('DATE_MIN_TOO_LOW', 'date_min', frozenset({13,14})),
-            ('DATE_MAX_TOO_LOW', 'date_max', frozenset({14})),
-        })
+        assert_import_errors(
+            prepared_import,
+            {
+                ("DATE_MIN_SUP_DATE_MAX", "date_min", frozenset({3, 9})),
+                ("DATE_MIN_TOO_HIGH", "date_min", frozenset({2, 3})),
+                ("DATE_MAX_TOO_HIGH", "date_max", frozenset({4})),
+                ("MISSING_VALUE", "date_min", frozenset({11})),
+                ("INVALID_DATE", "date_min", frozenset({12})),
+                ("DATE_MIN_TOO_LOW", "date_min", frozenset({13, 14})),
+                ("DATE_MAX_TOO_LOW", "date_max", frozenset({14})),
+            },
+        )
 
     @pytest.mark.parametrize("import_file_name", ["digital_proof.csv"])
     def test_import_digital_proofs_file(self, prepared_import):
-        assert_import_errors(prepared_import, {
-            ('INVALID_URL_PROOF', 'digital_proof', frozenset({2, 4, 5})),
-        })
+        assert_import_errors(
+            prepared_import,
+            {
+                ("INVALID_URL_PROOF", "digital_proof", frozenset({2, 4, 5})),
+            },
+        )
 
     @pytest.mark.parametrize("import_file_name", ["depth.csv"])
     def test_import_depth_file(self, prepared_import):
-        assert_import_errors(prepared_import, {
-            ('DEPTH_MIN_SUP_ALTI_MAX', 'depth_min', frozenset({6})),
-        })
+        assert_import_errors(
+            prepared_import,
+            {
+                ("DEPTH_MIN_SUP_ALTI_MAX", "depth_min", frozenset({6})),
+            },
+        )
 
     @pytest.mark.parametrize("import_file_name", ["nomenclatures_file.csv"])
     def test_import_nomenclatures_file(self, prepared_import, no_default_nomenclatures):
-        assert_import_errors(prepared_import, {
-            ('INVALID_NOMENCLATURE', 'id_nomenclature_exist_proof', frozenset({2})),
-            ('INVALID_EXISTING_PROOF_VALUE', 'id_nomenclature_exist_proof', frozenset({4,5,6,7})),
-            ('CONDITIONAL_MANDATORY_FIELD_ERROR', 'id_nomenclature_blurring', frozenset({11})),
-            ('CONDITIONAL_MANDATORY_FIELD_ERROR', 'id_nomenclature_source_status', frozenset({13})),
-        })
+        assert_import_errors(
+            prepared_import,
+            {
+                ("INVALID_NOMENCLATURE", "id_nomenclature_exist_proof", frozenset({2})),
+                (
+                    "INVALID_EXISTING_PROOF_VALUE",
+                    "id_nomenclature_exist_proof",
+                    frozenset({4, 5, 6, 7}),
+                ),
+                (
+                    "CONDITIONAL_MANDATORY_FIELD_ERROR",
+                    "id_nomenclature_blurring",
+                    frozenset({11}),
+                ),
+                (
+                    "CONDITIONAL_MANDATORY_FIELD_ERROR",
+                    "id_nomenclature_source_status",
+                    frozenset({13}),
+                ),
+            },
+        )
