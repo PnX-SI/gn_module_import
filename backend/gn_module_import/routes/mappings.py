@@ -3,6 +3,7 @@ from itertools import groupby
 from flask import request, jsonify, current_app, g
 from werkzeug.exceptions import Forbidden, Conflict, BadRequest, NotFound
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.attributes import flag_modified
 
 from geonature.utils.env import db
 from geonature.core.gn_permissions import decorators as permissions
@@ -118,7 +119,12 @@ def update_mapping(mappingtype, mapping, scope):
             mapping.validate_values(request.json)
         except ValueError as e:
             raise BadRequest(*e.args)
-        mapping.values = request.json
+        if mappingtype == "FIELD":
+            mapping.values.update(request.json)
+        elif mappingtype == "CONTENT":
+            for key, value in request.json.items():
+                mapping.values[key].update(value)
+            flag_modified(mapping, "values")  # nested dict modification not detected by MutableDict
 
     db.session.commit()
     return jsonify(mapping.as_dict())

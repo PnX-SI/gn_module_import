@@ -385,50 +385,55 @@ class TestMappings:
         set_logged_user_cookie(self.client, users["admin_user"])
 
         fm = mappings["field_public"]
-        fieldvalues2 = deepcopy(fm.values)
-        fieldvalues2["WKT"] = "WKT2"
+        fieldvalues_update = deepcopy(fm.values)
+        fieldvalues_update["WKT"] = "WKT2"
+        fieldvalues_should = deepcopy(fieldvalues_update)
+        del fieldvalues_update["validator"]  # should not removed from mapping!
         r = self.client.post(
             url_for(
                 "import.update_mapping", mappingtype=fm.type.lower(), id_mapping=fm.id
             ),
-            data=fieldvalues2,
+            data=fieldvalues_update,
         )
         assert r.status_code == 200
-        assert fm.values == fieldvalues2
-        fieldvalues3 = deepcopy(fm.values)
-        fieldvalues3["unexisting"] = "unexisting"
+        assert fm.values == fieldvalues_should
+        fieldvalues_update = deepcopy(fm.values)
+        fieldvalues_update["unexisting"] = "unexisting"
         r = self.client.post(
             url_for(
                 "import.update_mapping", mappingtype=fm.type.lower(), id_mapping=fm.id
             ),
-            data=fieldvalues3,
+            data=fieldvalues_update,
         )
         assert r.status_code == BadRequest.code
-        assert fm.values == fieldvalues2
+        assert fm.values == fieldvalues_should
 
     def test_update_content_mapping_values(self, users, mappings):
         set_logged_user_cookie(self.client, users["admin_user"])
         cm = mappings["content_public"]
-        contentvalues2 = deepcopy(cm.values)
-        contentvalues2["NAT_OBJ_GEO"]["ne sais pas"] = "NSP"
+        contentvalues_update = deepcopy(cm.values)
+        contentvalues_update["NAT_OBJ_GEO"]["In"] = "St"  # change existing mapping
+        contentvalues_update["NAT_OBJ_GEO"]["ne sais pas"] = "NSP"  # add new mapping
+        contentvalues_should = deepcopy(contentvalues_update)
+        del contentvalues_update["NAT_OBJ_GEO"]["St"]  # should not be removed!
         r = self.client.post(
             url_for(
                 "import.update_mapping", mappingtype=cm.type.lower(), id_mapping=cm.id
             ),
-            data=contentvalues2,
+            data=contentvalues_update,
         )
         assert r.status_code == 200
-        assert cm.values == contentvalues2
-        contentvalues3 = deepcopy(cm.values)
-        contentvalues3["NAT_OBJ_GEO"] = "invalid"
+        assert cm.values == contentvalues_should
+        contentvalues_update = deepcopy(cm.values)
+        contentvalues_update["NAT_OBJ_GEO"] = "invalid"
         r = self.client.post(
             url_for(
                 "import.update_mapping", mappingtype=cm.type.lower(), id_mapping=cm.id
             ),
-            data=contentvalues3,
+            data=contentvalues_update,
         )
         assert r.status_code == BadRequest.code
-        assert cm.values == contentvalues2
+        assert cm.values == contentvalues_should
 
     def test_delete_mapping(self, users, mappings):
         mapping = mappings["associate"]
