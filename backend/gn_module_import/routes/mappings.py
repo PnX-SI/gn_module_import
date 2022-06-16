@@ -96,7 +96,7 @@ def add_mapping(mappingtype, scope):
 
 
 @blueprint.route("/<mappingtype>mappings/<int:id_mapping>/", methods=["POST"])
-@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="MAPPING")
+@permissions.check_cruved_scope("U", get_scope=True, module_code="IMPORT", object_code="MAPPING")
 def update_mapping(mappingtype, mapping, scope):
     """
     .. :quickref: Import; Update a mapping (label and/or content).
