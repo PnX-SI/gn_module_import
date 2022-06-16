@@ -49,6 +49,12 @@ valid_file_expected_errors = {
     ("DUPLICATE_ENTITY_SOURCE_PK", "id_synthese", frozenset([3, 4])),
     ("COUNT_MIN_SUP_COUNT_MAX", "nombre_min", frozenset([5])),
 }
+valid_file_invalid_rows = reduce(
+    or_, [rows for _, _, rows in valid_file_expected_errors]
+)
+valid_file_line_count = 6
+valid_file_column_count = 76
+valid_file_taxa_count = 2
 
 
 def assert_import_errors(imprt, expected_errors):
@@ -618,7 +624,7 @@ class TestImports:
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.post(url_for("import.load_import", import_id=imprt.id_import))
         assert r.status_code == 200
-        assert r.json["source_count"] > 0
+        assert r.json["source_count"] == valid_file_line_count
         assert (
             ImportSyntheseData.query.filter_by(id_import=imprt.id_import).count()
             == r.json["source_count"]
@@ -697,9 +703,10 @@ class TestImports:
             url_for("import.preview_valid_data", import_id=imprt.id_import)
         )
         assert r.status_code == 200
-        invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
-        assert r.json["n_valid_data"] == imprt.source_count - len(invalid_rows)
-        assert r.json["n_invalid_data"] == len(invalid_rows)
+        assert r.json["n_valid_data"] == imprt.source_count - len(
+            valid_file_invalid_rows
+        )
+        assert r.json["n_invalid_data"] == len(valid_file_invalid_rows)
 
     def test_import_invalid_rows(self, users, prepared_import):
         imprt = prepared_import
@@ -806,7 +813,7 @@ class TestImports:
         assert imprt.separator == ";"
         assert imprt.srid == 4326
         assert imprt.columns
-        assert len(imprt.columns) > 0
+        assert len(imprt.columns) == valid_file_column_count
         assert ImportSyntheseData.query.filter_by(imprt=imprt).count() == 0
 
         # Field mapping step
@@ -825,7 +832,8 @@ class TestImports:
         # Loading step
         r = self.client.post(url_for("import.load_import", import_id=imprt.id_import))
         assert r.status_code == 200
-        assert r.json["source_count"] == test_file_line_count
+        assert r.json["source_count"] == valid_file_line_count
+        assert imprt.source_count == valid_file_line_count
         assert (
             ImportSyntheseData.query.filter_by(imprt=imprt).count()
             == test_file_line_count
@@ -870,9 +878,10 @@ class TestImports:
             url_for("import.preview_valid_data", import_id=imprt.id_import)
         )
         assert r.status_code == 200
-        invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
-        assert r.json["n_valid_data"] == imprt.source_count - len(invalid_rows)
-        assert r.json["n_invalid_data"] == len(invalid_rows)
+        assert r.json["n_valid_data"] == imprt.source_count - len(
+            valid_file_invalid_rows
+        )
+        assert r.json["n_invalid_data"] == len(valid_file_invalid_rows)
 
         # Get invalid data
         r = self.client.get(
@@ -891,6 +900,10 @@ class TestImports:
             {"definitions": jsonschema_definitions, "$ref": "#/definitions/import"},
         )
         assert 0 == ImportSyntheseData.query.filter_by(imprt=imprt).count()
+        assert (
+            valid_file_line_count - len(valid_file_invalid_rows) == imprt.import_count
+        )
+        assert valid_file_taxa_count == imprt.taxa_count
 
         # Delete step
         r = self.client.delete(

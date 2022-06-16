@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from sqlalchemy import func, distinct
 from celery.utils.log import get_task_logger
 
 from geonature.core.gn_synthese.models import Synthese, TSources
@@ -148,4 +149,14 @@ def do_import_in_synthese(self, import_id):
         imprt.date_end_import = datetime.now()
         imprt.source_count = 0
         imprt.task_id = None
+        imprt.import_count = (
+            db.session.query(func.count(Synthese.id_synthese))
+            .filter_by(source=source)
+            .scalar()
+        )
+        imprt.taxa_count = (
+            db.session.query(func.count(distinct(Synthese.cd_nom)))
+            .filter_by(source=source)
+            .scalar()
+        )
         db.session.commit()
