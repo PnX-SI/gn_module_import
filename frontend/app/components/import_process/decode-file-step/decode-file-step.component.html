@@ -99,7 +99,7 @@
                     mat-raised-button
                     color=primary
                     (click)="onSubmit()"
-                    [disabled]="!submitAvailable()"
+                    [disabled]="!isNextStepAvailable()"
                     id="validate"
                 >
                     Suivant

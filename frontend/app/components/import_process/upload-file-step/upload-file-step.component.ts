@@ -55,7 +55,7 @@ export class UploadFileStepComponent implements OnInit {
     }
   }
 
-  submitAvailable() {
+  isNextStepAvailable() {
     if (this.isUploadRunning) {
       return false;
     } else if (this.importData && this.uploadForm.pristine) {
@@ -75,19 +75,20 @@ export class UploadFileStepComponent implements OnInit {
     });
     this.uploadForm.markAsDirty();
   }
+  onSaveData(): Observable<Import> {
+      if (this.importData) {
+          return this.ds.updateFile(this.importData.id_import, this.file);
+      } else {
+          return this.ds.addFile(this.datasetId, this.file);
+      }
+  }
   onNextStep() {
       if (this.uploadForm.pristine) {
           this.importProcessService.navigateToNextStep(this.step);
           return;
       }
       this.isUploadRunning = true;
-      var upload: Observable<Import>;
-      if (this.importData) {
-          upload = this.ds.updateFile(this.importData.id_import, this.file);
-      } else {
-          upload = this.ds.addFile(this.datasetId, this.file);
-      }
-      upload.subscribe(
+      this.onSaveData().subscribe(
             res => {
               this.isUploadRunning = false;
               this.importProcessService.setImportData(res);

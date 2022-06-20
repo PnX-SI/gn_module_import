@@ -4,7 +4,7 @@ import { DataService } from "../../../services/data.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../../module.config";
 import { ImportProcessService } from "../import-process.service";
-import { ImportStepInterface } from "../import-process.interface";
+// import { ImportStepInterface } from "../import-process.interface";
 import { isObservable } from "rxjs";
 import { Import } from "../../../models/import.model";
 

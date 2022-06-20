@@ -100,6 +100,9 @@ export class ImportStepComponent implements OnInit {
     onPreviousStep() {
       this.importProcessService.navigateToPreviousStep(this.step);
     }
+    isNextStepAvailable() {
+      return true
+    }
     verifyChecksDone() {
         this._ds.getOneImport(this.importData.id_import)
             .pipe()

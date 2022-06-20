@@ -38,8 +38,8 @@ export class DataService {
     return this._http.put<Import>(url, fd);
   }
 
-  decodeFile(importId: number, params: { encoding: string, format: string, srid: string}): Observable<Import> {
-    const url = `${urlApi}/imports/${importId}/decode`;
+  decodeFile(importId: number, params: { encoding: string, format: string, srid: string}, decode:number=1): Observable<Import> {
+    const url = `${urlApi}/imports/${importId}/decode?decode=${decode}`;
     return this._http.post<Import>(url, params);
   }
 

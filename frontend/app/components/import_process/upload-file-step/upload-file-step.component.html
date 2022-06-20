@@ -22,7 +22,7 @@
                         >
                         <label
                             class="custom-file-label"
-                            [class.error-file]="!submitAvailable() && uploadForm.get('file').errors"
+                            [class.error-file]="!isNextStepAvailable() && uploadForm.get('file').errors"
                             for="selectedFile"
                         >{{fileName ? fileName : 'Choisissez votre fichier' }}</label>
                     </div>
@@ -47,7 +47,7 @@
                     class="d-flex justify-content-center align-content-between"
                     mat-raised-button
                     color=primary
-                    [disabled]="!submitAvailable()"
+                    [disabled]="!isNextStepAvailable()"
                     (click)="onNextStep()"
                     id="validate"
                 >

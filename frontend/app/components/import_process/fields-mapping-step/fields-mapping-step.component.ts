@@ -303,7 +303,7 @@ export class FieldsMappingStepComponent implements OnInit {
   }
 
   isNextStepAvailable() {
-    return this.syntheseForm.valid;
+    return this.syntheseForm && this.syntheseForm.valid;
   }
 
   onNextStep() {
@@ -326,24 +326,28 @@ export class FieldsMappingStepComponent implements OnInit {
     }
 
   }
+  onSaveData(loadImport=false):Observable<Import> {
+      return of(this.importData).pipe(
+      concatMap((importData: Import) => {
+          if (this.mappingSelected || this.syntheseForm.dirty) {
+              return this._ds.setImportFieldMapping(importData.id_import, this.getFieldMappingValues())
+          } else {
+              return of(importData);
+          }
+      }),
+      concatMap((importData: Import) => {
+          if (!importData.source_count && loadImport) {
+              return this._ds.loadImport(importData.id_import)
+          } else {
+              return of(importData);
+          }
+      }),
+      finalize(() => this.spinner = false),
+  )
+  }
+
   processNextStep(){
-      of(this.importData).pipe(
-          concatMap((importData: Import) => {
-              if (this.mappingSelected || this.syntheseForm.dirty) {
-                  return this._ds.setImportFieldMapping(importData.id_import, this.getFieldMappingValues())
-              } else {
-                  return of(importData);
-              }
-          }),
-          concatMap((importData: Import) => {
-              if (!importData.source_count) {
-                  return this._ds.loadImport(importData.id_import)
-              } else {
-                  return of(importData);
-              }
-          }),
-          finalize(() => this.spinner = false),
-      ).subscribe(
+      this.onSaveData(true).subscribe(
           (importData: Import) => {
               this.importProcessService.setImportData(importData);
               this.importProcessService.navigateToNextStep(this.step);
