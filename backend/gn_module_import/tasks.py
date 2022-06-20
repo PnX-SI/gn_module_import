@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import func, distinct
+from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from celery.utils.log import get_task_logger
 
 from geonature.core.gn_synthese.models import Synthese, TSources
@@ -112,6 +113,17 @@ def do_import_checks(self, import_id):
         logger.info("All done, committing…")
         imprt.processed = True
         imprt.task_id = None
+        imprt.erroneous_rows = (
+            db.session.query(
+                array_agg(
+                    aggregate_order_by(
+                        ImportSyntheseData.line_no, ImportSyntheseData.line_no
+                    )
+                )
+            )
+            .filter_by(imprt=imprt, valid=False)
+            .scalar()
+        )
         db.session.commit()
 
 

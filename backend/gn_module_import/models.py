@@ -162,6 +162,7 @@ class TImports(InstancePermissionMixin, db.Model):
     )
     date_end_import = db.Column(db.DateTime, nullable=True)
     source_count = db.Column(db.Integer, nullable=True)
+    erroneous_rows = deferred(db.Column(ARRAY(db.Integer), nullable=True))
     import_count = db.Column(db.Integer, nullable=True)
     taxa_count = db.Column(db.Integer, nullable=True)
     date_min_data = db.Column(db.DateTime, nullable=True)

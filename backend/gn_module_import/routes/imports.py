@@ -178,6 +178,7 @@ def upload_file(scope, import_id):
     imprt.source_count = None
     imprt.synthese_data = []
     imprt.errors = []
+    imprt.erroneous_rows = None
     imprt.processed = False
 
     db.session.commit()
@@ -224,6 +225,7 @@ def decode_file(scope, import_id):
     imprt.source_count = None
     imprt.synthese_data = []
     imprt.errors = []
+    imprt.erroneous_rows = None
     imprt.processed = False
 
     db.session.commit()  # commit parameters
@@ -267,6 +269,7 @@ def set_import_field_mapping(scope, import_id):
     imprt.source_count = None
     imprt.synthese_data = []
     imprt.errors = []
+    imprt.erroneous_rows = None
     imprt.processed = False
     db.session.commit()
     return jsonify(imprt.as_dict())
@@ -287,6 +290,7 @@ def load_import(scope, import_id):
     if imprt.fieldmapping is None:
         raise BadRequest(description="File fields must be first mapped.")
     imprt.errors = []
+    imprt.erroneous_rows = None
     imprt.synthese_data = []
     imprt.processed = False
     line_no = insert_import_data_in_database(imprt)
@@ -396,7 +400,7 @@ def set_import_content_mapping(scope, import_id):
         raise BadRequest(*e.args)
     imprt.contentmapping = request.json
     imprt.errors = []
-    # TODO: set valid = False on all rows
+    imprt.erroneous_rows = None
     imprt.processed = False
     db.session.commit()
     return jsonify(imprt.as_dict())
@@ -422,6 +426,7 @@ def prepare_import(scope, import_id):
 
     # Remove previous errors
     imprt.errors = []
+    imprt.erroneous_rows = None
     imprt.processed = False
 
     # Run background import checks
