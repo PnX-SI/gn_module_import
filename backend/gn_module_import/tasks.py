@@ -14,9 +14,7 @@ from gn_module_import.checks.dataframe.geography import set_the_geom_column
 from gn_module_import.utils import (
     load_import_data_in_dataframe,
     update_import_data_from_dataframe,
-    toggle_synthese_triggers,
     import_data_to_synthese,
-    populate_cor_area_synthese,
 )
 from gn_module_import.checks.sql import (
     do_nomenclatures_mapping,
@@ -145,10 +143,7 @@ def do_import_in_synthese(self, import_id):
             entity_source_pk_field=entity_source_pk_field.synthese_field,
         )
         db.session.add(source)
-    toggle_synthese_triggers(enable=False)
     import_data_to_synthese(imprt, source)
-    toggle_synthese_triggers(enable=True)
-    populate_cor_area_synthese(imprt, source)
     ImportSyntheseData.query.filter_by(imprt=imprt).delete()
     imprt = TImports.query.with_for_update(of=TImports).get(import_id)
     if imprt is None or imprt.task_id != self.request.id:

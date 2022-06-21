@@ -198,16 +198,6 @@ def update_import_data_from_dataframe(imprt, fields, df):
     db.session.execute(insert_stmt)
 
 
-def toggle_synthese_triggers(enable):
-    triggers = ["tri_meta_dates_change_synthese", "tri_insert_cor_area_synthese"]
-    action = "ENABLE" if enable else "DISABLE"
-    with db.session.begin_nested():
-        for trigger in triggers:
-            db.session.execute(
-                f"ALTER TABLE gn_synthese.synthese {action} TRIGGER {trigger}"
-            )
-
-
 def import_data_to_synthese(imprt, source):
     generated_fields = {
         "datetime_min",
@@ -248,39 +238,3 @@ def import_data_to_synthese(imprt, source):
         select=select_stmt,
     )
     db.session.execute(insert_stmt)
-
-
-def populate_cor_area_synthese(imprt, source):
-    # Populate synthese / area association table
-    # A synthese entry is associated to an area when the area is enabled,
-    # and when the synthese geom intersects with the area
-    # (we also check the intersection is more than just touches when the geom is not a point)
-    synthese_geom = Synthese.__table__.c.the_geom_local
-    area_geom = LAreas.__table__.c.geom
-    stmt = corAreaSynthese.insert().from_select(
-        names=[
-            corAreaSynthese.c.id_synthese,
-            corAreaSynthese.c.id_area,
-        ],
-        select=select(
-            [
-                Synthese.__table__.c.id_synthese,
-                LAreas.__table__.c.id_area,
-            ]
-        )
-        .select_from(
-            Synthese.__table__.join(
-                LAreas.__table__,
-                sa.func.ST_Intersects(synthese_geom, area_geom),
-            )
-        )
-        .where(
-            (LAreas.__table__.c.enable == True)
-            & (
-                (sa.func.ST_GeometryType(synthese_geom) == "ST_Point")
-                | ~(sa.func.ST_Touches(synthese_geom, area_geom))
-            )
-            & (Synthese.__table__.c.id_source == source.id_source)
-        ),
-    )
-    db.session.execute(stmt)
