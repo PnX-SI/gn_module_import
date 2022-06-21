@@ -597,6 +597,26 @@ class TestImports:
         db.session.refresh(imprt)
         assert len(imprt.errors) == 0
 
+    def test_import_preparation(self, users, content_mapped_import):
+        imprt = content_mapped_import
+        r = self.client.post(
+            url_for("import.prepare_import", import_id=imprt.id_import)
+        )
+        assert r.status_code == Unauthorized.code, r.data
+
+        set_logged_user_cookie(self.client, users["stranger_user"])
+        r = self.client.post(
+            url_for("import.prepare_import", import_id=imprt.id_import)
+        )
+        assert r.status_code == Forbidden.code, r.data
+
+        set_logged_user_cookie(self.client, users["user"])
+        r = self.client.post(
+            url_for("import.prepare_import", import_id=imprt.id_import)
+        )
+        assert r.status_code == 200, r.data
+        assert frozenset(imprt.erroneous_rows) == valid_file_invalid_rows
+
     def test_import_columns(self, users, decoded_import):
         imprt = decoded_import
 
