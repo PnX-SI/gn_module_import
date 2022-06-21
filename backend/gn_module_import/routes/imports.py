@@ -445,6 +445,8 @@ def preview_valid_data(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
+    if not imprt.processed:
+        raise Conflict("Import must have been prepared before executing this action.")
     fields = BibFields.query.filter(
         BibFields.synthese_field != None,
         BibFields.name_field.in_(imprt.fieldmapping.keys()),
