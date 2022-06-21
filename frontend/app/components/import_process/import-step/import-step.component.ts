@@ -97,15 +97,11 @@ export class ImportStepComponent implements OnInit {
             }
         })
     }
+
     openReportSheet() {
         const url = new URL(window.location.href);
         url.hash = this._router.serializeUrl(
-          this._router.createUrlTree(
-            ["../../../", this.importData.id_import, "report"],
-            {
-              relativeTo: this._route,
-            }
-          )
+            this._router.createUrlTree(['import', this.importData.id_import, 'report'])
         );
         window.open(url.href, "_blank");
     }

@@ -101,11 +101,12 @@
                                 <mat-icon>edit</mat-icon>
                             </button>
                             <button
-                                matTooltip="Rapport d'import"
+                                *ngIf="row.errors_count"
+                                matTooltip="Rapport d'erreur"
                                 mat-icon-button
-                                color="primary"
+                                color="warn"
                                 style="margin-top: -10px;"
-                                [routerLink]="[row.id_import, 'report']"
+                                [routerLink]="[row.id_import, 'errors']"
                             >
                                 <mat-icon>warning</mat-icon>
                             </button>

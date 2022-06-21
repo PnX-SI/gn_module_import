@@ -1013,12 +1013,3 @@ class TestImports:
                 ),
             },
         )
-
-    def test_export_pdf(self, users, imports):
-        user = users["user"]
-        imprt = imports["own_import"]
-        set_logged_user_cookie(self.client, user)
-
-        resp = self.client.post(url_for("import.export_pdf", import_id=imprt.id_import))
-
-        assert resp.status_code == 200

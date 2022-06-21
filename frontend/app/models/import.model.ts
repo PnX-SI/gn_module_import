@@ -88,7 +88,6 @@ export interface Nomenclature {
     active: boolean;
     meta_create_date: string;
     meta_update_date: string;
-    id_nomenclature: number;
 }
 
 export interface ImportValues {

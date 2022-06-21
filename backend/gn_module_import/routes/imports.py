@@ -581,7 +581,7 @@ def export_pdf(scope, import_id):
                 'report']
     dataset['url'] = '/'.join(url_list)
     pdf_file = generate_pdf_from_template("import_template_pdf.html", dataset, filename)
-    return send_file(BytesIO(pdf_file),
+    return send_file(io.BytesIO(pdf_file),
                      mimetype='application/pdf', 
                      as_attachment=True,
                      attachment_filename="rapport.pdf")
