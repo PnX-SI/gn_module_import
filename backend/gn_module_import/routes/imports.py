@@ -31,11 +31,13 @@ from gn_module_import.models import (
 from pypnusershub.db.models import User
 from gn_module_import.blueprint import blueprint
 from gn_module_import.utils import (
+    ImportStep,
     get_valid_bbox,
     detect_encoding,
     detect_separator,
     insert_import_data_in_database,
     get_file_size,
+    clean_import,
 )
 from gn_module_import.tasks import do_import_checks, do_import_in_synthese
 
@@ -173,13 +175,7 @@ def upload_file(scope, import_id):
     imprt.source_file = f.read()
     imprt.full_file_name = f.filename
 
-    # reset decode step
-    imprt.columns = None
-    imprt.source_count = None
-    imprt.synthese_data = []
-    imprt.errors = []
-    imprt.erroneous_rows = None
-    imprt.processed = False
+    clean_import(imprt, ImportStep.UPLOAD)
 
     db.session.commit()
     return jsonify(imprt.as_dict())
@@ -222,11 +218,7 @@ def decode_file(scope, import_id):
         raise BadRequest(description='Unknown separator')
     imprt.separator = request.json['separator']
 
-    imprt.source_count = None
-    imprt.synthese_data = []
-    imprt.errors = []
-    imprt.erroneous_rows = None
-    imprt.processed = False
+    clean_import(imprt, ImportStep.DECODE)
 
     db.session.commit()  # commit parameters
 
@@ -266,11 +258,7 @@ def set_import_field_mapping(scope, import_id):
     except ValueError as e:
         raise BadRequest(*e.args)
     imprt.fieldmapping = request.json
-    imprt.source_count = None
-    imprt.synthese_data = []
-    imprt.errors = []
-    imprt.erroneous_rows = None
-    imprt.processed = False
+    clean_import(imprt, ImportStep.LOAD)
     db.session.commit()
     return jsonify(imprt.as_dict())
 
@@ -289,10 +277,7 @@ def load_import(scope, import_id):
         raise BadRequest(description="A file must be first uploaded.")
     if imprt.fieldmapping is None:
         raise BadRequest(description="File fields must be first mapped.")
-    imprt.errors = []
-    imprt.erroneous_rows = None
-    imprt.synthese_data = []
-    imprt.processed = False
+    clean_import(imprt, ImportStep.LOAD)
     line_no = insert_import_data_in_database(imprt)
     if not line_no:
         raise BadRequest("File with 0 lines.")
@@ -399,9 +384,7 @@ def set_import_content_mapping(scope, import_id):
     except ValueError as e:
         raise BadRequest(*e.args)
     imprt.contentmapping = request.json
-    imprt.errors = []
-    imprt.erroneous_rows = None
-    imprt.processed = False
+    clean_import(imprt, ImportStep.PREPARE)
     db.session.commit()
     return jsonify(imprt.as_dict())
 
@@ -425,9 +408,7 @@ def prepare_import(scope, import_id):
         raise Conflict("Field data must have been loaded before executing this action.")
 
     # Remove previous errors
-    imprt.errors = []
-    imprt.erroneous_rows = None
-    imprt.processed = False
+    clean_import(imprt, ImportStep.PREPARE)
 
     # Run background import checks
     sig = do_import_checks.s(imprt.id_import)

@@ -2,6 +2,7 @@ import os
 from io import StringIO
 import csv
 import json
+from enum import IntEnum
 
 from sqlalchemy import func
 from chardet.universaldetector import UniversalDetector
@@ -20,14 +21,39 @@ from gn_module_import.models import (
 )
 
 from geonature.core.gn_commons.models import TModules
-from geonature.core.gn_synthese.models import Synthese, corAreaSynthese
+from geonature.core.gn_synthese.models import Synthese, corAreaSynthese, TSources
 from ref_geo.models import LAreas
+
+
+class ImportStep(IntEnum):
+    UPLOAD = 1
+    DECODE = 2
+    LOAD = 3
+    PREPARE = 4
+    IMPORT = 5
 
 
 generated_fields = {
     "datetime_min": "date_min",
     "datetime_max": "date_max",
 }
+
+
+def clean_import(imprt, step: ImportStep):
+    if step <= ImportStep.UPLOAD:
+        # source_file will be necessary overwritten
+        pass
+    if step <= ImportStep.DECODE:
+        imprt.columns = None
+    if step <= ImportStep.LOAD:
+        imprt.source_count = None
+        imprt.synthese_data = []
+    if step <= ImportStep.PREPARE:
+        imprt.errors = []
+        imprt.erroneous_rows = None
+        imprt.processed = False
+    if step <= ImportStep.IMPORT:
+        pass
 
 
 def get_file_size(f):
