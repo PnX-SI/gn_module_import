@@ -10,7 +10,7 @@
             <div class="row">
                 <div class="col-6">
                         <p> <b> Nom du fichier : </b> {{importData.full_file_name}} </p>
-                        <p> <b> Jeu de données : </b> {{importData.id_dataset}} </p>
+                        <p> <b> Jeu de données : </b> {{importData.dataset.dataset_name}} </p>
                         <p> <b>Date de soumission de l'import :  </b> {{importData.date_create_import | date:'dd/MM/yyyy'}}  </p>
                         <p> <b>Auteur(s) :  </b> {{importData.authors_name}} </p>
                         <p> <b>Nombre de lignes :  </b> {{importData.source_count}} </p>
