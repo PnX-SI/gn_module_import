@@ -21,7 +21,7 @@ from gn_module_import.models import (
 )
 
 from geonature.core.gn_commons.models import TModules
-from geonature.core.gn_synthese.models import Synthese, corAreaSynthese, TSources
+from geonature.core.gn_synthese.models import Synthese, corAreaSynthese
 from ref_geo.models import LAreas
 
 
@@ -40,6 +40,7 @@ generated_fields = {
 
 
 def clean_import(imprt, step: ImportStep):
+    imprt.task_id = None
     if step <= ImportStep.UPLOAD:
         # source_file will be necessary overwritten
         pass
