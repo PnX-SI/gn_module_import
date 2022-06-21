@@ -507,16 +507,8 @@ def get_import_invalid_rows_as_csv(scope, import_id):
     imprt = TImports.query.options(undefer("source_file")).get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
-
-    invalid_rows = (
-        ImportSyntheseData.query.filter_by(imprt=imprt, valid=False)
-        .options(load_only("line_no"))
-        .order_by(ImportSyntheseData.line_no)
-        .all()
-    )
-    invalid_rows = {row.line_no for row in invalid_rows}
-    if imprt.source_count and imprt.source_count == len(invalid_rows):
-        raise BadRequest("Import file has not been processed.")
+    if not imprt.processed:
+        raise Conflict("Import must have been prepared before executing this action.")
 
     filename = imprt.full_file_name.rsplit(".", 1)[0]  # remove extension
     filename = f"{filename}_errors.csv"
@@ -527,7 +519,7 @@ def get_import_invalid_rows_as_csv(scope, import_id):
         line_no = 0
         for row in inputfile:
             line_no += 1
-            if line_no in invalid_rows:
+            if line_no in imprt.erroneous_rows:
                 yield row
 
     response = current_app.response_class(
