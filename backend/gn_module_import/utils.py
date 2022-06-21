@@ -21,7 +21,7 @@ from gn_module_import.models import (
 )
 
 from geonature.core.gn_commons.models import TModules
-from geonature.core.gn_synthese.models import Synthese, corAreaSynthese
+from geonature.core.gn_synthese.models import Synthese, corAreaSynthese, TSources
 from ref_geo.models import LAreas
 
 
@@ -54,7 +54,12 @@ def clean_import(imprt, step: ImportStep):
         imprt.erroneous_rows = None
         imprt.processed = False
     if step <= ImportStep.IMPORT:
-        pass
+        imprt.taxa_count = None
+        imprt.import_count = None
+        imprt.date_end_import = None
+        source = TSources.query.filter_by(name_source=imprt.source_name).one_or_none()
+        if source:
+            Synthese.query.filter(Synthese.source == source).delete()
 
 
 def get_file_size(f):

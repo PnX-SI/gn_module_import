@@ -534,6 +534,8 @@ def import_valid_data(scope, import_id):
     if not valid_data_count:
         raise BadRequest("Not valid data to import")
 
+    clean_import(imprt, ImportStep.IMPORT)
+
     sig = do_import_in_synthese.s(imprt.id_import)
     task = sig.freeze()
     imprt.task_id = task.task_id

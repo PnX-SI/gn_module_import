@@ -145,8 +145,6 @@ def do_import_in_synthese(self, import_id):
             entity_source_pk_field=entity_source_pk_field.synthese_field,
         )
         db.session.add(source)
-    else:
-        Synthese.query.filter(Synthese.source == source).delete()
     toggle_synthese_triggers(enable=False)
     import_data_to_synthese(imprt, source)
     toggle_synthese_triggers(enable=True)
