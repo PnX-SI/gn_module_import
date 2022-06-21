@@ -98,7 +98,7 @@
                                 <mat-icon>edit</mat-icon>
                             </button>
                             <button
-                                *ngIf="row.errors_exists"
+                                *ngIf="row.errors_count"
                                 matTooltip="Rapport d'erreur"
                                 mat-icon-button
                                 color="warn"
@@ -108,7 +108,7 @@
                                 <mat-icon>warning</mat-icon>
                             </button>
                             <button
-                                *ngIf="row.errors_exists"
+                                *ngIf="row.errors_count"
                                 mat-icon-button
                                 color="primary"
                                 style="margin-top: -10px;"

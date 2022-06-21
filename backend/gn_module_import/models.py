@@ -214,9 +214,7 @@ class TImports(InstancePermissionMixin, db.Model):
             for action, scope in scopes_by_action.items()
         }
 
-    errors_exists = column_property(
-        exists().where(ImportUserError.id_import == id_import)
-    )
+    errors_count = column_property(func.array_length(erroneous_rows, 1))
 
     @property
     def task_progress(self):
