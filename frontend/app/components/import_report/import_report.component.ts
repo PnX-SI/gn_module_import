@@ -1,20 +1,18 @@
 import { Component, OnInit } from "@angular/core";
-import { ActivatedRoute, Router } from "@angular/router";
+import { Router } from "@angular/router";
 import { saveAs } from "file-saver";
 import leafletImage from "leaflet-image";
 
 import { MapService } from "@geonature_common/map/map.service";
 import { DataService } from "../../services/data.service";
-import { CsvExportService } from "../../services/csv-export.service";
 import { ImportProcessService } from "../import_process/import-process.service";
 import {
   Import,
   ImportError,
-  ImportValues,
   Nomenclature,
   TaxaDistribution,
 } from "../../models/import.model";
-import { ContentMapping, FieldMapping } from "../../models/mapping.model";
+import { ModuleConfig } from "../../module.config";
 
 interface MatchedNomenclature {
   source: Nomenclature;
@@ -43,16 +41,15 @@ export class ImportReportComponent implements OnInit {
   public expansionPanelHeight: string = "60px";
   public validBbox: any;
   public validData: Array<Object>;
-  public fields: Array<FieldMapping> = [];
   public fieldsNb: Number = 0;
-  public taxaDistribution: TaxaDistribution[];
-  public nomenclature: ImportValues;
-  public contentMapping: Array<ContentMapping>;
-  public matchedNomenclature: MatchedNomenclature[];
+  public taxaDistribution: Array<TaxaDistribution> = [];
+  public matchedNomenclature: Array<MatchedNomenclature> = [];
   public importErrors: Array<ImportError> = [];
   public nbTotalErrors: number = 0;
   public datasetName: string = "";
-  public rank: string = this.rankOptions[0]; //ModuleConfig.DEFAULT_RANK;
+  public rank: string = this.rankOptions.includes(ModuleConfig.DEFAULT_RANK)
+    ? ModuleConfig.DEFAULT_RANK
+    : this.rankOptions[0];
   public doughnutChartLabels: Array<String> = [];
   public doughnutChartData: Array<number> = [];
   public doughnutChartColors: Array<{ backgroundColor: Array<String> }> = [
@@ -69,8 +66,6 @@ export class ImportReportComponent implements OnInit {
   constructor(
     private importProcessService: ImportProcessService,
     private _dataService: DataService,
-    private _csvExport: CsvExportService,
-    private _route: ActivatedRoute,
     private _router: Router,
     private _map: MapService
   ) {}
@@ -84,9 +79,6 @@ export class ImportReportComponent implements OnInit {
     this.loadDatasetName();
     // Add property to show errors lines. Need to do this to
     // show line per line...
-    // data.errors.forEach((element) => {
-    //   element.show = false;
-    // });
     this.loadErrors();
     this.matchNomenclature();
   }
@@ -104,7 +96,6 @@ export class ImportReportComponent implements OnInit {
   }
 
   loadTaxaDistribution() {
-    //FIXME get idSource from import!
     const idSource: number | undefined = this.importData?.id_source;
     if (idSource) {
       this._dataService
@@ -149,7 +140,7 @@ export class ImportReportComponent implements OnInit {
   matchNomenclature() {
     if (this.importData) {
       const mappingValues = this.importData?.contentmapping;
-      const match: MatchedNomenclature[] = [];
+      const match: Array<MatchedNomenclature> = [];
       this._dataService
         .getImportValues(this.importData.id_import)
         .subscribe((importValues) => {

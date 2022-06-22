@@ -111,6 +111,9 @@ DEFAULT_FIELD_MAPPING_ID = 1
 # Parameter to define if the checkbox allowing to change display mode is displayed or not.
 DISPLAY_CHECK_BOX_MAPPED_FIELD = True
 
+# Parameter to define the rank shown in the doughnut chart in the import report
+# must be in ['regne', 'phylum', 'classe', 'ordre', 'famille', 'sous_famille', 'tribu', 'group1_inpn', 'group2_inpn']
+DEFAULT_RANK = "regne"
 
 class GnModuleSchemaConf(Schema):
     LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, load_default=DEFAULT_LIST_COLUMN)
@@ -145,6 +148,7 @@ class GnModuleSchemaConf(Schema):
     CHECK_EXIST_PROOF = fields.Boolean(load_default=True)
     CHECK_TYPE_INFO_GEO = fields.Boolean(load_default=True)
     DEFAULT_GENERATE_MISSING_UUID = fields.Boolean(load_default=True)
+    DEFAULT_RANK = fields.String(load_default=DEFAULT_RANK)
     # If ID is provided (!=-1) will take the geometry in ref_geo.l_areas
     # and checks if all imported points are inside it. Otherwise throws an error
     ID_AREA_RESTRICTION = fields.Integer(load_default=None)
