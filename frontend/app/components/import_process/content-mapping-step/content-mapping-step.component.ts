@@ -92,6 +92,7 @@ export class ContentMappingStepComponent implements OnInit {
                         );
                         if (nomenclature) {
                             control.setValue(nomenclature);
+                            control.markAsDirty();
                         }
                     }
                 });
