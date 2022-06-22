@@ -38,8 +38,8 @@ from gn_module_import.utils import (
     insert_import_data_in_database,
     get_file_size,
     clean_import,
+    generate_pdf_from_template,
 )
-from gn_module_import.utils.pdf import generate_pdf_from_template
 from gn_module_import.tasks import do_import_checks, do_import_in_synthese
 
 IMPORTS_PER_PAGE = 15
@@ -569,7 +569,8 @@ def export_pdf(scope, import_id):
         )
         .get_or_404(import_id)
     )
-    imprt.check_instance_permission(scope)
+    if not imprt.has_instance_permission(scope):
+        raise Forbidden
     dataset = imprt.as_dict(fields=['errors', 'errors.type', 'dataset.dataset_name'])
     
     dataset['map'] = request.form.get('map')
@@ -581,7 +582,7 @@ def export_pdf(scope, import_id):
                 'report']
     dataset['url'] = '/'.join(url_list)
     pdf_file = generate_pdf_from_template("import_template_pdf.html", dataset, filename)
-    return send_file(io.BytesIO(pdf_file),
+    return send_file(BytesIO(pdf_file),
                      mimetype='application/pdf', 
                      as_attachment=True,
                      attachment_filename="rapport.pdf")

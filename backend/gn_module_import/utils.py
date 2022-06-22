@@ -4,6 +4,7 @@ import csv
 import json
 from enum import IntEnum
 
+from flask import current_app, render_template
 from sqlalchemy import func
 from chardet.universaldetector import UniversalDetector
 from sqlalchemy.sql.expression import select, insert, literal
@@ -13,6 +14,7 @@ import numpy as np
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from werkzeug.exceptions import BadRequest
 from geonature.utils.env import db
+from weasyprint import HTML
 
 from gn_module_import import MODULE_CODE
 from gn_module_import.models import (
@@ -235,3 +237,13 @@ def import_data_to_synthese(imprt):
         select=select_stmt,
     )
     db.session.execute(insert_stmt)
+
+
+def generate_pdf_from_template(template, data, filename):
+    template_rendered = render_template(template, data=data)
+    html_file = HTML(
+        string=template_rendered,
+        base_url=current_app.config["API_ENDPOINT"],
+        encoding="utf-8",
+    )
+    return html_file.write_pdf()
