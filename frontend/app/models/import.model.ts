@@ -64,6 +64,7 @@ export interface Import {
     task_id?: string;
     errors?: [ImportError];
     dataset?: Dataset;
+    id_source?: number;
 }
 
 export interface NomenclatureType {

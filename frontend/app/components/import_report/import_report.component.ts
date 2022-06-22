@@ -105,13 +105,15 @@ export class ImportReportComponent implements OnInit {
 
   loadTaxaDistribution() {
     //FIXME get idSource from import!
-    const idSource: number = 1;
-    this._dataService
-      .getTaxaRepartition(idSource, this.rank)
-      .subscribe((data) => {
-        this.taxaDistribution = data;
-        this.updateChart();
-      });
+    const idSource: number | undefined = this.importData?.id_source;
+    if (idSource) {
+      this._dataService
+        .getTaxaRepartition(idSource, this.rank)
+        .subscribe((data) => {
+          this.taxaDistribution = data;
+          this.updateChart();
+        });
+    }
   }
 
   loadDatasetName() {
