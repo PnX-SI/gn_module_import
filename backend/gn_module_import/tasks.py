@@ -132,18 +132,16 @@ def do_import_in_synthese(self, import_id):
     if imprt is None or imprt.task_id != self.request.id:
         logger.warning("Task cancelled, doing nothing.")
         return
-    source = TSources.query.filter_by(name_source=imprt.source_name).one_or_none()
-    if not source:
+    if not imprt.source:
         entity_source_pk_field = BibFields.query.filter_by(
             name_field="entity_source_pk_value"
         ).one()
-        source = TSources(
+        imprt.source = TSources(
             name_source=imprt.source_name,
             desc_source="Imported data from import module (id={import_id})",
             entity_source_pk_field=entity_source_pk_field.synthese_field,
         )
-        db.session.add(source)
-    import_data_to_synthese(imprt, source)
+    import_data_to_synthese(imprt)
     ImportSyntheseData.query.filter_by(imprt=imprt).delete()
     imprt = TImports.query.with_for_update(of=TImports).get(import_id)
     if imprt is None or imprt.task_id != self.request.id:
@@ -156,12 +154,12 @@ def do_import_in_synthese(self, import_id):
         imprt.task_id = None
         imprt.import_count = (
             db.session.query(func.count(Synthese.id_synthese))
-            .filter_by(source=source)
+            .filter_by(source=imprt.source)
             .scalar()
         )
         imprt.taxa_count = (
             db.session.query(func.count(distinct(Synthese.cd_nom)))
-            .filter_by(source=source)
+            .filter_by(source=imprt.source)
             .scalar()
         )
         db.session.commit()

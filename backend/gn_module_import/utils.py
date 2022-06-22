@@ -59,9 +59,9 @@ def clean_import(imprt, step: ImportStep):
         imprt.taxa_count = None
         imprt.import_count = None
         imprt.date_end_import = None
-        source = TSources.query.filter_by(name_source=imprt.source_name).one_or_none()
-        if source:
-            Synthese.query.filter(Synthese.source == source).delete()
+        if imprt.source:
+            Synthese.query.filter(Synthese.source == imprt.source).delete()
+            imprt.source = None
 
 
 def get_file_size(f):
@@ -200,7 +200,7 @@ def update_import_data_from_dataframe(imprt, fields, df):
     db.session.execute(insert_stmt)
 
 
-def import_data_to_synthese(imprt, source):
+def import_data_to_synthese(imprt):
     generated_fields = {
         "datetime_min",
         "datetime_max",
@@ -223,7 +223,7 @@ def import_data_to_synthese(imprt, source):
             *[getattr(ImportSyntheseData, field.synthese_field) for field in fields]
         )
         .add_columns(
-            literal(source.id_source),
+            literal(imprt.id_source),
             literal(TModules.query.filter_by(module_code=MODULE_CODE).one().id_module),
             literal(imprt.id_dataset),
             literal("I"),

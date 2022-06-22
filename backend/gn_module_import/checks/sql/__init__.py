@@ -340,7 +340,7 @@ def set_uuid(imprt, fields):
             whereclause=sa.and_(
                 ImportSyntheseData.unique_id_sinp == Synthese.unique_id_sinp,
                 Synthese.id_dataset == imprt.id_dataset,
-                ~Synthese.source.has(TSources.name_source == imprt.source_name),
+                Synthese.source != imprt.source,
             ),
         )
     if imprt.fieldmapping.get("unique_id_sinp_generate", False):

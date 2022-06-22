@@ -561,10 +561,9 @@ def delete_import(scope, import_id):
         raise Forbidden("Le jeu de données est fermé.")
     ImportUserError.query.filter_by(imprt=imprt).delete()
     ImportSyntheseData.query.filter_by(imprt=imprt).delete()
-    source = TSources.query.filter_by(name_source=imprt.source_name).one_or_none()
-    if source:
-        Synthese.query.filter_by(source=source).delete()
-        db.session.delete(source)
+    if imprt.source:
+        Synthese.query.filter_by(source=imprt.source).delete()
+        imprt.source = None
     db.session.delete(imprt)
     db.session.commit()
     return jsonify()
