@@ -26,7 +26,7 @@ export class ImportStepComponent implements OnInit {
     public nValidData: number;
     public nInvalidData: number;
     public validBbox: any;
-    public spinner: boolean = true;
+    public spinner: boolean = false;
     // public nbLignes: string = "X";
     public errorCount: number;
     public warningCount: number;
@@ -36,6 +36,7 @@ export class ImportStepComponent implements OnInit {
     public importRunning: boolean = false;
     public importDone: boolean = false;
     public progressBar: boolean = false;
+    public errorStatus: string = "";
     private timeout: number = 100;
 
     @ViewChild("modalRedir") modalRedir: any;
@@ -54,7 +55,6 @@ export class ImportStepComponent implements OnInit {
       this.step = this._route.snapshot.data.step;
       this.importData = this.importProcessService.getImportData();
       // TODO : parallel requests, spinner
-      this.setImportData()
       if (this.importData.task_progress !== null && this.importData.task_id !== null) {
           if (this.importData.processed) {
               this.importDone = false
@@ -65,6 +65,8 @@ export class ImportStepComponent implements OnInit {
               this.progressBar = true
               this.verifyChecksDone()
           }
+      } else if (this.importData.processed) {
+           this.setImportData()
       }
     }
     setImportData() {
@@ -117,6 +119,7 @@ export class ImportStepComponent implements OnInit {
                 } else if (importData.task_progress === -1){
                     this.timeout = 100
                     this.progress = 0
+                    this.errorStatus= "check"
                     this.progressBar = false
                 } else {
                     this.progress = 100 * importData.task_progress
@@ -143,6 +146,7 @@ export class ImportStepComponent implements OnInit {
                     this.importDone = true
                     this._commonService.regularToaster("info", "Données importées !");
                 } else if (importData.task_progress === -1){
+                    this.errorStatus = "import"
                     this.importRunning = false
                 } else {
                     this.progress = 100 * importData.task_progress
