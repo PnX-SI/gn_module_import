@@ -167,6 +167,8 @@ def upload_file(scope, import_id):
         imprt = TImports(dataset=dataset)
         imprt.authors.append(author)
         db.session.add(imprt)
+    else:
+        clean_import(imprt, ImportStep.UPLOAD)
     imprt.detected_encoding = detect_encoding(f)
     imprt.detected_separator = detect_separator(
         f,
@@ -174,8 +176,6 @@ def upload_file(scope, import_id):
     )
     imprt.source_file = f.read()
     imprt.full_file_name = f.filename
-
-    clean_import(imprt, ImportStep.UPLOAD)
 
     db.session.commit()
     return jsonify(imprt.as_dict())
@@ -282,6 +282,7 @@ def load_import(scope, import_id):
     if not line_no:
         raise BadRequest("File with 0 lines.")
     imprt.source_count = line_no
+    imprt.loaded = True
     db.session.commit()
     return jsonify(imprt.as_dict())
 
@@ -318,10 +319,8 @@ def get_import_values(scope, import_id):
     # check that the user has read permission to this particular import instance:
     if not imprt.has_instance_permission(scope):
         raise Forbidden
-    if not imprt.source_count:
-        raise Conflict(
-            description="Data have not been loaded {}.".format(imprt.source_count)
-        )
+    if not imprt.loaded:
+        raise Conflict(description="Data have not been loaded")
     nomenclated_fields = (
         BibFields.query.filter(BibFields.mnemonique != None)
         .join(BibFields.nomenclature_type)
@@ -404,7 +403,7 @@ def prepare_import(scope, import_id):
         raise Forbidden("Le jeu de données est fermé.")
 
     # Check preconditions to execute this action
-    if not imprt.source_count:
+    if not imprt.loaded:
         raise Conflict("Field data must have been loaded before executing this action.")
 
     # Remove previous errors

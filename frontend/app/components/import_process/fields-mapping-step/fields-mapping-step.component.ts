@@ -336,7 +336,7 @@ export class FieldsMappingStepComponent implements OnInit {
           }
       }),
       concatMap((importData: Import) => {
-          if (!importData.source_count && loadImport) {
+          if (!importData.loaded && loadImport) {
               return this._ds.loadImport(importData.id_import)
           } else {
               return of(importData);

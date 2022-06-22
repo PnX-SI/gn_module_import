@@ -191,6 +191,7 @@ def loaded_import(client, field_mapped_import):
         field_mapped_import.source_count = insert_import_data_in_database(
             field_mapped_import
         )
+        field_mapped_import.loaded = True
     return field_mapped_import
 
 
@@ -507,6 +508,8 @@ class TestImports:
         db.session.refresh(imprt)
         assert imprt.source_file is not None
         assert imprt.source_count == None
+        assert imprt.loaded == False
+        assert imprt.processed == False
         assert imprt.full_file_name == "utf8_file.csv"
         assert imprt.columns == None
         assert len(imprt.errors) == 0
@@ -645,6 +648,7 @@ class TestImports:
         r = self.client.post(url_for("import.load_import", import_id=imprt.id_import))
         assert r.status_code == 200, r.data
         assert r.json["source_count"] == valid_file_line_count
+        assert r.json["loaded"] == True
         assert (
             ImportSyntheseData.query.filter_by(id_import=imprt.id_import).count()
             == r.json["source_count"]
@@ -854,6 +858,7 @@ class TestImports:
         assert r.status_code == 200, r.data
         assert r.json["source_count"] == valid_file_line_count
         assert imprt.source_count == valid_file_line_count
+        assert imprt.loaded == True
         assert (
             ImportSyntheseData.query.filter_by(imprt=imprt).count()
             == test_file_line_count

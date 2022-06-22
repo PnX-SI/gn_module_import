@@ -43,12 +43,14 @@ def clean_import(imprt, step: ImportStep):
     imprt.task_id = None
     if step <= ImportStep.UPLOAD:
         # source_file will be necessary overwritten
+        # source_count will be necessary overwritten
         pass
     if step <= ImportStep.DECODE:
         imprt.columns = None
     if step <= ImportStep.LOAD:
-        imprt.source_count = None
         imprt.synthese_data = []
+        imprt.source_count = None
+        imprt.loaded = False
     if step <= ImportStep.PREPARE:
         imprt.errors = []
         imprt.erroneous_rows = None

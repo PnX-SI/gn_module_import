@@ -152,7 +152,7 @@ def do_import_in_synthese(self, import_id):
     else:
         logger.info("All done, committing…")
         imprt.date_end_import = datetime.now()
-        imprt.source_count = 0
+        imprt.loaded = False
         imprt.task_id = None
         imprt.import_count = (
             db.session.query(func.count(Synthese.id_synthese))
