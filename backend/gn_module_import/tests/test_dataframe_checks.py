@@ -10,12 +10,20 @@ from geonature.utils.config import config
 from geonature import create_app
 from geonature.core.gn_synthese.models import Synthese
 from geonature.tests.fixtures import synthese_data
+from shapely.geometry import Point
 
 from gn_module_import.models import TImports, BibFields
 from gn_module_import.checks.dataframe import *
+from gn_module_import.checks.dataframe.geography import check_wkt_inside_area_id, check_geometry_inside_l_areas
+from ref_geo.models import LAreas
 
 
 Error = namedtuple('Error', ['error_code', 'column', 'invalid_rows'], defaults=([],))
+
+
+@pytest.fixture()
+def sample_area():
+    return LAreas.query.filter(LAreas.area_name=="Bouches-du-Rhône").one()
 
 
 @pytest.fixture()
@@ -140,6 +148,31 @@ class TestChecks:
             Error(error_code='MULTIPLE_CODE_ATTACHMENT', column='Champs géométriques', invalid_rows=frozenset([8,9,10, 11])),
             Error(error_code='INVALID_WKT', column='WKT', invalid_rows=frozenset([15])),
             Error(error_code='INVALID_GEOMETRY', column='longitude', invalid_rows=frozenset([16])),
+        ])
+
+    def test_check_geography_outside(self, imprt, sample_area):
+        fields = get_fields([
+            'WKT', 'latitude', 'longitude', 'codecommune', 'codemaille', 'codedepartement',
+        ])
+        df = pd.DataFrame(
+            [
+                ['Point(600000 7000000)', None, None, None, None, None],
+                # [4] XY
+                [None, '600000', '7000000', None, None, None],
+            ],
+            columns=[field.source_field for field in fields.values()],
+        )
+        
+        errors = check_geography(
+            df,
+            fields,
+            file_srid=imprt.srid,
+            id_area=sample_area.id_area
+        )
+
+        assert_errors(errors, expected=[
+            Error(error_code='GEOMETRY_OUTSIDE', column='WKT', invalid_rows=frozenset([0])),
+            Error(error_code='GEOMETRY_OUTSIDE', column='longitude', invalid_rows=frozenset([1]))
         ])
 
     def test_check_types(self, imprt):
@@ -302,3 +335,39 @@ class TestChecks:
                 ],
             ),
         )
+    
+    def test_check_wkt_inside_area_id(self, imprt, sample_area):
+        wkt = 'POINT(900000 6250000)'
+
+        check = check_wkt_inside_area_id(id_area=sample_area.id_area,
+                                         wkt=wkt,
+                                         wkt_srid=imprt.srid)
+
+        assert check
+    
+    def test_check_wkt_inside_area_id_outside(self, imprt, sample_area):
+        wkt = 'Point(6000000 700000)'
+
+        check = check_wkt_inside_area_id(id_area=sample_area.id_area,
+                                         wkt=wkt,
+                                         wkt_srid=imprt.srid)
+
+        assert not check
+    
+    def test_check_geometry_inside_l_areas(self, imprt, sample_area):
+        point = Point(900000, 6250000)
+
+        check = check_geometry_inside_l_areas(id_area=sample_area.id_area,
+                                              geometry=point,
+                                              geom_srid=imprt.srid)
+
+        assert check
+    
+    def test_check_geometry_inside_l_areas_outside(self, imprt, sample_area):
+        point = Point(6000000, 700000)
+
+        check = check_geometry_inside_l_areas(id_area=sample_area.id_area,
+                                              geometry=point,
+                                              geom_srid=imprt.srid)
+
+        assert not check

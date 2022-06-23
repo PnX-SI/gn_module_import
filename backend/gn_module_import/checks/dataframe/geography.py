@@ -2,12 +2,14 @@ from typing import Dict
 from functools import partial
 
 import sqlalchemy as sa
-from geoalchemy2.functions import ST_Transform, ST_GeomFromWKB
+from geoalchemy2.functions import ST_Transform, ST_GeomFromWKB, ST_GeomFromText
 import pandas as pd
 from shapely import wkt
 from shapely.geometry import Point, Polygon
+from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform
 from pyproj import CRS, Transformer
+from ref_geo.models import LAreas
 
 from geonature.utils.env import db
 
@@ -49,10 +51,39 @@ def check_bound(p, bounding_box: Polygon):
     return p.within(bounding_box)
 
 
+def check_geometry_inside_l_areas(geometry: BaseGeometry, id_area: int, geom_srid: int):
+    """
+    Like check_wkt_inside_l_areas but with a conversion before
+    """
+    wkt = geometry.wkt
+    return check_wkt_inside_area_id(wkt=wkt, id_area=id_area, wkt_srid=geom_srid)
+
+
+def check_wkt_inside_area_id(wkt: str, id_area: int, wkt_srid: int):
+    """
+    Checks if the provided wkt is inside the area defined
+    by id_area
+    Args:
+        wkt(str): geometry to check if inside the area
+        id_area(int): id to get the area in ref_geo.l_areas
+        wkt_srid(str): srid of the provided wkt
+    """
+    local_srid = db.session.execute(
+        sa.func.Find_SRID("ref_geo", "l_areas", "geom")
+    ).scalar()
+    query = LAreas.query.filter(LAreas.id_area==id_area).filter(
+        LAreas.geom.ST_Contains(
+            ST_Transform(ST_GeomFromText(wkt, wkt_srid), local_srid)))
+    data = query.first()
+
+    return data is not None
+
+
 def check_geography(
     df,
     fields: Dict[str, BibFields],
     file_srid,
+    id_area:int=None,
 ):
     file_srid_bounding_box = get_srid_bounding_box(file_srid)
 
@@ -112,6 +143,21 @@ def check_geography(
                 'column': column,
                 'invalid_rows': out_of_bound,
             })
+        
+        if id_area is not None:
+            inside = df[mask & df['_geom'].notnull()]['_geom'].apply(
+                partial(check_geometry_inside_l_areas, id_area=id_area, geom_srid=file_srid)
+            )
+
+            is_outside = df[mask & ~inside]
+
+            if len(is_outside):
+                df.loc[mask & ~bound, '_geom'] = None
+                errors.append({
+                    'error_code': 'GEOMETRY_OUTSIDE',
+                    'column': column,
+                    'invalid_rows': is_outside,
+                })
 
     if 'codecommune' in fields:
         codecommune_field = fields['codecommune'].source_field
