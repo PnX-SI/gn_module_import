@@ -84,7 +84,12 @@ def _run_all_checks(imprt, fields: Dict[str, BibFields], df):
     concat_dates(df, fields)
     yield from check_required_values(df, fields)
     yield from check_types(df, fields)
-    yield from check_geography(df, fields, file_srid=imprt.srid)
+    yield from check_geography(
+        df,
+        fields,
+        file_srid=imprt.srid,
+        id_area=current_app.config["IMPORT"]["ID_AREA_RESTRICTION"],
+    )
     yield from check_counts(df, fields)
 
 
