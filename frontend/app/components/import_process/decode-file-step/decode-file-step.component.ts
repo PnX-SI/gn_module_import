@@ -86,7 +86,6 @@ export class DecodeFileStepComponent implements OnInit {
         },
         error => {
           this.isRequestPending = false;
-          this.commonService.regularToaster("error", error.error.description);
         },
       );
   }
