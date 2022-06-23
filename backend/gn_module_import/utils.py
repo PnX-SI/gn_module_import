@@ -88,7 +88,11 @@ def detect_encoding(f):
 def detect_separator(f, encoding):
     position = f.tell()
     f.seek(0)
-    sample = f.readline().decode(encoding)
+    try:
+        sample = f.readline().decode(encoding)
+    except UnicodeDecodeError:
+        # encoding is likely to be detected encoding, so prompt to errors
+        return None
     if sample == '\n':  # files that do not start with column names
         raise BadRequest("File must start with columns")
     dialect = csv.Sniffer().sniff(sample)

@@ -31,7 +31,7 @@ export interface Import {
     format_source_file: string;
     srid: number;
     separator: string;
-    detected_separator: string;
+    detected_separator: null | string;
     encoding: string;
     detected_encoding: string;
     import_table: string;
