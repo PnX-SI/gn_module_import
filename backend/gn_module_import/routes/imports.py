@@ -231,7 +231,10 @@ def decode_file(scope, import_id):
         try:
             csvfile = StringIO(imprt.source_file.decode(imprt.encoding))
         except UnicodeError as e:
-            raise BadRequest(description=str(e))
+            raise BadRequest(
+                description="Erreur d’encodage lors de la lecture du fichier source. "
+                "Avez-vous sélectionné le bon encodage de votre fichier ?"
+            )
         csvreader = csv.reader(csvfile, delimiter=imprt.separator)
         columns = next(csvreader)
         duplicates = set([col for col in columns if columns.count(col) > 1])
