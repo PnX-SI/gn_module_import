@@ -24,17 +24,6 @@ def upgrade():
         table_name="dict_fields", column_name="nomenclature", schema="gn_imports"
     )
 
-    op.execute(
-        """
-    UPDATE
-        gn_imports.dict_fields
-    SET
-        name_field = 'additional_data'
-    WHERE
-        name_field = 'additionnal_data'
-    """
-    )
-
     op.alter_column(
         table_name="dict_fields",
         column_name="synthese_field",
@@ -470,17 +459,6 @@ def downgrade():
         column_name="is_synthese_field",
         new_column_name="synthese_field",
         schema="gn_imports",
-    )
-
-    op.execute(
-        """
-    UPDATE
-        gn_imports.dict_fields
-    SET
-        name_field = 'additionnal_data'
-    WHERE
-        name_field = 'additional_data'
-    """
     )
 
     op.add_column(

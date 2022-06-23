@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import func, distinct
+from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from celery.utils.log import get_task_logger
 
 from geonature.core.gn_synthese.models import Synthese, TSources
@@ -13,9 +14,7 @@ from gn_module_import.checks.dataframe.geography import set_the_geom_column
 from gn_module_import.utils import (
     load_import_data_in_dataframe,
     update_import_data_from_dataframe,
-    toggle_synthese_triggers,
     import_data_to_synthese,
-    populate_cor_area_synthese,
 )
 from gn_module_import.checks.sql import (
     do_nomenclatures_mapping,
@@ -112,6 +111,17 @@ def do_import_checks(self, import_id):
         logger.info("All done, committing…")
         imprt.processed = True
         imprt.task_id = None
+        imprt.erroneous_rows = (
+            db.session.query(
+                array_agg(
+                    aggregate_order_by(
+                        ImportSyntheseData.line_no, ImportSyntheseData.line_no
+                    )
+                )
+            )
+            .filter_by(imprt=imprt, valid=False)
+            .scalar()
+        )
         db.session.commit()
 
 
@@ -122,23 +132,16 @@ def do_import_in_synthese(self, import_id):
     if imprt is None or imprt.task_id != self.request.id:
         logger.warning("Task cancelled, doing nothing.")
         return
-    source = TSources.query.filter_by(name_source=imprt.source_name).one_or_none()
-    if not source:
+    if not imprt.source:
         entity_source_pk_field = BibFields.query.filter_by(
             name_field="entity_source_pk_value"
         ).one()
-        source = TSources(
+        imprt.source = TSources(
             name_source=imprt.source_name,
             desc_source="Imported data from import module (id={import_id})",
             entity_source_pk_field=entity_source_pk_field.synthese_field,
         )
-        db.session.add(source)
-    else:
-        Synthese.query.filter(Synthese.source == source).delete()
-    toggle_synthese_triggers(enable=False)
-    import_data_to_synthese(imprt, source)
-    toggle_synthese_triggers(enable=True)
-    populate_cor_area_synthese(imprt, source)
+    import_data_to_synthese(imprt)
     ImportSyntheseData.query.filter_by(imprt=imprt).delete()
     imprt = TImports.query.with_for_update(of=TImports).get(import_id)
     if imprt is None or imprt.task_id != self.request.id:
@@ -147,16 +150,16 @@ def do_import_in_synthese(self, import_id):
     else:
         logger.info("All done, committing…")
         imprt.date_end_import = datetime.now()
-        imprt.source_count = 0
+        imprt.loaded = False
         imprt.task_id = None
         imprt.import_count = (
             db.session.query(func.count(Synthese.id_synthese))
-            .filter_by(source=source)
+            .filter_by(source=imprt.source)
             .scalar()
         )
         imprt.taxa_count = (
             db.session.query(func.count(distinct(Synthese.cd_nom)))
-            .filter_by(source=source)
+            .filter_by(source=imprt.source)
             .scalar()
         )
         db.session.commit()

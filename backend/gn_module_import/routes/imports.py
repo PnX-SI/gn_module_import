@@ -31,11 +31,13 @@ from gn_module_import.models import (
 from pypnusershub.db.models import User
 from gn_module_import.blueprint import blueprint
 from gn_module_import.utils import (
+    ImportStep,
     get_valid_bbox,
     detect_encoding,
     detect_separator,
     insert_import_data_in_database,
     get_file_size,
+    clean_import,
 )
 from gn_module_import.tasks import do_import_checks, do_import_in_synthese
 
@@ -165,6 +167,8 @@ def upload_file(scope, import_id):
         imprt = TImports(dataset=dataset)
         imprt.authors.append(author)
         db.session.add(imprt)
+    else:
+        clean_import(imprt, ImportStep.UPLOAD)
     imprt.detected_encoding = detect_encoding(f)
     imprt.detected_separator = detect_separator(
         f,
@@ -172,13 +176,6 @@ def upload_file(scope, import_id):
     )
     imprt.source_file = f.read()
     imprt.full_file_name = f.filename
-
-    # reset decode step
-    imprt.columns = None
-    imprt.source_count = None
-    imprt.synthese_data = []
-    imprt.errors = []
-    imprt.processed = False
 
     db.session.commit()
     return jsonify(imprt.as_dict())
@@ -221,10 +218,7 @@ def decode_file(scope, import_id):
         raise BadRequest(description='Unknown separator')
     imprt.separator = request.json['separator']
 
-    imprt.source_count = None
-    imprt.synthese_data = []
-    imprt.errors = []
-    imprt.processed = False
+    clean_import(imprt, ImportStep.DECODE)
 
     db.session.commit()  # commit parameters
 
@@ -237,7 +231,10 @@ def decode_file(scope, import_id):
         try:
             csvfile = StringIO(imprt.source_file.decode(imprt.encoding))
         except UnicodeError as e:
-            raise BadRequest(description=str(e))
+            raise BadRequest(
+                description="Erreur d’encodage lors de la lecture du fichier source. "
+                "Avez-vous sélectionné le bon encodage de votre fichier ?"
+            )
         csvreader = csv.reader(csvfile, delimiter=imprt.separator)
         columns = next(csvreader)
         duplicates = set([col for col in columns if columns.count(col) > 1])
@@ -264,10 +261,7 @@ def set_import_field_mapping(scope, import_id):
     except ValueError as e:
         raise BadRequest(*e.args)
     imprt.fieldmapping = request.json
-    imprt.source_count = None
-    imprt.synthese_data = []
-    imprt.errors = []
-    imprt.processed = False
+    clean_import(imprt, ImportStep.LOAD)
     db.session.commit()
     return jsonify(imprt.as_dict())
 
@@ -286,13 +280,12 @@ def load_import(scope, import_id):
         raise BadRequest(description="A file must be first uploaded.")
     if imprt.fieldmapping is None:
         raise BadRequest(description="File fields must be first mapped.")
-    imprt.errors = []
-    imprt.synthese_data = []
-    imprt.processed = False
+    clean_import(imprt, ImportStep.LOAD)
     line_no = insert_import_data_in_database(imprt)
     if not line_no:
         raise BadRequest("File with 0 lines.")
     imprt.source_count = line_no
+    imprt.loaded = True
     db.session.commit()
     return jsonify(imprt.as_dict())
 
@@ -329,10 +322,8 @@ def get_import_values(scope, import_id):
     # check that the user has read permission to this particular import instance:
     if not imprt.has_instance_permission(scope):
         raise Forbidden
-    if not imprt.source_count:
-        raise Conflict(
-            description="Data have not been loaded {}.".format(imprt.source_count)
-        )
+    if not imprt.loaded:
+        raise Conflict(description="Data have not been loaded")
     nomenclated_fields = (
         BibFields.query.filter(BibFields.mnemonique != None)
         .join(BibFields.nomenclature_type)
@@ -395,9 +386,7 @@ def set_import_content_mapping(scope, import_id):
     except ValueError as e:
         raise BadRequest(*e.args)
     imprt.contentmapping = request.json
-    imprt.errors = []
-    # TODO: set valid = False on all rows
-    imprt.processed = False
+    clean_import(imprt, ImportStep.PREPARE)
     db.session.commit()
     return jsonify(imprt.as_dict())
 
@@ -417,12 +406,11 @@ def prepare_import(scope, import_id):
         raise Forbidden("Le jeu de données est fermé.")
 
     # Check preconditions to execute this action
-    if not imprt.source_count:
+    if not imprt.loaded:
         raise Conflict("Field data must have been loaded before executing this action.")
 
     # Remove previous errors
-    imprt.errors = []
-    imprt.processed = False
+    clean_import(imprt, ImportStep.PREPARE)
 
     # Run background import checks
     sig = do_import_checks.s(imprt.id_import)
@@ -440,6 +428,8 @@ def preview_valid_data(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
+    if not imprt.processed:
+        raise Conflict("Import must have been prepared before executing this action.")
     fields = BibFields.query.filter(
         BibFields.synthese_field != None,
         BibFields.name_field.in_(imprt.fieldmapping.keys()),
@@ -500,16 +490,8 @@ def get_import_invalid_rows_as_csv(scope, import_id):
     imprt = TImports.query.options(undefer("source_file")).get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
-
-    invalid_rows = (
-        ImportSyntheseData.query.filter_by(imprt=imprt, valid=False)
-        .options(load_only("line_no"))
-        .order_by(ImportSyntheseData.line_no)
-        .all()
-    )
-    invalid_rows = {row.line_no for row in invalid_rows}
-    if imprt.source_count and imprt.source_count == len(invalid_rows):
-        raise BadRequest("Import file has not been processed.")
+    if not imprt.processed:
+        raise Conflict("Import must have been prepared before executing this action.")
 
     filename = imprt.full_file_name.rsplit(".", 1)[0]  # remove extension
     filename = f"{filename}_errors.csv"
@@ -520,7 +502,7 @@ def get_import_invalid_rows_as_csv(scope, import_id):
         line_no = 0
         for row in inputfile:
             line_no += 1
-            if line_no in invalid_rows:
+            if line_no in imprt.erroneous_rows:
                 yield row
 
     response = current_app.response_class(
@@ -554,6 +536,8 @@ def import_valid_data(scope, import_id):
     if not valid_data_count:
         raise BadRequest("Not valid data to import")
 
+    clean_import(imprt, ImportStep.IMPORT)
+
     sig = do_import_in_synthese.s(imprt.id_import)
     task = sig.freeze()
     imprt.task_id = task.task_id
@@ -580,10 +564,9 @@ def delete_import(scope, import_id):
         raise Forbidden("Le jeu de données est fermé.")
     ImportUserError.query.filter_by(imprt=imprt).delete()
     ImportSyntheseData.query.filter_by(imprt=imprt).delete()
-    source = TSources.query.filter_by(name_source=imprt.source_name).one_or_none()
-    if source:
-        Synthese.query.filter_by(source=source).delete()
-        db.session.delete(source)
+    if imprt.source:
+        Synthese.query.filter_by(source=imprt.source).delete()
+        imprt.source = None
     db.session.delete(imprt)
     db.session.commit()
     return jsonify()

@@ -36,17 +36,25 @@
                         [maxWidth]="col.max_width"
                         [sortable]="col.filter"
                     >
-                        <div *ngIf="col.prop=='dataset.dataset_name'">
                             <ng-template
                                 let-row="row"
                                 ngx-datatable-cell-template
                             >
-                                <a
-                                    routerLink="/metadata/dataset_detail/{{row.id_dataset}}"
-                                    matTooltip="{{col.name}}"
-                                >{{row.dataset.dataset_name}}</a>
+                                <div *ngIf="col.prop=='dataset.dataset_name' else dateBlock">
+                                    <a
+                                            routerLink="/metadata/dataset_detail/{{row.id_dataset}}"
+                                            matTooltip="{{col.name}}"
+                                    >{{row.dataset ? row.dataset.dataset_name : ''}}</a>
+                                </div>
+                                <ng-template #dateBlock>
+                                    <ng-container *ngIf="col.prop=='date_create_import' else defaultBlock">
+                                        {{row.date_create_import |date:'dd-MM-yyyy'}}
+                                    </ng-container>
+                                </ng-template>
+                                <ng-template #defaultBlock>
+                                    {{row[col.prop]}}
+                                </ng-template>
                             </ng-template>
-                        </div>
                         <div *ngIf="col.prop=='date_create_import'">
                             <ng-template
                                 let-row="row"
@@ -90,7 +98,7 @@
                                 <mat-icon>edit</mat-icon>
                             </button>
                             <button
-                                *ngIf="row.errors_exists"
+                                *ngIf="row.errors_count"
                                 matTooltip="Rapport d'erreur"
                                 mat-icon-button
                                 color="warn"
@@ -100,7 +108,7 @@
                                 <mat-icon>warning</mat-icon>
                             </button>
                             <button
-                                *ngIf="row.errors_exists"
+                                *ngIf="row.errors_count"
                                 mat-icon-button
                                 color="primary"
                                 style="margin-top: -10px;"
@@ -137,7 +145,7 @@
                 <import-delete
                     [row]="deleteOne"
                     [c]="c"
-                    (onDelete)="onImportList()"
+                    (onDelete)="onImportList(offset, search_string)"
                 >
                 </import-delete>
 

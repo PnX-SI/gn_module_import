@@ -4,13 +4,16 @@
         Validation
     </h4>
     <div class="card-body">
-        <div *ngIf="!progressBar">
+        <div *ngIf="!progressBar && errorStatus!=='check'">
         <p>Avant de procéder à l'import de vos données, il est nécessaire de valider la conformité de ces dernières</p>
         <button (click)="performChecks()"
                 mat-raised-button
                 color="primary">
             Lancer la vérification
         </button>
+        </div>
+        <div *ngIf="errorStatus==='check'">
+            Erreur lors de la vérification, veuillez vérifier votre fichier
         </div>
         <div *ngIf="progressBar">
             <div class="d-flex justify-content-center align-items-center">
@@ -132,7 +135,7 @@
                     Précédent
                 </button>
                 <button
-                    *ngIf="nValidData > 0 && !importDone"
+                    *ngIf="nValidData > 0 && !importDone && errorStatus !== 'import'"
                     class="d-flex justify-content-center align-content-between button-success"
                     (click)="onImport()"
                     mat-raised-button
@@ -141,6 +144,9 @@
                     <mat-icon>done</mat-icon>
 
                 </button>
+                <div *ngIf="errorStatus === 'import'">
+                    Erreur lors de l'import des données
+                </div>
             </div>
         </div>
     </div>

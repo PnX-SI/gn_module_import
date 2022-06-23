@@ -2,6 +2,7 @@ import os
 from io import StringIO
 import csv
 import json
+from enum import IntEnum
 
 from sqlalchemy import func
 from chardet.universaldetector import UniversalDetector
@@ -20,14 +21,47 @@ from gn_module_import.models import (
 )
 
 from geonature.core.gn_commons.models import TModules
-from geonature.core.gn_synthese.models import Synthese, corAreaSynthese
+from geonature.core.gn_synthese.models import Synthese, corAreaSynthese, TSources
 from ref_geo.models import LAreas
+
+
+class ImportStep(IntEnum):
+    UPLOAD = 1
+    DECODE = 2
+    LOAD = 3
+    PREPARE = 4
+    IMPORT = 5
 
 
 generated_fields = {
     "datetime_min": "date_min",
     "datetime_max": "date_max",
 }
+
+
+def clean_import(imprt, step: ImportStep):
+    imprt.task_id = None
+    if step <= ImportStep.UPLOAD:
+        # source_file will be necessary overwritten
+        # source_count will be necessary overwritten
+        pass
+    if step <= ImportStep.DECODE:
+        imprt.columns = None
+    if step <= ImportStep.LOAD:
+        imprt.synthese_data = []
+        imprt.source_count = None
+        imprt.loaded = False
+    if step <= ImportStep.PREPARE:
+        imprt.errors = []
+        imprt.erroneous_rows = None
+        imprt.processed = False
+    if step <= ImportStep.IMPORT:
+        imprt.taxa_count = None
+        imprt.import_count = None
+        imprt.date_end_import = None
+        if imprt.source:
+            Synthese.query.filter(Synthese.source == imprt.source).delete()
+            imprt.source = None
 
 
 def get_file_size(f):
@@ -54,7 +88,11 @@ def detect_encoding(f):
 def detect_separator(f, encoding):
     position = f.tell()
     f.seek(0)
-    sample = f.readline().decode(encoding)
+    try:
+        sample = f.readline().decode(encoding)
+    except UnicodeDecodeError:
+        # encoding is likely to be detected encoding, so prompt to errors
+        return None
     if sample == '\n':  # files that do not start with column names
         raise BadRequest("File must start with columns")
     dialect = csv.Sniffer().sniff(sample)
@@ -166,17 +204,7 @@ def update_import_data_from_dataframe(imprt, fields, df):
     db.session.execute(insert_stmt)
 
 
-def toggle_synthese_triggers(enable):
-    triggers = ["tri_meta_dates_change_synthese", "tri_insert_cor_area_synthese"]
-    action = "ENABLE" if enable else "DISABLE"
-    with db.session.begin_nested():
-        for trigger in triggers:
-            db.session.execute(
-                f"ALTER TABLE gn_synthese.synthese {action} TRIGGER {trigger}"
-            )
-
-
-def import_data_to_synthese(imprt, source):
+def import_data_to_synthese(imprt):
     generated_fields = {
         "datetime_min",
         "datetime_max",
@@ -199,7 +227,7 @@ def import_data_to_synthese(imprt, source):
             *[getattr(ImportSyntheseData, field.synthese_field) for field in fields]
         )
         .add_columns(
-            literal(source.id_source),
+            literal(imprt.id_source),
             literal(TModules.query.filter_by(module_code=MODULE_CODE).one().id_module),
             literal(imprt.id_dataset),
             literal("I"),
@@ -216,39 +244,3 @@ def import_data_to_synthese(imprt, source):
         select=select_stmt,
     )
     db.session.execute(insert_stmt)
-
-
-def populate_cor_area_synthese(imprt, source):
-    # Populate synthese / area association table
-    # A synthese entry is associated to an area when the area is enabled,
-    # and when the synthese geom intersects with the area
-    # (we also check the intersection is more than just touches when the geom is not a point)
-    synthese_geom = Synthese.__table__.c.the_geom_local
-    area_geom = LAreas.__table__.c.geom
-    stmt = corAreaSynthese.insert().from_select(
-        names=[
-            corAreaSynthese.c.id_synthese,
-            corAreaSynthese.c.id_area,
-        ],
-        select=select(
-            [
-                Synthese.__table__.c.id_synthese,
-                LAreas.__table__.c.id_area,
-            ]
-        )
-        .select_from(
-            Synthese.__table__.join(
-                LAreas.__table__,
-                sa.func.ST_Intersects(synthese_geom, area_geom),
-            )
-        )
-        .where(
-            (LAreas.__table__.c.enable == True)
-            & (
-                (sa.func.ST_GeometryType(synthese_geom) == "ST_Point")
-                | ~(sa.func.ST_Touches(synthese_geom, area_geom))
-            )
-            & (Synthese.__table__.c.id_source == source.id_source)
-        ),
-    )
-    db.session.execute(stmt)

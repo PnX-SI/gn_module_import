@@ -9,7 +9,6 @@ from sqlalchemy.types import ARRAY
 from sqlalchemy.dialects.postgresql import HSTORE, JSON, UUID, JSONB
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import column_property
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.sql.expression import exists
 from flask_sqlalchemy import BaseQuery
 from jsonschema.exceptions import ValidationError as JSONValidationError
@@ -22,6 +21,7 @@ from utils_flask_sqla.serializers import serializable
 from geonature.utils.env import db
 from geonature.utils.celery import celery_app
 from geonature.core.gn_permissions.tools import get_scopes_by_action
+from geonature.core.gn_synthese.models import TSources
 
 from pypnnomenclature.models import BibNomenclaturesTypes, TNomenclatures
 from pypnusershub.db.models import User
@@ -156,12 +156,19 @@ class TImports(InstancePermissionMixin, db.Model):
     id_dataset = db.Column(
         db.Integer, ForeignKey("gn_meta.t_datasets.id_dataset"), nullable=True
     )
+    id_source = db.Column(
+        "id_source_synthese", db.Integer, ForeignKey(TSources.id_source), nullable=True
+    )
+    source = db.relationship(
+        TSources, lazy="joined", single_parent=True, cascade="all, delete-orphan"
+    )
     date_create_import = db.Column(db.DateTime, default=datetime.now)
     date_update_import = db.Column(
         db.DateTime, default=datetime.now, onupdate=datetime.now
     )
     date_end_import = db.Column(db.DateTime, nullable=True)
     source_count = db.Column(db.Integer, nullable=True)
+    erroneous_rows = deferred(db.Column(ARRAY(db.Integer), nullable=True))
     import_count = db.Column(db.Integer, nullable=True)
     taxa_count = db.Column(db.Integer, nullable=True)
     date_min_data = db.Column(db.DateTime, nullable=True)
@@ -173,7 +180,8 @@ class TImports(InstancePermissionMixin, db.Model):
         lazy="joined",
         secondary=cor_role_import,
     )
-    processed = db.Column("processing", db.Boolean, nullable=False, default=False)
+    loaded = db.Column(db.Boolean, nullable=False, default=False)
+    processed = db.Column(db.Boolean, nullable=False, default=False)
     dataset = db.relationship("TDatasets", lazy="joined")
     source_file = deferred(db.Column(db.LargeBinary))
     columns = db.Column(ARRAY(db.Unicode))
@@ -182,13 +190,9 @@ class TImports(InstancePermissionMixin, db.Model):
     contentmapping = db.Column(MutableDict.as_mutable(JSON))
     task_id = db.Column(sa.String(155))
 
-    @hybrid_property
+    @property
     def source_name(self):
         return f"Import(id={self.id_import})"
-
-    @source_name.expression
-    def source_name(cls):
-        return func.concat("Import(id=", func.cast(cls.id_import, sa.String), ")")
 
     errors = db.relationship(
         "ImportUserError",
@@ -213,9 +217,7 @@ class TImports(InstancePermissionMixin, db.Model):
             for action, scope in scopes_by_action.items()
         }
 
-    errors_exists = column_property(
-        exists().where(ImportUserError.id_import == id_import)
-    )
+    errors_count = column_property(func.array_length(erroneous_rows, 1))
 
     @property
     def task_progress(self):

@@ -161,7 +161,7 @@ def decoded_import(client, uploaded_import):
             "separator": ";",
         },
     )
-    assert r.status_code == 200
+    assert r.status_code == 200, r.data
     unset_logged_user_cookie(client)
     db.session.refresh(uploaded_import)
     return uploaded_import
@@ -191,6 +191,7 @@ def loaded_import(client, field_mapped_import):
         field_mapped_import.source_count = insert_import_data_in_database(
             field_mapped_import
         )
+        field_mapped_import.loaded = True
     return field_mapped_import
 
 
@@ -211,7 +212,7 @@ def prepared_import(client, content_mapped_import):
     r = client.post(
         url_for("import.prepare_import", import_id=content_mapped_import.id_import)
     )
-    assert r.status_code == 200
+    assert r.status_code == 200, r.data
     unset_logged_user_cookie(client)
     db.session.refresh(content_mapped_import)
     return content_mapped_import
@@ -223,7 +224,7 @@ def imported_import(client, prepared_import):
     r = client.post(
         url_for("import.import_valid_data", import_id=prepared_import.id_import)
     )
-    assert r.status_code == 200
+    assert r.status_code == 200, r.data
     unset_logged_user_cookie(client)
     db.session.refresh(prepared_import)
     return prepared_import
@@ -304,13 +305,13 @@ class TestImports:
 
     def test_list_imports(self, imports, users):
         r = self.client.get(url_for("import.get_import_list"))
-        assert r.status_code == Unauthorized.code
+        assert r.status_code == Unauthorized.code, r.data
         set_logged_user_cookie(self.client, users["noright_user"])
         r = self.client.get(url_for("import.get_import_list"))
-        assert r.status_code == Forbidden.code
+        assert r.status_code == Forbidden.code, r.data
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.get(url_for("import.get_import_list"))
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         json_data = r.get_json()
         validate_json(
             json_data["imports"],
@@ -329,7 +330,7 @@ class TestImports:
     def test_search_import(self, users, imports, uploaded_import):
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.get(url_for("import.get_import_list") + "?search=valid_file")
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         json_data = r.get_json()
         assert json_data["count"] == 1
 
@@ -367,7 +368,7 @@ class TestImports:
         set_logged_user_cookie(self.client, users["user"])
         assert get("associate_import").status_code == 200
         r = get("own_import")
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         assert r.json["id_import"] == imports["own_import"].id_import
 
     def test_delete_import(self, users, imported_import):
@@ -375,17 +376,17 @@ class TestImports:
         r = self.client.delete(
             url_for("import.delete_import", import_id=imprt.id_import)
         )
-        assert r.status_code == Unauthorized.code
+        assert r.status_code == Unauthorized.code, r.data
         set_logged_user_cookie(self.client, users["admin_user"])
         r = self.client.delete(
             url_for("import.delete_import", import_id=imprt.id_import)
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         # TODO: check data from synthese, and import tables are also removed
         r = self.client.delete(
             url_for("import.delete_import", import_id=imprt.id_import)
         )
-        assert r.status_code == 404
+        assert r.status_code == 404, r.data
         assert 0 == ImportSyntheseData.query.filter_by(imprt=imprt).count()
 
     def test_import_upload(self, users, datasets):
@@ -399,7 +400,7 @@ class TestImports:
                 data=data,
                 headers=Headers({"Content-Type": "multipart/form-data"}),
             )
-            assert r.status_code == Unauthorized.code
+            assert r.status_code == Unauthorized.code, r.data
 
         set_logged_user_cookie(self.client, users["noright_user"])
         with open(tests_path / "files" / "simple_file.csv", "rb") as f:
@@ -412,7 +413,7 @@ class TestImports:
                 data=data,
                 headers=Headers({"Content-Type": "multipart/form-data"}),
             )
-            assert r.status_code == Forbidden.code
+            assert r.status_code == Forbidden.code, r.data
             assert 'cannot "C" in IMPORT' in r.json["description"]
 
         set_logged_user_cookie(self.client, users["user"])
@@ -428,7 +429,7 @@ class TestImports:
                 data=data,
                 headers=Headers({"Content-Type": "multipart/form-data"}),
             )
-            assert r.status_code == BadRequest.code
+            assert r.status_code == BadRequest.code, r.data
             assert r.json["description"] == f"Dataset '{unexisting_id}' does not exist."
 
         with open(tests_path / "files" / "simple_file.csv", "rb") as f:
@@ -441,7 +442,7 @@ class TestImports:
                 data=data,
                 headers=Headers({"Content-Type": "multipart/form-data"}),
             )
-            assert r.status_code == Forbidden.code
+            assert r.status_code == Forbidden.code, r.data
             assert "jeu de données" in r.json["description"]  # this is a DS issue
 
         with open(tests_path / "files" / "simple_file.csv", "rb") as f:
@@ -454,7 +455,7 @@ class TestImports:
                 data=data,
                 headers=Headers({"Content-Type": "multipart/form-data"}),
             )
-            assert r.status_code == 200
+            assert r.status_code == 200, r.data
 
         imprt = TImports.query.get(r.json["id_import"])
         assert imprt.source_file is not None
@@ -472,7 +473,7 @@ class TestImports:
                 data=data,
                 headers=Headers({"Content-Type": "multipart/form-data"}),
             )
-            assert r.status_code == 400
+            assert r.status_code == 400, r.data
             assert r.json["description"] == "Impossible to upload empty files"
 
         with open(tests_path / "files" / "starts_with_empty_line.csv", "rb") as f:
@@ -485,7 +486,7 @@ class TestImports:
                 data=data,
                 headers=Headers({"Content-Type": "multipart/form-data"}),
             )
-            assert r.status_code == 400
+            assert r.status_code == 400, r.data
             assert r.json["description"] == "File must start with columns"
 
     def test_import_upload_after_preparation(self, prepared_import):
@@ -503,10 +504,12 @@ class TestImports:
                 data=data,
                 headers=Headers({"Content-Type": "multipart/form-data"}),
             )
-            assert r.status_code == 200
+            assert r.status_code == 200, r.data
         db.session.refresh(imprt)
         assert imprt.source_file is not None
         assert imprt.source_count == None
+        assert imprt.loaded == False
+        assert imprt.processed == False
         assert imprt.full_file_name == "utf8_file.csv"
         assert imprt.columns == None
         assert len(imprt.errors) == 0
@@ -523,19 +526,19 @@ class TestImports:
         r = self.client.post(
             url_for("import.decode_file", import_id=imprt.id_import), data=data
         )
-        assert r.status_code == Unauthorized.code
+        assert r.status_code == Unauthorized.code, r.data
 
         set_logged_user_cookie(self.client, users["noright_user"])
         r = self.client.post(
             url_for("import.decode_file", import_id=imprt.id_import), data=data
         )
-        assert r.status_code == Forbidden.code
+        assert r.status_code == Forbidden.code, r.data
 
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.post(
             url_for("import.decode_file", import_id=imprt.id_import), data=data
         )
-        assert r.status_code == BadRequest.code
+        assert r.status_code == BadRequest.code, r.data
         assert "first upload" in r.json["description"]
 
         imprt.full_file_name = "import.csv"
@@ -546,7 +549,7 @@ class TestImports:
         r = self.client.post(
             url_for("import.decode_file", import_id=imprt.id_import), data=data
         )
-        assert r.status_code == BadRequest.code
+        assert r.status_code == BadRequest.code, r.data
 
         data["encoding"] = "utf-8"
 
@@ -555,7 +558,7 @@ class TestImports:
         r = self.client.post(
             url_for("import.decode_file", import_id=imprt.id_import), data=data
         )
-        assert r.status_code == BadRequest.code
+        assert r.status_code == BadRequest.code, r.data
         assert "Duplicates column names" in r.json["description"]
 
         # with open(tests_path / "files" / "wrong_line_length.csv", "rb") as f:
@@ -563,7 +566,7 @@ class TestImports:
         # r = self.client.post(
         #    url_for("import.decode_file", import_id=imprt.id_import), data=data
         # )
-        # assert r.status_code == BadRequest.code
+        # assert r.status_code == BadRequest.code, r.data
         # assert "Expected" in r.json["description"]
 
         wrong_separator_data = data.copy()
@@ -572,14 +575,14 @@ class TestImports:
             url_for("import.decode_file", import_id=imprt.id_import),
             data=wrong_separator_data,
         )
-        assert r.status_code == BadRequest.code
+        assert r.status_code == BadRequest.code, r.data
 
         with open(tests_path / "files" / "utf8_file.csv", "rb") as f:
             imprt.source_file = f.read()
         r = self.client.post(
             url_for("import.decode_file", import_id=imprt.id_import), data=data
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
 
     def test_import_decode_after_preparation(self, users, prepared_import):
         imprt = prepared_import
@@ -593,9 +596,29 @@ class TestImports:
         r = self.client.post(
             url_for("import.decode_file", import_id=imprt.id_import), data=data
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         db.session.refresh(imprt)
         assert len(imprt.errors) == 0
+
+    def test_import_preparation(self, users, content_mapped_import):
+        imprt = content_mapped_import
+        r = self.client.post(
+            url_for("import.prepare_import", import_id=imprt.id_import)
+        )
+        assert r.status_code == Unauthorized.code, r.data
+
+        set_logged_user_cookie(self.client, users["stranger_user"])
+        r = self.client.post(
+            url_for("import.prepare_import", import_id=imprt.id_import)
+        )
+        assert r.status_code == Forbidden.code, r.data
+
+        set_logged_user_cookie(self.client, users["user"])
+        r = self.client.post(
+            url_for("import.prepare_import", import_id=imprt.id_import)
+        )
+        assert r.status_code == 200, r.data
+        assert frozenset(imprt.erroneous_rows) == valid_file_invalid_rows
 
     def test_import_columns(self, users, decoded_import):
         imprt = decoded_import
@@ -603,19 +626,19 @@ class TestImports:
         r = self.client.get(
             url_for("import.get_import_columns_name", import_id=imprt.id_import)
         )
-        assert r.status_code == Unauthorized.code
+        assert r.status_code == Unauthorized.code, r.data
 
         set_logged_user_cookie(self.client, users["stranger_user"])
         r = self.client.get(
             url_for("import.get_import_columns_name", import_id=imprt.id_import)
         )
-        assert r.status_code == Forbidden.code
+        assert r.status_code == Forbidden.code, r.data
 
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.get(
             url_for("import.get_import_columns_name", import_id=imprt.id_import)
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         assert "cd_nom" in r.json
 
     def test_import_loading(self, users, field_mapped_import):
@@ -623,8 +646,9 @@ class TestImports:
 
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.post(url_for("import.load_import", import_id=imprt.id_import))
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         assert r.json["source_count"] == valid_file_line_count
+        assert r.json["loaded"] == True
         assert (
             ImportSyntheseData.query.filter_by(id_import=imprt.id_import).count()
             == r.json["source_count"]
@@ -636,13 +660,13 @@ class TestImports:
         r = self.client.get(
             url_for("import.get_import_values", import_id=imprt.id_import)
         )
-        assert r.status_code == Unauthorized.code
+        assert r.status_code == Unauthorized.code, r.data
 
         set_logged_user_cookie(self.client, users["stranger_user"])
         r = self.client.get(
             url_for("import.get_import_values", import_id=imprt.id_import)
         )
-        assert r.status_code == Forbidden.code
+        assert r.status_code == Forbidden.code, r.data
 
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.get(
@@ -690,19 +714,19 @@ class TestImports:
         r = self.client.get(
             url_for("import.preview_valid_data", import_id=imprt.id_import)
         )
-        assert r.status_code == Unauthorized.code
+        assert r.status_code == Unauthorized.code, r.data
 
         set_logged_user_cookie(self.client, users["stranger_user"])
         r = self.client.get(
             url_for("import.preview_valid_data", import_id=imprt.id_import)
         )
-        assert r.status_code == Forbidden.code
+        assert r.status_code == Forbidden.code, r.data
 
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.get(
             url_for("import.preview_valid_data", import_id=imprt.id_import)
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         assert r.json["n_valid_data"] == imprt.source_count - len(
             valid_file_invalid_rows
         )
@@ -713,19 +737,19 @@ class TestImports:
         r = self.client.get(
             url_for("import.get_import_invalid_rows_as_csv", import_id=imprt.id_import)
         )
-        assert r.status_code == Unauthorized.code
+        assert r.status_code == Unauthorized.code, r.data
 
         set_logged_user_cookie(self.client, users["stranger_user"])
         r = self.client.get(
             url_for("import.get_import_invalid_rows_as_csv", import_id=imprt.id_import)
         )
-        assert r.status_code == Forbidden.code
+        assert r.status_code == Forbidden.code, r.data
 
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.get(
             url_for("import.get_import_invalid_rows_as_csv", import_id=imprt.id_import)
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         csvfile = StringIO(r.data.decode("utf-8"))
         invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
         assert len(csvfile.readlines()) == 1 + len(invalid_rows)  # 1 = header
@@ -736,19 +760,19 @@ class TestImports:
         r = self.client.get(
             url_for("import.get_import_errors", import_id=imprt.id_import)
         )
-        assert r.status_code == Unauthorized.code
+        assert r.status_code == Unauthorized.code, r.data
 
         set_logged_user_cookie(self.client, users["stranger_user"])
         r = self.client.get(
             url_for("import.get_import_errors", import_id=imprt.id_import)
         )
-        assert r.status_code == Forbidden.code
+        assert r.status_code == Forbidden.code, r.data
 
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.get(
             url_for("import.get_import_errors", import_id=imprt.id_import)
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
         assert_import_errors(imprt, valid_file_expected_errors)
         validate_json(
@@ -780,7 +804,7 @@ class TestImports:
                 data=data,
                 headers=Headers({"Content-Type": "multipart/form-data"}),
             )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         imprt_json = r.get_json()
         imprt = TImports.query.get(imprt_json["id_import"])
         assert len(imprt.authors) == 1
@@ -802,7 +826,7 @@ class TestImports:
         r = self.client.post(
             url_for("import.decode_file", import_id=imprt.id_import), data=data
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         validate_json(
             r.json,
             {"definitions": jsonschema_definitions, "$ref": "#/definitions/import"},
@@ -822,7 +846,7 @@ class TestImports:
             url_for("import.set_import_field_mapping", import_id=imprt.id_import),
             data=fieldmapping.values,
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         validate_json(
             r.json,
             {"definitions": jsonschema_definitions, "$ref": "#/definitions/import"},
@@ -831,9 +855,10 @@ class TestImports:
 
         # Loading step
         r = self.client.post(url_for("import.load_import", import_id=imprt.id_import))
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         assert r.json["source_count"] == valid_file_line_count
         assert imprt.source_count == valid_file_line_count
+        assert imprt.loaded == True
         assert (
             ImportSyntheseData.query.filter_by(imprt=imprt).count()
             == test_file_line_count
@@ -847,7 +872,7 @@ class TestImports:
             url_for("import.set_import_content_mapping", import_id=imprt.id_import),
             data=contentmapping.values,
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         data = r.get_json()
         validate_json(
             data,
@@ -859,7 +884,7 @@ class TestImports:
         r = self.client.post(
             url_for("import.prepare_import", import_id=imprt.id_import)
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         validate_json(
             r.json,
             {"definitions": jsonschema_definitions, "$ref": "#/definitions/import"},
@@ -870,14 +895,14 @@ class TestImports:
         r = self.client.get(
             url_for("import.get_import_errors", import_id=imprt.id_import)
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         assert len(r.json) == len(valid_file_expected_errors)
 
         # Get valid data (preview)
         r = self.client.get(
             url_for("import.preview_valid_data", import_id=imprt.id_import)
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         assert r.json["n_valid_data"] == imprt.source_count - len(
             valid_file_invalid_rows
         )
@@ -887,13 +912,13 @@ class TestImports:
         r = self.client.get(
             url_for("import.get_import_invalid_rows_as_csv", import_id=imprt.id_import)
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
 
         # Import step
         r = self.client.post(
             url_for("import.import_valid_data", import_id=imprt.id_import)
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
         data = r.get_json()
         validate_json(
             data,
@@ -909,7 +934,7 @@ class TestImports:
         r = self.client.delete(
             url_for("import.delete_import", import_id=imprt.id_import)
         )
-        assert r.status_code == 200
+        assert r.status_code == 200, r.data
 
     @pytest.mark.parametrize("import_file_name", ["geom_file.csv"])
     def test_import_geometry_file(self, prepared_import):

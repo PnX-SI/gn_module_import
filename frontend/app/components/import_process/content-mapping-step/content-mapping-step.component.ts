@@ -92,6 +92,7 @@ export class ContentMappingStepComponent implements OnInit {
                         );
                         if (nomenclature) {
                             control.setValue(nomenclature);
+                            control.markAsDirty();
                         }
                     }
                 });
@@ -240,8 +241,8 @@ export class ContentMappingStepComponent implements OnInit {
         }
 
     }
-    processNextStep() {
-        of(this.importData).pipe(
+    onSaveData(): Observable<Import> {
+        return of(this.importData).pipe(
             concatMap((importData: Import) => {
                 if (this.contentTargetForm.dirty || this.mappingSelected || Object.keys(this.importValues).length === 0) {
                     let values: ContentMappingValues = this.computeContentMappingValues();
@@ -250,7 +251,10 @@ export class ContentMappingStepComponent implements OnInit {
                     return of(importData);
                 }
             })
-        ).subscribe(
+        )
+    }
+    processNextStep() {
+        this.onSaveData().subscribe(
             (importData: Import) => {
                 this.importProcessService.setImportData(importData);
                 this.importProcessService.navigateToNextStep(this.step);

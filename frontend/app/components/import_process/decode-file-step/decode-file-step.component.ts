@@ -8,6 +8,8 @@ import { ImportProcessComponent } from "../import-process.component";
 import { ImportProcessService } from "../import-process.service";
 import { Step } from "../../../models/enums.model";
 import { Import } from "../../../models/import.model";
+import { Observable } from "rxjs";
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: "decode-file-step",
@@ -64,29 +66,28 @@ export class DecodeFileStepComponent implements OnInit {
     this.importProcessService.navigateToPreviousStep(this.step);
   }
 
-  submitAvailable() {
+  isNextStepAvailable() {
     return this.paramsForm.valid;
   }
-
+  onSaveData(decode=0) :Observable<Import> {
+      return  this.ds.decodeFile( this.importData.id_import,
+          this.paramsForm.value, decode)
+  }
   onSubmit() {
     if (this.paramsForm.pristine && this.importData.step > Step.Decode) {
         this.importProcessService.navigateToNextStep(this.step);
         return;
     }
     this.isRequestPending = true;
-    this.ds.decodeFile(
-        this.importData.id_import,
-        this.paramsForm.value,
-      ).subscribe(
-        res => {
+    this.onSaveData(1).pipe(
+        finalize(() => {
             this.isRequestPending = false;
+        }),
+    ).subscribe(
+        res => {
             this.importProcessService.setImportData(res);
             this.importProcessService.navigateToLastStep();
         },
-        error => {
-          this.isRequestPending = false;
-          this.commonService.regularToaster("error", error.error.description);
-        },
-      );
+    );
   }
 }

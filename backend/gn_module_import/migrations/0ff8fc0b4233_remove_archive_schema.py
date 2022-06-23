@@ -13,7 +13,7 @@ import pandas as pd
 
 # revision identifiers, used by Alembic.
 revision = '0ff8fc0b4233'
-down_revision = 'cadfdaa42430'
+down_revision = '6f60b0b934b1'
 branch_labels = None
 depends_on = None
 
@@ -44,15 +44,37 @@ def upgrade():
         op.execute(f'DROP SEQUENCE IF EXISTS {archive_schema}.{archive_table}_gn_pk_seq')
     # Drop cor table
     op.drop_table(table_name="cor_import_archives", schema=archive_schema)
+    op.execute(f'DROP SCHEMA {archive_schema}')
 
     tables = inspector.get_table_names(schema="gn_imports")
-    for table in list(filter(lambda x: x.startswith('i_'), tables)):
-        op.drop_table(table_name=table, schema="gn_imports")
-    op.execute(f'DROP SCHEMA {archive_schema}')
-    op.execute("""
-        ALTER TABLE gn_imports.t_imports
-        DROP COLUMN import_table
-    """)
+    for table_name in list(filter(lambda x: x.startswith('i_'), tables)):
+        id_import = int(table_name.rsplit("_", 1)[-1])
+        op.execute(
+            f"""
+        WITH cte AS (
+            SELECT
+                array_agg(gn_pk ORDER BY gn_pk) erroneous_rows
+            FROM
+                gn_imports.{table_name}
+            WHERE
+                gn_is_valid = 'False'
+        )
+        UPDATE
+            gn_imports.t_imports
+        SET
+            erroneous_rows = cte.erroneous_rows
+        FROM
+            cte
+        WHERE
+            id_import = {id_import}
+        """
+        )
+        op.drop_table(table_name=table_name, schema="gn_imports")
+    op.drop_column(
+        schema="gn_imports",
+        table_name="t_imports",
+        column_name="import_table",
+    )
 
 
 def downgrade():
