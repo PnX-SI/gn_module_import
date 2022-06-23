@@ -95,7 +95,7 @@ export interface ImportValues {
     [target_field: string]: {
         nomenclature_type: NomenclatureType,
         nomenclatures: [Nomenclature],
-        values: [string];
+        values?: [string];
     }
 }
 

@@ -6,7 +6,7 @@ import csv
 from flask import request, current_app, jsonify, g, stream_with_context, send_file
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden
 from sqlalchemy import or_, func, desc
-from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
+from sqlalchemy.orm import joinedload, Load, load_only, undefer
 from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.sql.expression import collate
 
@@ -39,10 +39,23 @@ from gn_module_import.utils import (
     get_file_size,
     clean_import,
     generate_pdf_from_template,
+    get_nomenclated_fields,
 )
 from gn_module_import.tasks import do_import_checks, do_import_in_synthese
 
 IMPORTS_PER_PAGE = 15
+
+
+@blueprint.route("/nomenclatures", methods=["GET"])
+def get_nomenclatures():
+    response = {}
+    nomenclated_fields = get_nomenclated_fields()
+    for field in nomenclated_fields:
+        response[field.name_field] = {
+            "nomenclature_type": field.nomenclature_type.as_dict(),
+            "nomenclatures": [n.as_dict() for n in field.nomenclature_type.nomenclatures],
+        }
+    return jsonify(response)
 
 
 @blueprint.route("/imports/", methods=["GET"])
@@ -315,18 +328,9 @@ def get_import_values(scope, import_id):
         raise Forbidden
     if not imprt.loaded:
         raise Conflict(description="Data have not been loaded")
-    nomenclated_fields = (
-        BibFields.query.filter(BibFields.mnemonique != None)
-        .join(BibFields.nomenclature_type)
-        .options(
-            contains_eager(BibFields.nomenclature_type),
-        )
-        .order_by(BibFields.id_theme, BibFields.order_field)
-        .all()
-    )
     # Note: response format is validated with jsonschema in tests
     response = {}
-    for field in nomenclated_fields:
+    for field in get_nomenclated_fields():
         if field.name_field not in imprt.fieldmapping:
             # this nomenclated field is not mapped
             continue
@@ -559,30 +563,30 @@ def export_pdf(scope, import_id):
     Downloads the report in pdf format
     """
     filename = "rapport.pdf"
-    imprt = (
-        TImports.query
-        .options(
-            Load(TImports).raiseload('*'),
-            joinedload('authors'),
-            joinedload('dataset'),
-            joinedload('errors'),
-        )
-        .get_or_404(import_id)
-    )
+    imprt = TImports.query.options(
+        Load(TImports).raiseload("*"),
+        joinedload("authors"),
+        joinedload("dataset"),
+        joinedload("errors"),
+    ).get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
-    dataset = imprt.as_dict(fields=['errors', 'errors.type', 'dataset.dataset_name'])
-    
-    dataset['map'] = request.form.get('map')
-    dataset['chart'] = request.form.get('chart')
-    url_list = [current_app.config['URL_APPLICATION'],
-                '#',
-                current_app.config['IMPORT'].get('MODULE_URL', "").replace('/',''),
-                str(dataset['id_import']),
-                'report']
-    dataset['url'] = '/'.join(url_list)
+    dataset = imprt.as_dict(fields=["errors", "errors.type", "dataset.dataset_name"])
+
+    dataset["map"] = request.form.get("map")
+    dataset["chart"] = request.form.get("chart")
+    url_list = [
+        current_app.config["URL_APPLICATION"],
+        "#",
+        current_app.config["IMPORT"].get("MODULE_URL", "").replace("/", ""),
+        str(dataset["id_import"]),
+        "report",
+    ]
+    dataset["url"] = "/".join(url_list)
     pdf_file = generate_pdf_from_template("import_template_pdf.html", dataset, filename)
-    return send_file(BytesIO(pdf_file),
-                     mimetype='application/pdf', 
-                     as_attachment=True,
-                     attachment_filename="rapport.pdf")
+    return send_file(
+        BytesIO(pdf_file),
+        mimetype="application/pdf",
+        as_attachment=True,
+        attachment_filename="rapport.pdf",
+    )

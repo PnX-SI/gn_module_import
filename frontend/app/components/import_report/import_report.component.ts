@@ -1,18 +1,13 @@
-import { Component, OnInit } from "@angular/core";
-import { Router } from "@angular/router";
-import { saveAs } from "file-saver";
-import leafletImage from "leaflet-image";
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { saveAs } from 'file-saver';
+import leafletImage from 'leaflet-image';
 
-import { MapService } from "@geonature_common/map/map.service";
-import { DataService } from "../../services/data.service";
-import { ImportProcessService } from "../import_process/import-process.service";
-import {
-  Import,
-  ImportError,
-  Nomenclature,
-  TaxaDistribution,
-} from "../../models/import.model";
-import { ModuleConfig } from "../../module.config";
+import { MapService } from '@geonature_common/map/map.service';
+import { DataService } from '../../services/data.service';
+import { ImportProcessService } from '../import_process/import-process.service';
+import { Import, ImportError, Nomenclature, TaxaDistribution } from '../../models/import.model';
+import { ModuleConfig } from '../../module.config';
 
 interface MatchedNomenclature {
   source: Nomenclature;
@@ -20,25 +15,25 @@ interface MatchedNomenclature {
 }
 
 @Component({
-  selector: "pnx-import-report",
-  templateUrl: "import_report.component.html",
-  styleUrls: ["import_report.component.scss"],
+  selector: 'pnx-import-report',
+  templateUrl: 'import_report.component.html',
+  styleUrls: ['import_report.component.scss'],
 })
 export class ImportReportComponent implements OnInit {
   readonly maxErrorsLines: number = 10;
   readonly rankOptions: string[] = [
-    "regne",
-    "phylum",
-    "classe",
-    "ordre",
-    "famille",
-    "sous_famille",
-    "tribu",
-    "group1_inpn",
-    "group2_inpn",
+    'regne',
+    'phylum',
+    'classe',
+    'ordre',
+    'famille',
+    'sous_famille',
+    'tribu',
+    'group1_inpn',
+    'group2_inpn',
   ];
   public importData: Import | null;
-  public expansionPanelHeight: string = "60px";
+  public expansionPanelHeight: string = '60px';
   public validBbox: any;
   public validData: Array<Object>;
   public fieldsNb: Number = 0;
@@ -46,7 +41,7 @@ export class ImportReportComponent implements OnInit {
   public matchedNomenclature: Array<MatchedNomenclature> = [];
   public importErrors: Array<ImportError> = [];
   public nbTotalErrors: number = 0;
-  public datasetName: string = "";
+  public datasetName: string = '';
   public rank: string = this.rankOptions.includes(ModuleConfig.DEFAULT_RANK)
     ? ModuleConfig.DEFAULT_RANK
     : this.rankOptions[0];
@@ -54,12 +49,12 @@ export class ImportReportComponent implements OnInit {
   public doughnutChartData: Array<number> = [];
   public doughnutChartColors: Array<{ backgroundColor: Array<String> }> = [
     {
-      backgroundColor: ["red", "green", "blue"],
+      backgroundColor: ['red', 'green', 'blue'],
     },
   ];
-  public doughnutChartType: string = "doughnut";
+  public doughnutChartType: string = 'doughnut';
   public options: any = {
-    legend: { position: "left" },
+    legend: { position: 'left' },
   };
   public loadingPdf: boolean = false;
 
@@ -98,42 +93,34 @@ export class ImportReportComponent implements OnInit {
   loadTaxaDistribution() {
     const idSource: number | undefined = this.importData?.id_source;
     if (idSource) {
-      this._dataService
-        .getTaxaRepartition(idSource, this.rank)
-        .subscribe((data) => {
-          this.taxaDistribution = data;
-          this.updateChart();
-        });
+      this._dataService.getTaxaRepartition(idSource, this.rank).subscribe((data) => {
+        this.taxaDistribution = data;
+        this.updateChart();
+      });
     }
   }
 
   loadDatasetName() {
     if (this.importData) {
-      this._dataService
-        .getDatasetFromId(this.importData.id_dataset)
-        .subscribe((data) => {
-          this.datasetName = data.dataset_name;
-        });
+      this._dataService.getDatasetFromId(this.importData.id_dataset).subscribe((data) => {
+        this.datasetName = data.dataset_name;
+      });
     }
   }
 
   loadErrors() {
     if (this.importData) {
-      this._dataService
-        .getImportErrors(this.importData.id_import)
-        .subscribe((errors) => {
-          this.importErrors = errors;
-          // Get the total number of errors:
-          // 1. get all rows in errors
-          // 2. flaten to have 1 array of all rows in error
-          // 3. remove duplicates (with Set)
-          // 4. return the size of the Set (length)
-          this.nbTotalErrors = new Set(
-            errors
-              .map((item) => item.rows)
-              .reduce((acc, val) => acc.concat(val), [])
-          ).size;
-        });
+      this._dataService.getImportErrors(this.importData.id_import).subscribe((errors) => {
+        this.importErrors = errors;
+        // Get the total number of errors:
+        // 1. get all rows in errors
+        // 2. flaten to have 1 array of all rows in error
+        // 3. remove duplicates (with Set)
+        // 4. return the size of the Set (length)
+        this.nbTotalErrors = new Set(
+          errors.map((item) => item.rows).reduce((acc, val) => acc.concat(val), [])
+        ).size;
+      });
     }
   }
 
@@ -141,28 +128,23 @@ export class ImportReportComponent implements OnInit {
     if (this.importData) {
       const mappingValues = this.importData?.contentmapping;
       const match: Array<MatchedNomenclature> = [];
-      this._dataService
-        .getImportValues(this.importData.id_import)
-        .subscribe((importValues) => {
-          Object.keys(importValues).forEach((targetField) => {
-            let type_mnemo =
-              importValues[targetField].nomenclature_type.mnemonique;
-            importValues[targetField].values.forEach((value, index) => {
-              let sourceNomenclature = importValues[
-                targetField
-              ].nomenclatures.find(
-                (n) => n.cd_nomenclature === mappingValues[type_mnemo][value]
-              );
-              let targetNomenclature = importValues[
-                targetField
-              ].nomenclatures.find((n) => n.label_default == value);
-              match.push({
-                source: sourceNomenclature,
-                target: targetNomenclature,
-              });
+      this._dataService.getNomenclatures().subscribe((nomencs) => {
+        Object.keys(nomencs).forEach((nomenc) => {
+          const type_mnemo = nomencs[nomenc].nomenclature_type.mnemonique;
+          Object.keys(mappingValues[type_mnemo]).forEach((val) => {
+            const sourceNomenclature = nomencs[nomenc].nomenclatures.find(
+              (n) => n.cd_nomenclature === mappingValues[type_mnemo][val]
+            );
+            const targetNomenclature = nomencs[nomenc].nomenclatures.find(
+              (n) => n.label_default === val
+            );
+            match.push({
+              source: sourceNomenclature,
+              target: targetNomenclature,
             });
           });
         });
+      });
       this.matchedNomenclature = match;
     }
   }
@@ -181,16 +163,14 @@ export class ImportReportComponent implements OnInit {
     // Fill colors with random colors
     const colors: string[] = new Array(this.doughnutChartData.length);
     for (let i = 0; i < colors.length; i++) {
-      colors[i] = "#" + (((1 << 24) * Math.random()) | 0).toString(16);
+      colors[i] = '#' + (((1 << 24) * Math.random()) | 0).toString(16);
     }
     this.doughnutChartColors[0].backgroundColor.push(...colors);
   }
 
   getChartPNG(): HTMLImageElement {
-    const chart: HTMLCanvasElement = <HTMLCanvasElement>(
-      document.getElementById("chart")
-    );
-    const img: HTMLImageElement = document.createElement("img");
+    const chart: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('chart');
+    const img: HTMLImageElement = document.createElement('img');
     img.src = chart.toDataURL();
     return img;
   }
@@ -199,49 +179,41 @@ export class ImportReportComponent implements OnInit {
     // this.fields can be null
     // 4 : tab size
     if (this.importData?.fieldmapping) {
-      const blob: Blob = new Blob(
-        [JSON.stringify(this.importData.fieldmapping, null, 4)],
-        {
-          type: "application/json",
-        }
-      );
-      saveAs(blob, "correspondances.json");
+      const blob: Blob = new Blob([JSON.stringify(this.importData.fieldmapping, null, 4)], {
+        type: 'application/json',
+      });
+      saveAs(blob, 'correspondances.json');
     }
   }
 
   exportNomenclatures() {
     // Exactly like the correspondances
     if (this.matchedNomenclature) {
-      const blob: Blob = new Blob(
-        [JSON.stringify(this.matchedNomenclature, null, 4)],
-        {
-          type: "application/json",
-        }
-      );
-      saveAs(blob, "nomenclatures.json");
+      const blob: Blob = new Blob([JSON.stringify(this.matchedNomenclature, null, 4)], {
+        type: 'application/json',
+      });
+      saveAs(blob, 'nomenclatures.json');
     }
   }
 
   exportAsPDF() {
-    const img: HTMLImageElement = document.createElement("img");
+    const img: HTMLImageElement = document.createElement('img');
     this.loadingPdf = true;
     const chartImg: HTMLImageElement = this.getChartPNG();
     leafletImage(
       this._map.map,
       function (err, canvas) {
-        img.src = canvas.toDataURL("image/png");
-        this._dataService
-          .getPdf(this.importData.id_import, img.src, chartImg.src)
-          .subscribe(
-            (result) => {
-              this.loadingPdf = false;
-              saveAs(result, "export.pdf");
-            },
-            (error) => {
-              this.loadingPdf = false;
-              console.log("Error getting pdf");
-            }
-          );
+        img.src = canvas.toDataURL('image/png');
+        this._dataService.getPdf(this.importData.id_import, img.src, chartImg.src).subscribe(
+          (result) => {
+            this.loadingPdf = false;
+            saveAs(result, 'export.pdf');
+          },
+          (error) => {
+            this.loadingPdf = false;
+            console.log('Error getting pdf');
+          }
+        );
       }.bind(this)
     );
   }
@@ -252,7 +224,7 @@ export class ImportReportComponent implements OnInit {
         id_dataset: idDataSet,
       },
     };
-    this._router.navigate(["/synthese"], navigationExtras);
+    this._router.navigate(['/synthese'], navigationExtras);
   }
 
   onRankChange($event) {
