@@ -9,6 +9,7 @@ import { ImportProcessService } from "../import-process.service";
 import { Step } from "../../../models/enums.model";
 import { Import } from "../../../models/import.model";
 import { Observable } from "rxjs";
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: "decode-file-step",
@@ -78,15 +79,15 @@ export class DecodeFileStepComponent implements OnInit {
         return;
     }
     this.isRequestPending = true;
-    this.onSaveData(1).subscribe(
-        res => {
+    this.onSaveData(1).pipe(
+        finalize(() => {
             this.isRequestPending = false;
+        }),
+    ).subscribe(
+        res => {
             this.importProcessService.setImportData(res);
             this.importProcessService.navigateToLastStep();
         },
-        error => {
-          this.isRequestPending = false;
-        },
-      );
+    );
   }
 }
