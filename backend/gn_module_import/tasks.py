@@ -51,9 +51,7 @@ def do_import_checks(self, import_id):
         for field_name, source_field in imprt.fieldmapping.items()
         if source_field in imprt.columns
     ]
-    selected_fields = BibFields.query.filter(
-        BibFields.name_field.in_(selected_fields_names)
-    ).all()
+    selected_fields = BibFields.query.filter(BibFields.name_field.in_(selected_fields_names)).all()
 
     fields = {
         field.name_field: field
@@ -114,9 +112,7 @@ def do_import_checks(self, import_id):
         imprt.erroneous_rows = (
             db.session.query(
                 array_agg(
-                    aggregate_order_by(
-                        ImportSyntheseData.line_no, ImportSyntheseData.line_no
-                    )
+                    aggregate_order_by(ImportSyntheseData.line_no, ImportSyntheseData.line_no)
                 )
             )
             .filter_by(imprt=imprt, valid=False)

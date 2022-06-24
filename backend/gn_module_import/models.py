@@ -65,9 +65,7 @@ class ImportUserError(db.Model):
     pk = db.Column("id_user_error", db.Integer, primary_key=True)
     id_import = db.Column(
         db.Integer,
-        db.ForeignKey(
-            "gn_imports.t_imports.id_import", onupdate="CASCADE", ondelete="CASCADE"
-        ),
+        db.ForeignKey("gn_imports.t_imports.id_import", onupdate="CASCADE", ondelete="CASCADE"),
     )
     imprt = db.relationship("TImports", back_populates="errors")
     id_type = db.Column(
@@ -153,9 +151,7 @@ class TImports(InstancePermissionMixin, db.Model):
     detected_encoding = db.Column(db.Unicode, nullable=True)
     # import_table = db.Column(db.Unicode, nullable=True)
     full_file_name = db.Column(db.Unicode, nullable=True)
-    id_dataset = db.Column(
-        db.Integer, ForeignKey("gn_meta.t_datasets.id_dataset"), nullable=True
-    )
+    id_dataset = db.Column(db.Integer, ForeignKey("gn_meta.t_datasets.id_dataset"), nullable=True)
     id_source = db.Column(
         "id_source_synthese", db.Integer, ForeignKey(TSources.id_source), nullable=True
     )
@@ -163,9 +159,7 @@ class TImports(InstancePermissionMixin, db.Model):
         TSources, lazy="joined", single_parent=True, cascade="all, delete-orphan"
     )
     date_create_import = db.Column(db.DateTime, default=datetime.now)
-    date_update_import = db.Column(
-        db.DateTime, default=datetime.now, onupdate=datetime.now
-    )
+    date_update_import = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     date_end_import = db.Column(db.DateTime, nullable=True)
     source_count = db.Column(db.Integer, nullable=True)
     erroneous_rows = deferred(db.Column(ARRAY(db.Integer), nullable=True))
@@ -209,9 +203,7 @@ class TImports(InstancePermissionMixin, db.Model):
 
     @property
     def cruved(self):
-        scopes_by_action = get_scopes_by_action(
-            module_code="IMPORT", object_code="IMPORT"
-        )
+        scopes_by_action = get_scopes_by_action(module_code="IMPORT", object_code="IMPORT")
         return {
             action: self.has_instance_permission(scope)
             for action, scope in scopes_by_action.items()
@@ -234,25 +226,20 @@ class TImports(InstancePermissionMixin, db.Model):
     def has_instance_permission(self, scope, user=None):
         if user is None:
             user = g.current_user
-        if (
-            scope == 0
-        ):  # pragma: no cover (should not happen as already checked by the decorator)
+        if scope == 0:  # pragma: no cover (should not happen as already checked by the decorator)
             return False
         elif scope == 1:  # self
             return user.id_role in [author.id_role for author in self.authors]
         elif scope == 2:  # organism
             return user.id_role in [author.id_role for author in self.authors] or (
                 user.id_organisme is not None
-                and user.id_organisme
-                in [author.id_organisme for author in self.authors]
+                and user.id_organisme in [author.id_organisme for author in self.authors]
             )
         elif scope == 3:  # all
             return True
 
     def as_dict(self, import_as_dict):
-        import_as_dict["authors_name"] = "; ".join(
-            [author.nom_complet for author in self.authors]
-        )
+        import_as_dict["authors_name"] = "; ".join([author.nom_complet for author in self.authors])
         if self.detected_encoding:
             import_as_dict["available_encodings"] = sorted(
                 TImports.AVAILABLE_ENCODINGS
@@ -355,21 +342,15 @@ class ImportSyntheseData(db.Model):
     nomenclature_geo_object_nature = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_geo_object_nature]
     )
-    id_nomenclature_grp_typ = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_grp_typ = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_grp_typ]
-    )
+    id_nomenclature_grp_typ = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
+    nomenclature_grp_typ = db.relationship(TNomenclatures, foreign_keys=[id_nomenclature_grp_typ])
     id_nomenclature_obs_technique = db.Column(
         db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
     )
     nomenclature_obs_technique = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_obs_technique]
     )
-    id_nomenclature_bio_status = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
+    id_nomenclature_bio_status = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
     nomenclature_bio_status = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_bio_status]
     )
@@ -379,15 +360,11 @@ class ImportSyntheseData(db.Model):
     nomenclature_bio_condition = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_bio_condition]
     )
-    id_nomenclature_naturalness = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
+    id_nomenclature_naturalness = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
     nomenclature_naturalness = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_naturalness]
     )
-    id_nomenclature_exist_proof = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
+    id_nomenclature_exist_proof = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
     nomenclature_exist_proof = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_exist_proof]
     )
@@ -397,9 +374,7 @@ class ImportSyntheseData(db.Model):
     nomenclature_valid_status = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_valid_status]
     )
-    id_nomenclature_exist_proof = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
+    id_nomenclature_exist_proof = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
     nomenclature_exist_proof = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_exist_proof]
     )
@@ -409,33 +384,21 @@ class ImportSyntheseData(db.Model):
     nomenclature_diffusion_level = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_diffusion_level]
     )
-    id_nomenclature_life_stage = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
+    id_nomenclature_life_stage = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
     nomenclature_life_stage = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_life_stage]
     )
-    id_nomenclature_sex = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_sex = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_sex]
-    )
-    id_nomenclature_obj_count = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
+    id_nomenclature_sex = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
+    nomenclature_sex = db.relationship(TNomenclatures, foreign_keys=[id_nomenclature_sex])
+    id_nomenclature_obj_count = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
     nomenclature_obj_count = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_obj_count]
     )
-    id_nomenclature_type_count = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
+    id_nomenclature_type_count = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
     nomenclature_type_count = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_type_count]
     )
-    id_nomenclature_sensitivity = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
+    id_nomenclature_sensitivity = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
     nomenclature_sensitivity = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_sensitivity]
     )
@@ -445,9 +408,7 @@ class ImportSyntheseData(db.Model):
     nomenclature_observation_status = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_observation_status]
     )
-    id_nomenclature_blurring = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
+    id_nomenclature_blurring = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
     nomenclature_blurring = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_blurring]
     )
@@ -463,9 +424,7 @@ class ImportSyntheseData(db.Model):
     nomenclature_info_geo_type = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_info_geo_type]
     )
-    id_nomenclature_behaviour = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
+    id_nomenclature_behaviour = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
     nomenclature_behaviour = db.relationship(
         TNomenclatures, foreign_keys=[id_nomenclature_behaviour]
     )
@@ -615,15 +574,11 @@ class MappingTemplate(db.Model):
     label = db.Column(db.Unicode(255), nullable=False)
     type = db.Column(db.Unicode(10), nullable=False)
     active = db.Column(db.Boolean, nullable=False, default=True, server_default="true")
-    public = db.Column(
-        db.Boolean, nullable=False, default=False, server_default="false"
-    )
+    public = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
 
     @property
     def cruved(self):
-        scopes_by_action = get_scopes_by_action(
-            module_code="IMPORT", object_code="MAPPING"
-        )
+        scopes_by_action = get_scopes_by_action(module_code="IMPORT", object_code="MAPPING")
         return {
             action: self.has_instance_permission(scope)
             for action, scope in scopes_by_action.items()
@@ -669,8 +624,7 @@ class FieldMapping(MappingTemplate):
     @staticmethod
     def validate_values(values):
         fields = (
-            BibFields.query
-            .filter_by(display=True)
+            BibFields.query.filter_by(display=True)
             .with_entities(
                 BibFields.name_field,
                 BibFields.autogenerated,

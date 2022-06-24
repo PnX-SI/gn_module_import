@@ -12,40 +12,42 @@ from distutils.util import strtobool
 
 
 # revision identifiers, used by Alembic.
-revision = '4b137deaf201'
+revision = "4b137deaf201"
 down_revision = None
-branch_labels = ('import',)
+branch_labels = ("import",)
 depends_on = None
 
 
-schema = 'gn_imports'
-archive_schema = 'gn_import_archives'
+schema = "gn_imports"
+archive_schema = "gn_import_archives"
 
 
 def upgrade():
-    sql_files = ['schema.sql', 'data.sql']
-    if strtobool(context.get_x_argument(as_dictionary=True).get('default-mappings', "true")):
-        sql_files += ['default_mappings_data.sql']
+    sql_files = ["schema.sql", "data.sql"]
+    if strtobool(context.get_x_argument(as_dictionary=True).get("default-mappings", "true")):
+        sql_files += ["default_mappings_data.sql"]
     for sql_file in sql_files:
-        operations = pkg_resources.resource_string("gn_module_import.migrations", f"data/{sql_file}").decode('utf-8')
+        operations = pkg_resources.resource_string(
+            "gn_module_import.migrations", f"data/{sql_file}"
+        ).decode("utf-8")
         op.execute(operations)
 
 
 def downgrade():
-    op.execute(f'DROP TABLE {archive_schema}.cor_import_archives')
-    op.execute(f'DROP SCHEMA {archive_schema}')
-    op.execute(f'DROP VIEW IF EXISTS {schema}.v_imports_errors')
+    op.execute(f"DROP TABLE {archive_schema}.cor_import_archives")
+    op.execute(f"DROP SCHEMA {archive_schema}")
+    op.execute(f"DROP VIEW IF EXISTS {schema}.v_imports_errors")
     for table in [
-            'cor_role_import',
-            'cor_role_mapping',
-            'cor_synthese_nomenclature',
-            't_mappings_fields',
-            't_mappings_values',
-            't_user_error_list',
-            't_imports',
-            't_mappings',
-            't_user_errors',
-            'dict_fields',
-            'dict_themes',
-            ]:
-        op.execute(f'DROP TABLE IF EXISTS {schema}.{table}')
+        "cor_role_import",
+        "cor_role_mapping",
+        "cor_synthese_nomenclature",
+        "t_mappings_fields",
+        "t_mappings_values",
+        "t_user_error_list",
+        "t_imports",
+        "t_mappings",
+        "t_user_errors",
+        "dict_fields",
+        "dict_themes",
+    ]:
+        op.execute(f"DROP TABLE IF EXISTS {schema}.{table}")

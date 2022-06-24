@@ -175,7 +175,7 @@ jsonschema_definitions = {
             "separator": {"type": ["string", "null"]},
             "encoding": {"type": ["string", "null"]},
             "detected_encoding": {"type": ["string", "null"]},
-            #"import_table": {"type": ["string", "null"]},
+            # "import_table": {"type": ["string", "null"]},
             "full_file_name": {"type": ["string", "null"]},
             "id_dataset": {"type": ["integer", "null"]},
             "date_create_import": {"type": "string"},
@@ -191,10 +191,10 @@ jsonschema_definitions = {
             "available_encodings": {"type": "array", "items": {"type": "string"}},
             "available_formats": {"type": "array", "items": {"type": "string"}},
             "available_separators": {"type": "array", "items": {"type": "string"}},
-            #"columns": {
+            # "columns": {
             #    "type": ["null", "array"],
             #    "items": {"type": "string"},
-            #},
+            # },
             "fieldmapping": {
                 "type": ["null", "object"],
             },
@@ -212,7 +212,7 @@ jsonschema_definitions = {
             "separator",
             "encoding",
             "detected_encoding",
-            #"import_table",
+            # "import_table",
             "full_file_name",
             "id_dataset",
             "date_create_import",

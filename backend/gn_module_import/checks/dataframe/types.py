@@ -21,11 +21,13 @@ def convert_to_datetime(value):
     except Exception:
         return None
 
+
 def convert_to_uuid(value, version=4):
     try:
         return UUID(str(value), version=version).hex
     except Exception:
         return None
+
 
 def convert_to_integer(value):
     try:
@@ -35,9 +37,7 @@ def convert_to_integer(value):
 
 
 def check_datetime_field(df, source_field, target_field, required):
-    datetime_col = df[source_field].apply(
-        lambda x: convert_to_datetime(x) if pd.notnull(x) else x
-    )
+    datetime_col = df[source_field].apply(lambda x: convert_to_datetime(x) if pd.notnull(x) else x)
     if required:
         invalid_rows = df[datetime_col.isna()]
     else:
@@ -56,9 +56,7 @@ def check_datetime_field(df, source_field, target_field, required):
 
 
 def check_uuid_field(df, source_field, target_field, required):
-    uuid_col = df[source_field].apply(
-        lambda x: convert_to_uuid(x) if pd.notnull(x) else x
-    )
+    uuid_col = df[source_field].apply(lambda x: convert_to_uuid(x) if pd.notnull(x) else x)
     if required:
         invalid_rows = df[uuid_col.isna()]
     else:
@@ -77,9 +75,7 @@ def check_uuid_field(df, source_field, target_field, required):
 
 
 def check_integer_field(df, source_field, target_field, required):
-    integer_col = df[source_field].apply(
-        lambda x: convert_to_integer(x) if pd.notnull(x) else x
-    )
+    integer_col = df[source_field].apply(lambda x: convert_to_integer(x) if pd.notnull(x) else x)
     if required:
         invalid_rows = df[integer_col.isna()]
     else:
@@ -100,9 +96,7 @@ def check_integer_field(df, source_field, target_field, required):
 def check_unicode_field(df, field, field_length):
     if field_length is None:
         return
-    length = df[field].apply(
-        lambda x: len(x) if pd.notnull(x) else x
-    )
+    length = df[field].apply(lambda x: len(x) if pd.notnull(x) else x)
     invalid_rows = df[length > field_length]
     if len(invalid_rows) > 0:
         yield dict(
@@ -138,7 +132,9 @@ def check_types(df, fields: Dict[str, BibFields]):
             dest_col=field.synthese_field,
             required=False,
         ):
-            error.update({
-                'column': name,
-            })
+            error.update(
+                {
+                    "column": name,
+                }
+            )
             yield error

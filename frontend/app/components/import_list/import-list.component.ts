@@ -12,7 +12,7 @@ import { ImportProcessService} from "../import_process/import-process.service";
 import { Step } from "../../models/enums.model";
 import { Import } from "../../models/import.model";
 import { CsvExportService } from "../../services/csv-export.service";
-
+import { forkJoin, of } from 'rxjs'
 
 @Component({
   styleUrls: ["import-list.component.scss"],
@@ -32,6 +32,10 @@ export class ImportListComponent implements OnInit {
     public search_string: string = ''
     public sort: string
     public dir: string
+    public runningImport: Array<number> = [];
+    public inErrorImport: Array<number> = [];
+    public checkingImport: Array<number> = [];
+    private mytimeout:any;
 
     constructor(
         public _cruvedStore: CruvedStoreService,
@@ -48,8 +52,9 @@ export class ImportListComponent implements OnInit {
     ngOnInit() {
 
         this.onImportList(1, "");
-
-
+        setTimeout(() => {
+            this.updateImports()}, 15000
+        )
         this.search.valueChanges.subscribe(value => {
             setTimeout(() => {
                 if (value == this.search.value) {
@@ -61,6 +66,7 @@ export class ImportListComponent implements OnInit {
 
     ngOnDestroy() {
         this._ds.getImportList({}).subscribe().unsubscribe();
+        clearTimeout(this.mytimeout)
     }
 
     updateFilter(val: any) {
@@ -75,6 +81,8 @@ export class ImportListComponent implements OnInit {
         this._ds.getImportList({page:page, search:search}).subscribe(
             res => {
                 this.history = res["imports"];
+                this.getImportsStatus()
+
                 this.filteredHistory = this.history;
                 this.empty = res.length == 0;
                 this.total = res["count"]
@@ -88,7 +96,42 @@ export class ImportListComponent implements OnInit {
             }
         );
     }
-
+    private getImportsStatus() {
+        this.history.forEach(h =>
+        {
+            if (h.task_id !== null && h.task_progress !== null) {
+                if (h.task_progress == -1) {
+                    this.inErrorImport.push(h.id_import)
+                } else if (h.processed) {
+                    this.runningImport.push(h.id_import)
+                } else {
+                    this.checkingImport.push(h.id_import)
+                }
+            }
+        })
+    }
+    private resetImportInfos() {
+        this.checkingImport = this.inErrorImport = this.runningImport =  []
+    }
+    private updateImports() {
+        let params = {page: this.offset + 1, search: this.search_string}
+        if (this.sort) {
+            params["sort"] = this.sort
+        }
+        if (this.dir) {
+            params["sort_dir"] = this.dir
+        }
+        this._ds.getImportList(params)
+            .subscribe(res=>{
+                this.history=res["imports"]
+                this.checkingImport = []
+                this.getImportsStatus()
+                this.filteredHistory=this.history
+                this.mytimeout = setTimeout(()=> {
+                    this.updateImports()
+                }, 15000)
+            })
+    }
     onFinishImport(data: Import) {
         this.importProcessService.continueProcess(data);
     }
@@ -98,7 +141,6 @@ export class ImportListComponent implements OnInit {
             `metadata/dataset_detail/${row.id_dataset}`
         ]);
     }
-
     openDeleteModal(row: Import, modalDelete) {
         this.deleteOne = row;
         this.modal.open(modalDelete);

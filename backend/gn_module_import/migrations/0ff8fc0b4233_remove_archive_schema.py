@@ -12,42 +12,47 @@ from alembic import op
 import pandas as pd
 
 # revision identifiers, used by Alembic.
-revision = '0ff8fc0b4233'
-down_revision = '6f60b0b934b1'
+revision = "0ff8fc0b4233"
+down_revision = "6f60b0b934b1"
 branch_labels = None
 depends_on = None
 
-archive_schema = 'gn_import_archives'
+archive_schema = "gn_import_archives"
+
 
 def upgrade():
     conn = op.get_bind()
     inspector = sa.inspect(conn.engine)
     archive_tables = inspector.get_table_names(schema="gn_import_archives")
     metadata = MetaData(bind=op.get_bind())
-    imprt = Table('t_imports', metadata, autoload=True, schema='gn_imports')
+    imprt = Table("t_imports", metadata, autoload=True, schema="gn_imports")
 
     for archive_table in list(filter(lambda x: x != "cor_import_archives", archive_tables)):
-        #Read table with pandas
-        op.drop_column(archive_table, 'gn_pk', "gn_import_archives")
+        # Read table with pandas
+        op.drop_column(archive_table, "gn_pk", "gn_import_archives")
         arch_df = pd.read_sql_table(archive_table, con=conn, schema="gn_import_archives")
-        update_id = conn.execute(imprt.update()
-                                 .where(imprt.c.import_table == archive_table)
-                                 .values({'source_file': arch_df.to_csv(index=False).encode(),
-                                          'encoding': 'utf-8',
-                                          'separator': ',',
-                                          })
-                                 .returning(imprt.c.id_import) #To raise error if not exists
-                                 )
+        update_id = conn.execute(
+            imprt.update()
+            .where(imprt.c.import_table == archive_table)
+            .values(
+                {
+                    "source_file": arch_df.to_csv(index=False).encode(),
+                    "encoding": "utf-8",
+                    "separator": ",",
+                }
+            )
+            .returning(imprt.c.id_import)  # To raise error if not exists
+        )
         if not update_id.rowcount:
-            raise NoReferenceError(f'No import linked with archive table: {archive_table}')
+            raise NoReferenceError(f"No import linked with archive table: {archive_table}")
         op.drop_table(table_name=archive_table, schema=archive_schema)
-        op.execute(f'DROP SEQUENCE IF EXISTS {archive_schema}.{archive_table}_gn_pk_seq')
+        op.execute(f"DROP SEQUENCE IF EXISTS {archive_schema}.{archive_table}_gn_pk_seq")
     # Drop cor table
     op.drop_table(table_name="cor_import_archives", schema=archive_schema)
-    op.execute(f'DROP SCHEMA {archive_schema}')
+    op.execute(f"DROP SCHEMA {archive_schema}")
 
     tables = inspector.get_table_names(schema="gn_imports")
-    for table_name in list(filter(lambda x: x.startswith('i_'), tables)):
+    for table_name in list(filter(lambda x: x.startswith("i_"), tables)):
         id_import = int(table_name.rsplit("_", 1)[-1])
         op.execute(
             f"""
@@ -78,14 +83,18 @@ def upgrade():
 
 
 def downgrade():
-    op.execute(f'CREATE SCHEMA {archive_schema}')
-    op.execute('''
+    op.execute(f"CREATE SCHEMA {archive_schema}")
+    op.execute(
+        """
         CREATE TABLE gn_import_archives.cor_import_archives(
           id_import integer NOT NULL,
           table_archive character varying(255) NOT NULL
         );
-    ''')
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
             ALTER TABLE gn_imports.t_imports
             ADD COLUMN import_table character varying(255)
-        """)
+        """
+    )

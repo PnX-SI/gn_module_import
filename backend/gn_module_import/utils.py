@@ -93,7 +93,7 @@ def detect_separator(f, encoding):
     except UnicodeDecodeError:
         # encoding is likely to be detected encoding, so prompt to errors
         return None
-    if sample == '\n':  # files that do not start with column names
+    if sample == "\n":  # files that do not start with column names
         raise BadRequest("File must start with columns")
     dialect = csv.Sniffer().sniff(sample)
     f.seek(position)
@@ -116,9 +116,7 @@ def insert_import_data_in_database(imprt):
     columns = imprt.columns
     extra_columns = set(columns) - set(imprt.fieldmapping.values())
     csvfile = StringIO(imprt.source_file.decode(imprt.encoding))
-    csvreader = csv.DictReader(
-        csvfile, fieldnames=columns, delimiter=imprt.separator
-    )
+    csvreader = csv.DictReader(csvfile, fieldnames=columns, delimiter=imprt.separator)
     header = next(csvreader, None)  # skip header
     for key, value in header.items():  # FIXME
         assert key == value
@@ -141,10 +139,7 @@ def insert_import_data_in_database(imprt):
             "line_no": line_no,
         }
         o.update(
-            {
-                dest_field: row[source_field]
-                for dest_field, source_field in fieldmapping.items()
-            }
+            {dest_field: row[source_field] for dest_field, source_field in fieldmapping.items()}
         )
         o.update(
             {
@@ -191,9 +186,7 @@ def update_import_data_from_dataframe(imprt, fields, df):
         "line_no",
         "valid",
     ]
-    updated_cols += [
-        field.synthese_field for field in fields.values() if field.synthese_field
-    ]
+    updated_cols += [field.synthese_field for field in fields.values() if field.synthese_field]
     df.replace({np.nan: None, pd.NaT: None}, inplace=True)
     records = df[df["valid"] == True][updated_cols].to_dict(orient="records")
     insert_stmt = pg_insert(ImportSyntheseData)
@@ -223,9 +216,7 @@ def import_data_to_synthese(imprt):
     ).all()
     select_stmt = (
         ImportSyntheseData.query.filter_by(imprt=imprt, valid=True)
-        .with_entities(
-            *[getattr(ImportSyntheseData, field.synthese_field) for field in fields]
-        )
+        .with_entities(*[getattr(ImportSyntheseData, field.synthese_field) for field in fields])
         .add_columns(
             literal(imprt.id_source),
             literal(TModules.query.filter_by(module_code=MODULE_CODE).one().id_module),

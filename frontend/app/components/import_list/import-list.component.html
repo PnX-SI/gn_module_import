@@ -76,6 +76,9 @@
                             ngx-datatable-cell-template
                         >
                             <p *ngIf="row.date_end_import">{{row.date_end_import |date:'dd-MM-yyyy'}}</p>
+                            <p *ngIf="inErrorImport.includes(row.id_import)" class="import-status">import en erreur</p>
+                            <p *ngIf="runningImport.includes(row.id_import)" class="import-status">import en cours</p>
+                            <p *ngIf="checkingImport.includes(row.id_import)" class="import-status">vérifications en cours</p>
                         </ng-template>
                     </ngx-datatable-column>
                     <ngx-datatable-column

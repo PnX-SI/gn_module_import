@@ -86,9 +86,7 @@ def mappings(users):
             public=True,
             values=fieldmapping_values,
         )
-        mappings["field"] = FieldMapping(
-            label="Private Field Mapping", active=True, public=False
-        )
+        mappings["field"] = FieldMapping(label="Private Field Mapping", active=True, public=False)
         mappings["field_public_disabled"] = FieldMapping(
             label="Disabled Public Field Mapping", active=False, public=True
         )
@@ -180,9 +178,7 @@ class TestMappings:
         assert get_mapping(mappings["content_public"]).status_code == 200
         assert get_mapping(mappings["field_public"]).status_code == 200
         assert get_mapping(mappings["field"]).status_code == Forbidden.code
-        assert (
-            get_mapping(mappings["field_public_disabled"]).status_code == Forbidden.code
-        )
+        assert get_mapping(mappings["field_public_disabled"]).status_code == Forbidden.code
 
         assert get_mapping(mappings["self"]).status_code == 200
         assert get_mapping(mappings["associate"]).status_code == Forbidden.code
@@ -261,9 +257,7 @@ class TestMappings:
         assert self.client.post(url, data=fieldmapping).status_code == BadRequest.code
 
         # label already exist
-        url = url_for(
-            "import.add_mapping", mappingtype="field", label=mappings["field"].label
-        )
+        url = url_for("import.add_mapping", mappingtype="field", label=mappings["field"].label)
         assert self.client.post(url, data=fieldmapping).status_code == Conflict.code
 
         # label may be reused between field and content
@@ -293,9 +287,7 @@ class TestMappings:
         assert mapping.owners == [users["user"]]
 
     def test_add_content_mapping(self, users, mappings):
-        url = url_for(
-            "import.add_mapping", mappingtype="content", label="test content mapping"
-        )
+        url = url_for("import.add_mapping", mappingtype="content", label="test content mapping")
         set_logged_user_cookie(self.client, users["user"])
 
         contentmapping = {
@@ -390,9 +382,7 @@ class TestMappings:
         fieldvalues_should = deepcopy(fieldvalues_update)
         del fieldvalues_update["validator"]  # should not removed from mapping!
         r = self.client.post(
-            url_for(
-                "import.update_mapping", mappingtype=fm.type.lower(), id_mapping=fm.id
-            ),
+            url_for("import.update_mapping", mappingtype=fm.type.lower(), id_mapping=fm.id),
             data=fieldvalues_update,
         )
         assert r.status_code == 200
@@ -400,9 +390,7 @@ class TestMappings:
         fieldvalues_update = deepcopy(fm.values)
         fieldvalues_update["unexisting"] = "unexisting"
         r = self.client.post(
-            url_for(
-                "import.update_mapping", mappingtype=fm.type.lower(), id_mapping=fm.id
-            ),
+            url_for("import.update_mapping", mappingtype=fm.type.lower(), id_mapping=fm.id),
             data=fieldvalues_update,
         )
         assert r.status_code == BadRequest.code
@@ -417,9 +405,7 @@ class TestMappings:
         contentvalues_should = deepcopy(contentvalues_update)
         del contentvalues_update["NAT_OBJ_GEO"]["St"]  # should not be removed!
         r = self.client.post(
-            url_for(
-                "import.update_mapping", mappingtype=cm.type.lower(), id_mapping=cm.id
-            ),
+            url_for("import.update_mapping", mappingtype=cm.type.lower(), id_mapping=cm.id),
             data=contentvalues_update,
         )
         assert r.status_code == 200
@@ -427,9 +413,7 @@ class TestMappings:
         contentvalues_update = deepcopy(cm.values)
         contentvalues_update["NAT_OBJ_GEO"] = "invalid"
         r = self.client.post(
-            url_for(
-                "import.update_mapping", mappingtype=cm.type.lower(), id_mapping=cm.id
-            ),
+            url_for("import.update_mapping", mappingtype=cm.type.lower(), id_mapping=cm.id),
             data=contentvalues_update,
         )
         assert r.status_code == BadRequest.code
@@ -460,9 +444,7 @@ class TestMappings:
 
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.delete(
-            url_for(
-                "import.delete_mapping", mappingtype="content", id_mapping=mapping.id
-            )
+            url_for("import.delete_mapping", mappingtype="content", id_mapping=mapping.id)
         )
         assert r.status_code == NotFound.code
         assert MappingTemplate.query.get(mapping.id) is not None

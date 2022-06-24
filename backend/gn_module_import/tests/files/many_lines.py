@@ -17,10 +17,10 @@ def many_lines(source, dest, count):
         writer.writerow(line)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('--source', default='one_line.csv', type=FileType('r'))
-    parser.add_argument('--dest', default='many_lines.csv', type=FileType('w'))
-    parser.add_argument('--count', default=100000, type=int)
+    parser.add_argument("--source", default="one_line.csv", type=FileType("r"))
+    parser.add_argument("--dest", default="many_lines.csv", type=FileType("w"))
+    parser.add_argument("--count", default=100000, type=int)
     args = parser.parse_args()
     many_lines(**vars(args))

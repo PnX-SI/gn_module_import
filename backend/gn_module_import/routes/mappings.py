@@ -124,7 +124,9 @@ def update_mapping(mappingtype, mapping, scope):
         elif mappingtype == "CONTENT":
             for key, value in request.json.items():
                 mapping.values[key].update(value)
-            flag_modified(mapping, "values")  # nested dict modification not detected by MutableDict
+            flag_modified(
+                mapping, "values"
+            )  # nested dict modification not detected by MutableDict
 
     db.session.commit()
     return jsonify(mapping.as_dict())
