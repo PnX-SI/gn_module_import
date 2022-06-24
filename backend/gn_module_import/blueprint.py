@@ -2,7 +2,7 @@ from flask import Blueprint
 
 import gn_module_import.admin  # noqa: F401
 
-blueprint = Blueprint("import", __name__, template_folder='templates')
+blueprint = Blueprint("import", __name__, template_folder="templates")
 
 from .routes import (
     imports,

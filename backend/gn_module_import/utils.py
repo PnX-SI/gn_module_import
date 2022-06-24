@@ -256,9 +256,9 @@ def get_nomenclated_fields():
         set_committed_value(
             field.nomenclature_type,
             "nomenclatures",
-            TNomenclatures.query.filter_by(
-                nomenclature_type=field.nomenclature_type
-            ).order_by(collate(TNomenclatures.cd_nomenclature, "fr_numeric")),
+            TNomenclatures.query.filter_by(nomenclature_type=field.nomenclature_type).order_by(
+                collate(TNomenclatures.cd_nomenclature, "fr_numeric")
+            ),
         )
         yield field
 

@@ -115,6 +115,7 @@ DISPLAY_CHECK_BOX_MAPPED_FIELD = True
 # must be in ['regne', 'phylum', 'classe', 'ordre', 'famille', 'sous_famille', 'tribu', 'group1_inpn', 'group2_inpn']
 DEFAULT_RANK = "regne"
 
+
 class GnModuleSchemaConf(Schema):
     LIST_COLUMNS_FRONTEND = fields.List(fields.Dict, load_default=DEFAULT_LIST_COLUMN)
     UPLOAD_DIRECTORY = fields.String(load_default=UPLOAD_DIRECTORY)
