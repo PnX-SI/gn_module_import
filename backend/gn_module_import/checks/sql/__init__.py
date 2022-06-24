@@ -201,7 +201,10 @@ def set_column_from_referential(imprt, field, reference, error_type):
             synthese_field: reference,
         })
         .where(
-            source_field == sa.cast(reference, sa.Unicode)
+            sa.and_(
+                source_field == sa.cast(reference, sa.Unicode),
+                ImportSyntheseData.id_import == imprt.id_import
+                )
         )
     )
     db.session.execute(stmt)
