@@ -13,7 +13,7 @@ from jsonschema import validate as validate_json
 from sqlalchemy import func
 from sqlalchemy.sql.expression import select
 
-from apptax.taxonomie.models import BibListes
+from apptax.taxonomie.models import BibListes, CorNomListe, BibNoms
 from geonature.utils.env import db
 from geonature.tests.utils import set_logged_user_cookie, unset_logged_user_cookie
 from geonature.core.gn_permissions.tools import _get_scopes_by_action
@@ -233,7 +233,20 @@ def imported_import(client, prepared_import):
 
 @pytest.fixture()
 def sample_taxhub_list():
-    return BibListes.query.filter(BibListes.nom_liste=="Saisie Occtax").one()
+    cd_nom = 67111
+    with db.session.begin_nested():
+        id_list_not_exist = (db.session.query(func.max(BibListes.id_liste)).scalar() or 0) + 1
+        bibTaxon = db.session.query(BibNoms).filter(BibNoms.cd_nom==cd_nom).first()
+        if bibTaxon is None:
+            bibTaxon = BibNoms(
+                cd_nom=cd_nom,
+                cd_ref=cd_nom
+            )
+            db.session.add(bibTaxon)
+        taxa_list = BibListes(id_liste=id_list_not_exist, nom_liste="test", code_liste="test", picto="")
+        db.session.add(taxa_list)
+        db.session.add(CorNomListe(id_nom=bibTaxon.id_nom, id_liste=taxa_list.id_liste))
+    return taxa_list
 
 
 @pytest.fixture()
