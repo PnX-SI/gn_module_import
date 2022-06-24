@@ -225,6 +225,8 @@ def sample_taxhub_list():
         if bibTaxon is None:
             bibTaxon = BibNoms(cd_nom=cd_nom, cd_ref=cd_nom)
             db.session.add(bibTaxon)
+
+    with db.session.begin_nested():
         taxa_list = BibListes(
             id_liste=id_list_not_exist, nom_liste="test", code_liste="test", picto=""
         )
