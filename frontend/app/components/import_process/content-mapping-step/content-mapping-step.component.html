@@ -285,8 +285,8 @@
             </ng-template>
             <form>
                 <div class="form-group">
-                    <label for="mappingName">Nom du modèle</label>
-                    <input [formControl]="modalCreateMappingForm" class="form-control" id="mappingName" placeholder="Nom du mapping">
+                    <label for="mappingName" *ngIf="this.updateAvailable">Nom du modèle</label>
+                    <input [formControl]="modalCreateMappingForm" class="form-control" id="mappingName" placeholder="Nom du modèle">
                     <span *ngIf="!modalCreateMappingForm.value" class="text-warning"> Un nom doit être renseigné pour pouvoir créer un modèle </span>
                     <span *ngIf="selectMappingContentForm.value && modalCreateMappingForm.value == selectMappingContentForm.value.label" class="text-warning"> Changer de nom pour pouvoir créer un modèle </span>
                 </div>
