@@ -157,7 +157,6 @@ class TestChecks:
         df = pd.DataFrame(
             [
                 ['Point(600000 7000000)', None, None, None, None, None],
-                # [4] XY
                 [None, '600000', '7000000', None, None, None],
             ],
             columns=[field.source_field for field in fields.values()],
