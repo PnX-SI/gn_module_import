@@ -21,7 +21,7 @@ from gn_module_import.utils import generated_fields
 from geonature.core.gn_synthese.models import Synthese, TSources
 from ref_geo.models import LAreas, BibAreasTypes
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
-from apptax.taxonomie.models import Taxref
+from apptax.taxonomie.models import Taxref, CorNomListe, BibNoms
 from pypn_habref_api.models import Habref
 
 
@@ -192,7 +192,7 @@ def set_the_geom_column(imprt, fields, df):
         ).one()
 
 
-def set_column_from_referential(imprt, field, reference, error_type):
+def set_column_from_referential(imprt, field, reference, error_type, where_clause=None):
     source_field = getattr(ImportSyntheseData, field.source_field)
     synthese_field = getattr(ImportSyntheseData, field.synthese_field)
     stmt = (
@@ -204,6 +204,8 @@ def set_column_from_referential(imprt, field, reference, error_type):
             source_field == sa.cast(reference, sa.Unicode)
         )
     )
+    if where_clause is not None:
+        stmt = stmt.where(sa.and_(*where_clause))
     db.session.execute(stmt)
     report_erroneous_rows(
         imprt,
@@ -221,7 +223,16 @@ def set_cd_nom(imprt, fields):
     if "cd_nom" not in fields:
         return
     field = fields["cd_nom"]
-    set_column_from_referential(imprt, field, Taxref.cd_nom, "CD_NOM_NOT_FOUND")
+    # Filter out on a taxhub list if provided
+    list_id = current_app.config['IMPORT'].get("ID_LIST_TAXA_RESTRICTION", None)
+    if list_id is not None:
+        where_clause = (
+            CorNomListe.id_liste == list_id,
+            BibNoms.id_nom == CorNomListe.id_nom,
+            Taxref.cd_nom == BibNoms.cd_nom
+        )
+    set_column_from_referential(imprt, field, Taxref.cd_nom, "CD_NOM_NOT_FOUND", 
+                                where_clause=where_clause)
 
 
 def set_cd_hab(imprt, fields):
