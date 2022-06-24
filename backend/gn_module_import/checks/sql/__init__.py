@@ -230,6 +230,7 @@ def set_altitudes(imprt, fields):
                 altitudes.c.altitude_max,
             ]
         )
+        .where(ImportSyntheseData.id_import == imprt.id_import)
         .where(ImportSyntheseData.the_geom_local != None)
         .where(
             sa.or_(
