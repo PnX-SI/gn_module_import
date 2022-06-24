@@ -35,7 +35,7 @@ export class ImportListComponent implements OnInit {
     public runningImport: Array<number> = [];
     public inErrorImport: Array<number> = [];
     public checkingImport: Array<number> = [];
-    private mytimeout:any;
+    private fetchTimeout:any;
 
     constructor(
         public _cruvedStore: CruvedStoreService,
@@ -66,7 +66,7 @@ export class ImportListComponent implements OnInit {
 
     ngOnDestroy() {
         this._ds.getImportList({}).subscribe().unsubscribe();
-        clearTimeout(this.mytimeout)
+        clearTimeout(this.fetchTimeout)
     }
 
     updateFilter(val: any) {
@@ -127,12 +127,13 @@ export class ImportListComponent implements OnInit {
                 this.checkingImport = []
                 this.getImportsStatus()
                 this.filteredHistory=this.history
-                this.mytimeout = setTimeout(()=> {
+                this.fetchTimeout = setTimeout(()=> {
                     this.updateImports()
                 }, 15000)
             })
     }
     onFinishImport(data: Import) {
+        clearTimeout(this.fetchTimeout)
         this.importProcessService.continueProcess(data);
     }
 
