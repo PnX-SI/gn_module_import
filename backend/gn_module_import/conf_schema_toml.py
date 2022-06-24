@@ -148,6 +148,6 @@ class GnModuleSchemaConf(Schema):
     # If ID is provided (!=-1) will take the geometry in ref_geo.l_areas
     # and checks if all imported points are inside it. Otherwise throws an error
     ID_AREA_RESTRICTION = fields.Integer(missing=None)
-        # If an id of taxhub list is provided will check if the imported taxons
+    # If an id of taxhub list is provided will check if the imported taxons
     # are in the list. Otherwise throws an error
     ID_LIST_TAXA_RESTRICTION = fields.Integer(missing=None)

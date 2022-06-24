@@ -221,14 +221,13 @@ def sample_taxhub_list():
     cd_nom = 67111
     with db.session.begin_nested():
         id_list_not_exist = (db.session.query(func.max(BibListes.id_liste)).scalar() or 0) + 1
-        bibTaxon = db.session.query(BibNoms).filter(BibNoms.cd_nom==cd_nom).first()
+        bibTaxon = db.session.query(BibNoms).filter(BibNoms.cd_nom == cd_nom).first()
         if bibTaxon is None:
-            bibTaxon = BibNoms(
-                cd_nom=cd_nom,
-                cd_ref=cd_nom
-            )
+            bibTaxon = BibNoms(cd_nom=cd_nom, cd_ref=cd_nom)
             db.session.add(bibTaxon)
-        taxa_list = BibListes(id_liste=id_list_not_exist, nom_liste="test", code_liste="test", picto="")
+        taxa_list = BibListes(
+            id_liste=id_list_not_exist, nom_liste="test", code_liste="test", picto=""
+        )
         db.session.add(taxa_list)
         db.session.add(CorNomListe(id_nom=bibTaxon.id_nom, id_liste=taxa_list.id_liste))
     return taxa_list

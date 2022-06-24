@@ -220,15 +220,16 @@ def set_cd_nom(imprt, fields):
     field = fields["cd_nom"]
     # Filter out on a taxhub list if provided
     where_clause = None
-    list_id = current_app.config['IMPORT'].get("ID_LIST_TAXA_RESTRICTION", None)
+    list_id = current_app.config["IMPORT"].get("ID_LIST_TAXA_RESTRICTION", None)
     if list_id is not None:
         where_clause = (
             CorNomListe.id_liste == list_id,
             BibNoms.id_nom == CorNomListe.id_nom,
-            Taxref.cd_nom == BibNoms.cd_nom
+            Taxref.cd_nom == BibNoms.cd_nom,
         )
-    set_column_from_referential(imprt, field, Taxref.cd_nom, "CD_NOM_NOT_FOUND", 
-                                where_clause=where_clause)
+    set_column_from_referential(
+        imprt, field, Taxref.cd_nom, "CD_NOM_NOT_FOUND", where_clause=where_clause
+    )
 
 
 def set_cd_hab(imprt, fields):
