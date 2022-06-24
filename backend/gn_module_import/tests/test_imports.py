@@ -1013,7 +1013,7 @@ class TestImports:
                 ),
             },
         )
-    
+
     def test_export_pdf(self, users, imports):
         user = users["user"]
         imprt = imports["own_import"]
@@ -1024,3 +1024,22 @@ class TestImports:
         assert resp.status_code == 200
         assert resp.data
         assert resp.mimetype == "application/pdf"
+
+    def test_export_pdf_forbidden(self, users, imports):
+        user = users["stranger_user"]
+        imprt = imports["own_import"]
+        set_logged_user_cookie(self.client, user)
+
+        resp = self.client.post(url_for("import.export_pdf", import_id=imprt.id_import))
+
+        assert resp.status_code == Forbidden.code
+
+    def test_get_nomenclatures(self):
+
+        resp = self.client.get(url_for("import.get_nomenclatures"))
+
+        assert resp.status_code == 200
+        assert any(
+            list(nomenclature.keys()) == ["nomenclature_type", "nomenclatures"]
+            for nomenclature in resp.json.values()
+        )
