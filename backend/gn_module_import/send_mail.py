@@ -8,13 +8,13 @@ from geonature.utils.utilsmails import send_mail
 
 def import_send_mail(mail_to, file_name, step, id_import):
     """
-        Send email after export is done
+    Send email after export is done
 
-        .. :quickref: Imports
+    .. :quickref: Imports
 
-        Send email after import is done
-        :param mail_to: User who runs the import
-        :param step: step of the process: 'import' | 'check'
+    Send email after import is done
+    :param mail_to: User who runs the import
+    :param step: step of the process: 'import' | 'check'
     """
     if step == "check":
         link = f"{current_app.config['URL_APPLICATION']}/#/import/process/id_import/{str(id_import)}/step/4"
@@ -46,14 +46,14 @@ def import_send_mail(mail_to, file_name, step, id_import):
 
 def import_send_mail_error(mail_to, file_name, error):
     """
-        Send email after export is failed
+    Send email after export is failed
 
-        .. :quickref: Send email after export is failed
+    .. :quickref: Send email after export is failed
 
 
-        :query User role: User who runs the export
-        :query {} export: Export definition
-        :query str error: Detail of the exception raised
+    :query User role: User who runs the export
+    :query {} export: Export definition
+    :query str error: Detail of the exception raised
 
     """
     msg = f"""

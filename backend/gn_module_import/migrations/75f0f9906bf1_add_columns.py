@@ -11,8 +11,8 @@ from sqlalchemy.types import ARRAY
 
 
 # revision identifiers, used by Alembic.
-revision = '75f0f9906bf1'
-down_revision = '2ed6a7ee5250'
+revision = "75f0f9906bf1"
+down_revision = "2ed6a7ee5250"
 branch_labels = None
 depends_on = None
 
@@ -26,10 +26,12 @@ def upgrade():
         ),
         schema="gn_imports",
     )
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE gn_imports.t_user_error_list
         ALTER COLUMN id_rows TYPE integer[] USING id_rows::integer[]
-    """)
+    """
+    )
     op.drop_column(
         table_name="t_mappings_fields",
         column_name="is_added",
@@ -43,18 +45,24 @@ def upgrade():
 
 
 def downgrade():
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE gn_imports.t_mappings_fields
         ADD COLUMN is_selected BOOLEAN NOT NULL DEFAULT TRUE
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         ALTER TABLE gn_imports.t_mappings_fields
         ADD COLUMN is_added BOOLEAN NOT NULL DEFAULT FALSE
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         ALTER TABLE gn_imports.t_user_error_list
         ALTER COLUMN id_rows TYPE text[] USING id_rows::text[]
-    """)
+    """
+    )
     op.drop_column(
         table_name="t_imports",
         column_name="columns",

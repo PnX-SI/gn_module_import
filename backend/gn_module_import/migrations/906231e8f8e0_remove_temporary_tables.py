@@ -20,9 +20,7 @@ depends_on = None
 
 
 def upgrade():
-    op.drop_column(
-        table_name="dict_fields", column_name="nomenclature", schema="gn_imports"
-    )
+    op.drop_column(table_name="dict_fields", column_name="nomenclature", schema="gn_imports")
 
     op.alter_column(
         table_name="dict_fields",
@@ -155,9 +153,7 @@ def upgrade():
         name_field IN ('date_min', 'date_max')
     """
     )
-    op.drop_column(
-        table_name="dict_fields", column_name="is_synthese_field", schema="gn_imports"
-    )
+    op.drop_column(table_name="dict_fields", column_name="is_synthese_field", schema="gn_imports")
 
     op.create_table(
         "t_imports_synthese",
@@ -360,9 +356,7 @@ def upgrade():
         sa.Column("validation_comment", sa.Unicode),  #
         sa.Column("observers", sa.Unicode),  #
         sa.Column("determiner", sa.Unicode),  #
-        sa.Column(
-            "id_digitiser", sa.Integer, sa.ForeignKey("utilisateurs.t_roles.id_role")
-        ),  #
+        sa.Column("id_digitiser", sa.Integer, sa.ForeignKey("utilisateurs.t_roles.id_role")),  #
         sa.Column("comment_context", sa.UnicodeText),  #
         sa.Column("comment_description", sa.UnicodeText),  #
         sa.Column("additional_data", JSONB),  #
@@ -399,7 +393,6 @@ def downgrade():
         table_name="t_imports_synthese",
         schema="gn_imports",
     )
-
 
     op.add_column(
         table_name="dict_fields",
@@ -463,9 +456,7 @@ def downgrade():
 
     op.add_column(
         table_name="dict_fields",
-        column=sa.Column(
-            "nomenclature", sa.Boolean, nullable=False, server_default=sa.false()
-        ),
+        column=sa.Column("nomenclature", sa.Boolean, nullable=False, server_default=sa.false()),
         schema="gn_imports",
     )
     op.execute(

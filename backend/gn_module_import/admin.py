@@ -26,17 +26,39 @@ class MappingView(CruvedProtectedMixin, ModelView):
     object_code = "MAPPING"
 
     can_view_details = True
-    column_list = ('label', 'active', 'public',)
-    column_searchable_list = ('label',)
-    column_filters = ('active', 'public',)
-    form_columns = ('label', 'active', 'public', 'owners', 'values',)
-    column_details_list = ('label', 'active', 'public', 'owners', 'values',)
+    column_list = (
+        "label",
+        "active",
+        "public",
+    )
+    column_searchable_list = ("label",)
+    column_filters = (
+        "active",
+        "public",
+    )
+    form_columns = (
+        "label",
+        "active",
+        "public",
+        "owners",
+        "values",
+    )
+    column_details_list = (
+        "label",
+        "active",
+        "public",
+        "owners",
+        "values",
+    )
     column_labels = {
-        'active': 'Actif',
-        'owners': 'Propriétaires',
-        'values': 'Correspondances',
+        "active": "Actif",
+        "owners": "Propriétaires",
+        "values": "Correspondances",
     }
-    column_export_list = ('label', 'values',)
+    column_export_list = (
+        "label",
+        "values",
+    )
 
 
 def FieldMappingValuesValidator(form, field):
@@ -55,28 +77,29 @@ def ContentMappingValuesValidator(form, field):
 
 class FieldMappingView(MappingView):
     form_args = {
-        'values': {
-            'validators': [FieldMappingValuesValidator],
+        "values": {
+            "validators": [FieldMappingValuesValidator],
         },
     }
     colmun_labels = {
-        'values': 'Association',
+        "values": "Association",
     }
     column_formatters_detail = {
-        'values': lambda v, c, m, p: Markup('<pre>%s</pre>' % pformat(m.values)),
+        "values": lambda v, c, m, p: Markup("<pre>%s</pre>" % pformat(m.values)),
     }
+
 
 class ContentMappingView(MappingView):
     form_args = {
-        'values': {
-            'validators': [ContentMappingValuesValidator],
+        "values": {
+            "validators": [ContentMappingValuesValidator],
         },
     }
     colmun_labels = {
-        'values': 'Association',
+        "values": "Association",
     }
     column_formatters_detail = {
-        'values': lambda v, c, m, p: Markup('<pre>%s</pre>' % pformat(m.values)),
+        "values": lambda v, c, m, p: Markup("<pre>%s</pre>" % pformat(m.values)),
     }
 
 
@@ -84,5 +107,7 @@ geonature_admin.add_view(
     FieldMappingView(FieldMapping, db.session, name="Champs", category="Modèles d’import")
 )
 geonature_admin.add_view(
-    ContentMappingView(ContentMapping, db.session, name="Nomenclatures", category="Modèles d’import")
+    ContentMappingView(
+        ContentMapping, db.session, name="Nomenclatures", category="Modèles d’import"
+    )
 )

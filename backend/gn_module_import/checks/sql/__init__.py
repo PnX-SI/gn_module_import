@@ -31,12 +31,8 @@ def do_nomenclatures_mapping(imprt, fields):
         source_field = getattr(ImportSyntheseData, field.source_field)
         # This CTE return the list of source value / cd_nomenclature for a given nomenclature type
         cte = (
-            select(
-                [column("key").label("value"), column("value").label("cd_nomenclature")]
-            )
-            .select_from(
-                sa.func.JSON_EACH_TEXT(TImports.contentmapping[field.mnemonique])
-            )
+            select([column("key").label("value"), column("value").label("cd_nomenclature")])
+            .select_from(sa.func.JSON_EACH_TEXT(TImports.contentmapping[field.mnemonique]))
             .where(TImports.id_import == imprt.id_import)
             .cte("cte")
         )
@@ -83,37 +79,43 @@ def do_nomenclatures_mapping(imprt, fields):
                 source_field != None,
                 source_field != "",
                 synthese_field == None,
-            )
+            ),
         )
 
 
 def check_nomenclatures(imprt, fields):
-    if current_app.config['IMPORT']['CHECK_EXIST_PROOF']:
-        nomenclature_field = BibFields.query.filter_by(name_field="id_nomenclature_exist_proof").one()
+    if current_app.config["IMPORT"]["CHECK_EXIST_PROOF"]:
+        nomenclature_field = BibFields.query.filter_by(
+            name_field="id_nomenclature_exist_proof"
+        ).one()
         digital_proof_field = fields.get("digital_proof")
         non_digital_proof_field = fields.get("non_digital_proof")
         if digital_proof_field is None and non_digital_proof_field is None:
             return
-        oui = (
-            TNomenclatures.query
-            .filter(
-                TNomenclatures.nomenclature_type.has(BibNomenclaturesTypes.mnemonique == "PREUVE_EXIST"),
-                TNomenclatures.mnemonique == "Oui",
-            )
-            .one()
+        oui = TNomenclatures.query.filter(
+            TNomenclatures.nomenclature_type.has(
+                BibNomenclaturesTypes.mnemonique == "PREUVE_EXIST"
+            ),
+            TNomenclatures.mnemonique == "Oui",
+        ).one()
+        oui_filter = (
+            getattr(ImportSyntheseData, nomenclature_field.synthese_field) == oui.id_nomenclature
         )
-        oui_filter = (getattr(ImportSyntheseData, nomenclature_field.synthese_field) == oui.id_nomenclature)
         proof_set_filters = []
         if digital_proof_field is not None:
-            proof_set_filters.append(sa.and_(
-                getattr(ImportSyntheseData, digital_proof_field.synthese_field) != None,
-                getattr(ImportSyntheseData, digital_proof_field.synthese_field) != "",
-            ))
+            proof_set_filters.append(
+                sa.and_(
+                    getattr(ImportSyntheseData, digital_proof_field.synthese_field) != None,
+                    getattr(ImportSyntheseData, digital_proof_field.synthese_field) != "",
+                )
+            )
         if non_digital_proof_field is not None:
-            proof_set_filters.append(sa.and_(
-                getattr(ImportSyntheseData, non_digital_proof_field.synthese_field) != None,
-                getattr(ImportSyntheseData, non_digital_proof_field.synthese_field) != "",
-            ))
+            proof_set_filters.append(
+                sa.and_(
+                    getattr(ImportSyntheseData, non_digital_proof_field.synthese_field) != None,
+                    getattr(ImportSyntheseData, non_digital_proof_field.synthese_field) != "",
+                )
+            )
         proof_set_filter = sa.or_(*proof_set_filters) if proof_set_filters else sa.false()
         report_erroneous_rows(
             imprt,
@@ -125,7 +127,7 @@ def check_nomenclatures(imprt, fields):
             ),
         )
     if (
-        current_app.config['IMPORT']['CHECK_PRIVATE_JDD_BLURING']
+        current_app.config["IMPORT"]["CHECK_PRIVATE_JDD_BLURING"]
         and not current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]
         and imprt.dataset.nomenclature_data_origin.mnemonique == "Privée"
     ):
@@ -134,27 +136,26 @@ def check_nomenclatures(imprt, fields):
             imprt,
             error_type="CONDITIONAL_MANDATORY_FIELD_ERROR",
             error_column=blurring_field.name_field,
-            whereclause=(
-                getattr(ImportSyntheseData, blurring_field.synthese_field) == None
+            whereclause=(getattr(ImportSyntheseData, blurring_field.synthese_field) == None),
+        )
+    if current_app.config["IMPORT"]["CHECK_REF_BIBLIO_LITTERATURE"]:
+        litterature = TNomenclatures.query.filter(
+            TNomenclatures.nomenclature_type.has(
+                BibNomenclaturesTypes.mnemonique == "STATUT_SOURCE"
             ),
-        )
-    if current_app.config['IMPORT']['CHECK_REF_BIBLIO_LITTERATURE']:
-        litterature = (
-            TNomenclatures.query
-            .filter(
-                TNomenclatures.nomenclature_type.has(BibNomenclaturesTypes.mnemonique == "STATUT_SOURCE"),
-                TNomenclatures.cd_nomenclature == "Li",
-            )
-            .one()
-        )
-        source_status_field = BibFields.query.filter_by(name_field="id_nomenclature_source_status").one()
+            TNomenclatures.cd_nomenclature == "Li",
+        ).one()
+        source_status_field = BibFields.query.filter_by(
+            name_field="id_nomenclature_source_status"
+        ).one()
         ref_biblio_field = BibFields.query.filter_by(name_field="reference_biblio").one()
         report_erroneous_rows(
             imprt,
             error_type="CONDITIONAL_MANDATORY_FIELD_ERROR",
             error_column=source_status_field.name_field,
             whereclause=sa.and_(
-                getattr(ImportSyntheseData, source_status_field.synthese_field) == litterature.id_nomenclature,
+                getattr(ImportSyntheseData, source_status_field.synthese_field)
+                == litterature.id_nomenclature,
                 sa.or_(
                     getattr(ImportSyntheseData, ref_biblio_field.synthese_field) == None,
                     getattr(ImportSyntheseData, ref_biblio_field.synthese_field) == "",
@@ -165,31 +166,19 @@ def check_nomenclatures(imprt, fields):
 
 def set_the_geom_column(imprt, fields, df):
     file_srid = imprt.srid
-    local_srid = db.session.execute(
-        sa.func.Find_SRID("ref_geo", "l_areas", "geom")
-    ).scalar()
+    local_srid = db.session.execute(sa.func.Find_SRID("ref_geo", "l_areas", "geom")).scalar()
     geom_col = df[df["_geom"].notna()]["_geom"]
     if file_srid == 4326:
-        df["the_geom_4326"] = geom_col.apply(
-            lambda geom: ST_GeomFromWKB(geom.wkb, file_srid)
-        )
-        fields["the_geom_4326"] = BibFields.query.filter_by(
-            name_field="the_geom_4326"
-        ).one()
+        df["the_geom_4326"] = geom_col.apply(lambda geom: ST_GeomFromWKB(geom.wkb, file_srid))
+        fields["the_geom_4326"] = BibFields.query.filter_by(name_field="the_geom_4326").one()
     elif file_srid == local_srid:
-        df["the_geom_local"] = geom_col.apply(
-            lambda geom: ST_GeomFromWKB(geom.wkb, file_srid)
-        )
-        fields["the_geom_local"] = BibFields.query.filter_by(
-            name_field="the_geom_local"
-        ).one()
+        df["the_geom_local"] = geom_col.apply(lambda geom: ST_GeomFromWKB(geom.wkb, file_srid))
+        fields["the_geom_local"] = BibFields.query.filter_by(name_field="the_geom_local").one()
     else:
         df["the_geom_4326"] = geom_col.apply(
             lambda geom: ST_Transform(ST_GeomFromWKB(geom.wkb, file_srid), 4326)
         )
-        fields["the_geom_4326"] = BibFields.query.filter_by(
-            name_field="the_geom_4326"
-        ).one()
+        fields["the_geom_4326"] = BibFields.query.filter_by(name_field="the_geom_4326").one()
 
 
 def set_column_from_referential(imprt, field, reference, error_type):
@@ -197,14 +186,16 @@ def set_column_from_referential(imprt, field, reference, error_type):
     synthese_field = getattr(ImportSyntheseData, field.synthese_field)
     stmt = (
         update(ImportSyntheseData)
-        .values({
-            synthese_field: reference,
-        })
+        .values(
+            {
+                synthese_field: reference,
+            }
+        )
         .where(
             sa.and_(
                 source_field == sa.cast(reference, sa.Unicode),
-                ImportSyntheseData.id_import == imprt.id_import
-                )
+                ImportSyntheseData.id_import == imprt.id_import,
+            )
         )
     )
     db.session.execute(stmt)
@@ -216,7 +207,7 @@ def set_column_from_referential(imprt, field, reference, error_type):
             source_field != None,
             source_field != "",
             synthese_field == None,
-        )
+        ),
     )
 
 
@@ -238,62 +229,67 @@ def set_altitudes(imprt, fields):
     if not imprt.fieldmapping.get("altitudes_generate", False):
         return
     altitudes = (
-        select([
-            column("altitude_min"),
-            column("altitude_max"),
-        ])
-        .select_from(
-            func.ref_geo.fct_get_altitude_intersection(ImportSyntheseData.the_geom_local)
+        select(
+            [
+                column("altitude_min"),
+                column("altitude_max"),
+            ]
         )
+        .select_from(func.ref_geo.fct_get_altitude_intersection(ImportSyntheseData.the_geom_local))
         .lateral("altitudes")
     )
     cte = (
-        select([
-            ImportSyntheseData.id_import,
-            ImportSyntheseData.line_no,
-            altitudes.c.altitude_min,
-            altitudes.c.altitude_max,
-        ])
+        select(
+            [
+                ImportSyntheseData.id_import,
+                ImportSyntheseData.line_no,
+                altitudes.c.altitude_min,
+                altitudes.c.altitude_max,
+            ]
+        )
         .where(ImportSyntheseData.the_geom_local != None)
-        .where(sa.or_(
-            ImportSyntheseData.src_altitude_min == None,
-            ImportSyntheseData.src_altitude_min == "",
-            ImportSyntheseData.src_altitude_max == None,
-            ImportSyntheseData.src_altitude_max == "",
-        ))
+        .where(
+            sa.or_(
+                ImportSyntheseData.src_altitude_min == None,
+                ImportSyntheseData.src_altitude_min == "",
+                ImportSyntheseData.src_altitude_max == None,
+                ImportSyntheseData.src_altitude_max == "",
+            )
+        )
         .cte("cte")
     )
     stmt = (
         update(ImportSyntheseData)
         .where(ImportSyntheseData.id_import == cte.c.id_import)
         .where(ImportSyntheseData.line_no == cte.c.line_no)
-        .values({
-            ImportSyntheseData.altitude_min: sa.case(
-                whens=[
-                    (
-                        sa.or_(
-                            ImportSyntheseData.src_altitude_min == None,
-                            ImportSyntheseData.src_altitude_min == "",
+        .values(
+            {
+                ImportSyntheseData.altitude_min: sa.case(
+                    whens=[
+                        (
+                            sa.or_(
+                                ImportSyntheseData.src_altitude_min == None,
+                                ImportSyntheseData.src_altitude_min == "",
+                            ),
+                            cte.c.altitude_min,
                         ),
-                        cte.c.altitude_min,
-                    ),
-                ],
-                else_=ImportSyntheseData.altitude_min,
-            ),
-            ImportSyntheseData.altitude_max: sa.case(
-                whens=[
-                    (
-                        sa.or_(
-                            ImportSyntheseData.src_altitude_max == None,
-                            ImportSyntheseData.src_altitude_max == "",
+                    ],
+                    else_=ImportSyntheseData.altitude_min,
+                ),
+                ImportSyntheseData.altitude_max: sa.case(
+                    whens=[
+                        (
+                            sa.or_(
+                                ImportSyntheseData.src_altitude_max == None,
+                                ImportSyntheseData.src_altitude_max == "",
+                            ),
+                            cte.c.altitude_max,
                         ),
-                        cte.c.altitude_max,
-                    ),
-                ],
-                else_=ImportSyntheseData.altitude_max,
-            ),
-        })
-
+                    ],
+                    else_=ImportSyntheseData.altitude_max,
+                ),
+            }
+        )
     )
     db.session.execute(stmt)
 
@@ -304,11 +300,15 @@ def get_duplicates_query(imprt, synthese_field, whereclause=sa.true()):
         whereclause,
     )
     partitions = (
-        select([
-            array_agg(ImportSyntheseData.line_no).over(
-                partition_by=synthese_field,
-            ).label("duplicate_lines")
-        ])
+        select(
+            [
+                array_agg(ImportSyntheseData.line_no)
+                .over(
+                    partition_by=synthese_field,
+                )
+                .label("duplicate_lines")
+            ]
+        )
         .where(whereclause)
         .alias("partitions")
     )
@@ -326,15 +326,14 @@ def set_uuid(imprt, fields):
         synthese_field = getattr(ImportSyntheseData, field.synthese_field)
         duplicates = get_duplicates_query(
             imprt,
-            synthese_field, whereclause=synthese_field != None,
+            synthese_field,
+            whereclause=synthese_field != None,
         )
         report_erroneous_rows(
             imprt,
             error_type="DUPLICATE_UUID",
             error_column=field.name_field,
-            whereclause=(
-                ImportSyntheseData.line_no == duplicates.c.lines
-            ),
+            whereclause=(ImportSyntheseData.line_no == duplicates.c.lines),
         )
         report_erroneous_rows(
             imprt,
@@ -349,14 +348,18 @@ def set_uuid(imprt, fields):
     if imprt.fieldmapping.get("unique_id_sinp_generate", False):
         stmt = (
             update(ImportSyntheseData)
-            .values({
-                'unique_id_sinp': func.uuid_generate_v4(),
-            })
+            .values(
+                {
+                    "unique_id_sinp": func.uuid_generate_v4(),
+                }
+            )
             .where(ImportSyntheseData.imprt == imprt)
-            .where(sa.or_(
-                ImportSyntheseData.src_unique_id_sinp == None,
-                ImportSyntheseData.src_unique_id_sinp == '',
-            ))
+            .where(
+                sa.or_(
+                    ImportSyntheseData.src_unique_id_sinp == None,
+                    ImportSyntheseData.src_unique_id_sinp == "",
+                )
+            )
             .where(ImportSyntheseData.unique_id_sinp == None)
         )
         db.session.execute(stmt)
@@ -396,9 +399,7 @@ def check_duplicates_source_pk(imprt, fields):
         imprt,
         error_type="DUPLICATE_ENTITY_SOURCE_PK",
         error_column=field.name_field,
-        whereclause=(
-            ImportSyntheseData.line_no == duplicates.c.lines
-        ),
+        whereclause=(ImportSyntheseData.line_no == duplicates.c.lines),
     )
 
 
@@ -412,9 +413,7 @@ def check_dates(imprt, fields):
         imprt,
         error_type="DATE_MIN_TOO_HIGH",
         error_column=date_min_field.name_field,
-        whereclause=(
-            date_min_synthese_field > today
-        ),
+        whereclause=(date_min_synthese_field > today),
     )
     report_erroneous_rows(
         imprt,
@@ -429,25 +428,19 @@ def check_dates(imprt, fields):
         imprt,
         error_type="DATE_MIN_SUP_DATE_MAX",
         error_column=date_min_field.name_field,
-        whereclause=(
-            date_min_synthese_field > date_max_synthese_field
-        ),
+        whereclause=(date_min_synthese_field > date_max_synthese_field),
     )
     report_erroneous_rows(
         imprt,
         error_type="DATE_MIN_TOO_LOW",
         error_column=date_min_field.name_field,
-        whereclause=(
-            date_min_synthese_field < date(1900, 1, 1)
-        ),
+        whereclause=(date_min_synthese_field < date(1900, 1, 1)),
     )
     report_erroneous_rows(
         imprt,
         error_type="DATE_MAX_TOO_LOW",
         error_column=date_max_field.name_field,
-        whereclause=(
-            date_max_synthese_field < date(1900, 1, 1)
-        ),
+        whereclause=(date_max_synthese_field < date(1900, 1, 1)),
     )
 
 
@@ -462,9 +455,7 @@ def check_altitudes(imprt, fields):
         imprt,
         error_type="ALTI_MIN_SUP_ALTI_MAX",
         error_column=alti_min_field.name_field,
-        whereclause=(
-            alti_min_synthese_field > alti_max_synthese_field
-        ),
+        whereclause=(alti_min_synthese_field > alti_max_synthese_field),
     )
 
 
@@ -479,9 +470,7 @@ def check_depths(imprt, fields):
         imprt,
         error_type="DEPTH_MIN_SUP_ALTI_MAX",  # Yes, there is a typo in db...
         error_column=depth_min_field.name_field,
-        whereclause=(
-            depth_min_synthese_field > depth_max_synthese_field
-        ),
+        whereclause=(depth_min_synthese_field > depth_max_synthese_field),
     )
 
 
@@ -495,11 +484,13 @@ def check_digital_proof_urls(imprt, fields):
         error_type="INVALID_URL_PROOF",
         error_column=digital_proof_field.name_field,
         whereclause=(
-            sa.and_(digital_proof_synthese_field is not None,
-                    digital_proof_synthese_field != '',
-                    digital_proof_synthese_field.op('!~')(
-                        r"^(?:(?:https?|ftp):\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$")
-                    )
+            sa.and_(
+                digital_proof_synthese_field is not None,
+                digital_proof_synthese_field != "",
+                digital_proof_synthese_field.op("!~")(
+                    r"^(?:(?:https?|ftp):\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$"
+                ),
+            )
         ),
     )
 
@@ -507,17 +498,18 @@ def check_digital_proof_urls(imprt, fields):
 def set_geom_from_area_code(imprt, source_column, area_type_filter):
     # Find area in CTE, then update corresponding column in statement
     cte = (
-        ImportSyntheseData.query
-        .filter(
+        ImportSyntheseData.query.filter(
             ImportSyntheseData.imprt == imprt,
             ImportSyntheseData.valid == True,
             ImportSyntheseData.the_geom_4326 == None,
         )
         .join(
-            LAreas, LAreas.area_code == source_column,
+            LAreas,
+            LAreas.area_code == source_column,
         )
         .join(
-            LAreas.area_type, aliased=True,
+            LAreas.area_type,
+            aliased=True,
         )
         .filter(area_type_filter)
         .with_entities(
@@ -530,11 +522,13 @@ def set_geom_from_area_code(imprt, source_column, area_type_filter):
     )
     stmt = (
         update(ImportSyntheseData)
-        .values({
-            ImportSyntheseData.id_area_attachment: cte.c.id_area,
-            ImportSyntheseData.the_geom_local: cte.c.geom,
-            ImportSyntheseData.the_geom_4326: ST_Transform(cte.c.geom, 4326),
-        })
+        .values(
+            {
+                ImportSyntheseData.id_area_attachment: cte.c.id_area,
+                ImportSyntheseData.the_geom_local: cte.c.geom,
+                ImportSyntheseData.the_geom_4326: ST_Transform(cte.c.geom, 4326),
+            }
+        )
         .where(ImportSyntheseData.id_import == cte.c.id_import)
         .where(ImportSyntheseData.line_no == cte.c.line_no)
     )
@@ -548,9 +542,11 @@ def report_erroneous_rows(imprt, error_type, error_column, whereclause):
     if error_type.level == "ERROR":
         cte = (
             update(ImportSyntheseData)
-            .values({
-                ImportSyntheseData.valid: False,
-            })
+            .values(
+                {
+                    ImportSyntheseData.valid: False,
+                }
+            )
             .where(ImportSyntheseData.imprt == imprt)
             .where(whereclause)
             .returning(ImportSyntheseData.line_no)
@@ -563,40 +559,30 @@ def report_erroneous_rows(imprt, error_type, error_column, whereclause):
             .where(whereclause)
             .cte("cte")
         )
-    error = (
-        select([
+    error = select(
+        [
             literal(imprt.id_import).label("id_import"),
             literal(error_type.pk).label("id_type"),
             array_agg(
                 aggregate_order_by(cte.c.line_no, cte.c.line_no),
-            )
-            .label("rows"),
+            ).label("rows"),
             literal(error_column).label("error_column"),
-        ])
-        .alias("error")
-    )
-    stmt = (
-        insert(ImportUserError)
-        .from_select(
-            names=[
-                ImportUserError.id_import,
-                ImportUserError.id_type,
-                ImportUserError.rows,
-                ImportUserError.column,
-            ],
-            select=(
-                select([error])
-                .where(error.c.rows != None)
-            ),
-        )
+        ]
+    ).alias("error")
+    stmt = insert(ImportUserError).from_select(
+        names=[
+            ImportUserError.id_import,
+            ImportUserError.id_type,
+            ImportUserError.rows,
+            ImportUserError.column,
+        ],
+        select=(select([error]).where(error.c.rows != None)),
     )
     db.session.execute(stmt)
 
 
 def complete_others_geom_columns(imprt, fields):
-    local_srid = db.session.execute(
-        sa.func.Find_SRID("ref_geo", "l_areas", "geom")
-    ).scalar()
+    local_srid = db.session.execute(sa.func.Find_SRID("ref_geo", "l_areas", "geom")).scalar()
     if "the_geom_4326" not in fields:
         assert "the_geom_local" in fields
         source_col = "the_geom_local"
@@ -608,17 +594,13 @@ def complete_others_geom_columns(imprt, fields):
         dest_col = "the_geom_local"
         dest_srid = local_srid
     (
-        ImportSyntheseData.query
-        .filter(
+        ImportSyntheseData.query.filter(
             ImportSyntheseData.imprt == imprt,
             ImportSyntheseData.valid == True,
             getattr(ImportSyntheseData, source_col) != None,
-        )
-        .update(
+        ).update(
             values={
-                dest_col: ST_Transform(
-                    getattr(ImportSyntheseData, source_col), dest_srid
-                ),
+                dest_col: ST_Transform(getattr(ImportSyntheseData, source_col), dest_srid),
             },
             synchronize_session=False,
         )
@@ -626,7 +608,7 @@ def complete_others_geom_columns(imprt, fields):
     for name_field, area_type_filter in [
         ("codecommune", BibAreasTypes.type_code == "COM"),
         ("codedepartement", BibAreasTypes.type_code == "DEP"),
-        ("codemaille", BibAreasTypes.type_code.in_(["M1", "M5", "M10"]))
+        ("codemaille", BibAreasTypes.type_code.in_(["M1", "M5", "M10"])),
     ]:
         if name_field not in fields:
             continue
@@ -658,12 +640,10 @@ def complete_others_geom_columns(imprt, fields):
     )
     # Set the_geom_point:
     (
-        ImportSyntheseData.query
-        .filter(
+        ImportSyntheseData.query.filter(
             ImportSyntheseData.imprt == imprt,
             ImportSyntheseData.valid == True,
-        )
-        .update(
+        ).update(
             values={
                 ImportSyntheseData.the_geom_point: ST_Centroid(ImportSyntheseData.the_geom_4326),
             },

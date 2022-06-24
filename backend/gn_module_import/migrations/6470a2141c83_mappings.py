@@ -48,19 +48,30 @@ def upgrade():
     ### Add fieldmapping (resp. contentmapping) table with JSON values column
     fieldmapping = op.create_table(
         "t_fieldmappings",
-        sa.Column("id", sa.INTEGER, sa.ForeignKey("gn_imports.t_mappings.id", ondelete='CASCADE'), primary_key=True),
+        sa.Column(
+            "id",
+            sa.INTEGER,
+            sa.ForeignKey("gn_imports.t_mappings.id", ondelete="CASCADE"),
+            primary_key=True,
+        ),
         sa.Column("values", JSON),
         schema="gn_imports",
     )
     contentmapping = op.create_table(
         "t_contentmappings",
-        sa.Column("id", sa.INTEGER, sa.ForeignKey("gn_imports.t_mappings.id", ondelete='CASCADE'), primary_key=True),
+        sa.Column(
+            "id",
+            sa.INTEGER,
+            sa.ForeignKey("gn_imports.t_mappings.id", ondelete="CASCADE"),
+            primary_key=True,
+        ),
         sa.Column("values", JSON),
         schema="gn_imports",
     )
 
     ### Populate fieldmapping and contentmapping tables
-    op.execute("""
+    op.execute(
+        """
     WITH
     cte1 AS (
         SELECT
@@ -108,8 +119,10 @@ def upgrade():
         cte1
     LEFT JOIN
         cte2 USING(id_mapping)
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
     INSERT INTO
         gn_imports.t_contentmappings (id, values)
     WITH cte AS (
@@ -134,8 +147,10 @@ def upgrade():
         ref_nomenclatures.bib_nomenclatures_types nt ON cte.id_type = nt.id_type
     GROUP BY
         id_mapping
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
     DELETE FROM
 	gn_imports.t_mappings
     USING
@@ -148,8 +163,10 @@ def upgrade():
 	m."type" = 'FIELD'
 	AND
 	fm.id is NULL
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
     DELETE FROM
 	gn_imports.t_mappings
     USING
@@ -162,14 +179,16 @@ def upgrade():
 	m."type" = 'CONTENT'
 	AND
 	cm.id is NULL
-    """)
+    """
+    )
     op.drop_table("t_mappings_fields", schema="gn_imports")
     op.drop_table("t_mappings_values", schema="gn_imports")
 
     ### Add mappings columns on import, populate them, drop old foreign key to mappings
     op.add_column("t_imports", sa.Column("fieldmapping", JSON), schema="gn_imports")
     op.add_column("t_imports", sa.Column("contentmapping", JSON), schema="gn_imports")
-    op.execute("""
+    op.execute(
+        """
     UPDATE
         gn_imports.t_imports i
     SET
@@ -178,8 +197,10 @@ def upgrade():
         gn_imports.t_fieldmappings fm
     WHERE
         i.id_field_mapping = fm.id
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
     UPDATE
         gn_imports.t_imports i
     SET
@@ -188,17 +209,20 @@ def upgrade():
         gn_imports.t_contentmappings cm
     WHERE
         i.id_content_mapping = cm.id
-    """)
-    op.drop_column('t_imports', 'id_field_mapping', schema='gn_imports')
-    op.drop_column('t_imports', 'id_content_mapping', schema='gn_imports')
+    """
+    )
+    op.drop_column("t_imports", "id_field_mapping", schema="gn_imports")
+    op.drop_column("t_imports", "id_content_mapping", schema="gn_imports")
 
     # Remove unnamed mappings, set Not Null on label
-    op.execute("""
+    op.execute(
+        """
     DELETE FROM
         gn_imports.t_mappings
     WHERE
         label IS NULL
-    """)
+    """
+    )
     op.alter_column(
         table_name="t_mappings",
         column_name="label",
@@ -208,13 +232,17 @@ def upgrade():
 
     # Set unique constraint on (label, type)
     op.drop_constraint("t_mappings_un", "t_mappings", schema="gn_imports")
-    op.create_unique_constraint("t_mappings_un", "t_mappings", schema="gn_imports", columns=["label", "type"])
+    op.create_unique_constraint(
+        "t_mappings_un", "t_mappings", schema="gn_imports", columns=["label", "type"]
+    )
 
 
 def downgrade():
     # Set unique constraint on label
     op.drop_constraint("t_mappings_un", "t_mappings", schema="gn_imports")
-    op.create_unique_constraint("t_mappings_un", "t_mappings", schema="gn_imports", columns=["label"])
+    op.create_unique_constraint(
+        "t_mappings_un", "t_mappings", schema="gn_imports", columns=["label"]
+    )
 
     # Remove Not Null on label for temporary mappings
     op.alter_column(
@@ -226,16 +254,25 @@ def downgrade():
 
     ### Create an mapping for each import
     op.add_column(
-       't_imports',
-       sa.Column('id_field_mapping', sa.Integer, sa.ForeignKey('gn_imports.t_mappings.id', onupdate='CASCADE', ondelete='NO ACTION')),
-       schema='gn_imports',
+        "t_imports",
+        sa.Column(
+            "id_field_mapping",
+            sa.Integer,
+            sa.ForeignKey("gn_imports.t_mappings.id", onupdate="CASCADE", ondelete="NO ACTION"),
+        ),
+        schema="gn_imports",
     )
     op.add_column(
-       't_imports',
-       sa.Column('id_content_mapping', sa.Integer, sa.ForeignKey('gn_imports.t_mappings.id', onupdate='CASCADE', ondelete='NO ACTION')),
-       schema='gn_imports',
+        "t_imports",
+        sa.Column(
+            "id_content_mapping",
+            sa.Integer,
+            sa.ForeignKey("gn_imports.t_mappings.id", onupdate="CASCADE", ondelete="NO ACTION"),
+        ),
+        schema="gn_imports",
     )
-    op.execute("""
+    op.execute(
+        """
     DO $$
     DECLARE
         _id_mapping INTEGER;
@@ -276,8 +313,10 @@ def downgrade():
                 id_import = _id_import;
         END LOOP;
     END $$;
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
     DO $$
     DECLARE
         _id_mapping INTEGER;
@@ -318,29 +357,53 @@ def downgrade():
                 id_import = _id_import;
         END LOOP;
     END $$;
-    """)
+    """
+    )
 
     op.drop_column("t_imports", "fieldmapping", schema="gn_imports")
     op.drop_column("t_imports", "contentmapping", schema="gn_imports")
 
     op.create_table(
         "t_mappings_fields",
-        sa.Column('id_match_fields', sa.Integer, primary_key=True),
-        sa.Column('id_mapping', sa.Integer, sa.ForeignKey('gn_imports.t_mappings.id', onupdate='CASCADE', ondelete='CASCADE')),
-        sa.Column('source_field', sa.Unicode(255)),
-        sa.Column('target_field', sa.Unicode(255), sa.ForeignKey('gn_imports.dict_fields.name_field', onupdate='CASCADE', ondelete='CASCADE')),
+        sa.Column("id_match_fields", sa.Integer, primary_key=True),
+        sa.Column(
+            "id_mapping",
+            sa.Integer,
+            sa.ForeignKey("gn_imports.t_mappings.id", onupdate="CASCADE", ondelete="CASCADE"),
+        ),
+        sa.Column("source_field", sa.Unicode(255)),
+        sa.Column(
+            "target_field",
+            sa.Unicode(255),
+            sa.ForeignKey(
+                "gn_imports.dict_fields.name_field", onupdate="CASCADE", ondelete="CASCADE"
+            ),
+        ),
         schema="gn_imports",
     )
     op.create_table(
         "t_mappings_values",
-        sa.Column('id_match_fields', sa.Integer, primary_key=True),
-        sa.Column('id_mapping', sa.Integer, sa.ForeignKey('gn_imports.t_mappings.id', onupdate='CASCADE', ondelete='CASCADE')),
-        sa.Column('source_value', sa.Unicode(255)),
-        sa.Column('id_target_value', sa.Integer, sa.ForeignKey('ref_nomenclatures.t_nomenclatures.id_nomenclature', onupdate='CASCADE', ondelete='CASCADE')),
+        sa.Column("id_match_fields", sa.Integer, primary_key=True),
+        sa.Column(
+            "id_mapping",
+            sa.Integer,
+            sa.ForeignKey("gn_imports.t_mappings.id", onupdate="CASCADE", ondelete="CASCADE"),
+        ),
+        sa.Column("source_value", sa.Unicode(255)),
+        sa.Column(
+            "id_target_value",
+            sa.Integer,
+            sa.ForeignKey(
+                "ref_nomenclatures.t_nomenclatures.id_nomenclature",
+                onupdate="CASCADE",
+                ondelete="CASCADE",
+            ),
+        ),
         schema="gn_imports",
     )
 
-    op.execute("""
+    op.execute(
+        """
     WITH cte AS (
         SELECT
             id AS id_mapping,
@@ -358,9 +421,11 @@ def downgrade():
         cte
     JOIN
         gn_imports.dict_fields f ON f.name_field = cte.key
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
     WITH outercte AS (
         WITH innercte AS (
             SELECT
@@ -394,7 +459,8 @@ def downgrade():
         outercte.value = n.cd_nomenclature
         AND
         nt.id_type = n.id_type
-    """)
+    """
+    )
 
     op.drop_table("t_fieldmappings", schema="gn_imports")
     op.drop_table("t_contentmappings", schema="gn_imports")

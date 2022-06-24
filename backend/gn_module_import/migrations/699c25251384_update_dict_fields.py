@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '699c25251384'
-down_revision = '681062ef2939'
+revision = "699c25251384"
+down_revision = "681062ef2939"
 branch_labels = None
 depends_on = None
 
@@ -34,7 +34,7 @@ def upgrade():
     )
 
     op.execute(
-    """
+        """
     DELETE FROM
         gn_imports.bib_fields
     WHERE
@@ -42,7 +42,7 @@ def upgrade():
     """
     )
     op.execute(
-    """
+        """
     UPDATE
         gn_imports.t_fieldmappings
     SET
@@ -50,7 +50,7 @@ def upgrade():
     """
     )
     op.execute(
-    """
+        """
     UPDATE
         gn_imports.t_contentmappings
     SET
@@ -59,7 +59,7 @@ def upgrade():
     )
 
     op.execute(
-    """
+        """
     UPDATE
         gn_imports.bib_fields
     SET
@@ -69,7 +69,7 @@ def upgrade():
     """
     )
     op.execute(
-    """
+        """
     UPDATE
         gn_imports.bib_fields
     SET
@@ -82,7 +82,7 @@ def upgrade():
 
 def downgrade():
     op.execute(
-    """
+        """
     UPDATE
         gn_imports.bib_fields
     SET
@@ -92,7 +92,7 @@ def downgrade():
     """
     )
     op.execute(
-    """
+        """
     UPDATE
         gn_imports.bib_fields
     SET
@@ -103,7 +103,7 @@ def downgrade():
     )
 
     op.execute(
-    """
+        """
     INSERT INTO
         gn_imports.bib_fields
     (

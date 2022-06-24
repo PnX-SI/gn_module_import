@@ -10,29 +10,37 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '2ed6a7ee5250'
-down_revision = '3a65de65b697'
+revision = "2ed6a7ee5250"
+down_revision = "3a65de65b697"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE gn_imports.t_imports
         ADD COLUMN detected_encoding VARCHAR
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         ALTER TABLE gn_imports.t_imports
         ADD COLUMN source_file BYTEA
-    """)
+    """
+    )
 
 
 def downgrade():
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE gn_imports.t_imports
         DROP COLUMN source_file
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         ALTER TABLE gn_imports.t_imports
         DROP COLUMN detected_encoding
-    """)
+    """
+    )
