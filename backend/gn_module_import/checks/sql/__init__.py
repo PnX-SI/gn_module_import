@@ -1,6 +1,7 @@
 from datetime import date
 
 from flask import current_app
+from numpy import where
 from sqlalchemy import func
 from sqlalchemy.sql.expression import select, update, insert, literal
 from sqlalchemy.sql import column
@@ -224,6 +225,7 @@ def set_cd_nom(imprt, fields):
         return
     field = fields["cd_nom"]
     # Filter out on a taxhub list if provided
+    where_clause = None
     list_id = current_app.config['IMPORT'].get("ID_LIST_TAXA_RESTRICTION", None)
     if list_id is not None:
         where_clause = (
