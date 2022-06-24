@@ -6,13 +6,14 @@ from functools import reduce
 from unittest.mock import patch
 
 import pytest
-from flask import url_for
+from flask import url_for, current_app
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import Unauthorized, Forbidden, BadRequest, Conflict
 from jsonschema import validate as validate_json
 from sqlalchemy import func
 from sqlalchemy.sql.expression import select
 
+from apptax.taxonomie.models import BibListes
 from geonature.utils.env import db
 from geonature.tests.utils import set_logged_user_cookie, unset_logged_user_cookie
 from geonature.core.gn_permissions.tools import _get_scopes_by_action
@@ -213,6 +214,19 @@ def imported_import(client, prepared_import):
     unset_logged_user_cookie(client)
     db.session.refresh(prepared_import)
     return prepared_import
+
+
+@pytest.fixture()
+def sample_taxhub_list():
+    return BibListes.query.filter(BibListes.nom_liste == "Saisie Occtax").one()
+
+
+@pytest.fixture()
+def change_id_list_conf(sample_taxhub_list):
+    old_value = current_app.config["IMPORT"]["ID_LIST_TAXA_RESTRICTION"]
+    current_app.config["IMPORT"]["ID_LIST_TAXA_RESTRICTION"] = sample_taxhub_list.id_liste
+    yield
+    current_app.config["IMPORT"]["ID_LIST_TAXA_RESTRICTION"] = old_value
 
 
 @pytest.mark.usefixtures("client_class", "temporary_transaction", "celery_eager")
@@ -862,12 +876,12 @@ class TestImports:
         )
 
     @pytest.mark.parametrize("import_file_name", ["cd_file.csv"])
-    def test_import_cd_file(self, prepared_import):
+    def test_import_cd_file(self, change_id_list_conf, prepared_import):
         assert_import_errors(
             prepared_import,
             {
                 ("MISSING_VALUE", "cd_nom", frozenset([1, 4, 5])),
-                ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([2, 6, 8])),
+                ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([2, 6, 8, 10])),
                 ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([4, 6, 7])),
             },
         )
