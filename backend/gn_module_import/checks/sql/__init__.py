@@ -164,23 +164,6 @@ def check_nomenclatures(imprt, fields):
         )
 
 
-def set_the_geom_column(imprt, fields, df):
-    file_srid = imprt.srid
-    local_srid = db.session.execute(sa.func.Find_SRID("ref_geo", "l_areas", "geom")).scalar()
-    geom_col = df[df["_geom"].notna()]["_geom"]
-    if file_srid == 4326:
-        df["the_geom_4326"] = geom_col.apply(lambda geom: ST_GeomFromWKB(geom.wkb, file_srid))
-        fields["the_geom_4326"] = BibFields.query.filter_by(name_field="the_geom_4326").one()
-    elif file_srid == local_srid:
-        df["the_geom_local"] = geom_col.apply(lambda geom: ST_GeomFromWKB(geom.wkb, file_srid))
-        fields["the_geom_local"] = BibFields.query.filter_by(name_field="the_geom_local").one()
-    else:
-        df["the_geom_4326"] = geom_col.apply(
-            lambda geom: ST_Transform(ST_GeomFromWKB(geom.wkb, file_srid), 4326)
-        )
-        fields["the_geom_4326"] = BibFields.query.filter_by(name_field="the_geom_4326").one()
-
-
 def set_column_from_referential(imprt, field, reference, error_type):
     source_field = getattr(ImportSyntheseData, field.source_field)
     synthese_field = getattr(ImportSyntheseData, field.synthese_field)
