@@ -183,4 +183,16 @@ export class ImportListComponent implements OnInit {
             }
         );
     };
+    getTooltip(row, tooltipType){
+        if (!row?.cruved?.U) {
+            return "Vous n'avez pas les droits"
+        } else if (!row?.dataset?.active) {
+            return "JDD clos"
+        } else
+            if (tooltipType === "edit") {
+                return "Modifier l'import"
+            } else {
+                return "Supprimer l'import"
+            }
+    }
 }

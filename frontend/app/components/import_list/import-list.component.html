@@ -91,7 +91,7 @@
                         >
                             <button
                                 [disabled]="!row?.cruved?.U || !row?.dataset?.active"
-                                matTooltip="Modifier l’import"
+                                [matTooltip]="getTooltip(row,'edit')"
                                 mat-icon-button
                                 color="primary"
                                 *ngIf="!row.processing"
@@ -126,7 +126,7 @@
                                 color=warn
                                 style="margin-top: -10px;"
                                 (click)="openDeleteModal(row, deleteModal)"
-                                matTooltip="Supprimer l’import"
+                                [matTooltip]="getTooltip(row,'delete')"
                             >
                                 <mat-icon>delete</mat-icon>
                             </button>
