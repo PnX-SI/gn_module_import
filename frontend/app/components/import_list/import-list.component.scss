@@ -13,3 +13,7 @@ ngx-datatable{
 :host ::ng-deep datatable-body-cell {
   padding: 10px 5px !important;
 }
+
+.import-status{
+  font-style: italic;
+}
