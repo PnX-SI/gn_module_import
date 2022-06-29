@@ -130,6 +130,9 @@ export class FieldsMappingStepComponent implements OnInit {
 
   // add a form control for each target field in the syntheseForm
   // mandatory target fields have a required validator
+  displayAlert(field) {
+      return field.name_field === "unique_id_sinp_generate" && !this.syntheseForm.get(field.name_field).value
+  }
   populateSyntheseForm() {
     let validators: Array<ValidatorFn>;
     for (let themefields of this.targetFields) {
