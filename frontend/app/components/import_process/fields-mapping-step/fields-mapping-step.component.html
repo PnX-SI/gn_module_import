@@ -176,6 +176,7 @@
                         <div class="row m-0">
                             <ng-container *ngFor="let field of themefields.fields">
                                 <div
+                                    *ngIf="!getValue(field) || displayAllValues"
                                     class="col-6"
                                 >
                                     <div
