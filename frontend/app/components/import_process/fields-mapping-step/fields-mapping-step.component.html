@@ -229,8 +229,9 @@
                                         <p *ngIf="displayAlert(field)" class="text-warning text-sm">
                                             Attention les identifiants SINP ne seront pas générés
                                         </p>
-                                        <label for="{{field.name_field}}"> <small>{{field.fr_label}} : </small> </label>
+                                        <label for="{{field.name_field}}"> <small>{{field.fr_label}} :</small> </label>
                                         <input
+                                            class="ml-1"
                                             type="checkbox"
                                             id="{{field.name_field}}"
                                             formControlName="{{field.name_field}}"
