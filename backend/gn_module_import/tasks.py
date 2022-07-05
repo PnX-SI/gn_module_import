@@ -9,6 +9,7 @@ from geonature.utils.env import db
 from geonature.utils.celery import celery_app
 
 from gn_module_import.models import TImports, BibFields, ImportSyntheseData
+from geonature.core.gn_commons.models import TModules
 from gn_module_import.checks.dataframe import run_all_checks
 from gn_module_import.checks.dataframe.geography import set_the_geom_column
 from gn_module_import.utils import (
@@ -134,8 +135,9 @@ def do_import_in_synthese(self, import_id):
         ).one()
         imprt.source = TSources(
             name_source=imprt.source_name,
-            desc_source="Imported data from import module (id={import_id})",
+            desc_source=f"Imported data from import module (id={import_id})",
             entity_source_pk_field=entity_source_pk_field.synthese_field,
+            module=TModules.query.filter_by(module_code="IMPORT").one(),
         )
     import_data_to_synthese(imprt)
     ImportSyntheseData.query.filter_by(imprt=imprt).delete()

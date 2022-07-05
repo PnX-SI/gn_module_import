@@ -39,7 +39,7 @@ class ImportModule(TModules):
 
     def generate_module_url_for_source(self, source):
         id_import = re.search(r"^Import\(id=(?P<id>\d+)\)$", source.name_source).group("id")
-        return f"#/front/url/to/import/{id_import}"
+        return f"/import/{id_import}/errors"
 
 
 """
