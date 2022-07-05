@@ -1,5 +1,6 @@
 from datetime import datetime
 from collections.abc import Mapping
+import re
 
 from flask import g
 import sqlalchemy as sa
@@ -22,12 +23,23 @@ from geonature.utils.env import db
 from geonature.utils.celery import celery_app
 from geonature.core.gn_permissions.tools import get_scopes_by_action
 from geonature.core.gn_synthese.models import TSources
+from geonature.core.gn_commons.models import TModules
 
 from pypnnomenclature.models import BibNomenclaturesTypes, TNomenclatures
 from pypnusershub.db.models import User
 from apptax.taxonomie.models import Taxref
 from pypn_habref_api.models import Habref
 from ref_geo.models import LAreas
+
+
+class ImportModule(TModules):
+    __mapper_args__ = {
+        "polymorphic_identity": "import",
+    }
+
+    def generate_module_url_for_source(self, source):
+        id_import = re.search(r"^Import\(id=(?P<id>\d+)\)$", source.name_source).group("id")
+        return f"#/front/url/to/import/{id_import}"
 
 
 """
