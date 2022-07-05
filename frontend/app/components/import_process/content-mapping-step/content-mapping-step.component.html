@@ -195,7 +195,14 @@
                                     *ngIf="true"
                                     class="form-group row"
                                 >
-                                    <label class="col-sm-4 col-form-label" [ngClass]="{'font-italic': value == null || value == ''}">{{value || "Pas de valeur"}} :</label>
+                                    <label class="col-sm-4 col-form-label" [ngClass]="{'font-italic': value == null || value == ''}">
+                                        <i  *ngIf="value == null || value == ''"
+                                            matTooltip="Nomenclature à utiliser pour les cellules sans valeur (N/A, null)"
+                                            matTooltipClass="custom-tooltip"
+                                            class="fa fa-info-circle mr-1"
+                                            aria-hidden="true">
+                                        </i>{{value || "Valeur vide"}} :
+                                    </label>
                                     <div class="col-sm-8">
                                         <select
                                             class="form-control form-control-sm"
