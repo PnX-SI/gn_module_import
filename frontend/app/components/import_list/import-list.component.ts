@@ -52,7 +52,7 @@ export class ImportListComponent implements OnInit {
     ngOnInit() {
 
         this.onImportList(1, "");
-        setTimeout(() => {
+        this.fetchTimeout = setTimeout(() => {
             this.updateImports()}, 15000
         )
         this.search.valueChanges.subscribe(value => {
@@ -65,8 +65,8 @@ export class ImportListComponent implements OnInit {
     }
 
     ngOnDestroy() {
-        this._ds.getImportList({}).subscribe().unsubscribe();
         clearTimeout(this.fetchTimeout)
+        this._ds.getImportList({}).subscribe().unsubscribe();
     }
 
     updateFilter(val: any) {

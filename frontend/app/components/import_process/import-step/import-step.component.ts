@@ -38,8 +38,7 @@ export class ImportStepComponent implements OnInit {
     public progressBar: boolean = false;
     public errorStatus: string = "";
     private timeout: number = 100;
-    private checkTimeout: any
-    private importTimeout: any
+    private runningTimeout: any
 
     @ViewChild("modalRedir") modalRedir: any;
 
@@ -72,11 +71,8 @@ export class ImportStepComponent implements OnInit {
       }
     }
     ngOnDestroy() {
-        if (this.checkTimeout !== undefined) {
-            clearTimeout(this.checkTimeout)
-        }
-        if (this.importTimeout !== undefined) {
-            clearTimeout(this.importTimeout)
+        if (this.runningTimeout !== undefined) {
+            clearTimeout(this.runningTimeout)
         }
     }
     setImportData() {
@@ -136,7 +132,7 @@ export class ImportStepComponent implements OnInit {
                     if (this.timeout < 1000) {
                         this.timeout += 100;
                     }
-                    this.checkTimeout = setTimeout(() => this.verifyChecksDone(), this.timeout)
+                    this.runningTimeout = setTimeout(() => this.verifyChecksDone(), this.timeout)
                 }
             })
     }
@@ -163,7 +159,7 @@ export class ImportStepComponent implements OnInit {
                     if (this.timeout < 1000) {
                         this.timeout += 100;
                     }
-                    this.importTimeout = setTimeout(() => this.checkImportState(data), this.timeout)
+                    this.runningTimeout = setTimeout(() => this.checkImportState(data), this.timeout)
                 }
             })
     }
