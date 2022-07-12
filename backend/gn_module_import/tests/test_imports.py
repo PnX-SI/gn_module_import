@@ -92,11 +92,10 @@ def imports(users):
 
 
 @pytest.fixture()
-def no_default_nomenclatures(app):
-    previous_value = app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]
-    app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"] = False
-    yield
-    app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"] = previous_value
+def no_default_nomenclatures(monkeypatch):
+    monkeypatch.setitem(
+        current_app.config["IMPORT"], "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE", False
+    )
 
 
 @pytest.fixture()
@@ -235,11 +234,10 @@ def sample_taxhub_list():
 
 
 @pytest.fixture()
-def change_id_list_conf(sample_taxhub_list):
-    old_value = current_app.config["IMPORT"]["ID_LIST_TAXA_RESTRICTION"]
-    current_app.config["IMPORT"]["ID_LIST_TAXA_RESTRICTION"] = sample_taxhub_list.id_liste
-    yield
-    current_app.config["IMPORT"]["ID_LIST_TAXA_RESTRICTION"] = old_value
+def change_id_list_conf(monkeypatch, sample_taxhub_list):
+    monkeypatch.setitem(
+        current_app.config["IMPORT"], "ID_LIST_TAXA_RESTRICTION", sample_taxhub_list.id_liste
+    )
 
 
 @pytest.mark.usefixtures("client_class", "temporary_transaction", "celery_eager")
@@ -991,7 +989,7 @@ class TestImports:
         )
 
     @pytest.mark.parametrize("import_file_name", ["nomenclatures_file.csv"])
-    def test_import_nomenclatures_file(self, prepared_import, no_default_nomenclatures):
+    def test_import_nomenclatures_file(self, no_default_nomenclatures, prepared_import):
         assert_import_errors(
             prepared_import,
             {
