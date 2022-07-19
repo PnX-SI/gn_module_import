@@ -129,8 +129,12 @@ export class ImportReportComponent implements OnInit {
   }
 
   matchNomenclature() {
-    if (this.importData) {
-      const mappingValues = this.importData?.contentmapping;
+    if (
+      this.importData &&
+      this.importData?.contentmapping &&
+      Object.keys(this.importData?.contentmapping).length > 0
+    ) {
+      const mappingValues = this.importData.contentmapping;
       const match: Array<MatchedNomenclature> = [];
       this._dataService.getNomenclatures().subscribe((nomencs) => {
         Object.keys(nomencs).forEach((nomenc) => {
