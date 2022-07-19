@@ -165,6 +165,12 @@ export class DataService {
     return this._http.get<any>(`${urlApi}/imports/${import_id}/preview_valid_data`);
   }
 
+  getBbox(sourceId: number): Observable<any> {
+    return this._http.get<any>(`${AppConfig.API_ENDPOINT}/synthese/observations_bbox`, {
+      params: { id_source: sourceId },
+    });
+  }
+
   finalizeImport(import_id): Observable<Import> {
     return this._http.post<Import>(`${urlApi}/imports/${import_id}/import`, {});
   }

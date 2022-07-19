@@ -69,7 +69,7 @@ export class ImportReportComponent implements OnInit {
     this.importData = this.importProcessService.getImportData();
     this.fieldsNb = Object.keys(this.importData?.fieldmapping || {}).length;
     // Load additionnal data if imported data
-    this.loadValidData(this.importData?.id_import);
+    this.loadValidData(this.importData);
     this.loadTaxaDistribution();
     this.loadDatasetName();
     // Add property to show errors lines. Need to do this to
@@ -81,12 +81,18 @@ export class ImportReportComponent implements OnInit {
   /** Gets the validBbox and validData (info about observations)
    * @param {string}  idImport - id of the import to get the info from
    */
-  loadValidData(idImport: number | undefined) {
-    if (idImport) {
-      this._dataService.getValidData(idImport).subscribe((data) => {
-        this.validBbox = data.valid_bbox;
-        this.validData = data.valid_data;
-      });
+  loadValidData(importData: Import | null) {
+    if (importData) {
+      if (importData.date_end_import && importData.id_source) {
+        this._dataService.getBbox(importData.id_source).subscribe((data) => {
+          this.validBbox = data;
+        });
+      } else {
+        this._dataService.getValidData(importData?.id_import).subscribe((data) => {
+          this.validBbox = data.valid_bbox;
+          this.validData = data.valid_data;
+        });
+      }
     }
   }
 
