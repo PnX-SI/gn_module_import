@@ -221,7 +221,7 @@
             </div>
           </div>
         </div>
-        <div class="card content">
+        <div *ngIf="validBbox" class="card content">
           <div class="card-body">
             <div class="row">
               <div class="col-8">
@@ -237,7 +237,7 @@
             </div>
 
             <pnx-map height="40vh" searchBar="false">
-              <pnx-geojson [geojson]="this.validBbox" [zoomOnFirstTime]="true">
+              <pnx-geojson [geojson]="validBbox" [zoomOnFirstTime]="true">
               </pnx-geojson>
             </pnx-map>
           </div>

@@ -86,7 +86,7 @@ export class ImportReportComponent implements OnInit {
         this._dataService.getBbox(importData.id_source).subscribe((data) => {
           this.validBbox = data;
         });
-      } else {
+      } else if (importData.processed) {
         this._dataService.getValidData(importData?.id_import).subscribe((data) => {
           this.validBbox = data.valid_bbox;
         });
