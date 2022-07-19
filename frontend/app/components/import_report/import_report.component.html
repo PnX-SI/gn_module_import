@@ -230,7 +230,7 @@
                 </h5>
               </div>
               <div class="col-4">
-                <button class="mat-raised-button mat-primary" (click)="goToSynthese(importData?.id_dataset)">
+                <button [disabled]="importData?.date_end_import === null" class="mat-raised-button mat-primary" (click)="goToSynthese(importData?.id_dataset)">
                   Afficher dans la synthèse
                 </button>
               </div>
@@ -242,7 +242,7 @@
             </pnx-map>
           </div>
         </div>
-        <div class="card content">
+        <div *ngIf="doughnutChartData.length > 0" class="card content">
           <div class="card-body">
             <div class="row">
               <div class="col-7">
