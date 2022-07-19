@@ -35,7 +35,6 @@ export class ImportReportComponent implements OnInit {
   public importData: Import | null;
   public expansionPanelHeight: string = '60px';
   public validBbox: any;
-  public validData: Array<Object>;
   public fieldsNb: Number = 0;
   public taxaDistribution: Array<TaxaDistribution> = [];
   public matchedNomenclature: Array<MatchedNomenclature> = [];
@@ -90,7 +89,6 @@ export class ImportReportComponent implements OnInit {
       } else {
         this._dataService.getValidData(importData?.id_import).subscribe((data) => {
           this.validBbox = data.valid_bbox;
-          this.validData = data.valid_data;
         });
       }
     }
