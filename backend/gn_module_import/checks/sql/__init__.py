@@ -342,7 +342,9 @@ def set_uuid(imprt, fields):
                 Synthese.source != imprt.source,
             ),
         )
-    if imprt.fieldmapping.get("unique_id_sinp_generate", False):
+    if imprt.fieldmapping.get(
+        "unique_id_sinp_generate", current_app.config["IMPORT"]["DEFAULT_GENERATE_MISSING_UUID"]
+    ):
         stmt = (
             update(ImportSyntheseData)
             .values(
