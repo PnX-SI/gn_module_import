@@ -1040,6 +1040,6 @@ class TestImports:
 
         assert resp.status_code == 200
         assert all(
-            tuple(nomenclature.keys()) == ("nomenclature_type", "nomenclatures")
+            set(nomenclature.keys()) == {"nomenclature_type", "nomenclatures"}
             for nomenclature in resp.json.values()
         )
