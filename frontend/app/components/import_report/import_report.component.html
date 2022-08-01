@@ -4,9 +4,11 @@
       <div class="col-12 col-lg-6">
         <div class="card content">
           <div class="card-body">
-            <h5 class="card-title">
-              Rapport d'import : {{ importData?.id_import }}
-            </h5>
+            <div class="d-flex display justify-content-between">
+              <h5 class="card-title">Rapport d'import : {{ importData?.id_import }}</h5>
+              <h5 class="card-title unfinished">{{ importData?.processed ? '' : 'IMPORT NON FINALISÉ'}}
+              </h5>
+            </div>
             <p class="card-text">
               <b>Jeu de données : </b><a routerLink="/metadata/dataset_detail/{{
                   importData?.id_dataset
@@ -188,7 +190,7 @@
               </tbody>
             </table>
             <div class="d-flex flex-row-reverse" *ngIf="nbTotalErrors !== 0">
-              <button class="mat-raised-button mat-primary" (click)="_csvExport.onCSV(importData?.id_import)">
+              <button  mat-raised-button color="primary" (click)="_csvExport.onCSV(importData?.id_import)">
                 Exporter vos {{ nbTotalErrors }} observations invalides
               </button>
             </div>
@@ -199,20 +201,20 @@
         <div class="card content">
           <div class="card-body">
             <div class="d-flex justify-content-center">
-              <button class="mat-raised-button mat-primary" [disabled]="loadingPdf" (click)="exportAsPDF()">
+              <button  mat-raised-button color="primary" [disabled]="loadingPdf" (click)="exportAsPDF()">
                 Rapport PDF
                 <mat-icon *ngIf="loadingPdf">
                   <mat-spinner color="warn" diameter="30"> </mat-spinner>
                 </mat-icon>
               </button>
-              <button [attr.disabled]="fieldsNb == 0 ? true : null" class="mat-raised-button mat-primary"
+              <button mat-raised-button color="primary" [disabled]="fieldsNb == 0 ? true : null"
                 (click)="exportCorrespondances()">
                 Exporter les correspondances des champs
               </button>
-              <button [attr.disabled]="
+              <button mat-raised-button color="primary" [disabled]="
                   matchedNomenclature === undefined ||
                   matchedNomenclature?.length == 0 ? true : null
-                " class="mat-raised-button mat-primary" (click)="exportNomenclatures()">
+                " (click)="exportNomenclatures()">
                 Exporter les correspondances des nomenclatures
               </button>
             </div>
@@ -227,7 +229,7 @@
                 </h5>
               </div>
               <div class="col-4">
-                <button [disabled]="importData?.date_end_import === null" class="mat-raised-button mat-primary" (click)="goToSynthese(importData?.id_dataset)">
+                <button  mat-raised-button color="primary" [disabled]="importData?.date_end_import === null" (click)="goToSynthese(importData?.id_dataset)">
                   Afficher dans la synthèse
                 </button>
               </div>
