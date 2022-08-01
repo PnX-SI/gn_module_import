@@ -27,7 +27,7 @@
                     <div class="d-flex justify-content-center">
                       <h5>
                         ({{ importData?.import_count || 0 }} ligne(s) /
-                        {{ importData?.source_count }})
+                        {{ importData?.source_count || 0 }})
                       </h5>
                     </div>
                   </div>
@@ -43,7 +43,7 @@
               <div class="card-body">
                 <div class="row">
                   <div class="col-9 col-md-7">
-                    <h5 class="card-title">Taxa importés</h5>
+                    <h5 class="card-title">Taxons importés</h5>
                     <div class="d-flex justify-content-center">
                       <h5>{{ importData?.taxa_count }}</h5>
                     </div>
@@ -73,7 +73,7 @@
                   importData?.import_count || 0
                   }}
                   /
-                  {{ importData?.source_count }})
+                  {{ importData?.source_count || 0 }})
                 </p>
               </div>
               <div class="col-6">
@@ -214,9 +214,6 @@
                   matchedNomenclature?.length == 0 ? true : null
                 " class="mat-raised-button mat-primary" (click)="exportNomenclatures()">
                 Exporter les correspondances des nomenclatures
-              </button>
-              <button class="mat-raised-button mat-primary" disabled>
-                Correspondances d’identifiants
               </button>
             </div>
           </div>
