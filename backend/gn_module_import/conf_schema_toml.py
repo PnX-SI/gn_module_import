@@ -3,6 +3,7 @@
 """
 
 from marshmallow import Schema, fields
+from marshmallow.validate import OneOf
 
 DEFAULT_LIST_COLUMN = [
     {
@@ -149,7 +150,22 @@ class GnModuleSchemaConf(Schema):
     CHECK_EXIST_PROOF = fields.Boolean(load_default=True)
     CHECK_TYPE_INFO_GEO = fields.Boolean(load_default=True)
     DEFAULT_GENERATE_MISSING_UUID = fields.Boolean(load_default=True)
-    DEFAULT_RANK = fields.String(load_default=DEFAULT_RANK)
+    DEFAULT_RANK = fields.String(
+        load_default=DEFAULT_RANK,
+        validate=OneOf(
+            [
+                "regne",
+                "phylum",
+                "classe",
+                "ordre",
+                "famille",
+                "sous_famille",
+                "tribu",
+                "group1_inpn",
+                "group2_inpn",
+            ]
+        ),
+    )
     # If ID is provided (!=-1) will take the geometry in ref_geo.l_areas
     # and checks if all imported points are inside it. Otherwise throws an error
     ID_AREA_RESTRICTION = fields.Integer(load_default=None)
