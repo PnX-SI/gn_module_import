@@ -212,21 +212,30 @@ export class ImportReportComponent implements OnInit {
     const img: HTMLImageElement = document.createElement('img');
     this.loadingPdf = true;
     const chartImg: HTMLImageElement = this.getChartPNG();
+
+    if (this._map.map) {
     leafletImage(
-      this._map.map,
+      this._map.map ? this._map.map : "",
       function (err, canvas) {
         img.src = canvas.toDataURL('image/png');
-        this._dataService.getPdf(this.importData.id_import, img.src, chartImg.src).subscribe(
-          (result) => {
-            this.loadingPdf = false;
-            saveAs(result, 'export.pdf');
-          },
-          (error) => {
-            this.loadingPdf = false;
-            console.log('Error getting pdf');
-          }
-        );
+        this.exportMapAndChartPdf(chartImg, img)
       }.bind(this)
+    );}
+    else {
+      this.exportMapAndChartPdf(chartImg)
+    }
+  }
+
+  exportMapAndChartPdf(chartImg?, mapImg?) {
+    this._dataService.getPdf(this.importData?.id_import, mapImg?.src, chartImg.src).subscribe(
+      (result) => {
+        this.loadingPdf = false;
+        saveAs(result, 'export.pdf');
+      },
+      (error) => {
+        this.loadingPdf = false;
+        console.log('Error getting pdf');
+      }
     );
   }
 
