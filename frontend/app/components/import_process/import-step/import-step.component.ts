@@ -152,6 +152,7 @@ export class ImportStepComponent implements OnInit {
                     this.importProcessService.setImportData(importData);
                     this.importDone = true
                     this._commonService.regularToaster("info", "Données importées !");
+                    this._router.navigate([ModuleConfig.MODULE_URL, this.importData.id_import, 'report']);
                 } else if (importData.task_progress === -1){
                     this.errorStatus = "import"
                     this.importRunning = false
