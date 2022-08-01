@@ -7,7 +7,7 @@ import { MapService } from '@geonature_common/map/map.service';
 import { DataService } from '../../services/data.service';
 import { ImportProcessService } from '../import_process/import-process.service';
 import { Import, ImportError, Nomenclature, TaxaDistribution } from '../../models/import.model';
-import { CsvExportService } from "../../services/csv-export.service";
+import { CsvExportService } from '../../services/csv-export.service';
 import { ModuleConfig } from '../../module.config';
 
 interface MatchedNomenclature {
@@ -181,7 +181,9 @@ export class ImportReportComponent implements OnInit {
   getChartPNG(): HTMLImageElement {
     const chart: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('chart');
     const img: HTMLImageElement = document.createElement('img');
-    img.src = chart.toDataURL();
+    if (chart) {
+      img.src = chart.toDataURL();
+    }
     return img;
   }
 

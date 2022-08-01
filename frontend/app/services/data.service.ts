@@ -206,9 +206,9 @@ export class DataService {
   getPdf(importId, mapImg, chartImg) {
     const formData = new FormData();
     formData.append("map", mapImg);
-    formData.append("chart", chartImg);
-    return this._http
-      .post(`${urlApi}/export_pdf/${importId}`, formData, { responseType: "blob",
-      });
+    if (chartImg !== "") {
+      formData.append("chart", chartImg);
+    }
+    return this._http.post(`${urlApi}/export_pdf/${importId}`, formData, { responseType: "blob" });
   }
 }
