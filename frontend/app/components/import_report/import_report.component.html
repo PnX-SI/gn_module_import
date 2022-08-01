@@ -187,7 +187,7 @@
                 </tr>
               </tbody>
             </table>
-            <div class="d-flex flex-row-reverse" *ngIf="importData?.errors?.length">
+            <div class="d-flex flex-row-reverse" *ngIf="nbTotalErrors !== 0">
               <button class="mat-raised-button mat-primary" (click)="_csvExport.onCSV(importData?.id_import)">
                 Exporter vos {{ nbTotalErrors }} observations invalides
               </button>

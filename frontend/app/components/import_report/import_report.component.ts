@@ -7,6 +7,7 @@ import { MapService } from '@geonature_common/map/map.service';
 import { DataService } from '../../services/data.service';
 import { ImportProcessService } from '../import_process/import-process.service';
 import { Import, ImportError, Nomenclature, TaxaDistribution } from '../../models/import.model';
+import { CsvExportService } from "../../services/csv-export.service";
 import { ModuleConfig } from '../../module.config';
 
 interface MatchedNomenclature {
@@ -61,6 +62,7 @@ export class ImportReportComponent implements OnInit {
     private importProcessService: ImportProcessService,
     private _dataService: DataService,
     private _router: Router,
+    private _csvExport: CsvExportService,
     private _map: MapService
   ) {}
 
@@ -116,7 +118,7 @@ export class ImportReportComponent implements OnInit {
     if (this.importData) {
       this._dataService.getImportErrors(this.importData.id_import).subscribe((errors) => {
         this.importErrors = errors;
-        // Get the total number of errors:
+        // Get the total number of erroneous rows:
         // 1. get all rows in errors
         // 2. flaten to have 1 array of all rows in error
         // 3. remove duplicates (with Set)
