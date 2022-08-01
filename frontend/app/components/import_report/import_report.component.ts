@@ -192,7 +192,7 @@ export class ImportReportComponent implements OnInit {
       const blob: Blob = new Blob([JSON.stringify(this.importData.fieldmapping, null, 4)], {
         type: 'application/json',
       });
-      saveAs(blob, 'correspondances_champs.json');
+      saveAs(blob, `${this.importData?.id_import}_correspondances_champs.json`);
     }
   }
 
@@ -202,7 +202,7 @@ export class ImportReportComponent implements OnInit {
       const blob: Blob = new Blob([JSON.stringify(this.matchedNomenclature, null, 4)], {
         type: 'application/json',
       });
-      saveAs(blob, 'correspondances_nomenclatures.json');
+      saveAs(blob, `${this.importData?.id_import}_correspondances_nomenclatures.json`);
     }
   }
 
