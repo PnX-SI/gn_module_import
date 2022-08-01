@@ -200,20 +200,20 @@
           <div class="card-body">
             <div class="d-flex justify-content-center">
               <button class="mat-raised-button mat-primary" [disabled]="loadingPdf" (click)="exportAsPDF()">
-                Export PDF
+                Rapport PDF
                 <mat-icon *ngIf="loadingPdf">
                   <mat-spinner color="warn" diameter="30"> </mat-spinner>
                 </mat-icon>
               </button>
               <button [attr.disabled]="fieldsNb == 0 ? true : null" class="mat-raised-button mat-primary"
                 (click)="exportCorrespondances()">
-                Exporter les correspondances
+                Exporter les correspondances des champs
               </button>
               <button [attr.disabled]="
                   matchedNomenclature === undefined ||
                   matchedNomenclature?.length == 0 ? true : null
                 " class="mat-raised-button mat-primary" (click)="exportNomenclatures()">
-                Exporter les nomenclatures
+                Exporter les correspondances des nomenclatures
               </button>
               <button class="mat-raised-button mat-primary" disabled>
                 Correspondances d’identifiants

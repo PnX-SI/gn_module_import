@@ -210,6 +210,5 @@ export class DataService {
     return this._http
       .post(`${urlApi}/export_pdf/${importId}`, formData, { responseType: "blob",
       });
-    // return this._http.get(`${urlApi}/export_pdf/${importId}`, {responseType: 'blob'})
   }
 }
