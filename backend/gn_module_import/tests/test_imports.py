@@ -1039,7 +1039,7 @@ class TestImports:
         resp = self.client.get(url_for("import.get_nomenclatures"))
 
         assert resp.status_code == 200
-        assert any(
-            list(nomenclature.keys()) == ["nomenclature_type", "nomenclatures"]
+        assert all(
+            tuple(nomenclature.keys()) == ("nomenclature_type", "nomenclatures")
             for nomenclature in resp.json.values()
         )
