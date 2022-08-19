@@ -28,6 +28,16 @@ def upgrade():
     )
     op.execute(
         """
+        UPDATE gn_imports.t_user_error_list
+        SET id_rows = ARRAY(SELECT generate_series(1, gn_imports.t_imports.source_count))
+        FROM gn_imports.t_imports
+        WHERE
+            gn_imports.t_user_error_list.id_import = gn_imports.t_imports.id_import
+            AND gn_imports.t_user_error_list.id_rows=ARRAY['ALL'];
+        """
+    )
+    op.execute(
+        """
         ALTER TABLE gn_imports.t_user_error_list
         ALTER COLUMN id_rows TYPE integer[] USING id_rows::integer[]
     """
