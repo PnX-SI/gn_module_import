@@ -34,6 +34,20 @@ def upgrade():
         )
     """
     )
+    op.execute(
+        """
+        WITH unq AS (
+            SELECT DISTINCT ON (tmv.id_mapping, df.name_field, tmv.source_value) tmv.id_match_values
+            FROM gn_imports.t_mappings_values tmv
+            INNER JOIN ref_nomenclatures.t_nomenclatures tn ON tn.id_nomenclature = tmv.id_target_value
+            INNER JOIN ref_nomenclatures.bib_nomenclatures_types bnt ON bnt.id_type = tn.id_type
+            INNER JOIN gn_imports.cor_synthese_nomenclature csn ON csn.mnemonique = bnt.mnemonique
+            INNER JOIN gn_imports.dict_fields df ON df.name_field = csn.synthese_col
+        )
+        DELETE FROM gn_imports.t_mappings_values tmv
+        WHERE tmv.id_match_values NOT IN (SELECT unq.id_match_values FROM unq);
+    """
+    )
     # Add unique constraint
     op.execute(
         """
