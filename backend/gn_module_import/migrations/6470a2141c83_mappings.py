@@ -18,6 +18,24 @@ depends_on = None
 
 
 def upgrade():
+    op.execute(
+        """
+        ALTER TABLE gn_imports.t_imports
+        DROP CONSTRAINT IF EXISTS fk_gn_imports_t_mappings_fields,
+        ADD CONSTRAINT fk_gn_imports_t_mappings_fields 
+        FOREIGN KEY (id_field_mapping) 
+        REFERENCES gn_imports.t_mappings (id_mapping) ON DELETE SET NULL ON UPDATE CASCADE;
+        """
+    )
+    op.execute(
+        """
+        ALTER TABLE gn_imports.t_imports
+        DROP CONSTRAINT IF EXISTS fk_gn_imports_t_mappings_values,
+        ADD CONSTRAINT fk_gn_imports_t_mappings_values 
+        FOREIGN KEY (id_content_mapping) 
+        REFERENCES gn_imports.t_mappings (id_mapping) ON DELETE SET NULL ON UPDATE CASCADE;
+        """
+    )
     ### Rename mapping columns, add Not Null
     op.alter_column(
         table_name="t_mappings",
