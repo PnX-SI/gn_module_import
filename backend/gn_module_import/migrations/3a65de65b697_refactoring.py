@@ -1,7 +1,7 @@
 """Refactoring of database structure
 
 Revision ID: 3a65de65b697
-Revises: 4b137deaf201
+Revises: ff0d68285cd8
 Create Date: 2021-03-29 23:02:14.880716
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "3a65de65b697"
-down_revision = "4b137deaf201"
+down_revision = "ff0d68285cd8"
 branch_labels = None
 depends_on = None
 
