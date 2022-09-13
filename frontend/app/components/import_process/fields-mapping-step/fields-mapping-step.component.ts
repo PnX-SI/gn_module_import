@@ -22,7 +22,7 @@ import { ModuleConfig } from "../../../module.config";
 import { Import, SynthesisThemeFields } from "../../../models/import.model";
 import { ImportProcessComponent } from "../import-process.component";
 import { ImportProcessService } from "../import-process.service";
-import { FieldMapping, FieldMappingValues } from "../../../models/mapping.model";
+import {ContentMapping, FieldMapping, FieldMappingValues} from "../../../models/mapping.model";
 import { Step } from "../../../models/enums.model";
 
 @Component({
@@ -341,7 +341,15 @@ export class FieldsMappingStepComponent implements OnInit {
       return of(this.importData).pipe(
       concatMap((importData: Import) => {
           if (this.mappingSelected || this.syntheseForm.dirty) {
-              return this._ds.setImportFieldMapping(importData.id_import, this.getFieldMappingValues())
+              if (!ModuleConfig.ALLOW_VALUE_MAPPING){
+              this._ds.getContentMapping(ModuleConfig.DEFAULT_VALUE_MAPPING_ID).subscribe((mapping) => {
+                  this._ds.setImportContentMapping(importData.id_import, mapping.values).subscribe(() => {
+                  })
+              })
+                  return this._ds.setImportFieldMapping(importData.id_import, this.getFieldMappingValues())
+              } else {
+                  return this._ds.setImportFieldMapping(importData.id_import, this.getFieldMappingValues())
+              }
           } else {
               return of(importData);
           }

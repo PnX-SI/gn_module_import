@@ -51,11 +51,17 @@ constructor(
 
   // If some steps must be skipped, implement it here
   getPreviousStep(step: Step): Step {
+    if (!ModuleConfig.ALLOW_VALUE_MAPPING && step===5) {
+        return step - 2;
+    }
     return step - 1;
   }
 
   // If some steps must be skipped, implement it here
   getNextStep(step: Step): Step {
+    if (!ModuleConfig.ALLOW_VALUE_MAPPING && step===3) {
+        return step + 2;
+    }
     return step + 1;
   }
 
