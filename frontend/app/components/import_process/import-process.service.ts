@@ -51,18 +51,20 @@ constructor(
 
   // If some steps must be skipped, implement it here
   getPreviousStep(step: Step): Step {
-    if (!ModuleConfig.ALLOW_VALUE_MAPPING && step===5) {
-        return step - 2;
+    let previousStep = step - 1;
+    if (!ModuleConfig.ALLOW_VALUE_MAPPING && previousStep === Step.ContentMapping) {
+      previousStep -= 1;
     }
-    return step - 1;
+    return previousStep;
   }
 
   // If some steps must be skipped, implement it here
   getNextStep(step: Step): Step {
-    if (!ModuleConfig.ALLOW_VALUE_MAPPING && step===3) {
-        return step + 2;
+    let nextStep = step + 1;
+    if (!ModuleConfig.ALLOW_VALUE_MAPPING && nextStep === Step.ContentMapping) {
+      nextStep += 1;
     }
-    return step + 1;
+    return nextStep;
   }
 
   navigateToPreviousStep(step: Step) {
