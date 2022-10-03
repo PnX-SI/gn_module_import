@@ -10,7 +10,7 @@ import {
 import { HttpErrorResponse } from "@angular/common/http";
 import { Observable, of } from "rxjs";
 import { forkJoin } from "rxjs/observable/forkJoin";
-import { startWith, pairwise, switchMap, concatMap, map, mapTo, skip, finalize, catchError } from "rxjs/operators";
+import { startWith, pairwise, switchMap, concatMap, map, flatMap, mapTo, skip, finalize, catchError } from "rxjs/operators";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 
 import { CommonService } from "@geonature_common/service/common.service";
@@ -341,15 +341,7 @@ export class FieldsMappingStepComponent implements OnInit {
       return of(this.importData).pipe(
       concatMap((importData: Import) => {
           if (this.mappingSelected || this.syntheseForm.dirty) {
-              if (!ModuleConfig.ALLOW_VALUE_MAPPING){
-              this._ds.getContentMapping(ModuleConfig.DEFAULT_VALUE_MAPPING_ID).subscribe((mapping) => {
-                  this._ds.setImportContentMapping(importData.id_import, mapping.values).subscribe(() => {
-                  })
-              })
-                  return this._ds.setImportFieldMapping(importData.id_import, this.getFieldMappingValues())
-              } else {
-                  return this._ds.setImportFieldMapping(importData.id_import, this.getFieldMappingValues())
-              }
+              return this._ds.setImportFieldMapping(importData.id_import, this.getFieldMappingValues())
           } else {
               return of(importData);
           }
@@ -357,6 +349,17 @@ export class FieldsMappingStepComponent implements OnInit {
       concatMap((importData: Import) => {
           if (!importData.loaded && loadImport) {
               return this._ds.loadImport(importData.id_import)
+          } else {
+              return of(importData);
+          }
+      }),
+      concatMap((importData: Import) => {
+          if ((this.mappingSelected || this.syntheseForm.dirty) && !ModuleConfig.ALLOW_VALUE_MAPPING) {
+              return this._ds.getContentMapping(ModuleConfig.DEFAULT_VALUE_MAPPING_ID).pipe(
+                  flatMap((mapping: ContentMapping) => {
+                      return this._ds.setImportContentMapping(importData.id_import, mapping.values);
+                  }),
+              );
           } else {
               return of(importData);
           }
