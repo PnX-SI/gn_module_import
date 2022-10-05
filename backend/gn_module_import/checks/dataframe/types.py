@@ -1,13 +1,15 @@
 from typing import Dict
 import re
 from uuid import UUID
+import re
+from itertools import product
+from datetime import datetime
 
 from flask import current_app
 import pandas as pd
 import numpy as np
 from shapely import wkt
 from sqlalchemy.dialects.postgresql import UUID as UUIDType
-from dateutil.parser import parse as parse_datetime
 
 from geonature.core.gn_synthese.models import Synthese
 from geonature.utils.env import db
@@ -16,10 +18,31 @@ from gn_module_import.models import BibFields
 
 
 def convert_to_datetime(value):
-    try:
-        return parse_datetime(value)
-    except Exception:
-        return None
+    value = value.strip()
+    value = re.sub("[ ]+", " ", value)
+    value = re.sub("[/.:]", "-", value)
+    date_formats = [
+        "%Y-%m-%d",
+        "%d-%m-%Y",
+    ]
+    time_formats = [
+        None,
+        "%H",
+        "%H-%M",
+        "%H-%M-%S",
+        "%H-%M-%S-%f",
+        "%Hh",
+        "%Hh%M",
+        "%Hh%Mm",
+        "%Hh%Mm%Ss",
+    ]
+    for date_format, time_format in product(date_formats, time_formats):
+        fmt = (date_format + " " + time_format) if time_format else date_format
+        try:
+            return datetime.strptime(value, fmt)
+        except ValueError:
+            continue
+    return None
 
 
 def convert_to_uuid(value, version=4):

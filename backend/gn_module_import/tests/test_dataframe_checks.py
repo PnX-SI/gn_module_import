@@ -324,6 +324,60 @@ class TestChecks:
             ),
         )
 
+    def test_dates_parsing(self, imprt):
+        fields = get_fields(["date_min", "hour_min"])
+        df = pd.DataFrame(
+            [
+                ["2020-01-05", ""],
+                ["2020/01/05", ""],
+                ["2020-1-05", ""],
+                ["2020/01/5", ""],
+                ["05-01-2020", ""],
+                ["05/01/2020", ""],
+                ["05-1-2020", ""],
+                ["5/01/2020", ""],
+                ["2020.01.05", ""],
+                ["05.01.2020", ""],
+                ["2020-01-05", "13"],
+                ["2020-01-05", "13:12"],
+                ["2020-01-05", "13:12:05"],
+                ["2020-01-05", "13h"],
+                ["2020-01-05", "13h12"],
+                ["2020-01-05", "13h12m"],
+                ["2020-01-05", "13h12m05s"],
+            ],
+            columns=[field.source_field for field in fields.values()],
+        )
+        clean_missing_values(df, fields)  # replace '' with np.nan
+        concat_dates(df, fields)
+        errors = list(check_types(df, fields))
+        assert_errors(errors, expected=[])
+        pd.testing.assert_frame_equal(
+            df.loc[:, [fields["datetime_min"].synthese_field]],
+            pd.DataFrame(
+                [
+                    [datetime(2020, 1, 5, 0)],
+                    [datetime(2020, 1, 5, 0)],
+                    [datetime(2020, 1, 5, 0)],
+                    [datetime(2020, 1, 5, 0)],
+                    [datetime(2020, 1, 5, 0)],
+                    [datetime(2020, 1, 5, 0)],
+                    [datetime(2020, 1, 5, 0)],
+                    [datetime(2020, 1, 5, 0)],
+                    [datetime(2020, 1, 5, 0)],
+                    [datetime(2020, 1, 5, 0)],
+                    [datetime(2020, 1, 5, 13)],
+                    [datetime(2020, 1, 5, 13, 12)],
+                    [datetime(2020, 1, 5, 13, 12, 5)],
+                    [datetime(2020, 1, 5, 13)],
+                    [datetime(2020, 1, 5, 13, 12)],
+                    [datetime(2020, 1, 5, 13, 12)],
+                    [datetime(2020, 1, 5, 13, 12, 5)],
+                ],
+                columns=[fields["datetime_min"].synthese_field],
+            ),
+        )
+
     def test_check_counts(self, imprt):
         default_value = current_app.config["IMPORT"]["DEFAULT_COUNT_VALUE"]
         fields = get_fields(["count_min", "count_max"])
