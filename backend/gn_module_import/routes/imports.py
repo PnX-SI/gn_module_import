@@ -3,7 +3,7 @@ import codecs
 from io import StringIO
 import csv
 
-from flask import request, current_app, jsonify, g
+from flask import request, current_app, jsonify, g, stream_with_context
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden
 from sqlalchemy import or_, func, desc
 from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
@@ -480,6 +480,7 @@ def get_import_invalid_rows_as_csv(scope, import_id):
     filename = imprt.full_file_name.rsplit(".", 1)[0]  # remove extension
     filename = f"{filename}_errors.csv"
 
+    @stream_with_context
     def generate_invalid_rows_csv():
         inputfile = BytesIO(imprt.source_file)
         yield inputfile.readline()  # header

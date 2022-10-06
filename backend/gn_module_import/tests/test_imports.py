@@ -847,10 +847,12 @@ class TestImports:
         assert r.json["n_invalid_data"] == len(valid_file_invalid_rows)
 
         # Get invalid data
-        r = self.client.get(
+        # The with block forcefully close the request context, which may stay open due
+        # to the usage of stream_with_context in this route.
+        with self.client.get(
             url_for("import.get_import_invalid_rows_as_csv", import_id=imprt.id_import)
-        )
-        assert r.status_code == 200, r.data
+        ) as r:
+            assert r.status_code == 200, r.data
 
         # Import step
         r = self.client.post(url_for("import.import_valid_data", import_id=imprt.id_import))
