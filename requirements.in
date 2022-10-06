@@ -1,10 +1,5 @@
-goodtables
 pandas<1.4  # panda 1.4 requires sqlalchemy>=1.4
-geopandas
-dask[dataframe]
-psutil
-toolz
-cloudpickle
-python-slugify
 pyproj<3  # v3 require PROJ 7.2.0 but Debian 10 provide PROJ 5.2.0
-utils-flask-sqlalchemy
+chardet
+utils-flask-sqlalchemy>=0.3.0,<1.0.0
+geonature
