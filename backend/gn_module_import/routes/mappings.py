@@ -114,7 +114,7 @@ def update_mapping(mappingtype, mapping, scope):
             raise Conflict(description="Un mapping de ce type portant ce nom existe déjà")
         mapping.label = label
 
-    if request.json:
+    if request.is_json:
         try:
             mapping.validate_values(request.json)
         except ValueError as e:
