@@ -12,14 +12,17 @@ Installation du module d’imports
 
 Télécharger puis renommer la version souhaitée du module :
 
+```
     cd
     wget https://github.com/PnX-SI/gn_module_import/archive/X.Y.Z.zip
     unzip X.Y.Z.zip
     rm X.Y.Z.zip
     mv gn_module_import-X.Y.Z gn_module_import
+```
 
 Le module doit ensuite être installé comme suit :
 
+```
     cd
     source geonature/backend/venv/bin/activate
     geonature install_packaged_gn_module gn_module_import IMPORT
@@ -28,6 +31,7 @@ Le module doit ensuite être installé comme suit :
     cd geonature/frontend
     nvm use
     npm run build
+```
 
 Le module est installé et prêt à importer !
 
@@ -54,11 +58,13 @@ des champs (`dict_fields`) en y définissant leur ordre d\'affichage.
 Après avoir regroupé les champs dans leurs \"blocs\" et leur avoir
 associé un ordre, vous devrez relancer le build de l\'interface.
 
+```
     sudo systemctl reload geonature
     cd
     cd geonature/frontend
     nvm use
     npm run build
+```
 
 Droits du module
 ================
@@ -103,8 +109,10 @@ Contrôles et transformations
 
 [Liste des contrôles](docs/controls.rst)
 
-Documentation developpeur
+Documentation développeur
 =========================
+
+**Caduque, à revoir**
 
 Procesus de vérification:
 
@@ -129,32 +137,27 @@ Mise à jour du module
 
 -   Téléchargez la nouvelle version du module
 
-```{=html}
-<!-- -->
 ```
     wget https://github.com/PnX-SI/gn_module_import/archive/X.Y.Z.zip
     unzip X.Y.Z.zip
     rm X.Y.Z.zip
+```
 
 -   Renommez l\'ancien et le nouveau répertoire
 
-```{=html}
-<!-- -->
 ```
     mv /home/`whoami`/gn_module_import /home/`whoami`/gn_module_import_old
     mv /home/`whoami`/gn_module_import-X.Y.Z /home/`whoami`/gn_module_import
+```
 
 -   Rapatriez le fichier de configuration
 
-```{=html}
-<!-- -->
 ```
     cp /home/`whoami`/gn_module_import_old/config/conf_gn_module.toml  /home/`whoami`/gn_module_import/config/conf_gn_module.toml
+```
 
 -   Relancez la compilation en mettant à jour la configuration
 
-```{=html}
-<!-- -->
 ```
     cd /home/`whoami`/geonature/backend
     source venv/bin/activate
@@ -164,6 +167,7 @@ Mise à jour du module
     cd /home/`whoami`/geonature/frontend
     nvm use
     npm run build
+```
 
 Utilisation du module d\'imports
 ================================
