@@ -22,8 +22,12 @@ Le module doit ensuite être installé comme suit :
 
     cd
     source geonature/backend/venv/bin/activate
-    geonature install_gn_module /home/`whoami`/gn_module_import import
+    geonature install_packaged_gn_module gn_module_import IMPORT
     deactivate
+    sudo systemctl restart geonature
+    cd geonature/frontend
+    nvm use
+    npm run build
 
 Le module est installé et prêt à importer !
 
@@ -50,8 +54,10 @@ des champs (`dict_fields`) en y définissant leur ordre d\'affichage.
 Après avoir regroupé les champs dans leurs \"blocs\" et leur avoir
 associé un ordre, vous devrez relancer le build de l\'interface.
 
+    sudo systemctl reload geonature
     cd
     cd geonature/frontend
+    nvm use
     npm run build
 
 Droits du module
@@ -152,8 +158,12 @@ Mise à jour du module
 ```
     cd /home/`whoami`/geonature/backend
     source venv/bin/activate
-    pip install -r /home/`whoami`/gn_module_import/backend/requirements.txt
+    pip install -e /home/`whoami`/gn_module_import/
     geonature update_module_configuration IMPORT
+    sudo systemctl restart geonature
+    cd /home/`whoami`/geonature/frontend
+    nvm use
+    npm run build
 
 Utilisation du module d\'imports
 ================================
