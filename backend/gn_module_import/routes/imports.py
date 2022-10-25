@@ -570,19 +570,19 @@ def export_pdf(scope, import_id):
     ).get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
-    dataset = imprt.as_dict(fields=["errors", "errors.type", "dataset.dataset_name"])
+    ctx = imprt.as_dict(fields=["errors", "errors.type", "dataset.dataset_name"])
 
-    dataset["map"] = request.form.get("map")
-    dataset["chart"] = request.form.get("chart")
+    ctx["map"] = request.form.get("map")
+    ctx["chart"] = request.form.get("chart")
     url_list = [
         current_app.config["URL_APPLICATION"],
         "#",
         current_app.config["IMPORT"].get("MODULE_URL", "").replace("/", ""),
-        str(dataset["id_import"]),
+        str(ctx["id_import"]),
         "report",
     ]
-    dataset["url"] = "/".join(url_list)
-    pdf_file = generate_pdf_from_template("import_template_pdf.html", dataset)
+    ctx["url"] = "/".join(url_list)
+    pdf_file = generate_pdf_from_template("import_template_pdf.html", ctx)
     return send_file(
         BytesIO(pdf_file),
         mimetype="application/pdf",
