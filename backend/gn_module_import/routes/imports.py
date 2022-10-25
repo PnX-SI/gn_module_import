@@ -588,5 +588,5 @@ def export_pdf(scope, import_id):
         BytesIO(pdf_file),
         mimetype="application/pdf",
         as_attachment=True,
-        attachment_filename="rapport.pdf",
+        download_name="rapport.pdf",
     )
