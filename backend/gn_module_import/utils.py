@@ -263,7 +263,7 @@ def get_nomenclated_fields():
         yield field
 
 
-def generate_pdf_from_template(template, data, filename):
+def generate_pdf_from_template(template, data):
     template_rendered = render_template(template, data=data)
     html_file = HTML(
         string=template_rendered,

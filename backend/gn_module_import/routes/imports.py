@@ -562,7 +562,6 @@ def export_pdf(scope, import_id):
     """
     Downloads the report in pdf format
     """
-    filename = "rapport.pdf"
     imprt = TImports.query.options(
         Load(TImports).raiseload("*"),
         joinedload("authors"),
@@ -583,7 +582,7 @@ def export_pdf(scope, import_id):
         "report",
     ]
     dataset["url"] = "/".join(url_list)
-    pdf_file = generate_pdf_from_template("import_template_pdf.html", dataset, filename)
+    pdf_file = generate_pdf_from_template("import_template_pdf.html", dataset)
     return send_file(
         BytesIO(pdf_file),
         mimetype="application/pdf",
