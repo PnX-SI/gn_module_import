@@ -5,12 +5,9 @@ import json
 from enum import IntEnum
 
 from flask import current_app, render_template
-from pypnnomenclature.models import TNomenclatures
-from sqlalchemy import collate, func
+from sqlalchemy import func
 from chardet.universaldetector import UniversalDetector
 from sqlalchemy.sql.expression import select, insert, literal
-from sqlalchemy.orm import contains_eager
-from sqlalchemy.orm.attributes import set_committed_value
 import sqlalchemy as sa
 import pandas as pd
 import numpy as np
@@ -240,27 +237,6 @@ def import_data_to_synthese(imprt):
         select=select_stmt,
     )
     db.session.execute(insert_stmt)
-
-
-def get_nomenclated_fields():
-    nomenclated_fields = (
-        BibFields.query.filter(BibFields.mnemonique != None)
-        .join(BibFields.nomenclature_type)
-        .options(
-            contains_eager(BibFields.nomenclature_type),
-        )
-        .order_by(BibFields.id_theme, BibFields.order_field)
-        .all()
-    )
-    for field in nomenclated_fields:
-        set_committed_value(
-            field.nomenclature_type,
-            "nomenclatures",
-            TNomenclatures.query.filter_by(nomenclature_type=field.nomenclature_type).order_by(
-                collate(TNomenclatures.cd_nomenclature, "fr_numeric")
-            ),
-        )
-        yield field
 
 
 def generate_pdf_from_template(template, data):

@@ -94,7 +94,7 @@
             <mat-expansion-panel>
               <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
                 <mat-panel-title>
-                  <h6>Champs ({{ fieldsNb }} correspondance(s))</h6>
+                  <h6>Champs ({{ (importData?.fieldmapping || {} | keyvalue).length }} correspondance(s))</h6>
                 </mat-panel-title>
               </mat-expansion-panel-header>
               <table class="table table-striped table-bordered">
@@ -116,25 +116,36 @@
               <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
                 <mat-panel-title>
                   <h6>
-                    Nomenclature ({{ matchedNomenclature?.length || 0 }}
-                    correspondance(s))
+                    Nomenclatures ({{ (importData?.contentmapping || {} | keyvalue).length }}
+                    type(s de nomenclatures))
                   </h6>
                 </mat-panel-title>
               </mat-expansion-panel-header>
               <table class="table table-striped table-bordered">
                 <thead>
                   <tr>
-                    <th>Champ source</th>
-                    <th>Champ cible</th>
-                    <th>Définition</th>
+                    <th>Valeur source</th>
+                    <th>Nomenclature</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let field of matchedNomenclature">
-                    <td>{{ field?.source?.label_default }}</td>
-                    <td>{{ field?.target?.label_default }}</td>
-                    <td>{{ field?.target?.definition_default }}</td>
+                  <ng-container *ngFor="let nomenclature_type of importData?.contentmapping | keyvalue">
+                  <tr>
+                    <th colspan="2">
+                      <ng-container *ngIf="nomenclatures; then nomenclature_type_label else nomenclature_type_mnemonique"></ng-container>
+                      <ng-template #nomenclature_type_label>{{ nomenclatures[nomenclature_type.key].nomenclature_type.label_default }}</ng-template>
+                      <ng-template #nomenclature_type_mnemonique>{{ nomenclature_type.key }}</ng-template>
+                    </th>
                   </tr>
+                  <tr *ngFor="let mapping of nomenclature_type.value | keyvalue">
+                    <td>{{ mapping.key }}</td>
+                    <td>
+                      <ng-container *ngIf="nomenclatures; then nomenclature_label else nomenclature_code"></ng-container>
+                      <ng-template #nomenclature_label>{{ nomenclatures[nomenclature_type.key].nomenclatures[mapping.value].label_default }}</ng-template>
+                      <ng-template #nomenclature_code>{{ mapping.value }}</ng-template>
+                    </td>
+                  </tr>
+                  </ng-container>
                 </tbody>
               </table>
             </mat-expansion-panel>
@@ -207,14 +218,12 @@
                   <mat-spinner color="warn" diameter="30"> </mat-spinner>
                 </mat-icon>
               </button>
-              <button mat-raised-button color="primary" [disabled]="fieldsNb == 0 ? true : null"
-                (click)="exportCorrespondances()">
+              <button mat-raised-button color="primary" [disabled]="!importData?.fieldmapping"
+                (click)="exportFieldMapping()">
                 Exporter les correspondances des champs
               </button>
-              <button mat-raised-button color="primary" [disabled]="
-                  matchedNomenclature === undefined ||
-                  matchedNomenclature?.length == 0 ? true : null
-                " (click)="exportNomenclatures()">
+              <button mat-raised-button color="primary" [disabled]="!importData?.contentmapping"
+                (click)="exportContentMapping()">
                 Exporter les correspondances des nomenclatures
               </button>
             </div>

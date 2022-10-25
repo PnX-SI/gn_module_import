@@ -6,7 +6,8 @@ import leafletImage from 'leaflet-image';
 import { MapService } from '@geonature_common/map/map.service';
 import { DataService } from '../../services/data.service';
 import { ImportProcessService } from '../import_process/import-process.service';
-import { Import, ImportError, Nomenclature, TaxaDistribution } from '../../models/import.model';
+import { Import, ImportError, Nomenclature,
+         NomenclatureType, TaxaDistribution } from '../../models/import.model';
 import { CsvExportService } from '../../services/csv-export.service';
 import { ModuleConfig } from '../../module.config';
 
@@ -36,9 +37,7 @@ export class ImportReportComponent implements OnInit {
   public importData: Import | null;
   public expansionPanelHeight: string = '60px';
   public validBbox: any;
-  public fieldsNb: Number = 0;
   public taxaDistribution: Array<TaxaDistribution> = [];
-  public matchedNomenclature: Array<MatchedNomenclature> = [];
   public importErrors: Array<ImportError> = [];
   public nbTotalErrors: number = 0;
   public datasetName: string = '';
@@ -57,6 +56,14 @@ export class ImportReportComponent implements OnInit {
     legend: { position: 'left' },
   };
   public loadingPdf: boolean = false;
+  public nomenclatures: {
+      [propName: string]: {
+          nomenclature_type: NomenclatureType,
+          nomenclatures: {
+              [propName: string]: Nomenclature
+          }
+      }
+  };
 
   constructor(
     private importProcessService: ImportProcessService,
@@ -68,7 +75,6 @@ export class ImportReportComponent implements OnInit {
 
   ngOnInit() {
     this.importData = this.importProcessService.getImportData();
-    this.fieldsNb = Object.keys(this.importData?.fieldmapping || {}).length;
     // Load additionnal data if imported data
     this.loadValidData(this.importData);
     this.loadTaxaDistribution();
@@ -76,7 +82,9 @@ export class ImportReportComponent implements OnInit {
     // Add property to show errors lines. Need to do this to
     // show line per line...
     this.loadErrors();
-    this.matchNomenclature();
+    this._dataService.getNomenclatures().subscribe((nomenclatures) => {
+        this.nomenclatures = nomenclatures;
+    });
   }
 
   /** Gets the validBbox and validData (info about observations)
@@ -130,35 +138,6 @@ export class ImportReportComponent implements OnInit {
     }
   }
 
-  matchNomenclature() {
-    if (
-      this.importData &&
-      this.importData?.contentmapping &&
-      Object.keys(this.importData?.contentmapping).length > 0
-    ) {
-      const mappingValues = this.importData.contentmapping;
-      const match: Array<MatchedNomenclature> = [];
-      this._dataService.getNomenclatures().subscribe((nomencs) => {
-        Object.keys(nomencs).forEach((nomenc) => {
-          const type_mnemo = nomencs[nomenc].nomenclature_type.mnemonique;
-          Object.keys(mappingValues[type_mnemo]).forEach((val) => {
-            const sourceNomenclature = nomencs[nomenc].nomenclatures.find(
-              (n) => n.cd_nomenclature === mappingValues[type_mnemo][val]
-            );
-            const targetNomenclature = nomencs[nomenc].nomenclatures.find(
-              (n) => n.label_default === val
-            );
-            match.push({
-              source: sourceNomenclature,
-              target: targetNomenclature,
-            });
-          });
-        });
-      });
-      this.matchedNomenclature = match;
-    }
-  }
-
   updateChart() {
     const labels: string[] = this.taxaDistribution.map((e) => e.group);
     const data: number[] = this.taxaDistribution.map((e) => e.count);
@@ -187,7 +166,7 @@ export class ImportReportComponent implements OnInit {
     return img;
   }
 
-  exportCorrespondances() {
+  exportFieldMapping() {
     // this.fields can be null
     // 4 : tab size
     if (this.importData?.fieldmapping) {
@@ -198,10 +177,10 @@ export class ImportReportComponent implements OnInit {
     }
   }
 
-  exportNomenclatures() {
+  exportContentMapping() {
     // Exactly like the correspondances
-    if (this.matchedNomenclature) {
-      const blob: Blob = new Blob([JSON.stringify(this.matchedNomenclature, null, 4)], {
+    if (this.importData?.contentmapping) {
+      const blob: Blob = new Blob([JSON.stringify(this.importData.contentmapping, null, 4)], {
         type: 'application/json',
       });
       saveAs(blob, `${this.importData?.id_import}_correspondances_nomenclatures.json`);

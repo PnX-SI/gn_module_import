@@ -6,7 +6,7 @@ import csv
 from flask import request, current_app, jsonify, g, stream_with_context, send_file
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden
 from sqlalchemy import or_, func, desc
-from sqlalchemy.orm import joinedload, Load, load_only, undefer
+from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
 from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.sql.expression import collate
 
@@ -18,7 +18,7 @@ from geonature.core.gn_synthese.models import (
 )
 from geonature.core.gn_meta.models import TDatasets
 
-from pypnnomenclature.models import TNomenclatures
+from pypnnomenclature.models import BibNomenclaturesTypes, TNomenclatures
 
 from gn_module_import.models import (
     TImports,
@@ -39,7 +39,6 @@ from gn_module_import.utils import (
     get_file_size,
     clean_import,
     generate_pdf_from_template,
-    get_nomenclated_fields,
 )
 from gn_module_import.tasks import do_import_checks, do_import_in_synthese
 
@@ -48,14 +47,27 @@ IMPORTS_PER_PAGE = 15
 
 @blueprint.route("/nomenclatures", methods=["GET"])
 def get_nomenclatures():
-    response = {}
-    nomenclated_fields = get_nomenclated_fields()
-    for field in nomenclated_fields:
-        response[field.name_field] = {
-            "nomenclature_type": field.nomenclature_type.as_dict(),
-            "nomenclatures": [n.as_dict() for n in field.nomenclature_type.nomenclatures],
+    nomenclature_fields = (
+        BibFields.query.filter(BibFields.nomenclature_type != None)
+        .options(
+            joinedload(BibFields.nomenclature_type).joinedload(
+                BibNomenclaturesTypes.nomenclatures
+            ),
+        )
+        .all()
+    )
+    return jsonify(
+        {
+            field.nomenclature_type.mnemonique: {
+                "nomenclature_type": field.nomenclature_type.as_dict(),
+                "nomenclatures": {
+                    nomenclature.cd_nomenclature: nomenclature.as_dict()
+                    for nomenclature in field.nomenclature_type.nomenclatures
+                },
+            }
+            for field in nomenclature_fields
         }
-    return jsonify(response)
+    )
 
 
 @blueprint.route("/imports/", methods=["GET"])
@@ -328,9 +340,18 @@ def get_import_values(scope, import_id):
         raise Forbidden
     if not imprt.loaded:
         raise Conflict(description="Data have not been loaded")
+    nomenclated_fields = (
+        BibFields.query.filter(BibFields.mnemonique != None)
+        .join(BibFields.nomenclature_type)
+        .options(
+            contains_eager(BibFields.nomenclature_type),
+        )
+        .order_by(BibFields.id_theme, BibFields.order_field)
+        .all()
+    )
     # Note: response format is validated with jsonschema in tests
     response = {}
-    for field in get_nomenclated_fields():
+    for field in nomenclated_fields:
         if field.name_field not in imprt.fieldmapping:
             # this nomenclated field is not mapped
             continue

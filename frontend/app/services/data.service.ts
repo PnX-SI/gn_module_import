@@ -12,8 +12,8 @@ const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 export class DataService {
   constructor(private _http: HttpClient) { }
 
-  getNomenclatures(): Observable<ImportValues> {
-    return this._http.get<ImportValues>(`${urlApi}/nomenclatures`);
+  getNomenclatures(): Observable<any> {
+    return this._http.get<any>(`${urlApi}/nomenclatures`);
   }
 
   getImportList(values): Observable<Array<Import>> {
