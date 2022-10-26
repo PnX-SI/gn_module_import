@@ -39,6 +39,7 @@ export class ImportReportComponent implements OnInit {
   public validBbox: any;
   public taxaDistribution: Array<TaxaDistribution> = [];
   public importErrors: Array<ImportError> = [];
+  public importWarnings: Array<ImportError> = [];
   public nbTotalErrors: number = 0;
   public datasetName: string = '';
   public rank: string = this.rankOptions.includes(ModuleConfig.DEFAULT_RANK)
@@ -125,7 +126,8 @@ export class ImportReportComponent implements OnInit {
   loadErrors() {
     if (this.importData) {
       this._dataService.getImportErrors(this.importData.id_import).subscribe((errors) => {
-        this.importErrors = errors;
+        this.importErrors = errors.filter(err => {return err.type.level === "ERROR" });
+        this.importWarnings = errors.filter(err => {return err.type.level === "WARNING"})
         // Get the total number of erroneous rows:
         // 1. get all rows in errors
         // 2. flaten to have 1 array of all rows in error

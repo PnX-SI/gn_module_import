@@ -154,52 +154,108 @@
         <div class="card content">
           <div class="card-header">
             <div class="d-flex justify-content-start">
-              <h5 class="card-title">Données non importées - Erreurs</h5>
               <mat-icon> warning </mat-icon>
+              &nbsp;
+              <h5 class="card-title">Données invalides</h5>
             </div>
           </div>
           <div class="card-body">
-            <table class="table table-responsive table-striped table-bordered">
-              <thead>
-                <tr>
-                  <th>Type d'erreur</th>
-                  <th>Champ</th>
-                  <th>Description erreur</th>
-                  <th>Nombre d'erreur(s)</th>
-                  <th>Numéro des lignes en erreur</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let error of importErrors">
-                  <td>{{ error.type.name }}</td>
-                  <td>{{ error.column }}</td>
-                  <td>
-                    {{ error.type.description }}
-                    <i>
-                      <br />
-                      {{ error.comment }}</i>
-                  </td>
-                  <td>
-                    <span *ngIf="error?.rows && error?.rows.length > 0">{{ error?.rows.length }}
-                    </span>
-                  </td>
-                  <td>
-                    <span *ngIf="error.rows.length >= 10 && !error.show">{{ error.rows.slice(0, maxErrorsLines).join(",
-                      ") }} ...
-                      <button mat-icon-button matTooltip="Voir plus" (click)="error.show = !error.show">
-                        <mat-icon>expand_more</mat-icon>
-                      </button>
-                    </span>
-                    <span *ngIf="error.rows.length <= 10 || error.show">{{ error.rows.join(", ") }}
-                      <button mat-icon-button matTooltip="Voir moins" *ngIf="error.rows.length >= 10"
-                        (click)="error.show = !error.show">
-                        <mat-icon>expand_less</mat-icon>
-                      </button>
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <mat-expansion-panel>
+              <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
+                <mat-panel-title>
+                  <h6>{{ importErrors.length }} erreur(s)</h6>
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              <table class="table table-responsive table-striped table-bordered">
+                <thead>
+                  <tr>
+                    <th>Type d'erreur</th>
+                    <th>Champ</th>
+                    <th>Description erreur</th>
+                    <th>Nombre d'erreur(s)</th>
+                    <th>Numéro des lignes en erreur</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let error of importErrors">
+                    <td>{{ error.type.name }}</td>
+                    <td>{{ error.column }}</td>
+                    <td>
+                      {{ error.type.description }}
+                      <i>
+                        <br />
+                        {{ error.comment }}</i>
+                    </td>
+                    <td>
+                      <span *ngIf="error?.rows && error?.rows.length > 0">{{ error?.rows.length }}
+                      </span>
+                    </td>
+                    <td>
+                      <span *ngIf="error.rows.length >= 10 && !error.show">{{ error.rows.slice(0, maxErrorsLines).join(",
+                        ") }} ...
+                        <button mat-icon-button matTooltip="Voir plus" (click)="error.show = !error.show">
+                          <mat-icon>expand_more</mat-icon>
+                        </button>
+                      </span>
+                      <span *ngIf="error.rows.length <= 10 || error.show">{{ error.rows.join(", ") }}
+                        <button mat-icon-button matTooltip="Voir moins" *ngIf="error.rows.length >= 10"
+                          (click)="error.show = !error.show">
+                          <mat-icon>expand_less</mat-icon>
+                        </button>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </mat-expansion-panel>
+            <mat-expansion-panel>
+              <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
+                <mat-panel-title>
+                  <h6>{{ importWarnings.length }} alerte(s)</h6>
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              <table class="table table-responsive table-striped table-bordered">
+                <thead>
+                  <tr>
+                    <th>Type d'erreur</th>
+                    <th>Champ</th>
+                    <th>Description erreur</th>
+                    <th>Nombre d'erreur(s)</th>
+                    <th>Numéro des lignes en erreur</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let error of importWarnings">
+                    <td>{{ error.type.name }}</td>
+                    <td>{{ error.column }}</td>
+                    <td>
+                      {{ error.type.description }}
+                      <i>
+                        <br />
+                        {{ error.comment }}</i>
+                    </td>
+                    <td>
+                      <span *ngIf="error?.rows && error?.rows.length > 0">{{ error?.rows.length }}
+                      </span>
+                    </td>
+                    <td>
+                      <span *ngIf="error.rows.length >= 10 && !error.show">{{ error.rows.slice(0, maxErrorsLines).join(",
+                        ") }} ...
+                        <button mat-icon-button matTooltip="Voir plus" (click)="error.show = !error.show">
+                          <mat-icon>expand_more</mat-icon>
+                        </button>
+                      </span>
+                      <span *ngIf="error.rows.length <= 10 || error.show">{{ error.rows.join(", ") }}
+                        <button mat-icon-button matTooltip="Voir moins" *ngIf="error.rows.length >= 10"
+                          (click)="error.show = !error.show">
+                          <mat-icon>expand_less</mat-icon>
+                        </button>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </mat-expansion-panel>
             <div class="d-flex flex-row-reverse" *ngIf="nbTotalErrors !== 0">
               <button  mat-raised-button color="primary" (click)="_csvExport.onCSV(importData?.id_import)">
                 Exporter vos {{ nbTotalErrors }} observations invalides
