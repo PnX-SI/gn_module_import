@@ -219,7 +219,7 @@ Schéma (initial et théorique) des étapes de fonctionnement du module :
 
 ![image](https://geonature.fr/docs/img/import/gn_imports_etapes.png)
 
-Modèle de données du schéma `gn_imports` du module :
+Modèle de données du schéma `gn_imports` du module (à adapter à la version 2.0.0) :
 
 ![image](https://geonature.fr/docs/img/import/gn_imports_MCD-2020-03.png)
 
@@ -241,11 +241,11 @@ Si j'ai mappé une valeur source différente sur un champs déjà présent dans 
 - Les correspondances des champs sont stockées dans tous les cas en json dans le champs `gn_imports.t_imports.fieldmapping`. Cela permet de pouvoir reprendre les correspondances d'un import, même si le modèle a été modifié entre temps.
 - Quand on valide l'étape 3, les données sources des champs mappés sont chargées dans la table d'import temporaire (`gn_imports.t_imports_synthese`) avec une colonne pour la valeur de la source et une pour la valeur de destination. Cela permet à l'application de faire des traitements de transformation et de contrôle sur les données. Les données sources dans des champs non mappées sont importées dans un champs json de cette table (`extra_fields`)
 - **Etape 4** : Les valeurs des champs à nomenclature sont déterminées à partir du contenu de la table `gn_imports.t_imports_synthese`. Une nomenclature de destination peut avoir plusieurs valeurs source. Pour chaque type de nomenclature on liste les valeurs trouvées dans le fichier source et on propose de les associer aux valeurs des nomenclatures présentes dans GeoNature. Si le fichier source comprend des lignes vides, on propose en plus de mapper le cas "Pas de valeur".
-La gestion des mappings est similaire à l'étape 3 (ils sont stockées cette fois-ci dans le champs ``gn_imports.t_imports.contentmapping`).
+La gestion des mappings est similaire à l'étape 3 (ils sont stockées cette fois-ci dans le champs `gn_imports.t_imports.contentmapping`).
 - **Etape 5** : Il est proposé à l'utilisateur de lancer les contrôles. Ceux-ci sont exécutés en asynchrone dans tous les cas, et une barre de progression est affichée à l'utilisateur. Quand les contrôles sont terminés, le nombre d'erreurs est affiché, ainsi qu'une carte de l'étendue géographique des données et un tableau d'aperçu des données telles qu'elles seront importées.
 Si il y a des erreurs, l'utilisateur peut télécharger le fichier des données sources invalides. Elles sont récupérées dans la table `gn_imports.t_imports.source_file` en ne prenant que les lignes qui ont une erreur, en se basant sur les données qui ont le champs `valid=false` dans `gn_imports.t_imports_synthese`
 L'utilisateur peut alors lancer l'import des données dans la Synthèse.
-Elles sont lancée en asynchrone dans tous les cas, et un spinenr de chargement est affiché tant que l'import est en cours. Si d'autres imports sont en cours, le mécanisme asynchrone gère un système de queue pour les faire les uns après les autres et ne pas saturer le serveur.
+Il est lancée en asynchrone dans tous les cas, et un spinner de chargement est affiché tant que l'import est en cours. Si d'autres imports sont en cours, le mécanisme asynchrone gère un système de queue pour les faire les uns après les autres et ne pas saturer le serveur.
 - Il est possible de reprendre et modifier un import que celui-ci soit terminé ou non. Il est notamment possible d'uploader un nouveau fichier pour un import existant. En cas de modification d’un import existant, les données sont immédiatement supprimées de la synthèse. Les nouvelles données seront insérées lors de la nouvelle finalisation de l’import.
 - Une fois les données importées, les données sont supprimées de la table temporaire (`gn_imports.t_imports_synthese`)
 - **Administration des modèles** : Depuis le module ADMIN de GeoNature, il est possible de lister, afficher et modifier les modèles d'import.
@@ -253,3 +253,6 @@ Elles sont lancée en asynchrone dans tous les cas, et un spinenr de chargement 
 
 Financement de la version 1.0.0 : DREAL et Conseil Régional
 Auvergne-Rhône-Alpes.
+
+Financement de la version 2.0.0 : Ministère de la Transition écologique
+et UMS Patrinat.
