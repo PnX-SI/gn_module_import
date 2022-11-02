@@ -6,9 +6,9 @@ CHANGELOG
 ------------------
 
 Nécessite la version 2.10.0 (ou plus) de GeoNature.
-Refonte technique complète du module, améliorant son socle, sa robustesse et ses performances, et corrigeant de nombreux bugs (#257)
+Refonte technique complète du module, améliorant son socle, sa robustesse et ses performances, et corrigeant de nombreux bugs [https://github.com/PnX-SI/gn_module_import/issues/257]
 
-**🚀 Évolutions fonctionnelles (#257)**
+**🚀 Évolutions fonctionnelles [https://github.com/PnX-SI/gn_module_import/issues/257]**
 
 * Pagination de la liste des imports côté serveur pour optimiser son chargement et affichage quand on a de nombreux imports
 * Vérification des permissions sur le JDD.
@@ -18,7 +18,7 @@ Refonte technique complète du module, améliorant son socle, sa robustesse et s
   * Sélection des paramètres du fichier :
     
     * Format : CSV uniquement (le support du GeoJSON est à rétablir)
-    * Encodage : une liste configurable d’encodage est proposé avec l’encodage auto-détecté pré-sélectionné (#188)
+    * Encodage : une liste configurable d’encodage est proposé avec l’encodage auto-détecté pré-sélectionné [https://github.com/PnX-SI/gn_module_import/issues/188]
     * Séparateur : une liste configurable de séparateur est proposé avec le séparateur auto-détecté pré-sélectionné
     * SRID (pas d’évolution)
 
@@ -26,7 +26,6 @@ Refonte technique complète du module, améliorant son socle, sa robustesse et s
 * Gestion des modèles dans l’interface d’administration de GeoNature, 
 * Possibilité de reprendre un import à n’importe quelle étape, y compris lorsque celui-ci est terminé (permettant de mettre à jour des données déjà importées dans la synthèse).
 * Contrôle et import des données effectuées en asynchrone, peu importe le nombre de lignes du fichier.
-* Notification par email de la fin des opérations asynchrones à rétablir.
 * La dernière étape est dynamique, et affiche, suivant l’état de l’import :
 
   * Un bouton de lancement des contrôles;
@@ -38,28 +37,28 @@ Refonte technique complète du module, améliorant son socle, sa robustesse et s
 * Suppression du TYP_INFO_GEO [https://github.com/PnX-SI/gn_module_import/issues/271]
 * Utilisation des codes mailles longs [https://github.com/PnX-SI/gn_module_import/issues/218]
 
-**💻 Évolutions techniques (#257)**
+**💻 Évolutions techniques [https://github.com/PnX-SI/gn_module_import/issues/257]**
 
 * Compatibilité avec Angular version 12, mis à jour dans la version 2.10.0 de GeoNature
 * Packaging du module 
 * Gestion de la BDD du module avec Alembic
-* Suppression du code SQL au profit de l’utilisation de l’ORM.
-* Suppression des try/expect générique ; les imports ne passent plus en erreur, mais l’erreur est collectée dans les logs de GeoNature et dans sentry et il est permis à l’utilisateur de réessayer en reprenant là où il en était.
-* Nombreuses corrections de bugs par l’écriture de code plus robuste.
+* Suppression du code SQL au profit de l’utilisation de l’ORM
+* Suppression des try/expect génériques ; les imports ne passent plus en erreur, mais l’erreur est collectée dans les logs de GeoNature et dans sentry et il est permis à l’utilisateur de réessayer en reprenant là où il en était
+* Nombreuses corrections de bugs par l’écriture de code plus robuste
 * Ajout de tests unitaires (couverture de code à 91%)
 * Refonte des modèles d’imports :
 
-  * Gestion correcte des permissions, ajout, modification, suppression …
-  * Les correspondances sont sauvegardées directement dans l’import indépendamment du modèle, résolvant ainsi les soucis liés à la reprise d’un import dont le modèle utilisé a été modifié, et supprimant le recours aux modèles temporaires.
+  * Gestion correcte des permissions, ajout, modification, suppression
+  * Les correspondances sont sauvegardées directement dans l’import indépendamment du modèle, résolvant ainsi les soucis liés à la reprise d’un import dont le modèle utilisé a été modifié, et supprimant le recours aux modèles temporaires
   * Les correspondances de champs / de nomenclatures sont stoquées au format JSON. Le format permet d’associer plusieurs valeurs sources à une même nomenclature de destination
    
 * Asynchrone : utilisation d’un worker Celery permettant d’exécuter un seul contrôle / import à la fois (évite l’effondrement du serveur lors de plusieurs imports)
-* Isolation du code de contrôle permettant de le tester
+* Isolation du code de contrôle permettant de le tester automatiquement
 * Factorisation de la gestion des erreurs
 * Stockage du fichier source au format binaire dans une colonne de l’import. Cela rend inutile les tables d’archives qui sont supprimées ; les données sont préalablement migrées au format binaire.
-* Suppression des tables transitoires créées à partir de la structure des fichiers CSV au profit d’une unique table transitoire. Les données sont chargées depuis le fichier source après l’étape de correspondance des champs.
-* La table transitoire contient un jeu de colonnes source et un jeu de colonnes destination ; les transformations sont refondues sur cette base, apportant un gain de simplification et de robustesse.
-* Les contrôles python fondés sur une dataframe panda ont été réduit et convertie en SQL lorsque possible pour de meilleur performance.
+* Suppression des tables transitoires créées à partir de la structure des fichiers CSV au profit d’une unique table transitoire. Les données sont chargées depuis le fichier source après l’étape de correspondance des champs
+* La table transitoire contient un jeu de colonnes source et un jeu de colonnes destination ; les transformations sont refondues sur cette base, apportant un gain de simplification et de robustesse
+* Les contrôles python fondés sur une dataframe panda ont été réduits et convertis en SQL lorsque possible pour de meilleurs performances
 
 **📉 Régressions**
 
@@ -70,6 +69,7 @@ Refonte technique complète du module, améliorant son socle, sa robustesse et s
 * Restriction des imports à une liste de taxons
 * Affichage du nombre total de données du fichier source dans la liste des imports
 * Export / Import des modèles d'import, remplacé par la gestion des modèles d'import dans l'Admin de GeoNature
+* Notification par email de la fin des opérations asynchrones (contrôles et import des données)
 
 **⚠️ Notes de version**
 
@@ -87,7 +87,7 @@ Refonte technique complète du module, améliorant son socle, sa robustesse et s
 1.2.0 (2022-03-21)
 ------------------
 
-Nécessite la version 2.9.0 (ou plus) de GeoNature
+Nécessite la version 2.9 de GeoNature. Non compatible avec les versions 2.10 et supérieures de GeoNature.
 
 **🚀 Nouveautés**
 
