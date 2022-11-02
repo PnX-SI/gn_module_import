@@ -1,289 +1,235 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { ActivatedRoute, Router } from "@angular/router";
-import { saveAs } from "file-saver";
-import  leafletImage from 'leaflet-image';
-import { BaseChartDirective } from 'ng2-charts';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { saveAs } from 'file-saver';
+import leafletImage from 'leaflet-image';
 
 import { MapService } from '@geonature_common/map/map.service';
-import { ModuleConfig } from "../../module.config";
 import { DataService } from '../../services/data.service';
-import { CsvExportService } from "../../services/csv-export.service";
-import FixModel from '../need-fix/need-fix.models';
+import { ImportProcessService } from '../import_process/import-process.service';
+import { Import, ImportError, Nomenclature,
+         NomenclatureType, TaxaDistribution } from '../../models/import.model';
+import { CsvExportService } from '../../services/csv-export.service';
+import { ModuleConfig } from '../../module.config';
+
+interface MatchedNomenclature {
+  source: Nomenclature;
+  target: Nomenclature;
+}
 
 @Component({
-    selector: 'pnx-import-errors',
-    templateUrl: 'import_report.component.html',
-    styleUrls: ["import_report.component.scss"],
-
+  selector: 'pnx-import-report',
+  templateUrl: 'import_report.component.html',
+  styleUrls: ['import_report.component.scss'],
 })
+export class ImportReportComponent implements OnInit {
+  readonly maxErrorsLines: number = 10;
+  readonly rankOptions: string[] = [
+    'regne',
+    'phylum',
+    'classe',
+    'ordre',
+    'famille',
+    'sous_famille',
+    'tribu',
+    'group1_inpn',
+    'group2_inpn',
+  ];
+  public importData: Import | null;
+  public expansionPanelHeight: string = '60px';
+  public validBbox: any;
+  public taxaDistribution: Array<TaxaDistribution> = [];
+  public importErrors: Array<ImportError> = [];
+  public importWarnings: Array<ImportError> = [];
+  public nbTotalErrors: number = 0;
+  public datasetName: string = '';
+  public rank: string = this.rankOptions.includes(ModuleConfig.DEFAULT_RANK)
+    ? ModuleConfig.DEFAULT_RANK
+    : this.rankOptions[0];
+  public doughnutChartLabels: Array<String> = [];
+  public doughnutChartData: Array<number> = [];
+  public doughnutChartColors: Array<{ backgroundColor: Array<String> }> = [
+    {
+      backgroundColor: ['red', 'green', 'blue'],
+    },
+  ];
+  public doughnutChartType: string = 'doughnut';
+  public options: any = {
+    legend: { position: 'left' },
+  };
+  public loadingPdf: boolean = false;
+  public nomenclatures: {
+      [propName: string]: {
+          nomenclature_type: NomenclatureType,
+          nomenclatures: {
+              [propName: string]: Nomenclature
+          }
+      }
+  };
 
-export class ImportReportComponent implements OnInit, OnDestroy {
-    @ViewChild( BaseChartDirective ) private _chart: any; //BaseChartDirective;
-    readonly maxErrorsLines: number = 10;
-    readonly rankOptions: string[] = ['regne', 
-                                      'phylum',
-                                      'classe',
-                                      'ordre',
-                                      'famille',
-                                      'sous_famille',
-                                      'tribu',
-                                      'group1_inpn',
-                                      'group2_inpn']
-    private sub: any;
-    public import: any;
-    public formatedErrors: string;
-    public expansionPanelHeight: string = "60px";
-    public validBbox: Object;
-    public validData: Array<Object>;
-    public nInvalidData: number;
-    public fix: FixModel;
-    public fields: Array<Object>;
-    public taxaDistribution: Array<{ count: number, group: string }>;
-    public nomenclature: any;
-    public contentMapping: any;
-    public matchedNomenclature: any;
-    public rank: string = ModuleConfig.DEFAULT_RANK;
-    public doughnutChartLabels: Array<String> = [];
-    public doughnutChartData: Array<number> = [];
-    public doughnutChartColors: Array<{ backgroundColor: Array<String>}> = [{
-        backgroundColor: ['red', 'green', 'blue']
-      }];
-    public doughnutChartType = 'doughnut';
-    private options: any = {
-        legend: { position: 'left', display: true }
-      };
-    public loadingPdf = false 
+  constructor(
+    private importProcessService: ImportProcessService,
+    private _dataService: DataService,
+    private _router: Router,
+    private _csvExport: CsvExportService,
+    private _map: MapService
+  ) {}
 
-    constructor(
-        private _dataService: DataService, 
-        private _csvExport: CsvExportService, 
-        private _activedRoute: ActivatedRoute,
-        private _router: Router,
-        private _map: MapService) { }
+  ngOnInit() {
+    this.importData = this.importProcessService.getImportData();
+    // Load additionnal data if imported data
+    this.loadValidData(this.importData);
+    this.loadTaxaDistribution();
+    this.loadDatasetName();
+    // Add property to show errors lines. Need to do this to
+    // show line per line...
+    this.loadErrors();
+    this._dataService.getNomenclatures().subscribe((nomenclatures) => {
+        this.nomenclatures = nomenclatures;
+    });
+  }
 
-    ngOnInit() {
-
-        this.sub = this._activedRoute.params.subscribe(params => {
-            const idImport: number = params["id_import"];
-            this._dataService.getOneImport(idImport).subscribe(data => {
-                this.loadValidData(idImport);
-                const fieldMapping = data.id_field_mapping;
-                const contentMapping = data.id_content_mapping;
-                this.loadMapping(fieldMapping);
-                this.loadNomenclature(idImport, fieldMapping, contentMapping);
-                if (data.import_count) {
-                    const idSource = data.id_source;
-                    // Load additionnal data if imported data
-                    this.loadTaxaDistribution(idSource)
-                }
-                // Add property to show errors lines. Need to do this to
-                // show line per line...
-                data.errors.forEach(element => {
-                    element.show = false
-                });
-
-                this.import = data;
-            })
-        })
-
-        //this.rank = this.rankOptions[0]  // default
+  /** Gets the validBbox and validData (info about observations)
+   * @param {string}  idImport - id of the import to get the info from
+   */
+  loadValidData(importData: Import | null) {
+    if (importData) {
+      if (importData.date_end_import && importData.id_source) {
+        this._dataService.getBbox(importData.id_source).subscribe((data) => {
+          this.validBbox = data;
+        });
+      } else if (importData.processed) {
+        this._dataService.getValidData(importData?.id_import).subscribe((data) => {
+          this.validBbox = data.valid_bbox;
+        });
+      }
     }
+  }
 
-    /** Gets the validBbox and validData (info about observations)
-     * @param {string}  idImport - id of the import to get the info from
-     */
-    loadValidData(idImport: number) {
-        this._dataService.getValidData(idImport
-        ).subscribe(data => {
-            this.validBbox = data.valid_bbox;
-            this.validData = data.valid_data;
-            this.nInvalidData = data.n_invalid_data;
-            this.fix = data.fix;
-        })
+  loadTaxaDistribution() {
+    const idSource: number | undefined = this.importData?.id_source;
+    if (idSource) {
+      this._dataService.getTaxaRepartition(idSource, this.rank).subscribe((data) => {
+        this.taxaDistribution = data;
+        this.updateChart();
+      });
     }
+  }
 
-    loadMapping(idMapping: number) {
-        this._dataService.getMappingFields(idMapping)
-            .subscribe(data => {
-                this.fields = data
-            })
+  loadDatasetName() {
+    if (this.importData) {
+      this._dataService.getDatasetFromId(this.importData.id_dataset).subscribe((data) => {
+        this.datasetName = data.dataset_name;
+      });
     }
+  }
 
-    loadNomenclature(idImport: number, idMapping: number, idContentMapping: number) {
-        this._dataService.getNomencInfo(idImport, idMapping)
-            .subscribe(data => {
-                this.nomenclature = data
-                this.loadContentMapping(idContentMapping);
-            })
+  loadErrors() {
+    if (this.importData) {
+      this._dataService.getImportErrors(this.importData.id_import).subscribe((errors) => {
+        this.importErrors = errors.filter(err => {return err.type.level === "ERROR" });
+        this.importWarnings = errors.filter(err => {return err.type.level === "WARNING"})
+        // Get the total number of erroneous rows:
+        // 1. get all rows in errors
+        // 2. flaten to have 1 array of all rows in error
+        // 3. remove duplicates (with Set)
+        // 4. return the size of the Set (length)
+        this.nbTotalErrors = new Set(
+          errors.map((item) => item.rows).reduce((acc, val) => acc.concat(val), [])
+        ).size;
+      });
     }
+  }
 
-    loadContentMapping(idContentMapping: number) {
-        this._dataService.getMappingContents(idContentMapping)
-            .subscribe(data => {
-                this.contentMapping = data
-                if (!data.includes("empty")) { 
-                    this.matchNomenclature()
-                }
-            })
+  updateChart() {
+    const labels: string[] = this.taxaDistribution.map((e) => e.group);
+    const data: number[] = this.taxaDistribution.map((e) => e.count);
+
+    this.doughnutChartLabels.length = 0;
+    // Must push here otherwise the chart will not update
+    this.doughnutChartLabels.push(...labels);
+
+    this.doughnutChartData.length = 0;
+    this.doughnutChartData = data;
+
+    // Fill colors with random colors
+    const colors: string[] = new Array(this.doughnutChartData.length);
+    for (let i = 0; i < colors.length; i++) {
+      colors[i] = '#' + (((1 << 24) * Math.random()) | 0).toString(16);
     }
+    this.doughnutChartColors[0].backgroundColor.push(...colors);
+  }
 
-    loadTaxaDistribution(idSource) {
-        this._dataService.getTaxaRepartition(idSource, this.rank)
-            .subscribe(
-                data => {
-                    this.taxaDistribution = data
-                    this.updateChart();
-                }
-                )
-
+  getChartPNG(): HTMLImageElement {
+    const chart: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('chart');
+    const img: HTMLImageElement = document.createElement('img');
+    if (chart) {
+      img.src = chart.toDataURL();
     }
+    return img;
+  }
 
-    matchNomenclature() {
-        this.matchedNomenclature = []
-        let sourceValues = this.nomenclature.content_mapping_info.map(
-            elm => elm.nomenc_values_def).flat();
-        
-        if (sourceValues.length > 0) {
-            this.matchedNomenclature = this.contentMapping.map(elm => elm[0])
-            // For each values in target_values (this.matchedNomenclature)
-            // filter with the id of target_values with the id of source
-            // values to get the actual value
-            // Then affect the target_value and the definition
-            this.matchedNomenclature.forEach(
-                (val) =>
-                    sourceValues
-                    .filter((elm) => parseInt(elm.id) == val.id_target_value)
-                    .map((elm) => {
-                        // Carefull the target_value is actually the
-                        // source value, needs to rename
-                        val.target_value = val.source_value;
-                        val.source_value = elm.value;
-                        val.definition = elm.definition;
-                        val.cd_nomenclature = elm.cd_nomenclature;
-                        val.mnemonique = elm.mnemonique;
-                        val.nomenc_synthese_name =
-                        this.nomenclature.content_mapping_info.filter(
-                            (item) => item.nomenc_abbr == val.mnemonique
-                        )[0].nomenc_synthese_name;
-                    })[0]
-                );
-        }
+  exportFieldMapping() {
+    // this.fields can be null
+    // 4 : tab size
+    if (this.importData?.fieldmapping) {
+      const blob: Blob = new Blob([JSON.stringify(this.importData.fieldmapping, null, 4)], {
+        type: 'application/json',
+      });
+      saveAs(blob, `${this.importData?.id_import}_correspondances_champs.json`);
     }
+  }
 
-    updateChart() {
-        const labels = this.taxaDistribution.map(e => e.group)
-        const data = this.taxaDistribution.map(e => e.count)
-        
-        this.doughnutChartLabels.length = 0;
-        // Must push here otherwise the chart will not update
-        this.doughnutChartLabels.push(...labels);
-
-        this.doughnutChartData.length = 0;
-        this.doughnutChartData = data;
-
-        // Fill colors with random colors
-        let colors = new Array(this.doughnutChartData.length)
-        for (let i=0; i < colors.length; i++) {
-            colors[i] = "#" + ((1<<24)*Math.random() | 0).toString(16)
-        }
-        this.doughnutChartColors[0].backgroundColor.push(...colors);
+  exportContentMapping() {
+    // Exactly like the correspondances
+    if (this.importData?.contentmapping) {
+      const blob: Blob = new Blob([JSON.stringify(this.importData.contentmapping, null, 4)], {
+        type: 'application/json',
+      });
+      saveAs(blob, `${this.importData?.id_import}_correspondances_nomenclatures.json`);
     }
+  }
 
-    toggleLegend() {
-        this.options.legend.display = !this.options.legend.display
-        this._chart.refresh();
-    }
+  exportAsPDF() {
+    const img: HTMLImageElement = document.createElement('img');
+    this.loadingPdf = true;
+    const chartImg: HTMLImageElement = this.getChartPNG();
 
-    getChartPNG() {
-        let chart = <HTMLCanvasElement>document.getElementById('chart')
-        let img = document.createElement('img');
-        img.src = chart.toDataURL()
-        return img
+    if (this._map.map) {
+    leafletImage(
+      this._map.map ? this._map.map : "",
+      function (err, canvas) {
+        img.src = canvas.toDataURL('image/png');
+        this.exportMapAndChartPdf(chartImg, img)
+      }.bind(this)
+    );}
+    else {
+      this.exportMapAndChartPdf(chartImg)
     }
+  }
 
-    exportCorrespondances() {
-        // this.fields can be null
-        // 4 : tab size
-        if (this.fields) {
-            const blob = new Blob([JSON.stringify(this.fields, null, 4)], 
-                                {type : 'application/json'});
-            saveAs(blob, "correspondances.json");
-        }
-    }
+  exportMapAndChartPdf(chartImg?, mapImg?) {
+    this._dataService.getPdf(this.importData?.id_import, mapImg?.src, chartImg.src).subscribe(
+      (result) => {
+        this.loadingPdf = false;
+        saveAs(result, 'export.pdf');
+      },
+      (error) => {
+        this.loadingPdf = false;
+        console.log('Error getting pdf');
+      }
+    );
+  }
 
-    exportNomenclatures() {
-        // Exactly like the correspondances
-        if (this.matchedNomenclature) {
-            // keys to export
-            const toExport = [
-                "nomenc_synthese_name",
-                "source_value",
-                "cd_nomenclature",
-                "mnemonique",
-            ];
-            // Taken on https://stackoverflow.com/questions/34658867/slice-specific-keys-in-javascript-object/53202834
-            const pick = (obj, ...args) => ({
-                ...args.reduce((res, key) => ({ ...res, [key]: obj[key] }), {}),
-            });
-            // For all obj in this.matchedNomenclature pick only the toExport
-            // keys
-            const filtered = this.matchedNomenclature.map((item) =>
-                pick(item, ...toExport)
-            );
-            // Export
-            const blob = new Blob([JSON.stringify(filtered, null, 4)], {
-                type: "application/json",
-            });
-            saveAs(blob, "nomenclatures.json");
-        }
-    }
-    
-    exportAsPDF() {
-        var img = document.createElement('img');
-        this.loadingPdf = true
-        // Init chartImg
-        let chartImg = document.createElement('img');
-        // Check if the chart exists
-        if  (<HTMLCanvasElement>document.getElementById('chart')) {
-            chartImg = this.getChartPNG();
-        }
-        leafletImage(this._map.map, function(err, canvas) {
-            img.src = canvas.toDataURL('image/png');
-            this._dataService.getPdf(this.import.id_import, img.src, chartImg.src)
-                .subscribe(
-                    result => {
-                        this.loadingPdf = false;
-                        saveAs(result, 'export.pdf');
-                    },
-                    error => {
-                        this.loadingPdf = false;
-                        console.log('Error getting pdf');
-                    }
-                );
-        }.bind(this));
-    }
+  goToSynthese(idDataSet: number) {
+    let navigationExtras = {
+      queryParams: {
+        id_dataset: idDataSet,
+      },
+    };
+    this._router.navigate(['/synthese'], navigationExtras);
+  }
 
-    goToSynthese(idDataSet: number) {
-        let navigationExtras = {
-              queryParams: {
-                "id_dataset": idDataSet
-              }
-        };
-        this._router.navigate(['/synthese'], navigationExtras);
-    }
-
-    onRankChange($event) {
-        this.loadTaxaDistribution(this.import.id_source)
-    }
-
-    groupBy(xs, key) {
-        return xs.reduce(function(rv, x) {
-          (rv[x[key]] = rv[x[key]] || []).push(x);
-          return rv;
-        }, {});
-      };
-
-    ngOnDestroy() {
-        this.sub.unsubscribe();
-    }
+  onRankChange($event) {
+    this.loadTaxaDistribution();
+  }
 }

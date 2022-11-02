@@ -1,10 +1,15 @@
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
+import { Observable, timer, of } from "rxjs";
+import { map, take, concatMap } from 'rxjs/operators';
 import { DataService } from "../../../services/data.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../../module.config";
 import { FormGroup, FormBuilder, Validators, AbstractControl, ValidatorFn } from "@angular/forms";
-import { StepsService, Step1Data, Step2Data } from "../steps.service";
+import { Step } from "../../../models/enums.model";
+import { Import } from "../../../models/import.model";
+import { ImportProcessComponent } from "../import-process.component";
+import { ImportProcessService } from "../import-process.service";
 
 @Component({
   selector: "upload-file-step",
@@ -12,185 +17,95 @@ import { StepsService, Step1Data, Step2Data } from "../steps.service";
   templateUrl: "upload-file-step.component.html"
 })
 export class UploadFileStepComponent implements OnInit {
-  public fileName: string;
-  public spinner: boolean = false;
-  private skip: boolean = false;
+  public step: Step;
+  public importData: Import;
+  public datasetId: number = null;
   public uploadForm: FormGroup;
-  public uploadFileErrors: any;
-  public importConfig = ModuleConfig;
-  public isUserErrors: boolean = false;
-  public isFileChanged: boolean = false;
-  stepData: Step1Data;
-  importId: number;
-  dataForm: any;
-  datasetId: any;
-  isUploadRunning: boolean = false;
+  public file: File | null = null;
+  public fileName: string;
+  public isUploadRunning: boolean = false;
+  public maxFileSize: number = 0;
+  public emptyError: boolean = false;
+  public columnFirstError: boolean = false;
+  public maxFileNameLength: number = 255;
+  public acceptedExtensions: string = ModuleConfig.ALLOWED_EXTENSIONS.toString();
 
   constructor(
-    private _activatedRoute: ActivatedRoute,
-    private _ds: DataService,
-    private _commonService: CommonService,
-    private _fb: FormBuilder,
-    private stepService: StepsService,
-    private _router: Router
+    private ds: DataService,
+    private commonService: CommonService,
+    private fb: FormBuilder,
+    private importProcessService: ImportProcessService,
+    private router: Router,
+    private route: ActivatedRoute,
   ) {
-    this.uploadForm = this._fb.group({
+    this.uploadForm = this.fb.group({
       file: [null, Validators.required],
-      fileName: [null, [Validators.required, Validators.maxLength(50), this.startWithNumberValidator]],
-      encodage: [null, Validators.required],
-      srid: [null, Validators.required],
+      fileName: [null, [Validators.required, Validators.maxLength(this.maxFileNameLength)]],
     });
   }
 
   ngOnInit() {
-    this.datasetId = this._activatedRoute.snapshot.queryParams["datasetId"];
-    if (this._activatedRoute.snapshot.queryParams["resetStepper"])
-      this.stepService.setStepData(1);
-    this.stepData = this.stepService.getStepData(1);
-    if (this.stepData) {
-      this.importId = this.stepData.importId;
-      this.dataForm = this.stepData.formData;
-      this.datasetId = this.stepData.datasetId;
-    }
-    if (this.dataForm) {
-      this.skip = true;
-      this.fileName = this.dataForm.fileName;
-      this.uploadForm.patchValue({
-        file: this.fileName,
-        encodage: this.dataForm.encoding,
-        srid: this.dataForm.srid,
-        fileName: this.fileName
-      });
-      this.formListener();
-    }
-
-    this.isUserErrors = false;
-    this.uploadFileErrors = null;
-    this.isFileChanged = false;
-  }
-
-
-  startWithNumberValidator(fileControl): { [key: string]: boolean } {
-    const fileName = fileControl.value
-    // if the first char is a number set error
-    if (fileName && /\d/.test(fileName[0])) {
-      return { startWithNumber: true }
-    }
-    return null
-  }
-
-
-  isDisable() {
-    if (this.uploadForm.invalid) {
-      return true;
-    }
-    if (this.isUserErrors) {
-      return true;
-    }
-    return false;
-  }
-
-  onFileSelected(event: any) {
-    this.fileName
-    this.uploadForm.patchValue({
-      file: <File>event.target.files[0],
-      fileName: event.target.files[0].name
-    });
-    if (event.target.value.length == 0) {
-      this.fileName = null;
+    this.maxFileSize = ModuleConfig.MAX_FILE_SIZE
+    this.step = this.route.snapshot.data.step;
+    this.importData = this.importProcessService.getImportData();
+    if (this.importData === null) {
+      this.datasetId = this.route.snapshot.queryParams["datasetId"];
     } else {
-      this.fileName = event.target.files[0].name;
+      this.fileName = this.importData.full_file_name;
     }
-    this.isFileChanged = true;
   }
 
-  onFileClick(event) {
-    event.target.value = "";
-    this.fileName = null;
-    this.skip = false;
-    this.uploadForm.patchValue({
-      file: null
+  isNextStepAvailable() {
+    if (this.isUploadRunning) {
+      return false;
+    } else if (this.importData && this.uploadForm.pristine) {
+      return true;
+    } else {
+      return this.uploadForm.valid && this.file && this.file.size < this.maxFileSize * 1024 * 1024 && this.file.size;
+    }
+  }
+
+  onFileSelected(file: File) {
+    this.emptyError = this.columnFirstError = false;
+    this.file = file;
+    this.fileName = file.name;
+    this.uploadForm.setValue({
+        file: this.file,
+        fileName: this.fileName,
     });
-    this.isUserErrors = false;
-    this.uploadFileErrors = null;
+    this.uploadForm.markAsDirty();
   }
-
-  onUpload(formValues: any) {
-    if (!this.isUploadRunning) {
+  onSaveData(): Observable<Import> {
+      if (this.importData) {
+          return this.ds.updateFile(this.importData.id_import, this.file);
+      } else {
+          return this.ds.addFile(this.datasetId, this.file);
+      }
+  }
+  onNextStep() {
+      if (this.uploadForm.pristine) {
+          this.importProcessService.navigateToNextStep(this.step);
+          return;
+      }
       this.isUploadRunning = true;
-      this.uploadFileErrors = null;
-      this.isUserErrors = false;
-      this.spinner = true;
-
-      if (!this.skip) {
-        this._ds
-          .postUserFile(
-            formValues,
-            this.datasetId,
-            this.importId,
-            this.isFileChanged,
-            this.fileName
-          )
-          .subscribe(
+      this.onSaveData().subscribe(
             res => {
-              this.isUploadRunning = res.is_running;
-              this.importId = res.importId;
-              let step2Data: Step2Data = {
-                importId: res.importId,
-                srid: formValues.srid
-              };
-              this.stepService.setStepData(2, step2Data);
-              let step1data: Step1Data = {
-                importId: res.importId,
-                datasetId: this.datasetId,
-                formData: {
-                  fileName: res["fileName"],
-                  srid: formValues.srid,
-                  encoding: formValues.encodage
-                }
-              };
-              this.stepService.setStepData(1, step1data);
-              this._router.navigate([
-                `${ModuleConfig.MODULE_URL}/process/id_import/${res.importId}/step/2`
-              ]);
-              this.spinner = false;
+              this.isUploadRunning = false;
+              this.importProcessService.setImportData(res);
+              this.importProcessService.navigateToLastStep();
             },
             error => {
               this.isUploadRunning = false;
-              this.spinner = false;
-              if (error.statusText === "Unknown Error") {
-                this._commonService.regularToaster(
-                  "error",
-                  "Une erreur s'est produite : contactez l'administrateur du site"
-                );
-              } else {
-                if (error.status == 400) {
-                  this.isUserErrors = true;
-                  this.uploadFileErrors = error.error.errors;
-                  this.importId = error.error.id_import
-                } else {
-                  this._commonService.regularToaster(
-                    "error",
-                    error.error.message
-                  );
-                }
+              this.commonService.regularToaster("error", error.error.description);
+              if (error.status === 400) {
+                  if (error.error && error.error.description === "Impossible to upload empty files") {
+                      this.emptyError = true
+                  }
+                  if (error.error && error.error.description === "File must start with columns") {
+                      this.columnFirstError = true
+                  }
               }
-            }
-          );
-      } else {
-        this.spinner = false;
-        this._router.navigate([`${ModuleConfig.MODULE_URL}/process/id_import/${this.importId}/step/2`]);
-      }
-    } else {
-      this._commonService.regularToaster("error", "un upload déjà en cours");
-    }
-  }
-
-  formListener() {
-    this.uploadForm.valueChanges.subscribe(() => {
-      if (this.uploadForm.valid) {
-        this.skip = false;
-      }
-    });
+            },
+        );
   }
 }

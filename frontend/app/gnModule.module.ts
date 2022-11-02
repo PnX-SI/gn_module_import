@@ -7,93 +7,121 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { ChartsModule } from 'ng2-charts';
+import { ChartModule } from 'angular2-chartjs';
 
 import { ImportModalDatasetComponent } from "./components/modal_dataset/import-modal-dataset.component";
 import { ModalDeleteImport } from "./components/delete-modal/delete-modal.component";
 import { DataService } from "./services/data.service";
 import { CsvExportService } from "./services/csv-export.service";
-import { StepperGuardService } from "./services/stepper-guard";
 import { FieldMappingService } from "./services/mappings/field-mapping.service";
 import { ContentMappingService } from "./services/mappings/content-mapping.service";
-import { ImportComponent } from "./components/import_list/import.component";
-import { ImportReportComponent } from "./components/import_report/import_report.component";
-import { StepsService } from "./components/import_process/steps.service";
+import { ImportListComponent } from "./components/import_list/import-list.component";
+import { ImportErrorsComponent } from "./components/import_errors/import_errors.component";
+import { ImportProcessService } from "./components/import_process/import-process.service";
+import { ImportProcessResolver } from "./components/import_process/import-process.resolver";
+import { ImportProcessComponent } from "./components/import_process/import-process.component";
 import { UploadFileStepComponent } from "./components/import_process/upload-file-step/upload-file-step.component";
+import { DecodeFileStepComponent } from "./components/import_process/decode-file-step/decode-file-step.component";
 import { FieldsMappingStepComponent } from "./components/import_process/fields-mapping-step/fields-mapping-step.component";
 import { ContentMappingStepComponent } from "./components/import_process/content-mapping-step/content-mapping-step.component";
 import { ImportStepComponent } from "./components/import_process/import-step/import-step.component";
-import { stepperComponent } from "./components/import_process/stepper/stepper.component";
+import { StepperComponent } from "./components/import_process/stepper/stepper.component";
 import { FooterStepperComponent } from "./components/import_process/footer-stepper/footer-stepper.component";
-import { FileService } from "./services/file.service";
-import { PermissionsService } from "./services/permissions.service";
-import { NeedFixComponent } from "./components/need-fix/need-fix.component";
+import { Step } from "./models/enums.model";
+import { ImportReportComponent } from "./components/import_report/import_report.component";
 
 // my module routing
 const routes: Routes = [
-  { path: "", component: ImportComponent },
-  { path: "report/:id_import", component: ImportReportComponent },
-  {
-    path: "process/step/1",
-    component: UploadFileStepComponent,
-    canActivate: [StepperGuardService]
+  { path: "", component: ImportListComponent },
+  { path: ":id_import/errors",
+    component: ImportErrorsComponent,
+    resolve: { importData: ImportProcessResolver, },
   },
   {
-    path: "process/id_import/:id_import/step/2",
-    component: FieldsMappingStepComponent,
-    canActivate: [StepperGuardService]
+    path: ":id_import/report",
+    component: ImportReportComponent,
+    resolve: { importData: ImportProcessResolver },
   },
   {
-    path: "process/id_import/:id_import/step/3",
-    component: ContentMappingStepComponent,
-    canActivate: [StepperGuardService]
+    path: "process",
+    component: ImportProcessComponent,
+    children: [
+      {
+        path: "upload",
+        component: UploadFileStepComponent,
+        data: { step: Step.Upload },
+        resolve: { importData: ImportProcessResolver, },
+      },
+      {
+        path: ":id_import/upload",
+        component: UploadFileStepComponent,
+        data: { step: Step.Upload },
+        resolve: { importData: ImportProcessResolver, },
+      },
+      {
+        path: ":id_import/decode",
+        component: DecodeFileStepComponent,
+        data: { step: Step.Decode },
+        resolve: { importData: ImportProcessResolver, },
+      },
+      {
+        path: ":id_import/fieldmapping",
+        component: FieldsMappingStepComponent,
+        data: { step: Step.FieldMapping },
+        resolve: { importData: ImportProcessResolver, },
+      },
+      {
+        path: ":id_import/contentmapping",
+        component: ContentMappingStepComponent,
+        data: { step: Step.ContentMapping },
+        resolve: { importData: ImportProcessResolver, },
+      },
+      {
+        path: ":id_import/import",
+        component: ImportStepComponent,
+        data: { step: Step.Import },
+        resolve: { importData: ImportProcessResolver, },
+      },
+    ]
   },
-  {
-    path: "process/id_import/:id_import/step/4",
-    component: ImportStepComponent,
-    canActivate: [StepperGuardService]
-  },
-  {
-    path: "process//id_import/:id_import/step/4",
-    component: ImportStepComponent
-  }
 ];
 
 @NgModule({
   declarations: [
-    ImportComponent,
-    ImportReportComponent,
+    ImportListComponent,
+    ImportErrorsComponent,
     ImportModalDatasetComponent,
     ModalDeleteImport,
     UploadFileStepComponent,
+    DecodeFileStepComponent,
     FieldsMappingStepComponent,
     ContentMappingStepComponent,
     ImportStepComponent,
-    stepperComponent,
+    StepperComponent,
     FooterStepperComponent,
-    NeedFixComponent
+    ImportProcessComponent,
+    ImportReportComponent,
   ],
   imports: [
+    ChartsModule,
+    ChartModule,
     GN2CommonModule,
     RouterModule.forChild(routes),
     CommonModule,
     MatProgressSpinnerModule,
     MatStepperModule,
     MatCheckboxModule,
-    ChartsModule,
     NgbModule
   ],
   entryComponents: [ModalDeleteImport],
   providers: [
     DataService,
-    StepsService,
+    ImportProcessService,
+    ImportProcessResolver,
     CsvExportService,
-    FileService,
     FieldMappingService,
-    StepperGuardService,
-    ContentMappingService,
-    PermissionsService
+    ContentMappingService
   ],
-
   bootstrap: []
 })
 export class GeonatureModule { }

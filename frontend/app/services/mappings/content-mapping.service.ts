@@ -2,8 +2,6 @@ import { Injectable } from "@angular/core";
 import { DataService } from "../data.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../module.config";
-import { Observable } from "rxjs";
-
 
 @Injectable()
 export class ContentMappingService {
@@ -19,31 +17,18 @@ export class ContentMappingService {
     this.displayMapped = ModuleConfig.DISPLAY_MAPPED_VALUES;
   }
 
-  getMappingNamesListMap(newContentId?, formControl?): Observable<number | void>{
+  getMappingNamesList(newContentId?, formControl?) {
     // get list of existing content mapping in the select
-    return this._ds.getMappings("content").map(
+    this._ds.getContentMappings().subscribe(
       result => {
         this.userContentMappings = result
         if (newContentId) {
           const newMapping = result.find(el => {
-            return el.id_mapping == newContentId
+            return el.id == newContentId
           })
           formControl.setValue(newMapping)
         }
 
-      },
-      error => {
-        console.log(error);
-        if (error.statusText === "Unknown Error") {
-          // show error message if no connexion
-          this._commonService.regularToaster(
-            "error",
-            "Une erreur s'est produite : contactez l'administrateur du site"
-          );
-        } else {
-          console.log(error);
-          this._commonService.regularToaster("error", error.error);
-        }
       }
     );
   }

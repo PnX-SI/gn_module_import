@@ -1,5 +1,3 @@
-<div class=container>
-    <stepper [step]=1></stepper>
     <div class="card">
         <div class="card-header">
             <h5 class="card-title mb-0"> Téléversement du fichier </h5>
@@ -17,71 +15,31 @@
                         <input
                             class="custom-file-input"
                             type=file
-                            (click)="onFileClick($event)"
-                            (change)="onFileSelected($event)"
+                            (change)="onFileSelected($event.target.files[0])"
                             id="selectedFile"
                             name="file"
+                            [accept]="acceptedExtensions"
                         >
-                        <small style="color: red;" *ngIf="uploadForm.get('fileName').errors?.maxlength">
-                            Le nom du fichier doit faire au maximum 50 caractères 
-                            ({{uploadForm.get('fileName').errors?.maxlength.actualLength}} actuellement)
-                        </small>
-                        <small style="color: red;" *ngIf="uploadForm.get('fileName').errors?.startWithNumber">
-                            Le fichier ne doit pas commencer par un chiffre
-                        </small>
                         <label
-                            *ngIf="fileName"
                             class="custom-file-label"
-                            [class.error-file]="uploadForm.get('file').errors"
+                            [class.error-file]="!isNextStepAvailable() && uploadForm.get('file').errors"
                             for="selectedFile"
-                        >{{fileName}}</label>
-                        <label
-                            *ngIf="!fileName"
-                            class="custom-file-label"
-                            [class.error-file]="uploadForm.get('file').errors"
-                            for="selectedFile"
-                        > Choisissez
-                            votre
-                            fichier</label>
+                        >{{fileName ? fileName : 'Choisissez votre fichier' }}</label>
                     </div>
                 </div>
-                <!-- Encoding field -->
-                <div class="form-group">
-                    <label> Encodage de votre fichier :</label>
-                    <select
-                        class="custom-select mr-sm-2"
-                        id="encodage"
-                        formControlName="encodage"
-                        required
-                    >
-                        <option
-                            *ngFor="let encodage of importConfig.ENCODAGE"
-                            [value]="encodage"
-                        >
-                            {{encodage}}
-                        </option>
-                    </select>
-                    <div class="invalid-feedback">Sélectionnez un encodage</div>
-                </div>
-                <!-- SRID field -->
-                <div class="form-group">
-                    <label>SRID de vos données géographiques :</label>
-                    <select
-                        class="custom-select mr-sm-2"
-                        id="srid"
-                        formControlName="srid"
-                        required
-                    >
-                        <option
-                            *ngFor="let srid of importConfig.SRID"
-                            [value]="srid.code"
-                        >
-                            {{srid.name}}
-                        </option>
-                    </select>
-                    <div class="invalid-feedback">Sélectionnez un SRID</div>
-                </div>
             </form>
+            <div class="text-danger" *ngIf="file && maxFileSize * 1024 * 1024 < file.size">
+                Le fichier sélectionné est trop volumineux. La taille maximale est de {{maxFileSize}}Mo
+            </div>
+            <div class="text-danger" *ngIf="emptyError || file && !file.size">
+                Le fichier sélectionné est vide
+            </div>
+            <div class="text-danger" *ngIf="columnFirstError">
+                La première ligne du fichier doit correspondre au nom des colonnes
+            </div>
+            <div class="text-danger" *ngIf="fileName && fileName.length > maxFileNameLength">
+                Le nom du fichier est trop long. Il doit faire moins de {{maxFileNameLength}} caractères.
+            </div>
             <!-- Navigation buttons -->
             <div class="navigate-btn">
                 <button
@@ -89,42 +47,19 @@
                     class="d-flex justify-content-center align-content-between"
                     mat-raised-button
                     color=primary
-                    (click)="onUpload(uploadForm.value)"
-                    [disabled]="isDisable()"
+                    [disabled]="!isNextStepAvailable()"
+                    (click)="onNextStep()"
                     id="validate"
                 >
                     Suivant
                     <i class="material-icons"> navigate_next </i>
                 </button>
             </div>
-            <!-- Error list in table -->
-            <div
-                id="errorList"
-                *ngIf="uploadFileErrors"
-            >
-                <div> Attention, erreurs détectées dans le fichier soumis </div>
-                <button
-                    mat-raised-button
-                    color="warn"
-                >
-                    <a
-                        target="_blank"
-                        [routerLink]="['/import/errors', importId]"
-                    >
-
-                        Voir le rapport complet
-                    </a>
-                </button>
-            </div>
         </div>
     </div>
-    <footer>
-        <footer-stepper></footer-stepper>
-    </footer>
-</div>
 <!-- Spinner -->
 <div
-    *ngIf="spinner"
+    *ngIf="isUploadRunning"
     class="spinner"
 >
     <mat-spinner

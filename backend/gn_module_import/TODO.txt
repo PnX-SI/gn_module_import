@@ -1,0 +1,2 @@
+remove nomenclature column in dict_fields
+remove INVALID_CSV_NAME from config
