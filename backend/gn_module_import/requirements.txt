@@ -1,4 +1,4 @@
-numpy==1.19.4
+numpy==1.22.0
 pandas
 dask==2.0.0
 dask[dataframe]==2.0.0
