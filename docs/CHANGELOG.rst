@@ -2,14 +2,118 @@
 CHANGELOG
 =========
 
-1.1.9 (unreleased)
+2.0.0 (unreleased)
 ------------------
 
-Nécessite la version 2.10.0 (ou plus) de GeoNature
+Nécessite la version 2.10.0 (ou plus) de GeoNature.
+Refonte technique complète du module, améliorant son socle, sa robustesse et ses performances, et corrigeant de nombreux bugs [https://github.com/PnX-SI/gn_module_import/issues/257]
 
-**Evolutions**
+**🚀 Évolutions fonctionnelles [https://github.com/PnX-SI/gn_module_import/issues/257]**
 
-- Compatibilité avec Angular version 12, mis à jour dans la version 2.10.0 de GeoNature (#251)
+* Pagination de la liste des imports côté serveur pour optimiser son chargement et affichage quand on a de nombreux imports
+* Vérification des permissions sur le JDD.
+* Découpage de l’étape de téléversement et paramétrages en 2 étapes distincts :
+
+  * Téléversement du fichier
+  * Sélection des paramètres du fichier :
+    
+    * Format : CSV uniquement (le support du GeoJSON est à rétablir)
+    * Encodage : une liste configurable d’encodage est proposé avec l’encodage auto-détecté pré-sélectionné [https://github.com/PnX-SI/gn_module_import/issues/188]
+    * Séparateur : une liste configurable de séparateur est proposé avec le séparateur auto-détecté pré-sélectionné
+    * SRID (pas d’évolution)
+
+* Le formulaire de correspondances des nomenclatures a été inversé : pour chaque nomenclature associée lors de la correspondance des champs sont affichées les valeurs source présente dans le fichier, avec un select permettant de choisir la nomenclature de destination. Il reste possible d’associer plusieurs champs source à une même nomenclature de destination, et ce sans multi-select.
+* Gestion des modèles dans l’interface d’administration de GeoNature, 
+* Possibilité de reprendre un import à n’importe quelle étape, y compris lorsque celui-ci est terminé (permettant de mettre à jour des données déjà importées dans la synthèse).
+* Contrôle et import des données effectuées en asynchrone, peu importe le nombre de lignes du fichier.
+* La dernière étape est dynamique, et affiche, suivant l’état de l’import :
+
+  * Un bouton de lancement des contrôles;
+  * Une barre de progression des contrôles;
+  * La prévisualisation des données contrôlées et le bouton de lancement de l’import;
+  * Un spinner d’attente pendant l’import;
+  * Un rapport d’import.
+
+* Suppression du TYP_INFO_GEO [https://github.com/PnX-SI/gn_module_import/issues/271]
+* Utilisation des codes mailles longs [https://github.com/PnX-SI/gn_module_import/issues/218]
+
+**💻 Évolutions techniques [https://github.com/PnX-SI/gn_module_import/issues/257]**
+
+* Compatibilité avec Angular version 12, mis à jour dans la version 2.10.0 de GeoNature
+* Packaging du module 
+* Gestion de la BDD du module avec Alembic
+* Suppression du code SQL au profit de l’utilisation de l’ORM
+* Suppression des try/expect génériques ; les imports ne passent plus en erreur, mais l’erreur est collectée dans les logs de GeoNature et dans sentry et il est permis à l’utilisateur de réessayer en reprenant là où il en était
+* Nombreuses corrections de bugs par l’écriture de code plus robuste
+* Ajout de tests unitaires (couverture de code à 91%)
+* Refonte des modèles d’imports :
+
+  * Gestion correcte des permissions, ajout, modification, suppression
+  * Les correspondances sont sauvegardées directement dans l’import indépendamment du modèle, résolvant ainsi les soucis liés à la reprise d’un import dont le modèle utilisé a été modifié, et supprimant le recours aux modèles temporaires
+  * Les correspondances de champs / de nomenclatures sont stoquées au format JSON. Le format permet d’associer plusieurs valeurs sources à une même nomenclature de destination
+   
+* Asynchrone : utilisation d’un worker Celery permettant d’exécuter un seul contrôle / import à la fois (évite l’effondrement du serveur lors de plusieurs imports)
+* Isolation du code de contrôle permettant de le tester automatiquement
+* Factorisation de la gestion des erreurs
+* Stockage du fichier source au format binaire dans une colonne de l’import. Cela rend inutile les tables d’archives qui sont supprimées ; les données sont préalablement migrées au format binaire.
+* Suppression des tables transitoires créées à partir de la structure des fichiers CSV au profit d’une unique table transitoire. Les données sont chargées depuis le fichier source après l’étape de correspondance des champs
+* La table transitoire contient un jeu de colonnes source et un jeu de colonnes destination ; les transformations sont refondues sur cette base, apportant un gain de simplification et de robustesse
+* Les contrôles python fondés sur une dataframe panda ont été réduits et convertis en SQL lorsque possible pour de meilleurs performances
+
+**📉 Régressions**
+
+* Import des GeoJSON
+* Tag des imports à corriger
+* Alimentation des champs additionnels avec plusieurs colonnes
+* Restriction des imports à une aire géographique
+* Restriction des imports à une liste de taxons
+* Affichage du nombre total de données du fichier source dans la liste des imports
+* Export / Import des modèles d'import, remplacé par la gestion des modèles d'import dans l'Admin de GeoNature
+* Notification par email de la fin des opérations asynchrones (contrôles et import des données)
+
+**⚠️ Notes de version**
+
+* Suivez la procédure classique de mise à jour du module
+* Exécuter la commande suivante afin d’indiquer à Alembic que votre base de données est dans l'état de la version 1.2.0 et appliquer automatiquement les évolutions pour la passer dans l'état de la version 2.0.0 :
+
+::
+
+   cd
+   source geonature/backend/venv/bin/activate
+   geonature db stamp 4b137deaf201
+   geonature db autoupgrade
+   
+
+1.2.0 (2022-03-21)
+------------------
+
+Nécessite la version 2.9 de GeoNature. Non compatible avec les versions 2.10 et supérieures de GeoNature.
+
+**🚀 Nouveautés**
+
+* Ajout d'un rapport d'import - consultable en ligne et exportable en PDF - en cohérence avec le module métadonnées (#158)
+* Affichage dynamique du nombre de données importées par rang taxonomique sous forme de graphique dans le rapport d'import et son export pdf (rang par défaut configurable avec le nouveau paramètre ``DEFAULT_RANK_VALUE``) (#221)
+* Possibilité de taguer un import nécessitant des corrections et d'y attribuer un commentaire le cas échéant (#230)
+* Possibilité de filtrer les imports nécessitant des corrections depuis la liste des imports (#189)
+* Possibilité d'alimenter le champs "additionnal_data" de la synthèse avec un ou plusieurs champs du fichier source (#165)
+* Possibilité de restreindre les imports à une aire géographique du ref_geo (configurable avec le nouveau paramètre ``ID_AREA_RESTRICTION``) : les données hors du territoire configuré sont mises en erreur (#217)
+* Possibilité de restreindre les imports à une liste de taxons (configurable avec le nouveau paramètre ``ID_LIST_TAXA_RESTRICTION``) : les données ne portant pas sur ces taxons sont mises en erreur (#217)
+* Affichage du nombre de données importées / nombre total dans la liste des imports (#183)
+* Possibilité d'exporter ou d'importer des mappings en JSON pour les échanger entre instances de GeoNature (#146)
+
+**🐛 Corrections**
+
+* Suppression du champs "gn_is_valid" dans les tables d'import : les lignes invalides sont déduites à partir des erreurs détectées pour chaque donnée (gn_invalid_reason) (#223)
+* L'étape 3 (mapping de nomenclatures) est désormais passée automatiquement si aucun champs de nomenclature n'a été rempli à l'étape précédente (mapping des champs) (#157)
+* Suppression du rapport d'erreur au profit du rapport d'import plus complet, visuel et exportable (#158)
+* Correction de l'autocomplétion de la recherche (#214)
+* Amélioration du modèle de données : ajout d'une clé étrangère entre imports (gn_import.t_imports) et sources de la syntèse (gn_synthese.t_sources) (#201)
+* Correction de la version setuptools lors de l'installation (#244)
+* Compatilité Debian10 et Debian11
+
+**Notes de version**
+
+* Exécuter les fichiers de mise à jour du schéma de la BDD du module (``data/migration/1.1.8to1.2.0.sql``)
 
 1.1.8 (2022-02-23)
 ------------------

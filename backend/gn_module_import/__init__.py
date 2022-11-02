@@ -1,0 +1,2 @@
+MODULE_CODE = "IMPORT"
+MODULE_PICTO = "fa-upload"

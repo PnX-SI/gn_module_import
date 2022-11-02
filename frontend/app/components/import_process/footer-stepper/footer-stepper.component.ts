@@ -1,14 +1,13 @@
 import { Component, OnInit, Input } from "@angular/core";
-import { Router } from "@angular/router";
+import { Router, ActivatedRoute } from "@angular/router";
 import { DataService } from "../../../services/data.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { ModuleConfig } from "../../../module.config";
-import {
-  StepsService,
-  Step2Data,
-  Step3Data,
-  Step4Data
-} from "../steps.service";
+import { ImportProcessService } from "../import-process.service";
+// import { ImportStepInterface } from "../import-process.interface";
+import { isObservable } from "rxjs";
+import { Import } from "../../../models/import.model";
+
 
 @Component({
   selector: "footer-stepper",
@@ -16,46 +15,47 @@ import {
   templateUrl: "footer-stepper.component.html"
 })
 export class FooterStepperComponent implements OnInit {
+  @Input() stepComponent;
   public IMPORT_CONFIG = ModuleConfig;
-
-  @Input()
-  importId: any;
 
   constructor(
     private _router: Router,
+    private _route: ActivatedRoute,
     private _ds: DataService,
-    private stepService: StepsService,
+    private importProcessService: ImportProcessService,
     private _commonService: CommonService
   ) { }
 
   ngOnInit() { }
 
-  cancelImport() {
-    this._ds.cancelImport(this.importId).subscribe(
-      () => {
-        this.stepService.resetStepoer();
-        this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);
-      },
-      error => {
-        if (error.statusText === "Unknown Error") {
-          // show error message if no connexion
-          this._commonService.regularToaster(
-            "error",
-            "Une erreur s'est produite : contactez l'administrateur du site"
-          );
-        } else {
-          if ((error.status = 400)) {
-            this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);
-          }
-          // show error message if other server error
-          this._commonService.regularToaster("error", error.error.message);
-        }
-      }
-    );
+  deleteImport() {
+    let importData: Import | null = this.importProcessService.getImportData();
+    if (importData) {
+      this._ds.deleteImport(importData.id_import).subscribe(
+        () => { this.leaveImport(); }
+      );
+    } else {
+      this.leaveImport();
+    }
   }
 
-  onImportList() {
-    this.stepService.resetStepoer();
+  saveAndLeaveImport() {
+    if (this.stepComponent.onSaveData !== undefined) {
+      let ret = this.stepComponent.onSaveData();
+      if (isObservable(ret)) {
+        ret.subscribe(() => {
+          this.leaveImport();
+        });
+      } else {
+        this.leaveImport();
+      }
+    } else {
+      this.leaveImport();
+    }
+  }
+
+  leaveImport() {
+    this.importProcessService.resetImportData();
     this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);
   }
 }

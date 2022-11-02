@@ -1,0 +1,6 @@
+[run]
+source =
+    backend/gn_module_import/
+omit =
+    backend/gn_module_import/migrations/*
+    backend/gn_module_import/tests/*

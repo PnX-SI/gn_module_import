@@ -1,7 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute } from "@angular/router";
+import { Router, ActivatedRoute } from "@angular/router";
+import { ImportProcessService } from "../import_process/import-process.service";
 
-import { DataService } from '../../services/data.service'
+import { Import, ImportError } from '../../models/import.model';
+import { DataService } from '../../services/data.service';
 
 @Component({
     selector: 'pnx-import-errors',
@@ -10,27 +12,26 @@ import { DataService } from '../../services/data.service'
 
 })
 
-export class ImportErrorsComponent implements OnInit, OnDestroy {
-    private sub: any;
-    public import: any;
-    public formatedErrors: string;
-    constructor(private _dataService: DataService, private _activedRoute: ActivatedRoute) { }
+export class ImportErrorsComponent implements OnInit {
+    public importData: Import;
+    public importErrors: Array<ImportError> = null;
+    public importWarnings: Array<ImportError> = null;
 
-    ngOnInit() {
-
-        this.sub = this._activedRoute.params.subscribe(params => {
-            this._dataService.getOneImport(
-                params["id_import"]
-            ).subscribe(data => {
-                console.log(data);
-
-                this.import = data;
-            })
-
-        })
+    constructor(
+        private _router: Router,
+        private _route: ActivatedRoute,
+        private _ds: DataService,
+    ) {
+      _router.routeReuseStrategy.shouldReuseRoute = () => false; // reset component on importId change
     }
 
-    ngOnDestroy() {
-        this.sub.unsubscribe();
+    ngOnInit() {
+      this.importData = this._route.snapshot.data.importData;
+      this._ds.getImportErrors(this.importData.id_import).subscribe(
+        errors => {
+            this.importErrors = errors.filter(err => {return err.type.level === "ERROR" });
+            this.importWarnings = errors.filter(err => {return err.type.level === "WARNING"})
+            },
+      );
     }
 }

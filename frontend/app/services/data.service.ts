@@ -1,86 +1,115 @@
 import { Injectable } from "@angular/core";
-import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { Observable } from "rxjs";
+import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { AppConfig } from "@geonature_config/app.config";
 import { ModuleConfig } from "../module.config";
+import { Dataset, Import, ImportError, ImportValues, SynthesisThemeFields, TaxaDistribution } from "../models/import.model";
+import { FieldMapping, FieldMappingValues, ContentMapping, ContentMappingValues } from "../models/mapping.model";
 
-const HttpUploadOptions = {
-  headers: new HttpHeaders({ Accept: "application/json" })
-};
 const urlApi = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
 
 @Injectable()
 export class DataService {
   constructor(private _http: HttpClient) { }
 
-  getImportList() {
-    return this._http.get<any>(urlApi);
+  getNomenclatures(): Observable<any> {
+    return this._http.get<any>(`${urlApi}/nomenclatures`);
   }
 
-  getOneImport(id_import) {
-    return this._http.get<any>(`${urlApi}/${id_import}`);
+  getImportList(values): Observable<Array<Import>> {
+    const url = `${urlApi}/imports/`
+    let params = new HttpParams({fromObject:values})
+    return this._http.get<Array<Import>>(url, { params: params });
   }
 
-  updateImport(idImport, data) {
-    return this._http.post(`${urlApi}/update_import/${idImport}`, data);
+  getOneImport(id_import): Observable<Import> {
+    return this._http.get<Import>(`${urlApi}/imports/${id_import}/`);
   }
 
-  deleteMapping(idMapping) {
-    return this._http.delete(`${urlApi}/mapping/${idMapping}`);
-  }
 
-  postUserFile(value, datasetId, importId, isFileChanged, fileName) {
-    const urlStatus = `${urlApi}/uploads`;
+  addFile(datasetId: number, file: File): Observable<Import> {
     let fd = new FormData();
-    if (value.file instanceof Blob)
-      fd.append("File", value.file, value.file["name"]);
-    fd.append("encodage", value.encodage);
-    fd.append("srid", value.srid);
-    fd.append("separator", value.separator);
-    fd.append("datasetId", datasetId);
-    fd.append("importId", importId);
-    fd.append("isFileChanged", isFileChanged);
-    fd.append("fileName", fileName);
-    return this._http.post<any>(urlStatus, fd, HttpUploadOptions);
+    fd.append("file", file, file.name);
+    fd.append("datasetId", String(datasetId));
+    const url = `${urlApi}/imports/upload`;
+    return this._http.post<Import>(url, fd);
   }
 
-  getUserDatasets() {
-    return this._http.get<any>(`${urlApi}/datasets`);
+  updateFile(importId: number, file: File): Observable<Import> {
+    let fd = new FormData();
+    fd.append("file", file, file.name);
+    const url = `${urlApi}/imports/${importId}/upload`;
+    return this._http.put<Import>(url, fd);
   }
 
-  getMappings(mapping_type) {
-    return this._http.get<any>(`${urlApi}/mappings/${mapping_type}`);
+  decodeFile(importId: number, params: { encoding: string, format: string, srid: string}, decode:number=1): Observable<Import> {
+    const url = `${urlApi}/imports/${importId}/decode?decode=${decode}`;
+    return this._http.post<Import>(url, params);
   }
 
-  getOneBibMapping(id_mapping) {
-    return this._http.get<any>(`${urlApi}/mapping/${id_mapping}`);
+  loadImport(importId: number): Observable<Import> {
+    const url = `${urlApi}/imports/${importId}/load`;
+    return this._http.post<Import>(url, null);
   }
 
-  getMappingFields(id_mapping: number) {
-    return this._http.get<any>(`${urlApi}/field_mappings/${id_mapping}`);
+  updateImport(idImport, data): Observable<Import> {
+    return this._http.post<Import>(`${urlApi}/imports/${idImport}/update`, data);
   }
 
-  getMappingContents(id_mapping: number) {
-    return this._http.get<any>(`${urlApi}/content_mappings/${id_mapping}`);
+  createFieldMapping(name: string, values: FieldMappingValues): Observable<FieldMapping> {
+    return this._http.post<FieldMapping>(`${urlApi}/fieldmappings/?label=${name}`, values);
   }
 
-  createOrUpdateFieldMapping(data, id_mapping) {
-    return this._http.post(
-      `${urlApi}/create_or_update_field_mapping/${id_mapping}`,
-      data
-    );
+  createContentMapping(name: string, values: ContentMappingValues): Observable<ContentMapping> {
+    return this._http.post<ContentMapping>(`${urlApi}/contentmappings/?label=${name}`, values);
   }
 
-  updateContentMapping(id_mapping, data) {
-    return this._http.post(
-      `${urlApi}/update_content_mapping/${id_mapping}`,
-      data
-    );
+  getFieldMappings(): Observable<Array<FieldMapping>> {
+    return this._http.get<Array<FieldMapping>>(`${urlApi}/fieldmappings/`);
   }
 
-  postMappingName(value, mappingType) {
-    const urlMapping = `${urlApi}/mapping`;
-    value["mapping_type"] = mappingType;
-    return this._http.post<any>(urlMapping, value);
+  getContentMappings(): Observable<Array<ContentMapping>> {
+    return this._http.get<Array<ContentMapping>>(`${urlApi}/contentmappings/`);
+  }
+
+  getFieldMapping(id_mapping: number): Observable<FieldMapping> {
+    return this._http.get<FieldMapping>(`${urlApi}/fieldmappings/${id_mapping}/`);
+  }
+
+  getContentMapping(id_mapping: number): Observable<ContentMapping> {
+    return this._http.get<ContentMapping>(`${urlApi}/contentmappings/${id_mapping}/`);
+  }
+
+  updateFieldMapping(id_mapping: number, values: FieldMappingValues, label: string = ''): Observable<FieldMapping> {
+    let url =  `${urlApi}/fieldmappings/${id_mapping}/`
+    if (label) {
+        url  = url + `?label=${label}`
+    }
+    return this._http.post<FieldMapping>(url, values);
+  }
+
+  updateContentMapping(id_mapping: number, values: ContentMappingValues, label: string = ''): Observable<ContentMapping> {
+    let url =  `${urlApi}/contentmappings/${id_mapping}/`
+    if (label) {
+        url  = url + `?label=${label}`
+    }
+    return this._http.post<ContentMapping>(url, values);
+  }
+
+  renameFieldMapping(id_mapping: number, label: string): Observable<FieldMapping> {
+    return this._http.post<FieldMapping>(`${urlApi}/fieldmappings/${id_mapping}/?label=${label}`, null);
+  }
+
+  renameContentMapping(id_mapping: number, label: string): Observable<ContentMapping> {
+    return this._http.post<ContentMapping>(`${urlApi}/contentmappings/${id_mapping}/?label=${label}`, null);
+  }
+
+  deleteFieldMapping(id_mapping: number): Observable<null> {
+    return this._http.delete<null>(`${urlApi}/fieldmappings/${id_mapping}/`);
+  }
+
+  deleteContentMapping(id_mapping: number): Observable<null> {
+    return this._http.delete<null>(`${urlApi}/contentmappings/${id_mapping}/`);
   }
 
   /**
@@ -89,118 +118,97 @@ export class DataService {
    * @param idFieldMapping
    * @param idContentMapping
    */
-  dataChecker(idImport, idFieldMapping, idContentMapping) {
+  /*dataChecker(idImport, idFieldMapping, idContentMapping): Observable<Import> {
     const url = `${urlApi}/data_checker/${idImport}/field_mapping/${idFieldMapping}/content_mapping/${idContentMapping}`;
-    return this._http.post<any>(url, {});
-  }
+    return this._http.post<Import>(url, new FormData());
+  }*/
 
-  updateMappingName(value, mappingType, idMapping) {
-    const urlMapping = `${urlApi}/updateMappingName`;
-    let fd = new FormData();
-    fd.append("mapping_id", idMapping);
-    fd.append("mapping_type", mappingType);
-    fd.append("mappingName", value);
-    return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
-  }
-
-  cancelImport(importId: number) {
-    return this._http.get<any>(`${urlApi}/cancel_import/${importId}`);
+  deleteImport(importId: number): Observable<void> {
+    return this._http.delete<void>(`${urlApi}/imports/${importId}/`);
   }
 
   /**
    * Return all the column of the file of an import
    * @param idImport : integer
    */
-  getColumnsImport(idImport) {
-    return this._http.get<any>(`${urlApi}/columns_import/${idImport}`);
+  getColumnsImport(idImport: number): Observable<Array<string>> {
+    return this._http.get<Array<string>>(`${urlApi}/imports/${idImport}/columns`);
   }
 
-  getSynColumnNames() {
-    return this._http.get<any>(`${urlApi}/syntheseInfo`);
+  getImportValues(idImport: number): Observable<ImportValues> {
+    return this._http.get<ImportValues>(`${urlApi}/imports/${idImport}/values`);
   }
 
-  getBibFields() {
-    return this._http.get<any>(`${urlApi}/bibFields`);
+  getBibFields(): Observable<Array<SynthesisThemeFields>> {
+    return this._http.get<Array<SynthesisThemeFields>>(`${urlApi}/synthesis/fields`);
   }
 
-  postMapping(value, importId: number, id_mapping: number, user_srid) {
-    const urlMapping = `${urlApi}/mapping/${importId}/${id_mapping}`;
-    let fd = new FormData();
-    for (let key of Object.keys(value)) {
-      fd.append(key, value[key]);
-    }
-    fd.append("srid", user_srid);
-    return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
+  setImportFieldMapping(idImport: number, values: FieldMappingValues): Observable<Import> {
+    return this._http.post<Import>(`${urlApi}/imports/${idImport}/fieldmapping`, values);
   }
 
-  updateMappingField(value, importId: number, id_mapping: number) {
-    const urlMapping = `${urlApi}/updateMappingField/${importId}/${id_mapping}`;
-    let fd = new FormData();
-    for (let key of Object.keys(value)) {
-      fd.append(key, value[key]);
-    }
-    return this._http.post<any>(urlMapping, fd, HttpUploadOptions);
+  setImportContentMapping(idImport: number, values: ContentMappingValues): Observable<Import> {
+    return this._http.post<Import>(`${urlApi}/imports/${idImport}/contentmapping`, values);
   }
 
-  contentMappingDataChecking(import_id, id_mapping) {
-    if (id_mapping == null) {
-      id_mapping = 0;
-    }
-    const contentMappingUrl = `${urlApi}/contentMapping/${import_id}/${id_mapping}`;
-
-    return this._http.post<any>(contentMappingUrl, {});
-  }
-
-  postMetaToStep3(import_id, id_mapping, table_name) {
-    let fd = new FormData();
-    fd.append("import_id", import_id);
-    fd.append("id_mapping", id_mapping);
-    fd.append("table_name", table_name);
-    return this._http.post<any>(
-      `${urlApi}/postMetaToStep3`,
-      fd,
-      HttpUploadOptions
-    );
-  }
-
-  goToStep4(import_id, id_mapping) {
-    return this._http.put<any>(
-      `${urlApi}/goToStep4/${import_id}/${id_mapping}`,
-      {}
-    );
-  }
-
-  getNomencInfo(id_import, id_field_mapping) {
+  getNomencInfo(id_import: number) {
     return this._http.get<any>(
-      `${urlApi}/getNomencInfo/${id_import}/field_mapping/${id_field_mapping}`
+      `${urlApi}/imports/${id_import}/contentMapping`
     );
   }
 
-  importData(import_id) {
-    return this._http.get<any>(`${urlApi}/importData/${import_id}`);
+  prepareImport(import_id: number): Observable<Import> {
+    return this._http.post<Import>(`${urlApi}/imports/${import_id}/prepare`, {});
   }
 
-  getValidData(importId: number) {
-    return this._http.get<any>(`${urlApi}/getValidData/${importId}`);
+  getValidData(import_id: number): Observable<any> {
+    return this._http.get<any>(`${urlApi}/imports/${import_id}/preview_valid_data`);
   }
 
-  getErrorCSV(importId: number) {
-    let fd = new FormData();
-    return this._http.post(`${urlApi}/get_errors/${importId}`, fd, {
-      responseType: "blob"
-      //headers: new HttpHeaders().append("Content-Type", "application/json")
+  getBbox(sourceId: number): Observable<any> {
+    return this._http.get<any>(`${AppConfig.API_ENDPOINT}/synthese/observations_bbox`, {
+      params: { id_source: sourceId },
     });
   }
 
-  checkInvalid(import_id) {
-    return this._http.get<any>(`${urlApi}/check_invalid/${import_id}`);
+  finalizeImport(import_id): Observable<Import> {
+    return this._http.post<Import>(`${urlApi}/imports/${import_id}/import`, {});
   }
 
-  getErrorList(importId) {
-    return this._http.get<any>(`${urlApi}/get_error_list/${importId}`);
+  getErrorCSV(importId: number) {
+    return this._http.get(`${urlApi}/imports/${importId}/invalid_rows`, {
+      responseType: "blob"
+    });
   }
 
-  sendEmail(import_id) {
-    return this._http.get<any>(`${urlApi}/sendemail`);
+  getImportErrors(importId): Observable<Array<ImportError>> {
+    return this._http.get<Array<ImportError>>(`${urlApi}/imports/${importId}/errors`);
+  }
+
+  getTaxaRepartition(sourceId: number, taxa_rank: string) {
+    return this._http.get<Array<TaxaDistribution>>(
+      `${AppConfig.API_ENDPOINT}/synthese/taxa_distribution`,
+      {
+        params: {
+          id_source: sourceId,
+          taxa_rank: taxa_rank,
+        },
+      }
+    );
+  }
+
+  getDatasetFromId(datasetId: number) {
+    return this._http.get<Dataset>(
+      `${AppConfig.API_ENDPOINT}/meta/dataset/${datasetId}`
+    );
+  }
+
+  getPdf(importId, mapImg, chartImg) {
+    const formData = new FormData();
+    formData.append("map", mapImg);
+    if (chartImg !== "") {
+      formData.append("chart", chartImg);
+    }
+    return this._http.post(`${urlApi}/export_pdf/${importId}`, formData, { responseType: "blob" });
   }
 }

@@ -1,22 +1,22 @@
 import { Injectable } from "@angular/core";
-import { FormGroup, Validators } from "@angular/forms";
+import { FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from "@angular/forms";
 import { DataService } from "../data.service";
 import { CommonService } from "@geonature_common/service/common.service";
 
 @Injectable()
 export class FieldMappingService {
-  public fieldMappingForm: FormGroup;
+  /*public fieldMappingForm: FormGroup;
   public userFieldMappings;
   public columns;
   public newMapping: boolean = false;
-  public id_mapping;
+  public id_mapping;*/
 
   constructor(
-    private _ds: DataService,
-    private _commonService: CommonService
+    /*private _ds: DataService,
+    private _commonService: CommonService*/
   ) { }
 
-  getMappingNamesList(mapping_type) {
+  /*getMappingNamesList(mapping_type) {
     this._ds.getMappings(mapping_type).subscribe(
       result => {
         this.userFieldMappings = result["mappings"];
@@ -87,7 +87,7 @@ export class FieldMappingService {
     this.id_mapping = id_mapping;
     this._ds.getMappingFields(this.id_mapping).subscribe(
       mappingFields => {
-        if (mappingFields[0] != "empty") {
+        if (mappingFields.length > 0) {
           for (let field of mappingFields) {
             this.enableMapping(targetFormName);
             targetFormName
@@ -126,108 +126,82 @@ export class FieldMappingService {
         }
       }
     });
+  }*/
+
+  /*setFormControlNotRequired(form): void {
+    form.clearValidators();
+    //form.setValidators(null);
+    form.updateValueAndValidity();
   }
 
-  setFormControlNotRequired(targetForm, formControlName) {
-    targetForm.get(formControlName).clearValidators();
-    targetForm.get(formControlName).setValidators(null);
-    targetForm.get(formControlName).updateValueAndValidity();
-  }
+  setFormControlRequired(form): void {
+    form.setValidators([Validators.required]);
+    form.updateValueAndValidity();
+  }*/
 
-  setFormControlRequired(targetForm, formControlName) {
-    targetForm.get(formControlName).setValidators([Validators.required]);
-    targetForm.get(formControlName).updateValueAndValidity();
-  }
-
-  setInvalid(targetForm, formControlName, errorName) {
+  /*setInvalid(form, errorName: string): void {
     const error = {}
     error[errorName] = true
-    targetForm.get(formControlName).setErrors(error)
-
-
-  }
+    form.setErrors(error)
+  }*/
 
   /**
    * Add custom validator to the form
    */
-  geoFormValidator(targetForm) {
+  geoFormValidator(g: FormGroup): ValidationErrors | null {
+    /* We require a position (wkt/x,y) and/or a attachement (code{maille,communedepartement})
+       We can set both as some file can have a position for few rows, and a attachement for others.
+       Contraints are:
+       - We must have a position or a attachement (but can set both).
+       - WKT and X/Y are mutually exclusive.
+       - Code{maille,communedepartement} are mutually exclusive.
+    */
     /*
         6 cases :
-        - all empty : all required
-        - wkt == '' and both coordinates != '' : wkt not required, codes not required, coordinates required
+        - all null : all required
+        - wkt == null and both coordinates != null : wkt not required, codes not required, coordinates required
         - wkt != '' : wkt required, coordinates and codes not required
         - one of the code not empty: others not required
         - wkt and X/Y filled => error
         */
-    if (
-      targetForm.get("WKT").value === "" &&
-      (targetForm.get("longitude").value === "" ||
-        targetForm.get("latitude").value === "")
-      && (
-        targetForm.get("codemaille").value === "" ||
-        targetForm.get("codecommune").value === "" ||
-        targetForm.get("codedepartement").value === ""
-      )
-    ) {
-      this.setFormControlRequired(targetForm, "WKT");
-      this.setFormControlRequired(targetForm, "longitude");
-      this.setFormControlRequired(targetForm, "latitude");
-      this.setFormControlRequired(targetForm, "codemaille");
-      this.setFormControlRequired(targetForm, "codecommune");
-      this.setFormControlRequired(targetForm, "codedepartement");
+    let xy = false;
+    let attachment = false;
+    let wkt_errors = {};
+    let longitude_errors = {};
+    let latitude_errors = {};
+    let codemaille_errors = {};
+    let codecommune_errors = {};
+    let codedepartement_errors = {};
+    // check for position
+    if ( g.value.longitude != null || g.value.latitude != null) {
+      xy = true;
+      // ensure both x/y are set
+      if (g.value.longitude == null) longitude_errors['required'] = true;
+      if (g.value.latitude == null) latitude_errors['required'] = true;
     }
-    if (
-      targetForm.get("WKT").value === "" &&
-      targetForm.get("longitude").value !== "" &&
-      targetForm.get("latitude").value !== ""
-    ) {
-      this.setFormControlNotRequired(targetForm, "WKT");
-      this.setFormControlRequired(targetForm, "longitude");
-      this.setFormControlRequired(targetForm, "latitude");
-      this.setFormControlNotRequired(targetForm, "codecommune");
-      this.setFormControlNotRequired(targetForm, "codedepartement");
-      this.setFormControlNotRequired(targetForm, "codemaille");
+    // check for attachment
+    if (g.value.codemaille != null || g.value.codecommune != null || g.value.codedepartement != null) {
+      attachment = true;
     }
-    if (targetForm.get("WKT").value !== "") {
-      this.setFormControlRequired(targetForm, "WKT");
-      this.setFormControlNotRequired(targetForm, "longitude");
-      this.setFormControlNotRequired(targetForm, "latitude");
-      this.setFormControlNotRequired(targetForm, "codemaille");
-      this.setFormControlNotRequired(targetForm, "codecommune");
-      this.setFormControlNotRequired(targetForm, "codedepartement");
+    if (g.value.WKT == null && xy == false && attachment == false) {
+      wkt_errors['required'] = true;
+      longitude_errors['required'] = true;
+      latitude_errors['required'] = true;
+      codemaille_errors['required'] = true;
+      codecommune_errors['required'] = true;
+      codedepartement_errors['required'] = true;
     }
-    if (targetForm.get("codemaille").value !== "") {
-      this.setFormControlRequired(targetForm, "codemaille");
-      this.setFormControlNotRequired(targetForm, "WKT");
-      this.setFormControlNotRequired(targetForm, "longitude");
-      this.setFormControlNotRequired(targetForm, "latitude");
-      this.setFormControlNotRequired(targetForm, "codecommune");
-      this.setFormControlNotRequired(targetForm, "codedepartement");
-    }
-    if (targetForm.get("codecommune").value !== "") {
-      this.setFormControlRequired(targetForm, "codecommune");
-      this.setFormControlNotRequired(targetForm, "WKT");
-      this.setFormControlNotRequired(targetForm, "longitude");
-      this.setFormControlNotRequired(targetForm, "latitude");
-      this.setFormControlNotRequired(targetForm, "codemaille");
-      this.setFormControlNotRequired(targetForm, "codedepartement");
-    }
-    if (targetForm.get("codedepartement").value !== "") {
-      this.setFormControlRequired(targetForm, "codedepartement");
-      this.setFormControlNotRequired(targetForm, "WKT");
-      this.setFormControlNotRequired(targetForm, "longitude");
-      this.setFormControlNotRequired(targetForm, "latitude");
-      this.setFormControlNotRequired(targetForm, "codecommune");
-      this.setFormControlNotRequired(targetForm, "codemaille");
-    }
-    if (targetForm.get('WKT').value != "" && (targetForm.get("latitude").value != "" || targetForm.get("longitude").value != "")) {
-      this.setInvalid(targetForm, "WKT", 'geomError');
-      this.setInvalid(targetForm, "longitude", 'geomError');
-      this.setInvalid(targetForm, "latitude", 'geomError');
-    }
+    // we set errors on individual form control level, so we return no errors (null) at form group level.
+    g.controls.WKT.setErrors(Object.keys(wkt_errors).length ? wkt_errors : null);
+    g.controls.longitude.setErrors(Object.keys(longitude_errors).length ? longitude_errors : null);
+    g.controls.latitude.setErrors(Object.keys(latitude_errors).length ? latitude_errors : null);
+    g.controls.codemaille.setErrors(Object.keys(codemaille_errors).length ? codemaille_errors : null);
+    g.controls.codecommune.setErrors(Object.keys(codecommune_errors).length ? codecommune_errors : null);
+    g.controls.codedepartement.setErrors(Object.keys(codedepartement_errors).length ? codedepartement_errors : null);
+    return null;
   }
 
-  onSelect(id_mapping, targetForm) {
+  /*onSelect(id_mapping, targetForm) {
     this.id_mapping = id_mapping;
     this.shadeSelectedColumns(targetForm);
     this.geoFormValidator(targetForm);
@@ -249,5 +223,5 @@ export class FieldMappingService {
     Object.keys(targetForm.controls).forEach(key => {
       targetForm.get(key).setValue("");
     });
-  }
+  }*/
 }

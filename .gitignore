@@ -47,3 +47,9 @@ yarn-error.log*
 # logs
 var/*
 
+/dist
+*.egg-info
+
+.coverage
+htmlcov
+.tox

@@ -1,5 +1,3 @@
-<div class=container>
-    <stepper [step]=3></stepper>
     <div class="card">
         <div class="card-header">
             <h5 class="card-title mb-0"> Correspondance des nomenclatures </h5>
@@ -16,17 +14,17 @@
                             <select
                                 class="form-control form-control-sm"
                                 id="contentMappingSelection"
-                                [compareWith]="compareFn"
-                                [formControl]="mappingListForm"
+                                [formControl]="selectMappingContentForm"
+                                [compareWith]="areMappingContentEqual"
                             >
                                 <option [ngValue]="null">
                                     -
                                 </option>
                                 <option
-                                    *ngFor="let data of _cm.userContentMappings"
-                                    [ngValue]="data"
+                                    *ngFor="let contentMapping of userContentMappings"
+                                    [ngValue]="contentMapping"
                                 >
-                                    {{data.mapping_label}}
+                                    {{contentMapping.label}}
                                 </option>
                             </select>
                         </div>
@@ -35,16 +33,27 @@
                     <div class="row">
                         <div class="col">
                             <button
-                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.C != '0'"
-                                class="d-flex justify-content-center align-content-between mb-3"
+                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.U != '0'"
+                                class="btn-sm mb-3 ml-1"
                                 mat-raised-button
                                 color="primary"
-                                (click)="_cm.createMapping(newMappingNameForm)"
+                                (click)="showRenameMappingForm()"
+                                [disabled]="!deleteMappingEnabled()"
                             >
-                                Nouveau modèle d'import
+                                Renommer le modèle d'import
+                            </button>
+                            <button
+                                *ngIf="cruvedStore?.cruved?.IMPORT.module_objects.MAPPING.cruved.D != '0'"
+                                class="btn-sm mb-3 ml-1"
+                                mat-raised-button
+                                color="warn"
+                                (click)="openDeleteModal()"
+                                [disabled]="!deleteMappingEnabled()"
+                            >
+                                Supprimer le modèle d'import
                             </button>
                         </div>
-                        <div
+                        <!--<div
                             class="col"
                             *ngIf='displayCheckBox'
                         >
@@ -54,33 +63,63 @@
                                 [ngModelOptions]="{standalone: true}"
                             >
                             Afficher les champs automatiquement associés
-                        </div>
+                        </div>-->
                     </div>
-                    <div *ngIf="n_mappes != -1">
+                    <div
+                            *ngIf="renameMappingFormVisible"
+                            class="d-flex flex-row justify-content-between form_group"
+                            id="updateMap"
+                    >
+                        <input
+                                type="text"
+                                class="form-control mr-2"
+                                value="Inconnu"
+                                [formControl]="createOrRenameMappingForm"
+                        >
+                        <button
+                                class="d-flex justify-content-center align-content-between mr-2 button-success"
+                                (click)="renameMapping()"
+                                mat-raised-button
+                                matTooltip="Modifier le nom du modèle d'import"
+                                [disabled]="!createOrRenameMappingForm.valid || selectMappingContentForm.value.label.trim() == this.createOrRenameMappingForm.value.trim()"
+                        >
+                            <mat-icon>check</mat-icon>
+                        </button>
+                        <button
+                                matTooltip="Annuler la modification du nom du modèle d'import"
+                                class="d-flex justify-content-center align-content-between"
+                                (click)="hideCreateOrRenameMappingForm()"
+                                mat-raised-button
+                                color="warn"
+                        >
+                            Annuler
+                        </button>
+                    </div>
+                    <div *ngIf="unmappedFields.size > 0 || mappedFields.size > 0">
                         <div
-                            *ngIf="n_aMapper ==  n_mappes"
+                            *ngIf="unmappedFields.size == 0"
                             class="alert alert-success mat-alert"
                         >
                             L'ensemble des valeurs du fichier a été automatiquement associé aux nomenclatures.
                         </div>
                         <div
-                            *ngIf="n_mappes == 1"
+                            *ngIf="unmappedFields.size == 1"
                             class="alert alert-success mat-alert"
                         >
                             Une seule valeur du fichier a été automatiquement associée aux valeurs des nomenclatures.
                             <br />
-                            {{n_aMapper}} restent à associer manuellement.
+                            {{unmappedFields.size}} restent à associer manuellement.
                         </div>
                         <div
-                            *ngIf="n_mappes > 1"
+                            *ngIf="unmappedFields.size > 1"
                             class="alert alert-success mat-alert"
                         >
-                            {{n_mappes}} champs du fichier ont été automatiquement associés aux champs du modèle
+                            {{mappedFields.size}} champs du fichier ont été automatiquement associés aux champs du modèle
                             d'import. <br />
-                            {{n_aMapper}} restent à associer manuellement.
+                            {{unmappedFields.size}} restent à associer manuellement.
                         </div>
                         <div
-                            *ngIf="n_mappes == 0"
+                            *ngIf="mappedFields.size == 0"
                             class="alert alert-danger"
                         >
                             Aucune valeur du fichier n'a pu être associée aux valeurs des nomenclatures.
@@ -120,79 +159,77 @@
                 [formGroup]="contentTargetForm"
                 *ngIf="showForm"
             >
-                <div *ngFor="let contentMapping of stepData.contentMappingInfo">
+                <div *ngFor="let targetField of importValues | keyvalue">
                     <div
-                        [hidden]="(!containsEnabled(contentMapping) && !_cm.displayMapped)"
+                        [hidden]="false"
                         class="card field-card"
                     >
                         <div
                             class="field-header"
-                            (click)="contentMapping.isCollapsed = !contentMapping.isCollapsed"
+                            (click)="targetField.value.nomenclature_type.isCollapsed = !targetField.value.nomenclature_type.isCollapsed"
                         >
                             <div class="card-title mb-0">
-                                {{contentMapping.nomenc_name}}
+                                {{targetField.value.nomenclature_type.label_default}}
                                 <i
-                                    matTooltip="{{contentMapping.nomenc_def}} |  Valeur par défaut: {{contentMapping.nomenc_default_value}}"
+                                    matTooltip="{{targetField.value.nomenclature_type.definition_default}} |  Valeur par défaut: TODO"
                                     matTooltipClass="custom-tooltip"
                                     class="fa fa-info-circle"
                                     aria-hidden="true"
                                 ></i>
                             </div>
                             <i
-                                *ngIf="contentMapping.isCollapsed"
+                                *ngIf="targetField.value.nomenclature_type.isCollapsed"
                                 class="material-icons"
                             >keyboard_arrow_down</i>
                             <i
-                                *ngIf="!contentMapping.isCollapsed"
+                                *ngIf="!targetField.value.nomenclature_type.isCollapsed"
                                 class="material-icons"
                             >keyboard_arrow_up</i>
                         </div>
                         <div
-                            [ngbCollapse]="contentMapping.isCollapsed"
+                            [ngbCollapse]="targetField.value.nomenclature_type.isCollapsed"
                             class="card-body"
                         >
-                            <div
-                                *ngIf="contentMapping.user_values.values.length > 0 && mappingListForm.value != null"
-                                class="alert alert-warning"
-                            >
-                                <b> Attention: </b> des valeurs du fichier n'ont trouvé aucune correspondance dans le
-                                modèle selectionné:
-                                <ul>
-                                    <li *ngFor="let item of contentMapping.user_values.values">
-                                            {{item.value }}
-                                    </li>
-                                </ul>
-                            </div>
-                            <div *ngFor="let value_def of contentMapping.nomenc_values_def">
+                            <div *ngFor="let value of targetField.value.values; let index = index;">
                                 <div
-                                    *ngIf="isEnabled(value_def.id) || _cm.displayMapped"
+                                    *ngIf="true"
                                     class="form-group row"
                                 >
-                                    <label class="col-sm-4 col-form-label">{{value_def.value}} :</label>
+                                    <label class="col-sm-4 col-form-label" [ngClass]="{'font-italic': value == null || value == ''}">
+                                        <i  *ngIf="value == null || value == ''"
+                                            matTooltip="Nomenclature à utiliser pour les cellules sans valeur (N/A, null)"
+                                            matTooltipClass="custom-tooltip"
+                                            class="fa fa-info-circle mr-1"
+                                            aria-hidden="true">
+                                        </i>{{value || "Valeur vide"}} :
+                                    </label>
                                     <div class="col-sm-8">
-                                        <pnx-multiselect
-                                            [values]="contentMapping.user_values.values"
-                                            [parentFormControl]="contentTargetForm.controls[value_def.id]"
-                                            keyValue="value"
-                                            keyLabel="value"
-                                            debounceTime="500"
-                                            [searchBar]="false"
-                                            [disabled]="disabled"
-                                            [bindAllItem]="true"
-                                            (onDelete)="onSelectDelete($event, contentMapping.user_values.values)"
-                                            >
-                                        </pnx-multiselect>
+                                        <select
+                                            class="form-control form-control-sm"
+                                            formControlName="{{targetField.key + '-' + index}}"
+                                            [compareWith]="areNomenclaturesEqual"
+                                            id="{{targetField.key + '-' + index}}"
+                                            (change)="onSelectNomenclature(targetField.key + '-' + index)"
+                                        >
+                                          <option [ngValue]="null"></option>
+                                          <option
+                                              *ngFor="let nomenclature of targetField.value.nomenclatures"
+                                              [ngValue]="nomenclature"
+                                          >
+                                            {{ nomenclature.cd_nomenclature }} - {{ nomenclature.label_default }}
+                                          </option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
 
                         </div>
                     </div>
-                </div>
+                </div><!-- endfor -->
                 <div class="d-flex flex-row justify-content-between">
                     <button
                         class="btn btn-secondary box-shadow d-flex justify-content-center align-content-between"
-                        (click)="onStepBack()"
+                        (click)="onPreviousStep()"
                         mat-raised-button
                         color="primary"
                     >
@@ -201,8 +238,8 @@
                     </button>
                     <button
                         class="btn btn-success box-shadow d-flex justify-content-center align-content-between"
-                        [disabled]="disabled"
-                        (click)="goToPreview()"
+                        [disabled]="!isNextStepAvailable()"
+                        (click)="onNextStep()"
                         mat-raised-button
                         color="primary"
                     >
@@ -212,9 +249,6 @@
                 </div>
             </form>
         </div>
-        <footer>
-            <footer-stepper importId={{stepData.importId}}></footer-stepper>
-        </footer>
     </div>
     <!-- Spinner -->
     <div
@@ -250,21 +284,42 @@
             </button>
         </div>
         <div class="modal-body">
-            Attention, le modèle a été modifié, voulez-vous sauvegarder ces modifications
+            <span *ngIf="!this.updateAvailable; else elseBlock">Souhaitez sauvegarder vos correspondances dans un modèle pour les réutiliser lors d’un futur import ?</span>
+            <ng-template #elseBlock>
+            <span>
+                Le modèle de correspondance a été modifié ; souhaitez-vous mettre à jour le modèle existant ou créer un nouveau modèle ?
+            </span>
+            </ng-template>
+            <form>
+                <div class="form-group">
+                    <label for="mappingName" *ngIf="this.updateAvailable">Nom du modèle</label>
+                    <input [formControl]="modalCreateMappingForm" class="form-control" id="mappingName" placeholder="Nom du modèle">
+                    <span *ngIf="!modalCreateMappingForm.value" class="text-warning"> Un nom doit être renseigné pour pouvoir créer un modèle </span>
+                    <span *ngIf="selectMappingContentForm.value && modalCreateMappingForm.value == selectMappingContentForm.value.label" class="text-warning"> Changer de nom pour pouvoir créer un modèle </span>
+                </div>
+            </form>
         </div>
         <div class="modal-footer">
             <button
                 type="button"
                 mat-raised-button
                 color="accent"
-                (click)="saveMappingUpdate(false); modal.close()"
+                (click)="processNextStep(); modal.close()"
             >Ne pas enregistrer </button>
+            <button
+                *ngIf="updateAvailable"
+                type="button"
+                mat-raised-button
+                color="primary"
+                (click)="updateMapping(); modal.close()"
+            >Mettre à jour le modèle d'import</button>
             <button
                 type="button"
                 mat-raised-button
                 color="primary"
-                (click)="saveMappingUpdate(true); modal.close()"
-            >Enregistrer les modifications du modèle d'import</button>
+                (click)="createMapping(); modal.close()"
+                [disabled]="!modalCreateMappingForm.value || selectMappingContentForm.value && modalCreateMappingForm.value == selectMappingContentForm.value.label"
+            >Enregistrer un nouveau modèle d'import</button>
         </div>
     </ng-template>
 
@@ -297,4 +352,30 @@
                 (click)="onRedirect(); modal.close()"
             > OK </button>
         </div>
+    </ng-template>
+    <ng-template
+            #deleteConfirmModal
+            let-modalDelete
+    >
+        <div class="modal-header">
+            Confirmation
+        </div>
+        <div class="modal-body">
+            Voulez vous supprimer le modèle ?
+        </div>
+        <div class="modal-footer">
+            <button
+                    type="button"
+                    mat-raised-button
+                    color="accent"
+                    (click)="modalDelete.close()"
+            > Annuler </button>
+            <button
+                    type="button"
+                    mat-raised-button
+                    color="warn"
+                    (click)="modalDelete.close(); deleteMapping()"
+            > Supprimer le modèle </button>
+        </div>
+
     </ng-template>
