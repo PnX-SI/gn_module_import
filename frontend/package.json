@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "file-saver": "^2.0.2"
+    "file-saver": "^2.0.2",
+    "leaflet-image": "^0.4.0"
   }
 }
