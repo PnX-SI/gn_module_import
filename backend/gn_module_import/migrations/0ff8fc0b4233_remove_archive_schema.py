@@ -58,7 +58,7 @@ def upgrade():
             f"""
         WITH cte AS (
             SELECT
-                array_agg(gn_pk ORDER BY gn_pk) erroneous_rows
+                array_agg(gn_pk::int ORDER BY gn_pk::int) erroneous_rows
             FROM
                 gn_imports.{table_name}
             WHERE
