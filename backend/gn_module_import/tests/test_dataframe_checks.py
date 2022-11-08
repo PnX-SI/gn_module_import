@@ -104,8 +104,8 @@ class TestChecks:
         fields = get_fields(
             [
                 "WKT",
-                "latitude",
                 "longitude",
+                "latitude",
                 "codecommune",
                 "codemaille",
                 "codedepartement",
@@ -194,8 +194,8 @@ class TestChecks:
         fields = get_fields(
             [
                 "WKT",
-                "latitude",
                 "longitude",
+                "latitude",
                 "codecommune",
                 "codemaille",
                 "codedepartement",

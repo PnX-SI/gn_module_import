@@ -104,7 +104,7 @@ def check_geography(
         # take xy when no wkt and xy are not null
         xy_mask = df[latitude_field].notnull() & df[longitude_field].notnull()
         df.loc[xy_mask, "_geom"] = df[xy_mask].apply(
-            lambda row: x_y_to_geometry(row[latitude_field], row[longitude_field]), axis=1
+            lambda row: x_y_to_geometry(row[longitude_field], row[latitude_field]), axis=1
         )
         invalid_xy = df[xy_mask & df["_geom"].isnull()]
         if len(invalid_xy):
