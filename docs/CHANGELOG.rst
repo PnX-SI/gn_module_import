@@ -2,6 +2,17 @@
 CHANGELOG
 =========
 
+2.0.1 (2022-11-08)
+------------------
+
+**🐛 Corrections**
+
+* Ajout de ``leaflet-image`` aux dépendances du frontend
+* Correction de l’inversion du X et du Y lors de l’import
+* Correction de l’inversion de la source et de la destination des correspondances de champs dans le rapport d’import
+* Correction du processus de migration depuis la v1
+
+
 2.0.0 (2022-11-02)
 ------------------
 
