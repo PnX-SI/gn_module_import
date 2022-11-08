@@ -74,7 +74,7 @@ Refonte technique complète du module, améliorant son socle, sa robustesse et s
 **⚠️ Notes de version**
 
 * Suivez la procédure classique de mise à jour du module
-* Exécuter la commande suivante afin d’indiquer à Alembic que votre base de données est dans l'état de la version 1.2.0 et appliquer automatiquement les évolutions pour la passer dans l'état de la version 2.0.0 :
+* Exécutez la commande suivante afin d’indiquer à Alembic que votre base de données est dans l'état de la version 1.2.0 et appliquer automatiquement les évolutions pour la passer dans l'état de la version 2.0.0 :
 
 ::
 
@@ -82,6 +82,12 @@ Refonte technique complète du module, améliorant son socle, sa robustesse et s
    source geonature/backend/venv/bin/activate
    geonature db stamp 4b137deaf201
    geonature db autoupgrade
+
+* Redémarrez le worker Celery :
+
+::
+
+  sudo systemctl restart geonature-worker
    
 
 1.2.0 (2022-03-21)

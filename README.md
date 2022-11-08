@@ -29,6 +29,7 @@ Le module doit ensuite être installé comme suit :
     geonature install-packaged-gn-module gn_module_import IMPORT
     deactivate
     sudo systemctl restart geonature
+    sudo systemctl restart geonature-worker
     cd geonature/frontend
     nvm use
     npm run build
