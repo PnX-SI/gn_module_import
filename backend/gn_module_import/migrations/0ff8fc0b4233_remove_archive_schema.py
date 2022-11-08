@@ -74,6 +74,28 @@ def upgrade():
             id_import = {id_import}
         """
         )
+        op.execute(
+            f"""
+        WITH cte AS (
+            SELECT EXISTS(
+                SELECT
+                    1
+                FROM
+                    gn_imports.{table_name}
+                WHERE
+                    gn_is_valid IS NOT NULL
+            )
+        )
+        UPDATE
+            gn_imports.t_imports
+        SET
+            processing = cte.exists
+        FROM
+            cte
+        WHERE
+            id_import = {id_import}
+        """
+        )
         op.drop_table(table_name=table_name, schema="gn_imports")
     op.drop_column(
         schema="gn_imports",
