@@ -969,6 +969,7 @@ class TestImports:
                 ("INVALID_DATE", "date_min", frozenset({12})),
                 ("DATE_MIN_TOO_LOW", "date_min", frozenset({13, 14})),
                 ("DATE_MAX_TOO_LOW", "date_max", frozenset({14})),
+                ("INVALID_DATE", "meta_validation_date", frozenset({16})),
             },
         )
 

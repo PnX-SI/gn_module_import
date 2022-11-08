@@ -189,7 +189,7 @@ def update_import_data_from_dataframe(imprt, fields, df):
         "valid",
     ]
     updated_cols += [field.synthese_field for field in fields.values() if field.synthese_field]
-    df.replace({np.nan: None, pd.NaT: None}, inplace=True)
+    df.replace({np.nan: None}, inplace=True)
     records = df[df["valid"] == True][updated_cols].to_dict(orient="records")
     insert_stmt = pg_insert(ImportSyntheseData)
     insert_stmt = insert_stmt.values(records).on_conflict_do_update(
