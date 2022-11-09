@@ -132,7 +132,7 @@
                   <ng-container *ngFor="let nomenclature_type of importData?.contentmapping | keyvalue">
                   <tr>
                     <th colspan="2">
-                      <ng-container *ngIf="nomenclatures; then nomenclature_type_label else nomenclature_type_mnemonique"></ng-container>
+                      <ng-container *ngIf="nomenclatures && nomenclatures.hasOwnProperty(nomenclature_type.key); then nomenclature_type_label else nomenclature_type_mnemonique"></ng-container>
                       <ng-template #nomenclature_type_label>{{ nomenclatures[nomenclature_type.key].nomenclature_type.label_default }}</ng-template>
                       <ng-template #nomenclature_type_mnemonique>{{ nomenclature_type.key }}</ng-template>
                     </th>
@@ -140,7 +140,7 @@
                   <tr *ngFor="let mapping of nomenclature_type.value | keyvalue">
                     <td>{{ mapping.key }}</td>
                     <td>
-                      <ng-container *ngIf="nomenclatures; then nomenclature_label else nomenclature_code"></ng-container>
+                      <ng-container *ngIf="nomenclatures && nomenclatures.hasOwnProperty(nomenclature_type.key); then nomenclature_label else nomenclature_code"></ng-container>
                       <ng-template #nomenclature_label>{{ nomenclatures[nomenclature_type.key].nomenclatures[mapping.value].label_default }}</ng-template>
                       <ng-template #nomenclature_code>{{ mapping.value }}</ng-template>
                     </td>
