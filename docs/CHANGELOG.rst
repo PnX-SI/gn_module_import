@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+2.0.2 (2022-11-09)
+------------------
+
+**🐛 Corrections**
+
+* Correction de la gestion des dates optionnelles non fournies
+* Correction d’une erreur du frontend dans le rapport d’import
+
+
 2.0.1 (2022-11-08)
 ------------------
 
