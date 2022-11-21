@@ -172,3 +172,4 @@ class GnModuleSchemaConf(Schema):
     # If an id of taxhub list is provided will check if the imported taxons
     # are in the list. Otherwise throws an error
     ID_LIST_TAXA_RESTRICTION = fields.Integer(load_default=None)
+    MODULE_URL = fields.String(load_default="/import")
