@@ -37,6 +37,11 @@ class ImportModule(TModules):
         "polymorphic_identity": "import",
     }
 
+    def generate_input_url_for_dataset(self, dataset):
+        return f"/import/process/upload?datasetId={dataset.id_dataset}"
+
+    generate_input_url_for_dataset.label = "Importer des données"
+
     def generate_module_url_for_source(self, source):
         id_import = re.search(r"^Import\(id=(?P<id>\d+)\)$", source.name_source).group("id")
         return f"/import/{id_import}/report"
