@@ -86,7 +86,7 @@ ENCODAGE = ["UTF-8"]
 
 MAX_FILE_SIZE = 1000
 
-ALLOWED_EXTENSIONS = [".csv", ".geojson"]
+ALLOWED_EXTENSIONS = [".csv"]
 
 MISSING_VALUES = ["", "NA", "NaN", "na"]
 
