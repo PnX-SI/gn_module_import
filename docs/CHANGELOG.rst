@@ -5,9 +5,14 @@ CHANGELOG
 2.0.3 (unreleased)
 ------------------
 
+**🚀 Nouveautés**
+
+* Affichage d’un bouton « Importer des données » dans le module méta-données
+
 **🐛 Corrections**
 
 * Correction du processus de migration pour les imports créés avec la version 1.2 du module
+* Pré-supposition de l’UTF-8 en cas d’impossibilité d’auto-détecter l’encodage
 
 
 2.0.2 (2022-11-09)
