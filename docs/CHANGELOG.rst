@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+2.0.3 (unreleased)
+------------------
+
+**🐛 Corrections**
+
+* Correction du processus de migration pour les imports créés avec la version 1.2 du module
+
+
 2.0.2 (2022-11-09)
 ------------------
 

@@ -63,6 +63,8 @@ def upgrade():
                 gn_imports.{table_name}
             WHERE
                 gn_is_valid = 'False'
+                OR
+                gn_invalid_reason IS NOT NULL
         )
         UPDATE
             gn_imports.t_imports
@@ -84,6 +86,8 @@ def upgrade():
                     gn_imports.{table_name}
                 WHERE
                     gn_is_valid IS NOT NULL
+                    OR
+                    gn_invalid_reason IS NOT NULL
             )
         )
         UPDATE
