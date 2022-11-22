@@ -84,7 +84,7 @@ def detect_encoding(f):
             break
     detector.close()
     f.seek(position)
-    return detector.result["encoding"]
+    return detector.result["encoding"] or "UTF-8"
 
 
 def detect_separator(f, encoding):
