@@ -187,6 +187,16 @@ def upgrade():
     ### Add mappings columns on import, populate them, drop old foreign key to mappings
     op.add_column("t_imports", sa.Column("fieldmapping", JSON), schema="gn_imports")
     op.add_column("t_imports", sa.Column("contentmapping", JSON), schema="gn_imports")
+    op.drop_constraint(
+        constraint_name="fk_gn_imports_t_mappings_fields",
+        schema="gn_imports",
+        table_name="t_imports",
+    )
+    op.drop_constraint(
+        constraint_name="fk_gn_import_t_mappings_values",
+        schema="gn_imports",
+        table_name="t_imports",
+    )
     op.execute(
         """
     UPDATE
