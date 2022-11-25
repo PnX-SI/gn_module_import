@@ -57,6 +57,8 @@ export class ImportReportComponent implements OnInit {
     legend: { position: 'left' },
   };
   public loadingPdf: boolean = false;
+  public importStatus: string = 'EN COURS'
+  public importStatusClass: string = 'unfinished'
   public nomenclatures: {
       [propName: string]: {
           nomenclature_type: NomenclatureType,
@@ -83,6 +85,7 @@ export class ImportReportComponent implements OnInit {
     // Add property to show errors lines. Need to do this to
     // show line per line...
     this.loadErrors();
+    this.setImportStatus();
     this._dataService.getNomenclatures().subscribe((nomenclatures) => {
         this.nomenclatures = nomenclatures;
     });
@@ -206,6 +209,15 @@ export class ImportReportComponent implements OnInit {
       this.exportMapAndChartPdf(chartImg)
     }
   }
+  setImportStatus() {
+    if (this.importData?.task_progress === -1) {
+      this.importStatus = "EN ERREUR"
+      this.importStatusClass = "inerror"
+    } else if (this.importData?.date_end_import) {
+      this.importStatus = "TERMINE"
+      this.importStatusClass = "importdone"
+    }
+  }
 
   exportMapAndChartPdf(chartImg?, mapImg?) {
     this._dataService.getPdf(this.importData?.id_import, mapImg?.src, chartImg.src).subscribe(
@@ -231,5 +243,8 @@ export class ImportReportComponent implements OnInit {
 
   onRankChange($event) {
     this.loadTaxaDistribution();
+  }
+  navigateToImportList() {
+      this._router.navigate([ModuleConfig.MODULE_URL]);
   }
 }

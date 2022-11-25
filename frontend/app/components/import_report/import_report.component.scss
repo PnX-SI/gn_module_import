@@ -14,9 +14,7 @@
 }
 
 .card.content {
-  margin-bottom: 10px;
-  border-radius: 10px;
-  
+  border-radius: 5px;
 }
 
 .flex-row{
@@ -25,15 +23,35 @@
 }
 
 img {
-  width: 60px;
+  width: 40px;
 }
 
 .mat-raised-button {
   margin: 10px;
   white-space: pre-line !important;
+  max-width: 200px;
 }
 
 .unfinished {
+  color: orange;
+  font-weight: bold;
+}
+
+.inerror {
   color: red;
   font-weight: bold;
+}
+
+.importdone {
+  color: green;
+  font-weight: bold;
+}
+
+.back-button {
+  margin-left: 1.25rem;
+  max-width: 125px;
+}
+
+.mat-expansion-panel-header.mat-expanded {
+  background: #f7f7f7 !important;
 }
