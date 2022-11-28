@@ -18,7 +18,7 @@
     <mat-expansion-panel class="card content" [expanded]="true">
       <mat-expansion-panel-header class="card-header">
         <mat-panel-title>
-        <mat-icon>build</mat-icon>
+          <mat-icon>info</mat-icon>
         Description de l'import
         </mat-panel-title>
       </mat-expansion-panel-header>
@@ -43,13 +43,6 @@
             <p><b> SRID : </b> {{ importData?.srid }}</p>
             <p><b> Encodage :</b> {{ importData?.encoding }}</p>
             <p><b> Format : </b>{{ importData?.format_source_file }}</p>
-            <p>
-              <b>Nombre de lignes importées : </b> ({{
-              importData?.import_count || 0
-              }}
-              /
-              {{ importData?.source_count || 0 }})
-            </p>
           </div>
           <div class="col-sm-4 d-flex flex-column justify-content-center">
             <button  mat-raised-button color="primary" [disabled]="loadingPdf" (click)="exportAsPDF()" class="align-self-center">
@@ -98,7 +91,7 @@
           Exporter
         </button>
       </div>
-      <div class="col-12 d-flex flex-column">
+      <div class="col-sm-10 d-flex flex-column">
         <mat-expansion-panel>
           <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
             <mat-panel-title>
@@ -266,20 +259,22 @@
         </div>
       </mat-expansion-panel-header>
     <div class="row">
-    <div *ngIf="validBbox" class="card content" class="col-sm-6">
-        <h5 class="card-title">
+    <div *ngIf="validBbox" class="card content" class="col-sm-6 d-flex flex-column">
+        <h5 class="card-title mt-1">
           Périmètre géographique des données importées
         </h5>
       <pnx-map height="40vh" searchBar="false">
         <pnx-geojson [geojson]="validBbox" [zoomOnFirstTime]="true">
         </pnx-geojson>
       </pnx-map>
-      <button  mat-raised-button color="primary" [disabled]="importData?.date_end_import === null" (click)="goToSynthese(importData?.id_dataset)">
+      <button  mat-raised-button class="align-self-center" color="primary" [disabled]="importData?.date_end_import === null" (click)="goToSynthese(importData?.id_dataset)">
         Afficher dans la synthèse
       </button>
     </div>
     <div *ngIf="doughnutChartData.length > 0" class="card content" class="col-sm-6">
-      <b>Taxons importés :</b> {{ importData?.taxa_count }}
+      <b class="mt-1 mb-1">Taxons importés :</b> {{ importData?.taxa_count }}
+      <br>
+      <b class="mb-1">Nombre de lignes importées : </b> ({{importData?.import_count || 0}} / {{ importData?.source_count || 0 }})
       <h5 class="card-title">Répartition des taxons importés</h5>
       <div style="display: block">
         <canvas id="chart" baseChart [data]="doughnutChartData" [labels]="doughnutChartLabels"

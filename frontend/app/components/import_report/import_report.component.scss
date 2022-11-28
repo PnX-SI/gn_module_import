@@ -11,6 +11,7 @@
 
 .card.main {
   background-color: lightgray;
+  padding: 0;
 }
 
 .card.content {
@@ -30,6 +31,9 @@ img {
   margin: 10px;
   white-space: pre-line !important;
   max-width: 200px;
+}
+.import-status {
+  font-size: larger;
 }
 
 .unfinished {
@@ -54,4 +58,13 @@ img {
 
 .mat-expansion-panel-header.mat-expanded {
   background: #f7f7f7 !important;
+}
+.report-panel {
+  max-width: 700px;
+}
+@media screen and (min-width: 768px) {
+  .card.main {
+    padding-left: 140px;
+    padding-right: 140px;
+  }
 }
