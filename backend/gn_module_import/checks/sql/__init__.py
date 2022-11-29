@@ -456,6 +456,18 @@ def check_altitudes(imprt, fields):
         error_column=alti_min_field.name_field,
         whereclause=(alti_min_synthese_field > alti_max_synthese_field),
     )
+    report_erroneous_rows(
+        imprt,
+        error_type="INVALID_INTEGER",
+        error_column=alti_min_field.name_field,
+        whereclause=(alti_min_synthese_field < 0),
+    )
+    report_erroneous_rows(
+        imprt,
+        error_type="INVALID_INTEGER",
+        error_column=alti_max_field.name_field,
+        whereclause=(alti_max_synthese_field < 0),
+    )
 
 
 def check_depths(imprt, fields):
@@ -470,6 +482,18 @@ def check_depths(imprt, fields):
         error_type="DEPTH_MIN_SUP_ALTI_MAX",  # Yes, there is a typo in db...
         error_column=depth_min_field.name_field,
         whereclause=(depth_min_synthese_field > depth_max_synthese_field),
+    )
+    report_erroneous_rows(
+        imprt,
+        error_type="INVALID_INTEGER",
+        error_column=depth_min_field.name_field,
+        whereclause=(depth_min_synthese_field < 0),
+    )
+    report_erroneous_rows(
+        imprt,
+        error_type="INVALID_INTEGER",
+        error_column=depth_max_field.name_field,
+        whereclause=(depth_max_synthese_field < 0),
     )
 
 
