@@ -237,6 +237,8 @@ class TImports(InstancePermissionMixin, db.Model):
             return 0
         elif result.state == "PROGRESS":
             return result.result["progress"]
+        elif result.state == "SUCCESS":
+            return None
         else:
             return -1
 
