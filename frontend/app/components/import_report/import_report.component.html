@@ -4,11 +4,11 @@
     </button>
     <div class="card-body mb-2 text-center">
         <div class="card content">
-            <div class="row">
+            <div class="row import-info align-content-center align-items-center">
                 <div class="col-sm-10">
                 <h3> <b>Rapport d'import:</b> {{importData?.id_import}}</h3>
                 </div>
-                <div class="col-sm-2 d-flex align-items-center justify-content-center" [ngClass]="importStatusClass">
+                <div class="col-sm-2 d-flex align-items-center justify-content-center import-status" [ngClass]="importStatusClass">
                     {{importStatus}}
                 </div>
             </div>
@@ -43,6 +43,8 @@
             <p><b> SRID : </b> {{ importData?.srid }}</p>
             <p><b> Encodage :</b> {{ importData?.encoding }}</p>
             <p><b> Format : </b>{{ importData?.format_source_file }}</p>
+            <p *ngIf="importData?.taxa_count"><b>Taxons importés :</b> {{ importData?.taxa_count }}</p>
+            <p><b>Nombre de lignes importées : </b> ({{importData?.import_count || 0}} / {{ importData?.source_count || 0 }})</p>
           </div>
           <div class="col-sm-4 d-flex flex-column justify-content-center">
             <button  mat-raised-button color="primary" [disabled]="loadingPdf" (click)="exportAsPDF()" class="align-self-center">
@@ -64,8 +66,8 @@
       </mat-panel-title>
       </mat-expansion-panel-header>
       <div class="card-body row">
-      <div class="col-12 d-flex flex-column">
-      <mat-expansion-panel>
+      <div class="col-sm-8 d-flex flex-column">
+        <mat-expansion-panel>
         <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
         <mat-panel-title>
           <h6>Champs ({{ (importData?.fieldmapping || {} | keyvalue).length }})</h6>
@@ -86,12 +88,14 @@
         </tbody>
         </table>
       </mat-expansion-panel>
+      </div>
+      <div class="col-sm-4 d-flex justify-content-center report-button">
         <button mat-raised-button color="primary" [disabled]="!importData?.fieldmapping"
             (click)="exportFieldMapping()" class="align-self-center">
           Exporter
         </button>
       </div>
-      <div class="col-sm-10 d-flex flex-column">
+      <div class="col-sm-8 d-flex flex-column">
         <mat-expansion-panel>
           <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
             <mat-panel-title>
@@ -129,6 +133,8 @@
             </tbody>
           </table>
         </mat-expansion-panel>
+      </div>
+      <div class="col-sm-4 d-flex justify-content-center report-button">
         <button mat-raised-button color="primary" [disabled]="!importData?.contentmapping"
             (click)="exportContentMapping()" class="align-self-center">
           Exporter
@@ -146,7 +152,9 @@
       </div>
       </mat-expansion-panel-header>
       <div class="card-body">
-      <mat-expansion-panel>
+      <div class="row">
+        <div [ngClass]="nbTotalErrors !== 0 ? 'col-sm-8' : 'col-sm-12'">
+          <mat-expansion-panel>
         <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
         <mat-panel-title>
           <h6>{{ importErrors.length }} erreur(s)</h6>
@@ -194,7 +202,7 @@
         </tbody>
         </table>
       </mat-expansion-panel>
-      <mat-expansion-panel>
+          <mat-expansion-panel>
         <mat-expansion-panel-header [collapsedHeight]="expansionPanelHeight">
         <mat-panel-title>
           <h6>{{ importWarnings.length }} alerte(s)</h6>
@@ -242,14 +250,16 @@
         </tbody>
         </table>
       </mat-expansion-panel>
-      <div class="d-flex flex-row-reverse justify-content-center" *ngIf="nbTotalErrors !== 0">
+        </div>
+        <div class= "col-sm-4 d-flex justify-content-center align-items-center report-button" *ngIf="nbTotalErrors !== 0">
         <button  mat-raised-button class="mat-accent" color="accent" (click)="_csvExport.onCSV(importData?.id_import)">
         Exporter vos {{ nbTotalErrors }} observations invalides
         </button>
       </div>
       </div>
+      </div>
     </mat-expansion-panel>
-    <mat-expansion-panel class="card content row" [expanded]="true">
+    <mat-expansion-panel class="card content row" [expanded]="true" *ngIf="validBbox || doughnutChartData.length > 0">
       <mat-expansion-panel-header class="card-header">
         <div class="d-flex justify-content-start">
           <mat-panel-title>
@@ -259,7 +269,7 @@
         </div>
       </mat-expansion-panel-header>
     <div class="row">
-    <div *ngIf="validBbox" class="card content" class="col-sm-6 d-flex flex-column">
+    <div *ngIf="validBbox" class="col-sm-6 d-flex flex-column">
         <h5 class="card-title mt-1">
           Périmètre géographique des données importées
         </h5>
@@ -271,10 +281,7 @@
         Afficher dans la synthèse
       </button>
     </div>
-    <div *ngIf="doughnutChartData.length > 0" class="card content" class="col-sm-6">
-      <b class="mt-1 mb-1">Taxons importés :</b> {{ importData?.taxa_count }}
-      <br>
-      <b class="mb-1">Nombre de lignes importées : </b> ({{importData?.import_count || 0}} / {{ importData?.source_count || 0 }})
+    <div *ngIf="doughnutChartData.length > 0" class="d-flex flex-column col-sm-6">
       <h5 class="card-title">Répartition des taxons importés</h5>
       <div style="display: block">
         <canvas id="chart" baseChart [data]="doughnutChartData" [labels]="doughnutChartLabels"
