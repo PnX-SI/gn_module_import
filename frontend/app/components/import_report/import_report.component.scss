@@ -10,8 +10,9 @@
 }
 
 .card.main {
-  background-color: lightgray;
+  background-color: transparent;
   padding: 0;
+  border: none;
 }
 
 .card.content {
@@ -59,9 +60,15 @@ img {
 .mat-expansion-panel-header.mat-expanded {
   background: #f7f7f7 !important;
 }
-.report-panel {
-  max-width: 700px;
+
+.import-info {
+  height: 64px;
 }
+
+.report-button {
+  max-height: 200px;
+}
+
 @media screen and (min-width: 768px) {
   .card.main {
     padding-left: 140px;
