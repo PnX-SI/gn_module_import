@@ -98,8 +98,6 @@ Refonte technique complète du module, améliorant son socle, sa robustesse et s
 * Import des GeoJSON
 * Tag des imports à corriger
 * Alimentation des champs additionnels avec plusieurs colonnes
-* Restriction des imports à une aire géographique
-* Restriction des imports à une liste de taxons
 * Affichage du nombre total de données du fichier source dans la liste des imports
 * Export / Import des modèles d'import, remplacé par la gestion des modèles d'import dans l'Admin de GeoNature
 * Notification par email de la fin des opérations asynchrones (contrôles et import des données)
