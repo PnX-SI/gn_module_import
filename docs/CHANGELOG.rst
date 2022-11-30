@@ -5,14 +5,19 @@ CHANGELOG
 2.0.3 (unreleased)
 ------------------
 
+Nécessite la version 2.10.4 ou plus de GeoNature.
+
 **🚀 Nouveautés**
 
-* Affichage d’un bouton « Importer des données » dans le module méta-données
+* Refonte graphique du rapport d'import (#403)
+* Affichage d’un bouton « Importer des données » dans le module métadonnées
+* Ajout du contrôle que les altitudes et profondeurs ne soient pas négatives
 
 **🐛 Corrections**
 
 * Correction du processus de migration pour les imports créés avec la version 1.2 du module
 * Pré-supposition de l’UTF-8 en cas d’impossibilité d’auto-détecter l’encodage
+* Correction du format de fichier supporté en ne proposant que le CSV par défaut (seul format supporté actuellement)
 
 
 2.0.2 (2022-11-09)
