@@ -2,9 +2,11 @@ from io import BytesIO
 import codecs
 from io import StringIO
 import csv
+import unicodedata
 
 from flask import request, current_app, jsonify, g, stream_with_context, send_file
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden
+from werkzeug.urls import url_quote
 from sqlalchemy import or_, func, desc
 from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
 from sqlalchemy.orm.attributes import set_committed_value
@@ -520,7 +522,16 @@ def get_import_invalid_rows_as_csv(scope, import_id):
         generate_invalid_rows_csv(),
         mimetype=f"text/csv; charset={imprt.encoding}; header=present",
     )
-    response.headers.set("Content-Disposition", "attachment", filename=filename)
+    try:
+        filename.encode("ascii")
+    except UnicodeEncodeError:
+        simple = unicodedata.normalize("NFKD", filename)
+        simple = simple.encode("ascii", "ignore").decode("ascii")
+        quoted = url_quote(filename, safe="")
+        names = {"filename": simple, "filename*": f"UTF-8''{quoted}"}
+    else:
+        names = {"filename": filename}
+    response.headers.set("Content-Disposition", "attachment", **names)
     return response
 
 
