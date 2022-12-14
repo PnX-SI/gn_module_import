@@ -17,7 +17,9 @@ Nécessite la version 2.10.4 ou plus de GeoNature.
 
 * Correction du processus de migration pour les imports créés avec la version 1.2 du module
 * Pré-supposition de l’UTF-8 en cas d’impossibilité d’auto-détecter l’encodage
+* Correction de la gestion des fichiers contenant des caractères UTF-8 dans leur nom
 * Correction du format de fichier supporté en ne proposant que le CSV par défaut (seul format supporté actuellement)
+* Correction d’une mauvaise remontée de l’état d’avancement du contrôle des imports
 
 
 2.0.2 (2022-11-09)
