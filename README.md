@@ -26,13 +26,10 @@ Le module doit ensuite être installé comme suit :
 ```
     cd
     source geonature/backend/venv/bin/activate
-    geonature install-packaged-gn-module gn_module_import IMPORT
+    geonature install-gn-module gn_module_import IMPORT
     deactivate
     sudo systemctl restart geonature
     sudo systemctl restart geonature-worker
-    cd geonature/frontend
-    nvm use
-    npm run build
 ```
 
 Le module est installé et prêt à importer !
@@ -124,17 +121,12 @@ Mise à jour du module
     cp ~/gn_module_import_old/config/conf_gn_module.toml  ~/gn_module_import/config/conf_gn_module.toml
 ```
 
--   Relancez la compilation en mettant à jour la configuration
+-   Lancez la mise à jour du module
 
 ```
     cd ~/geonature/backend
     source venv/bin/activate
-    pip install -e ~/gn_module_import/
-    geonature update-module-configuration IMPORT
-    sudo systemctl restart geonature
-    cd ~/geonature/frontend
-    nvm use
-    npm run build
+    geonature install-gn-module gn_module_import IMPORT
 ```
 
 Utilisation du module d'imports
