@@ -17,9 +17,8 @@ SRID = [
   {name = "WGS84", code = 4326}, 
   {name = "Lambert93", code = 2154}
 ]
-# Extensions autorisées (seul le csv et geojson sont acceptés)
-# On peut donc uniquement enlever un des deux formats
-ALLOWED_EXTENSIONS = [".csv", ".geojson"]
+# Extensions autorisées (seul le csv est accepté actuellement)
+ALLOWED_EXTENSIONS = [".csv"]
 
 # Activer ou non l'étape du mapping des valeurs
 ALLOW_VALUE_MAPPING = true
