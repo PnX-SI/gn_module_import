@@ -434,7 +434,7 @@ def prepare_import(scope, import_id):
     return jsonify(imprt.as_dict())
 
 
-@blueprint.route("/imports/<int:import_id>/preview_valid_data/", methods=["GET"])
+@blueprint.route("/imports/<int:import_id>/preview_valid_data", methods=["GET"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT")
 def preview_valid_data(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
