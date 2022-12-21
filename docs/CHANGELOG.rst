@@ -2,6 +2,18 @@
 CHANGELOG
 =========
 
+2.0.4 (unreleased)
+------------------
+
+**🚀 Nouveautés**
+
+* Mise à jour de la documentation d’installation en accord avec les évolutions de GeoNature 2.11
+
+**🐛 Corrections**
+
+* Suppression d’une redirection inutile dû à un slash final en trop dans une route
+
+
 2.0.3 (2022-12-14)
 ------------------
 
