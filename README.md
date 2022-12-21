@@ -24,9 +24,8 @@ Télécharger puis renommer la version souhaitée du module :
 Le module doit ensuite être installé comme suit :
 
 ```
-    cd
-    source geonature/backend/venv/bin/activate
-    geonature install-gn-module gn_module_import IMPORT
+    source ~/geonature/backend/venv/bin/activate
+    geonature install-gn-module ~/gn_module_import IMPORT
     deactivate
     sudo systemctl restart geonature
     sudo systemctl restart geonature-worker
@@ -124,9 +123,8 @@ Mise à jour du module
 -   Lancez la mise à jour du module
 
 ```
-    cd ~/geonature/backend
-    source venv/bin/activate
-    geonature install-gn-module gn_module_import IMPORT
+    source ~/geonature/backend/venv/bin/activate
+    geonature install-gn-module ~/gn_module_import IMPORT
 ```
 
 Utilisation du module d'imports
