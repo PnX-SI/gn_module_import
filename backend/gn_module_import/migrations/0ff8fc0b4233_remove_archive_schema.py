@@ -44,7 +44,10 @@ def upgrade():
             .returning(imprt.c.id_import)  # To raise error if not exists
         )
         if not update_id.rowcount:
-            raise NoReferenceError(f"No import linked with archive table: {archive_table}")
+            raise NoReferenceError(
+                f"No import linked with archive table '{archive_table}'."
+                " Please backup (if wanted) and delete this archive table manually."
+            )
         op.drop_table(table_name=archive_table, schema=archive_schema)
         op.execute(f"DROP SEQUENCE IF EXISTS {archive_schema}.{archive_table}_gn_pk_seq")
     # Drop cor table
