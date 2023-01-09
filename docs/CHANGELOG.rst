@@ -12,6 +12,7 @@ CHANGELOG
 **🐛 Corrections**
 
 * Suppression d’une redirection inutile dû à un slash final en trop dans une route
+* Correction d’une migration v1 → v2 pour gérer les mappings vides
 
 
 2.0.3 (2022-12-14)
