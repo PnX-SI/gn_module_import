@@ -131,7 +131,7 @@ class GnModuleSchemaConf(Schema):
     INVALID_CSV_NAME = fields.String(load_default=INVALID_CSV_NAME)
     ALLOW_VALUE_MAPPING = fields.Boolean(load_default=ALLOW_VALUE_MAPPING)
     DEFAULT_VALUE_MAPPING_ID = fields.Integer(load_default=DEFAULT_VALUE_MAPPING_ID)
-    FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(load_default=False)
+    FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = fields.Boolean(load_default=True)
     # Parameter to define if the mapped fields are displayed or not.
     DISPLAY_MAPPED_VALUES = fields.Boolean(load_default=True)
     DISPLAY_CHECK_BOX_MAPPED_VALUES = fields.Boolean(load_default=True)

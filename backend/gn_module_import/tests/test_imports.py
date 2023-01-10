@@ -24,6 +24,7 @@ from geonature.core.gn_permissions.models import (
 )
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_meta.models import TDatasets
+from geonature.core.gn_synthese.models import Synthese
 from geonature.tests.test_ref_geo import has_french_dem
 from geonature.tests.fixtures import synthese_data, celery_eager
 
@@ -61,18 +62,21 @@ def assert_import_errors(imprt, expected_errors):
         (error.type.name, error.column, frozenset(error.rows or [])) for error in imprt.errors
     }
     assert errors == expected_errors
-    stmt = (
-        select([ImportSyntheseData.line_no])
-        .where(ImportSyntheseData.imprt == imprt)
-        .where(ImportSyntheseData.valid == False)
-    )
-    erroneous_rows = {line_no for line_no, in db.session.execute(stmt)}
     expected_erroneous_rows = set()
     for error_type, _, rows in expected_errors:
         error_type = ImportUserErrorType.query.filter_by(name=error_type).one()
         if error_type.level == "ERROR":
             expected_erroneous_rows |= set(rows)
-    assert erroneous_rows == expected_erroneous_rows
+    if imprt.processed:
+        assert set(imprt.erroneous_rows or []) == expected_erroneous_rows
+    else:
+        stmt = (
+            select([ImportSyntheseData.line_no])
+            .where(ImportSyntheseData.imprt == imprt)
+            .where(ImportSyntheseData.valid == False)
+        )
+        erroneous_rows = {line_no for line_no, in db.session.execute(stmt)}
+        assert erroneous_rows == expected_erroneous_rows
 
 
 @pytest.fixture(scope="function")
@@ -187,11 +191,17 @@ def loaded_import(client, field_mapped_import):
 
 
 @pytest.fixture()
-def content_mapped_import(client, loaded_import):
+def content_mapped_import(client, import_file_name, loaded_import):
     with db.session.begin_nested():
         loaded_import.contentmapping = (
             ContentMapping.query.filter_by(label="Nomenclatures SINP (labels)").one().values
         )
+        if import_file_name == "empty_nomenclatures_file.csv":
+            loaded_import.contentmapping["STADE_VIE"].update(
+                {
+                    "": "17",  # Alevin
+                }
+            )
     return loaded_import
 
 
@@ -865,6 +875,7 @@ class TestImports:
         assert 0 == ImportSyntheseData.query.filter_by(imprt=imprt).count()
         assert valid_file_line_count - len(valid_file_invalid_rows) == imprt.import_count
         assert valid_file_taxa_count == imprt.taxa_count
+        assert Synthese.query.filter_by(source=imprt.source).count() == imprt.import_count
 
         # Delete step
         r = self.client.delete(url_for("import.delete_import", import_id=imprt.id_import))
@@ -992,7 +1003,7 @@ class TestImports:
         )
 
     @pytest.mark.parametrize("import_file_name", ["nomenclatures_file.csv"])
-    def test_import_nomenclatures_file(self, no_default_nomenclatures, prepared_import):
+    def test_import_nomenclatures_file(self, prepared_import):
         assert_import_errors(
             prepared_import,
             {
@@ -1004,16 +1015,54 @@ class TestImports:
                 ),
                 (
                     "CONDITIONAL_MANDATORY_FIELD_ERROR",
-                    "id_nomenclature_blurring",
-                    frozenset({11}),
-                ),
-                (
-                    "CONDITIONAL_MANDATORY_FIELD_ERROR",
                     "id_nomenclature_source_status",
-                    frozenset({13}),
+                    frozenset({12}),
                 ),
             },
         )
+
+    @pytest.mark.parametrize("import_file_name", ["empty_nomenclatures_file.csv"])
+    def test_import_empty_nomenclatures_file(self, imported_import):
+        assert_import_errors(
+            imported_import,
+            set(),
+        )
+        obs2 = Synthese.query.filter_by(
+            source=imported_import.source, entity_source_pk_value="2"
+        ).one()
+        # champs non mappé → valeur par défaut de la synthèse
+        assert obs2.nomenclature_determination_method.label_default == "Non renseigné"
+        # champs non mappé mais sans valeur par défaut dans la synthèse → NULL
+        assert obs2.nomenclature_diffusion_level == None
+        # champs mappé mais cellule vide → valeur par défaut de la synthèse
+        assert obs2.nomenclature_naturalness.label_default == "Inconnu"
+        obs3 = Synthese.query.filter_by(
+            source=imported_import.source, entity_source_pk_value="3"
+        ).one()
+        # Le champs est vide, mais on doit utiliser la valeur du mapping,
+        # et ne pas l’écraser avec la valeur par défaut
+        assert obs3.nomenclature_life_stage.label_default == "Alevin"
+
+    @pytest.mark.parametrize("import_file_name", ["empty_nomenclatures_file.csv"])
+    def test_import_empty_nomenclatures_file_no_default(
+        self, no_default_nomenclatures, imported_import
+    ):
+        assert_import_errors(
+            imported_import,
+            {
+                ("INVALID_NOMENCLATURE", "id_nomenclature_naturalness", frozenset({2})),
+            },
+        )
+        obs3 = Synthese.query.filter_by(
+            source=imported_import.source, entity_source_pk_value="3"
+        ).one()
+        # champs non mappé → valeur par défaut de la synthèse
+        assert obs3.nomenclature_determination_method.label_default == "Non renseigné"
+        # champs non mappé mais sans valeur par défaut dans la synthèse → NULL
+        assert obs3.nomenclature_diffusion_level == None
+        # Le champs est vide, mais on doit utiliser la valeur du mapping,
+        # et ne pas l’écraser avec la valeur par défaut
+        assert obs3.nomenclature_life_stage.label_default == "Alevin"
 
     def test_export_pdf(self, users, imports):
         user = users["user"]

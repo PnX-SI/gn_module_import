@@ -9,6 +9,5 @@ date_min;nom_cite;observateurs;WKT;cd_nom;id_nomenclature_exist_proof;digital_pr
 2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;Oui;http://A.fr;;NSP;;;-
 2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;Oui;;B;NSP;;;-
 2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;Oui;http://A.fr;B;NSP;;;-
-2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;;;;;;;CONDITIONAL_MANDATORY_FIELD_ERROR
 2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;;;;NSP;Littérature;Petit ours brun;-
 2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;;;;NSP;Littérature;;CONDITIONAL_MANDATORY_FIELD_ERROR

@@ -48,24 +48,31 @@ def do_nomenclatures_mapping(imprt, fields):
             .values({field.synthese_field: TNomenclatures.id_nomenclature})
         )
         db.session.execute(stmt)
-        # TODO: Check conditional values
 
-    if current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]:
-        for field in BibFields.query.filter(BibFields.mnemonique != None).all():
-            fields[field.name_field] = field
-            # Set default nomenclature for empty user fields
-            (
-                ImportSyntheseData.query.filter(ImportSyntheseData.imprt == imprt)
-                .filter(sa.or_(source_field == None, source_field == ""))
-                .update(
-                    values={
-                        field.synthese_field: sa.func.gn_synthese.get_default_nomenclature_value(
-                            field.mnemonique,
-                        ),
-                    },
-                    synchronize_session=False,
-                )
+    for field in BibFields.query.filter(BibFields.mnemonique != None).all():
+        if (
+            not current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]
+            and field.name_field in fields
+        ):
+            continue
+        source_field = getattr(ImportSyntheseData, field.source_field)
+        synthese_field = getattr(ImportSyntheseData, field.synthese_field)
+        # Set default nomenclature for empty user fields
+        (
+            ImportSyntheseData.query.filter(ImportSyntheseData.imprt == imprt)
+            .filter(
+                sa.or_(source_field == None, source_field == ""),
+                synthese_field == None,
             )
+            .update(
+                values={
+                    field.synthese_field: sa.func.gn_synthese.get_default_nomenclature_value(
+                        field.mnemonique,
+                    ),
+                },
+                synchronize_session=False,
+            )
+        )
 
     for field in filter(lambda field: field.mnemonique != None, fields.values()):
         source_field = getattr(ImportSyntheseData, field.source_field)
@@ -75,11 +82,7 @@ def do_nomenclatures_mapping(imprt, fields):
             imprt,
             error_type="INVALID_NOMENCLATURE",
             error_column=field.name_field,
-            whereclause=sa.and_(
-                source_field != None,
-                source_field != "",
-                synthese_field == None,
-            ),
+            whereclause=synthese_field == None,
         )
 
 
