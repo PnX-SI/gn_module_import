@@ -990,6 +990,11 @@ class TestImports:
             prepared_import,
             {
                 ("INVALID_URL_PROOF", "digital_proof", frozenset({2, 4, 5})),
+                (
+                    "INVALID_EXISTING_PROOF_VALUE",
+                    "id_nomenclature_exist_proof",
+                    frozenset({8, 9, 11, 13, 15}),
+                ),
             },
         )
 
