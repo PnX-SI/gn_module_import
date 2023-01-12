@@ -8,12 +8,15 @@ CHANGELOG
 **🚀 Nouveautés**
 
 * Mise à jour de la documentation d’installation en accord avec les évolutions de GeoNature 2.11
+* Possibilité de télécharger le fichier source (#416)
 
 **🐛 Corrections**
 
 * Suppression d’une redirection inutile dû à un slash final en trop dans une route
 * Correction d’une migration v1 → v2 pour gérer les mappings vides
-
+* Utilisation des nomenclatures par défaut pour les champs de nomenclature non associé à l’étape de
+  correspondance des champs. Pour les champs associées mais contenant des lignes vides, est utilisé
+  la valeur précisée lors de la correspondance des champs, et à défaut, la nomenclature par défaut (#68)
 
 2.0.3 (2022-12-14)
 ------------------
