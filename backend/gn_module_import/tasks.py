@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from flask import current_app
 from sqlalchemy import func, distinct
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from celery.utils.log import get_task_logger
@@ -33,6 +34,7 @@ from gn_module_import.checks.sql import (
     check_digital_proof_urls,
 )
 
+from geonature.core.notifications.utils import dispatch_notifications
 
 logger = get_task_logger(__name__)
 
@@ -160,4 +162,25 @@ def do_import_in_synthese(self, import_id):
             .filter_by(source=imprt.source)
             .scalar()
         )
+
+        # Send element to notification system
+        notify_import_in_synthese_done(imprt)
+
         db.session.commit()
+
+
+# Send notification
+def notify_import_in_synthese_done(imprt):
+    print("\n\n\nnotify_import_in_synthese_done\n\n\n")
+    id_authors = [author.id_role for author in imprt.authors]
+    dispatch_notifications(
+        code_categories=["IMPORT-DONE%"],
+        id_roles=id_authors,
+        title="Import dans la synthèse",
+        url=(current_app.config["URL_APPLICATION"] + f"/#/import/{imprt.id_import}/report"),
+        context={
+            "imprt": imprt,
+            "url_notification_rules": current_app.config["URL_APPLICATION"]
+            + "/#/notification/rules",
+        },
+    )
