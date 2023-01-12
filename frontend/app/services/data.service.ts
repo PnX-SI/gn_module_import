@@ -181,6 +181,12 @@ export class DataService {
     });
   }
 
+  downloadSourceFile(importId: number) {
+    return this._http.get(`${urlApi}/imports/${importId}/source_file`, {
+      responseType: "blob"
+    });
+  }
+
   getImportErrors(importId): Observable<Array<ImportError>> {
     return this._http.get<Array<ImportError>>(`${urlApi}/imports/${importId}/errors`);
   }

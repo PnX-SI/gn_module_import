@@ -30,7 +30,7 @@
           importData?.id_dataset
         }}" matTooltip="Voir dans le module Metadonnées">{{ datasetName }}</a>
             </p>
-            <p><b>Fichier : </b>{{ importData?.full_file_name }}</p>
+            <p><b>Fichier : </b><a [routerLink]="" (click)="downloadSourceFile()">{{ importData?.full_file_name }}</a></p>
             <p>
               <b>Date de soumission de l'import : </b>
               {{ importData?.date_create_import | date: "dd/MM/yyyy" }}

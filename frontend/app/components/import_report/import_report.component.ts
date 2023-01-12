@@ -209,6 +209,15 @@ export class ImportReportComponent implements OnInit {
       this.exportMapAndChartPdf(chartImg)
     }
   }
+
+  downloadSourceFile() {
+    this._dataService.downloadSourceFile(this.importData?.id_import).subscribe(
+      (result) => {
+        saveAs(result, this.importData?.full_file_name);
+      }
+    );
+  }
+
   setImportStatus() {
     if (this.importData?.task_progress === -1) {
       this.importStatus = "EN ERREUR"

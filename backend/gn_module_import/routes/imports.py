@@ -5,7 +5,7 @@ import csv
 import unicodedata
 
 from flask import request, current_app, jsonify, g, stream_with_context, send_file
-from werkzeug.exceptions import Conflict, BadRequest, Forbidden
+from werkzeug.exceptions import Conflict, BadRequest, Forbidden, Gone
 from werkzeug.urls import url_quote
 from sqlalchemy import or_, func, desc
 from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
@@ -489,6 +489,22 @@ def get_import_errors(scope, import_id):
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     return jsonify([error.as_dict(fields=["type"]) for error in imprt.errors])
+
+
+@blueprint.route("/imports/<int:import_id>/source_file", methods=["GET"])
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT")
+def get_import_source_file(scope, import_id):
+    imprt = TImports.query.options(undefer("source_file")).get_or_404(import_id)
+    if not imprt.has_instance_permission(scope):
+        raise Forbidden
+    if imprt.source_file is None:
+        raise Gone
+    return send_file(
+        BytesIO(imprt.source_file),
+        download_name=imprt.full_file_name,
+        as_attachment=True,
+        mimetype=f"text/csv; charset={imprt.encoding}; header=present",
+    )
 
 
 @blueprint.route("/imports/<int:import_id>/invalid_rows", methods=["GET"])

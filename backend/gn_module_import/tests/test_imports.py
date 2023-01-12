@@ -1089,6 +1089,24 @@ class TestImports:
 
         assert resp.status_code == Forbidden.code
 
+    def test_get_import_source_file(self, users, uploaded_import):
+        url = url_for("import.get_import_source_file", import_id=uploaded_import.id_import)
+
+        resp = self.client.get(url)
+        assert resp.status_code == Unauthorized.code
+
+        set_logged_user_cookie(self.client, users["stranger_user"])
+        resp = self.client.get(url)
+        assert resp.status_code == Forbidden.code
+
+        set_logged_user_cookie(self.client, users["user"])
+        resp = self.client.get(url)
+        assert resp.status_code == 200
+        assert resp.content_length > 0
+        assert "text/csv" in resp.mimetype
+        assert "attachment" in resp.headers["Content-Disposition"]
+        assert uploaded_import.full_file_name in resp.headers["Content-Disposition"]
+
     def test_get_nomenclatures(self):
 
         resp = self.client.get(url_for("import.get_nomenclatures"))
