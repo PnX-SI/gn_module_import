@@ -36,33 +36,30 @@
                         [maxWidth]="col.max_width"
                         [sortable]="col.filter"
                     >
-                            <ng-template
-                                let-row="row"
-                                ngx-datatable-cell-template
-                            >
-                                <div *ngIf="col.prop=='dataset.dataset_name' else dateBlock">
+                        <ng-template
+                            let-row="row"
+                            ngx-datatable-cell-template
+                        >
+                            <ng-container [ngSwitch]="col.prop">
+                                <ng-container *ngSwitchCase="'dataset.dataset_name'">
                                     <a
-                                            routerLink="/metadata/dataset_detail/{{row.id_dataset}}"
-                                            matTooltip="{{col.name}}"
-                                    >{{row.dataset ? row.dataset.dataset_name : ''}}</a>
-                                </div>
-                                <ng-template #dateBlock>
-                                    <ng-container *ngIf="col.prop=='date_create_import' else defaultBlock">
-                                        {{row.date_create_import |date:'dd-MM-yyyy'}}
-                                    </ng-container>
-                                </ng-template>
-                                <ng-template #defaultBlock>
+                                        routerLink="/metadata/dataset_detail/{{row.id_dataset}}"
+                                        matTooltip="{{col.name}}"
+                                    >
+                                        {{row.dataset ? row.dataset.dataset_name : ''}}
+                                    </a>
+                                </ng-container>
+                                <ng-container *ngSwitchCase="'date_create_import'">
+                                    {{row.date_create_import |date:'dd-MM-yyyy'}}
+                                </ng-container>
+                                <ng-container *ngSwitchCase="'full_file_name'">
+                                    <a [routerLink]="" (click)="downloadSourceFile(row)">{{row[col.prop]}}</a>
+                                </ng-container>
+                                <ng-container *ngSwitchDefault>
                                     {{row[col.prop]}}
-                                </ng-template>
-                            </ng-template>
-                        <div *ngIf="col.prop=='date_create_import'">
-                            <ng-template
-                                let-row="row"
-                                ngx-datatable-cell-template
-                            >
-                                {{row.date_create_import |date:'dd-MM-yyyy'}}
-                            </ng-template>
-                        </div>
+                                </ng-container>
+                            </ng-container>
+                        </ng-template>
                     </ngx-datatable-column>
                     <ngx-datatable-column
                         maxWidth="200"

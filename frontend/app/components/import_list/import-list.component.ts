@@ -3,6 +3,7 @@
 import { Component, OnInit, ViewEncapsulation } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { FormControl } from "@angular/forms";
+import { saveAs } from 'file-saver';
 import { CommonService } from "@geonature_common/service/common.service";
 import { CruvedStoreService } from '@geonature_common/service/cruved-store.service';
 import { DataService } from "../../services/data.service";
@@ -142,10 +143,20 @@ export class ImportListComponent implements OnInit {
             `metadata/dataset_detail/${row.id_dataset}`
         ]);
     }
+
+    downloadSourceFile(row: Import) {
+        this._ds.downloadSourceFile(row.id_import).subscribe(
+          (result) => {
+            saveAs(result, row.full_file_name);
+          }
+        );
+    }
+
     openDeleteModal(row: Import, modalDelete) {
         this.deleteOne = row;
         this.modal.open(modalDelete);
     }
+
     onSort(e) {
         let sort = e.sorts[0]
         let params = {page:1, search: this.search_string, sort: sort.prop, sort_dir:sort.dir}
