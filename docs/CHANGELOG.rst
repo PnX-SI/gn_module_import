@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+2.1.0 (unreleased)
+------------------
+
+Nécessite la version 2.11.0 ou plus de GeoNature.
+
+**🚀 Nouveautés**
+
+* Possibilité pour les usagers de souscrire à une notification lorsque l’import se termine.
+
+
 2.0.4 (2023-01-16)
 ------------------
 
