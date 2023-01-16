@@ -9,14 +9,21 @@ CHANGELOG
 
 * Mise à jour de la documentation d’installation en accord avec les évolutions de GeoNature 2.11
 * Possibilité de télécharger le fichier source (#416)
+* Passage du paramètre ``FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE`` à ``true`` par défaut (#68)
 
 **🐛 Corrections**
 
-* Suppression d’une redirection inutile dû à un slash final en trop dans une route
+* Suppression d’une redirection inutile dûe à un slash final en trop dans une route
 * Correction d’une migration v1 → v2 pour gérer les mappings vides
-* Utilisation des nomenclatures par défaut pour les champs de nomenclature non associé à l’étape de
-  correspondance des champs. Pour les champs associées mais contenant des lignes vides, est utilisé
+* Utilisation des nomenclatures par défaut de la Synthèse pour les champs de nomenclature non associés à l’étape de
+  correspondance des champs. Pour les champs associés mais contenant des lignes vides, est utilisé
   la valeur précisée lors de la correspondance des champs, et à défaut, la nomenclature par défaut (#68)
+  
+**⚠️ Notes de version**
+
+* Les versions 2.0.0 à 2.0.3 importaient la valeur ``null`` dans les champs de nomenclature de la Synthèse qui 
+  n'étaient pas mappés. Si vous avez réalisé des imports avec ces versions et que vous souhaitez remplacer
+  les nomenclatures ``null`` dans la Synthèse par les valeurs par défaut, exécutez la requête...
 
 2.0.3 (2022-12-14)
 ------------------
