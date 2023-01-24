@@ -6,8 +6,7 @@ import { Routes, RouterModule } from "@angular/router";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatCheckboxModule } from "@angular/material/checkbox";
-import { ChartsModule } from 'ng2-charts';
-import { ChartModule } from 'angular2-chartjs';
+import { ChartsModule } from "ng2-charts";
 
 import { ImportModalDatasetComponent } from "./components/modal_dataset/import-modal-dataset.component";
 import { ModalDeleteImport } from "./components/delete-modal/delete-modal.component";
@@ -33,9 +32,10 @@ import { ImportReportComponent } from "./components/import_report/import_report.
 // my module routing
 const routes: Routes = [
   { path: "", component: ImportListComponent },
-  { path: ":id_import/errors",
+  {
+    path: ":id_import/errors",
     component: ImportErrorsComponent,
-    resolve: { importData: ImportProcessResolver, },
+    resolve: { importData: ImportProcessResolver },
   },
   {
     path: ":id_import/report",
@@ -50,39 +50,39 @@ const routes: Routes = [
         path: "upload",
         component: UploadFileStepComponent,
         data: { step: Step.Upload },
-        resolve: { importData: ImportProcessResolver, },
+        resolve: { importData: ImportProcessResolver },
       },
       {
         path: ":id_import/upload",
         component: UploadFileStepComponent,
         data: { step: Step.Upload },
-        resolve: { importData: ImportProcessResolver, },
+        resolve: { importData: ImportProcessResolver },
       },
       {
         path: ":id_import/decode",
         component: DecodeFileStepComponent,
         data: { step: Step.Decode },
-        resolve: { importData: ImportProcessResolver, },
+        resolve: { importData: ImportProcessResolver },
       },
       {
         path: ":id_import/fieldmapping",
         component: FieldsMappingStepComponent,
         data: { step: Step.FieldMapping },
-        resolve: { importData: ImportProcessResolver, },
+        resolve: { importData: ImportProcessResolver },
       },
       {
         path: ":id_import/contentmapping",
         component: ContentMappingStepComponent,
         data: { step: Step.ContentMapping },
-        resolve: { importData: ImportProcessResolver, },
+        resolve: { importData: ImportProcessResolver },
       },
       {
         path: ":id_import/import",
         component: ImportStepComponent,
         data: { step: Step.Import },
-        resolve: { importData: ImportProcessResolver, },
+        resolve: { importData: ImportProcessResolver },
       },
-    ]
+    ],
   },
 ];
 
@@ -104,14 +104,13 @@ const routes: Routes = [
   ],
   imports: [
     ChartsModule,
-    ChartModule,
     GN2CommonModule,
     RouterModule.forChild(routes),
     CommonModule,
     MatProgressSpinnerModule,
     MatStepperModule,
     MatCheckboxModule,
-    NgbModule
+    NgbModule,
   ],
   entryComponents: [ModalDeleteImport],
   providers: [
@@ -120,8 +119,8 @@ const routes: Routes = [
     ImportProcessResolver,
     CsvExportService,
     FieldMappingService,
-    ContentMappingService
+    ContentMappingService,
   ],
-  bootstrap: []
+  bootstrap: [],
 })
-export class GeonatureModule { }
+export class GeonatureModule {}
