@@ -11,8 +11,8 @@ import { ConfigService } from '@geonature/services/config.service';
 export class DataService {
   private urlApi = null;
 
-  constructor(private _http: HttpClient, public cs: ConfigService) {
-    this.urlApi = `${this.cs.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
+  constructor(private _http: HttpClient, public config: ConfigService) {
+    this.urlApi = `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
   }
 
   getNomenclatures(): Observable<any> {
@@ -169,7 +169,7 @@ export class DataService {
   }
 
   getBbox(sourceId: number): Observable<any> {
-    return this._http.get<any>(`${this.cs.API_ENDPOINT}/synthese/observations_bbox`, {
+    return this._http.get<any>(`${this.config.API_ENDPOINT}/synthese/observations_bbox`, {
       params: { id_source: sourceId },
     });
   }
@@ -196,7 +196,7 @@ export class DataService {
 
   getTaxaRepartition(sourceId: number, taxa_rank: string) {
     return this._http.get<Array<TaxaDistribution>>(
-      `${this.cs.API_ENDPOINT}/synthese/taxa_distribution`,
+      `${this.config.API_ENDPOINT}/synthese/taxa_distribution`,
       {
         params: {
           id_source: sourceId,
@@ -208,7 +208,7 @@ export class DataService {
 
   getDatasetFromId(datasetId: number) {
     return this._http.get<Dataset>(
-      `${this.cs.API_ENDPOINT}/meta/dataset/${datasetId}`
+      `${this.config.API_ENDPOINT}/meta/dataset/${datasetId}`
     );
   }
 
