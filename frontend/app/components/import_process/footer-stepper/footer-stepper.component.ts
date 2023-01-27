@@ -1,13 +1,10 @@
 import { Component, OnInit, Input } from "@angular/core";
-import { Router, ActivatedRoute } from "@angular/router";
+import { Router } from "@angular/router";
 import { DataService } from "../../../services/data.service";
-import { CommonService } from "@geonature_common/service/common.service";
-import { ModuleConfig } from "../../../module.config";
 import { ImportProcessService } from "../import-process.service";
-// import { ImportStepInterface } from "../import-process.interface";
 import { isObservable } from "rxjs";
 import { Import } from "../../../models/import.model";
-
+import { ConfigService } from '@geonature/services/config.service';
 
 @Component({
   selector: "footer-stepper",
@@ -16,14 +13,12 @@ import { Import } from "../../../models/import.model";
 })
 export class FooterStepperComponent implements OnInit {
   @Input() stepComponent;
-  public IMPORT_CONFIG = ModuleConfig;
 
   constructor(
     private _router: Router,
-    private _route: ActivatedRoute,
     private _ds: DataService,
     private importProcessService: ImportProcessService,
-    private _commonService: CommonService
+    public config: ConfigService
   ) { }
 
   ngOnInit() { }
@@ -56,6 +51,6 @@ export class FooterStepperComponent implements OnInit {
 
   leaveImport() {
     this.importProcessService.resetImportData();
-    this._router.navigate([`${this.IMPORT_CONFIG.MODULE_URL}`]);
+    this._router.navigate([`${this.config.IMPORT.MODULE_URL}`]);
   }
 }

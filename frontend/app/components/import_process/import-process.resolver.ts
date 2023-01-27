@@ -11,8 +11,7 @@ import { ImportProcessService } from './import-process.service';
 import { Import } from "../../models/import.model";
 import { Step } from "../../models/enums.model";
 import { DataService } from "../../services/data.service";
-import { ModuleConfig } from "../../module.config";
-
+import { ConfigService } from '@geonature/services/config.service';
 
 @Injectable()
 export class ImportProcessResolver implements Resolve<Import>{
@@ -21,6 +20,7 @@ export class ImportProcessResolver implements Resolve<Import>{
     private ds: DataService,
     private commonService: CommonService,
     private importProcessService: ImportProcessService,
+    public config: ConfigService
   ) { }
 
   resolve(route: ActivatedRouteSnapshot,
@@ -38,7 +38,7 @@ export class ImportProcessResolver implements Resolve<Import>{
           // typically 404 not found or 403 forbidden, we redirect to import list
           catchError((error: HttpErrorResponse) => {
             this.commonService.regularToaster("error", error.error.description);
-            this.router.navigate([ModuleConfig.MODULE_URL]);
+            this.router.navigate([this.config.IMPORT.MODULE_URL]);
             return EMPTY;
           }),
           concatMap((importData: Import) => {

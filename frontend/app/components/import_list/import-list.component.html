@@ -30,7 +30,7 @@
                     (sort)="onSort($event)"
                 >
                     <ngx-datatable-column
-                        *ngFor="let col of config.LIST_COLUMNS_FRONTEND"
+                        *ngFor="let col of config.IMPORT.LIST_COLUMNS_FRONTEND"
                         name="{{col.name}}"
                         [prop]="col.prop"
                         [maxWidth]="col.max_width"

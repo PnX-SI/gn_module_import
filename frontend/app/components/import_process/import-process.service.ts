@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { Step } from '../../models/enums.model';
 import { Import } from '../../models/import.model';
-import { ModuleConfig } from "../../module.config";
+import { ConfigService } from '@geonature/services/config.service';
 
 @Injectable()
 export class ImportProcessService {
@@ -10,7 +10,8 @@ export class ImportProcessService {
 
 constructor(
     private router: Router,
-    private route: ActivatedRoute) { }
+    public config: ConfigService
+) {}
 
   setImportData(importData: Import) {
     this.importData  = importData;
@@ -42,7 +43,7 @@ constructor(
     if (this.importData == null) return null;
     let stepName = Step[step].toLowerCase();
     let importId: number = this.importData.id_import;
-    return [ModuleConfig.MODULE_URL, 'process', importId, stepName];
+    return [this.config.IMPORT.MODULE_URL, 'process', importId, stepName];
   }
 
   navigateToStep(step: Step) {
@@ -52,7 +53,7 @@ constructor(
   // If some steps must be skipped, implement it here
   getPreviousStep(step: Step): Step {
     let previousStep = step - 1;
-    if (!ModuleConfig.ALLOW_VALUE_MAPPING && previousStep === Step.ContentMapping) {
+    if (!this.config.IMPORT.ALLOW_VALUE_MAPPING && previousStep === Step.ContentMapping) {
       previousStep -= 1;
     }
     return previousStep;
@@ -61,7 +62,7 @@ constructor(
   // If some steps must be skipped, implement it here
   getNextStep(step: Step): Step {
     let nextStep = step + 1;
-    if (!ModuleConfig.ALLOW_VALUE_MAPPING && nextStep === Step.ContentMapping) {
+    if (!this.config.IMPORT.ALLOW_VALUE_MAPPING && nextStep === Step.ContentMapping) {
       nextStep += 1;
     }
     return nextStep;
@@ -80,7 +81,7 @@ constructor(
   }
 
   beginProcess(datasetId: number) {
-    const link = [ModuleConfig.MODULE_URL, 'process', Step[Step.Upload].toLowerCase()];
+    const link = [this.config.IMPORT.MODULE_URL, 'process', Step[Step.Upload].toLowerCase()];
 	   this.router.navigate(link, { queryParams: { datasetId: datasetId } });
   }
 

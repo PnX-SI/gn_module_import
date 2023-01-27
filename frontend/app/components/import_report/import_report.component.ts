@@ -8,8 +8,7 @@ import { DataService } from '../../services/data.service';
 import { ImportProcessService } from '../import_process/import-process.service';
 import { Import, ImportError, Nomenclature,
          NomenclatureType, TaxaDistribution } from '../../models/import.model';
-import { CsvExportService } from '../../services/csv-export.service';
-import { ModuleConfig } from '../../module.config';
+import { ConfigService } from '@geonature/services/config.service';
 
 interface MatchedNomenclature {
   source: Nomenclature;
@@ -42,9 +41,7 @@ export class ImportReportComponent implements OnInit {
   public importWarnings: Array<ImportError> = [];
   public nbTotalErrors: number = 0;
   public datasetName: string = '';
-  public rank: string = this.rankOptions.includes(ModuleConfig.DEFAULT_RANK)
-    ? ModuleConfig.DEFAULT_RANK
-    : this.rankOptions[0];
+  public rank: string = null;
   public doughnutChartLabels: Array<String> = [];
   public doughnutChartData: Array<number> = [];
   public doughnutChartColors: Array<{ backgroundColor: Array<String> }> = [
@@ -72,9 +69,13 @@ export class ImportReportComponent implements OnInit {
     private importProcessService: ImportProcessService,
     private _dataService: DataService,
     private _router: Router,
-    private _csvExport: CsvExportService,
-    private _map: MapService
-  ) {}
+    private _map: MapService,
+    public config: ConfigService
+  ) {
+    this.rank= this.rankOptions.includes(this.config.IMPORT.DEFAULT_RANK)
+    ? this.config.IMPORT.DEFAULT_RANK
+    : this.rankOptions[0];
+  }
 
   ngOnInit() {
     this.importData = this.importProcessService.getImportData();
@@ -254,6 +255,6 @@ export class ImportReportComponent implements OnInit {
     this.loadTaxaDistribution();
   }
   navigateToImportList() {
-      this._router.navigate([ModuleConfig.MODULE_URL]);
+      this._router.navigate([this.config.IMPORT.MODULE_URL]);
   }
 }

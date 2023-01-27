@@ -71,7 +71,7 @@
                         required
                     >
                         <option
-                            *ngFor="let srid of importConfig.SRID"
+                            *ngFor="let srid of this.config.IMPORT.SRID"
                             [value]="srid.code"
                         >
                             {{srid.name}}

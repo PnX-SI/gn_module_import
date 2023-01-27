@@ -1,13 +1,9 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { NgbModal, NgbModalRef } from "@ng-bootstrap/ng-bootstrap";
 import { FormControl, Validators } from "@angular/forms";
-import { CommonService } from "@geonature_common/service/common.service";
-import { Router, ActivatedRoute } from "@angular/router";
 import { DataService } from "../../services/data.service";
-import { ModuleConfig } from "../../module.config";
 import { ImportProcessService } from "../import_process/import-process.service";
 import { CruvedStoreService } from '@geonature_common/service/cruved-store.service';
-import { Step } from "../../models/enums.model";
 
 @Component({
   selector: "import-modal-dataset",
@@ -25,10 +21,7 @@ export class ImportModalDatasetComponent implements OnInit, OnDestroy {
   constructor(
     private modalService: NgbModal,
     public _ds: DataService,
-    private _commonService: CommonService,
     private importProcessService: ImportProcessService,
-    private _router: Router,
-    private route: ActivatedRoute,
     public cruvedStore: CruvedStoreService
   ) {}
 

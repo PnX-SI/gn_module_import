@@ -1,15 +1,13 @@
-import { Component, OnInit, Input } from "@angular/core";
-import { ActivatedRoute, Router } from "@angular/router";
+import { Component, OnInit } from "@angular/core";
+import { ActivatedRoute } from "@angular/router";
 import { DataService } from "../../../services/data.service";
-import { CommonService } from "@geonature_common/service/common.service";
-import { ModuleConfig } from "../../../module.config";
-import { FormGroup, FormBuilder, Validators, AbstractControl, ValidatorFn } from "@angular/forms";
-import { ImportProcessComponent } from "../import-process.component";
+import { FormGroup, FormBuilder, Validators } from "@angular/forms";
 import { ImportProcessService } from "../import-process.service";
 import { Step } from "../../../models/enums.model";
 import { Import } from "../../../models/import.model";
 import { Observable } from "rxjs";
 import { finalize } from 'rxjs/operators';
+import { ConfigService } from '@geonature/services/config.service';
 
 @Component({
   selector: "decode-file-step",
@@ -20,16 +18,14 @@ export class DecodeFileStepComponent implements OnInit {
   public step: Step;
   public importData: Import;
   public paramsForm: FormGroup;
-  public importConfig = ModuleConfig;
   public isRequestPending: boolean = false; // spinner
 
   constructor(
     private fb: FormBuilder,
     private ds: DataService,
     private importProcessService: ImportProcessService,
-    private commonService: CommonService,
-    private router: Router,
     private route: ActivatedRoute,
+    public config: ConfigService
   ) {
     this.paramsForm = this.fb.group({
       encoding: [null, Validators.required],

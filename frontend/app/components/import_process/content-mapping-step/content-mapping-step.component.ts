@@ -2,20 +2,18 @@ import { Component, OnInit, ViewChild, ViewEncapsulation } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { Validators } from "@angular/forms";
 import { FormControl, FormGroup, FormBuilder } from "@angular/forms";
-import { HttpErrorResponse } from "@angular/common/http";
 
 import { Observable, of } from "rxjs";
 import { forkJoin } from "rxjs/observable/forkJoin";
-import { startWith, pairwise, concatMap, mapTo, finalize, tap } from "rxjs/operators";
+import { concatMap, finalize } from "rxjs/operators";
 
 import { DataService } from "../../../services/data.service";
 import { ContentMappingService } from "../../../services/mappings/content-mapping.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { SyntheseDataService } from "@geonature_common/form/synthese-form/synthese-data.service";
 import { CruvedStoreService } from "@geonature_common/service/cruved-store.service";
-import { ModuleConfig } from "../../../module.config";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
-import {ContentMapping, ContentMappingValues, FieldMapping} from "../../../models/mapping.model";
+import {ContentMapping, ContentMappingValues } from "../../../models/mapping.model";
 import { Step } from "../../../models/enums.model";
 import { Import, ImportValues, Nomenclature } from "../../../models/import.model";
 import { ImportProcessService } from "../import-process.service";

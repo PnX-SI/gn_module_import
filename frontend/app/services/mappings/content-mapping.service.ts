@@ -1,7 +1,6 @@
 import { Injectable } from "@angular/core";
 import { DataService } from "../data.service";
-import { CommonService } from "@geonature_common/service/common.service";
-import { ModuleConfig } from "../../module.config";
+import { ConfigService } from '@geonature/services/config.service';
 
 @Injectable()
 export class ContentMappingService {
@@ -12,9 +11,9 @@ export class ContentMappingService {
 
   constructor(
     private _ds: DataService,
-    private _commonService: CommonService
+    public config: ConfigService
   ) {
-    this.displayMapped = ModuleConfig.DISPLAY_MAPPED_VALUES;
+    this.displayMapped = this.config.IMPORT.DISPLAY_MAPPED_VALUES;
   }
 
   getMappingNamesList(newContentId?, formControl?) {

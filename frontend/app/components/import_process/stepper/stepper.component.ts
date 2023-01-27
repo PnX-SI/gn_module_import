@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
-import { ModuleConfig } from '../../../module.config';
 import { Step } from '../../../models/enums.model';
 import { ImportProcessService } from '../import-process.service'
+import { ConfigService } from '@geonature/services/config.service';
 
 @Component({
 	selector: 'stepper',
@@ -11,7 +11,6 @@ import { ImportProcessService } from '../import-process.service'
 export class StepperComponent {
 	@Input() step;
 	public Step = Step;
-	public IMPORT_CONFIG = ModuleConfig;
 
-	constructor(public importProcessService: ImportProcessService) { }
+	constructor(public importProcessService: ImportProcessService, public config: ConfigService) { }
 }

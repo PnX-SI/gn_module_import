@@ -1,10 +1,7 @@
 import { Component } from '@angular/core';
 import { Router, ActivatedRoute, ActivatedRouteSnapshot, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { ModuleConfig } from '../../module.config';
 import { Step } from '../../models/enums.model';
-import { Import } from '../../models/import.model';
-import { ImportStepInterface } from './import-process.interface'
 
 @Component({
 	selector: 'import-process',
@@ -33,7 +30,7 @@ export class ImportProcessComponent {
     };
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
-    ).subscribe(event => {
+    ).subscribe(() => {
       this.step = this.route.snapshot.firstChild.data.step;
     });
   }

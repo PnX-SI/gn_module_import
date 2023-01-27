@@ -2,12 +2,10 @@ import { Component, OnInit, ViewChild } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { ImportProcessService } from "../import-process.service";
 import { DataService } from "../../../services/data.service";
-import { CsvExportService } from "../../../services/csv-export.service";
 import { CommonService } from "@geonature_common/service/common.service";
-import { ModuleConfig } from "../../../module.config";
-import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { Step } from "../../../models/enums.model";
 import { Import } from "../../../models/import.model";
+import { ConfigService } from '@geonature/services/config.service';
 
 @Component({
     selector: "import-step",
@@ -44,12 +42,11 @@ export class ImportStepComponent implements OnInit {
 
     constructor(
       private importProcessService: ImportProcessService,
-      private _csvExport: CsvExportService,
       private _router: Router,
       private _route: ActivatedRoute,
       private _ds: DataService,
-      private _modalService: NgbModal,
-      private _commonService: CommonService
+      private _commonService: CommonService,
+      public config: ConfigService
     ) { }
 
     ngOnInit() {
@@ -152,7 +149,7 @@ export class ImportStepComponent implements OnInit {
                     this.importProcessService.setImportData(importData);
                     this.importDone = true
                     this._commonService.regularToaster("info", "Données importées !");
-                    this._router.navigate([ModuleConfig.MODULE_URL, this.importData.id_import, 'report']);
+                    this._router.navigate([this.config.IMPORT.MODULE_URL, this.importData.id_import, 'report']);
                 } else if (importData.task_progress === -1){
                     this.errorStatus = "import"
                     this.importRunning = false
@@ -178,6 +175,6 @@ export class ImportStepComponent implements OnInit {
     }
 
     onRedirect() {
-        this._router.navigate([ModuleConfig.MODULE_URL]);
+        this._router.navigate([this.config.IMPORT.MODULE_URL]);
     }
 }

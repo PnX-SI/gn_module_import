@@ -1,7 +1,6 @@
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { HttpClient, HttpParams } from "@angular/common/http";
-import { ModuleConfig } from "../module.config";
 import { Dataset, Import, ImportError, ImportValues, SynthesisThemeFields, TaxaDistribution } from "../models/import.model";
 import { FieldMapping, FieldMappingValues, ContentMapping, ContentMappingValues } from "../models/mapping.model";
 import { ConfigService } from '@geonature/services/config.service';
@@ -12,7 +11,7 @@ export class DataService {
   private urlApi = null;
 
   constructor(private _http: HttpClient, public config: ConfigService) {
-    this.urlApi = `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}`;
+    this.urlApi = `${this.config.API_ENDPOINT}/${this.config.IMPORT.MODULE_URL}`;
   }
 
   getNomenclatures(): Observable<any> {

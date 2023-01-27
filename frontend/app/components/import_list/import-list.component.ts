@@ -1,19 +1,16 @@
 // @ts-ignore
 
-import { Component, OnInit, ViewEncapsulation } from "@angular/core";
-import { Router, ActivatedRoute } from "@angular/router";
+import { Component, OnInit } from "@angular/core";
+import { Router } from "@angular/router";
 import { FormControl } from "@angular/forms";
 import { saveAs } from 'file-saver';
 import { CommonService } from "@geonature_common/service/common.service";
 import { CruvedStoreService } from '@geonature_common/service/cruved-store.service';
 import { DataService } from "../../services/data.service";
-import { ModuleConfig } from "../../module.config";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { ImportProcessService} from "../import_process/import-process.service";
-import { Step } from "../../models/enums.model";
 import { Import } from "../../models/import.model";
-import { CsvExportService } from "../../services/csv-export.service";
-import { forkJoin, of } from 'rxjs'
+import { ConfigService } from '@geonature/services/config.service';
 
 @Component({
   styleUrls: ["import-list.component.scss"],
@@ -23,7 +20,6 @@ export class ImportListComponent implements OnInit {
     public history;
     public filteredHistory;
     public empty: boolean = false;
-    public config = ModuleConfig;
     public deleteOne: Import;
     public interval: any;
     public search = new FormControl()
@@ -41,12 +37,11 @@ export class ImportListComponent implements OnInit {
     constructor(
         public _cruvedStore: CruvedStoreService,
         private _ds: DataService,
-        private _csvExport: CsvExportService,
         private _router: Router,
         private _commonService: CommonService,
         private modal: NgbModal,
-        private route: ActivatedRoute,
         private importProcessService: ImportProcessService,
+        public config: ConfigService
     ) {
     }
 
