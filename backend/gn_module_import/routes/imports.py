@@ -13,6 +13,7 @@ from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.sql.expression import collate
 
 from geonature.utils.env import db
+from geonature.utils.sentry import start_sentry_child
 from geonature.core.gn_permissions import decorators as permissions
 from geonature.core.gn_synthese.models import (
     Synthese,
@@ -197,11 +198,13 @@ def upload_file(scope, import_id):
         db.session.add(imprt)
     else:
         clean_import(imprt, ImportStep.UPLOAD)
-    imprt.detected_encoding = detect_encoding(f)
-    imprt.detected_separator = detect_separator(
-        f,
-        encoding=imprt.encoding or imprt.detected_encoding,
-    )
+    with start_sentry_child(op="detect encoding"):
+        imprt.detected_encoding = detect_encoding(f)
+    with start_sentry_child(op="detect separator"):
+        imprt.detected_separator = detect_separator(
+            f,
+            encoding=imprt.encoding or imprt.detected_encoding,
+        )
     imprt.source_file = f.read()
     imprt.full_file_name = f.filename
 
