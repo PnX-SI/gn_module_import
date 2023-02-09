@@ -140,6 +140,8 @@ def insert_import_data_in_database(imprt):
     line_no = 0
     for row in csvreader:
         line_no += 1
+        if None in row:
+            raise Exception(f"La ligne {line_no} contient des valeurs excédentaires : {row[None]}")
         assert list(row.keys()) == columns
         o = {
             "id_import": imprt.id_import,
