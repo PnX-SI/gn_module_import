@@ -1108,7 +1108,6 @@ class TestImports:
         assert uploaded_import.full_file_name in resp.headers["Content-Disposition"]
 
     def test_get_nomenclatures(self):
-
         resp = self.client.get(url_for("import.get_nomenclatures"))
 
         assert resp.status_code == 200

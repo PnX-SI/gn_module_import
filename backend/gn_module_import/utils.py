@@ -3,6 +3,7 @@ from io import StringIO
 import csv
 import json
 from enum import IntEnum
+from datetime import datetime, timedelta
 
 from flask import current_app, render_template
 from sqlalchemy import func
@@ -75,12 +76,16 @@ def get_file_size(f):
 
 
 def detect_encoding(f):
+    begin = datetime.now()
+    max_duration = timedelta(
+        seconds=current_app.config["IMPORT"]["MAX_ENCODING_DETECTION_DURATION"]
+    )
     position = f.tell()
     f.seek(0)
     detector = UniversalDetector()
     for row in f:
         detector.feed(row)
-        if detector.done:
+        if detector.done or (datetime.now() - begin) > max_duration:
             break
     detector.close()
     f.seek(position)
