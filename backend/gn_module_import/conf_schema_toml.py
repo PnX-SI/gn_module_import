@@ -125,6 +125,7 @@ class GnModuleSchemaConf(Schema):
     SRID = fields.List(fields.Dict, load_default=SRID)
     ENCODAGE = fields.List(fields.String, load_default=ENCODAGE)
     MAX_FILE_SIZE = fields.Integer(load_default=MAX_FILE_SIZE)
+    MAX_ENCODING_DETECTION_DURATION = fields.Integer(load_default=2.0)
     ALLOWED_EXTENSIONS = fields.List(fields.String, load_default=ALLOWED_EXTENSIONS)
     MISSING_VALUES = fields.List(fields.String, load_default=MISSING_VALUES)
     DEFAULT_COUNT_VALUE = fields.Integer(load_default=DEFAULT_COUNT_VALUE)
