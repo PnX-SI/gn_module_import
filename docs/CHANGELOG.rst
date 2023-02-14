@@ -27,6 +27,15 @@ Nécessite la version 2.11.0 ou plus de GeoNature.
   * ``CHECK_TYPE_INFO_GEO``
 
 
+2.0.5 (2023-02-14)
+------------------
+
+**🚀 Nouveautés**
+
+* Ajout d’une limite temporelle sur le temps consacré à la détection de l’encodage afin d’éviter l’expiration de la requête lors du téléversement du fichier.
+  La limite est définie par défaut à 2 secondes et modifiable via le paramètre ``MAX_ENCODING_DETECTION_DURATION`` (#422)
+
+
 2.0.4 (2023-01-16)
 ------------------
 
