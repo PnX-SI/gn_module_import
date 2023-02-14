@@ -11,6 +11,21 @@ Nécessite la version 2.11.0 ou plus de GeoNature.
 
 * Possibilité pour les usagers de souscrire à une notification lorsque l’import se termine.
 
+**🐛 Corrections**
+
+* Suppression de paramètres de configuration obsolètes depuis la version 2
+
+  * ``UPLOAD_DIRECTORY``
+  * ``IMPORTS_SCHEMA_NAME``
+  * ``MISSING_VALUES``
+  * ``INVALID_CSV_NAME``
+  * ``DISPLAY_CHECK_BOX_MAPPED_VALUES``
+  * ``MAX_LINE_LIMIT``
+  * ``DISPLAY_CHECK_BOX_MAPPED_VALUES``
+  * ``ALLOW_MODIFY_DEFAULT_MAPPING``
+  * ``DISPLAY_MAPPED_FIELD``
+  * ``CHECK_TYPE_INFO_GEO``
+
 
 2.0.4 (2023-01-16)
 ------------------

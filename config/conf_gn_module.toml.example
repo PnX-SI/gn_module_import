@@ -45,5 +45,3 @@ CHECK_PRIVATE_JDD_BLURING = true
 CHECK_REF_BIBLIO_LITTERATURE = true
 # Active la vérification qu'une preuve d'existance est fournie si preuve existance = "oui"
 CHECK_EXIST_PROOF = true
-# Active la vérification de cohérence entre le TypeInfoGeo et les éventuels rattachements géographiques fournis
-CHECK_TYPE_INFO_GEO = true
