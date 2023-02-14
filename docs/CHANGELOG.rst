@@ -5,11 +5,14 @@ CHANGELOG
 2.1.0 (unreleased)
 ------------------
 
-Nécessite la version 2.11.0 ou plus de GeoNature.
+Nécessite la version 2.12.0 ou plus de GeoNature.
 
 **🚀 Nouveautés**
 
+* Compatibilité GeoNature 2.12 : Angular 15, configuration dynamique.
 * Possibilité pour les usagers de souscrire à une notification lorsque l’import se termine.
+* Instrumentation avec Sentry des opérations coûteuses (chargement des données, contrôles, import en synthèse).
+* Optimisation de la suppression des erreurs et des données transitoires lors de la reprise d’un import existant.
 
 **🐛 Corrections**
 
