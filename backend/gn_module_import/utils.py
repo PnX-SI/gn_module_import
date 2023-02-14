@@ -21,6 +21,7 @@ from gn_module_import import MODULE_CODE
 from gn_module_import.models import (
     BibFields,
     ImportSyntheseData,
+    ImportUserError,
 )
 
 from geonature.core.gn_commons.models import TModules
@@ -53,12 +54,12 @@ def clean_import(imprt, step: ImportStep):
         imprt.columns = None
     if step <= ImportStep.LOAD:
         with start_sentry_child(op="task", description="clean synthese data"):
-            imprt.synthese_data = []
+            ImportSyntheseData.query.filter(ImportSyntheseData.imprt == imprt).delete()
         imprt.source_count = None
         imprt.loaded = False
     if step <= ImportStep.PREPARE:
         with start_sentry_child(op="task", description="clean errors"):
-            imprt.errors = []
+            ImportUserError.query.filter(ImportUserError.imprt == imprt).delete()
         imprt.erroneous_rows = None
         imprt.processed = False
     if step <= ImportStep.IMPORT:
