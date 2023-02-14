@@ -25,6 +25,7 @@ from gn_module_import.models import (
 
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_synthese.models import Synthese, corAreaSynthese, TSources
+from geonature.utils.sentry import start_sentry_child
 from ref_geo.models import LAreas
 
 
@@ -51,11 +52,13 @@ def clean_import(imprt, step: ImportStep):
     if step <= ImportStep.DECODE:
         imprt.columns = None
     if step <= ImportStep.LOAD:
-        imprt.synthese_data = []
+        with start_sentry_child(op="task", description="clean synthese data"):
+            imprt.synthese_data = []
         imprt.source_count = None
         imprt.loaded = False
     if step <= ImportStep.PREPARE:
-        imprt.errors = []
+        with start_sentry_child(op="task", description="clean errors"):
+            imprt.errors = []
         imprt.erroneous_rows = None
         imprt.processed = False
     if step <= ImportStep.IMPORT:
@@ -63,8 +66,9 @@ def clean_import(imprt, step: ImportStep):
         imprt.import_count = None
         imprt.date_end_import = None
         if imprt.source:
-            Synthese.query.filter(Synthese.source == imprt.source).delete()
-            imprt.source = None
+            with start_sentry_child(op="task", description="clean source"):
+                Synthese.query.filter(Synthese.source == imprt.source).delete()
+                imprt.source = None
 
 
 def get_file_size(f):

@@ -7,6 +7,7 @@ from flask import current_app
 
 from geonature.utils.env import db
 from geonature.core.gn_synthese.models import Synthese
+from geonature.utils.sentry import start_sentry_child
 
 from gn_module_import.models import ImportUserError, ImportUserErrorType, BibFields
 from gn_module_import.utils import generated_fields
@@ -80,17 +81,23 @@ def check_counts(df, fields: Dict[str, BibFields]):
 
 
 def _run_all_checks(imprt, fields: Dict[str, BibFields], df):
-    clean_missing_values(df, fields)
-    concat_dates(df, fields)
-    yield from check_required_values(df, fields)
-    yield from check_types(df, fields)
-    yield from check_geography(
-        df,
-        fields,
-        file_srid=imprt.srid,
-        id_area=current_app.config["IMPORT"]["ID_AREA_RESTRICTION"],
-    )
-    yield from check_counts(df, fields)
+    with start_sentry_child(op="check.df", description="clean missing values"):
+        clean_missing_values(df, fields)
+    with start_sentry_child(op="check.df", description="concat dates"):
+        concat_dates(df, fields)
+    with start_sentry_child(op="check.df", description="check required values"):
+        yield from check_required_values(df, fields)
+    with start_sentry_child(op="check.df", description="check types"):
+        yield from check_types(df, fields)
+    with start_sentry_child(op="check.df", description="check geography"):
+        yield from check_geography(
+            df,
+            fields,
+            file_srid=imprt.srid,
+            id_area=current_app.config["IMPORT"]["ID_AREA_RESTRICTION"],
+        )
+    with start_sentry_child(op="check.df", description="check counts"):
+        yield from check_counts(df, fields)
 
 
 def run_all_checks(imprt, fields: Dict[str, BibFields], df):

@@ -198,9 +198,9 @@ def upload_file(scope, import_id):
         db.session.add(imprt)
     else:
         clean_import(imprt, ImportStep.UPLOAD)
-    with start_sentry_child(op="detect encoding"):
+    with start_sentry_child(op="task", description="detect encoding"):
         imprt.detected_encoding = detect_encoding(f)
-    with start_sentry_child(op="detect separator"):
+    with start_sentry_child(op="task", description="detect separator"):
         imprt.detected_separator = detect_separator(
             f,
             encoding=imprt.encoding or imprt.detected_encoding,
@@ -306,7 +306,8 @@ def load_import(scope, import_id):
     if imprt.fieldmapping is None:
         raise BadRequest(description="File fields must be first mapped.")
     clean_import(imprt, ImportStep.LOAD)
-    line_no = insert_import_data_in_database(imprt)
+    with start_sentry_child(op="task", description="insert data in db"):
+        line_no = insert_import_data_in_database(imprt)
     if not line_no:
         raise BadRequest("File with 0 lines.")
     imprt.source_count = line_no

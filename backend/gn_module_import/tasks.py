@@ -8,6 +8,7 @@ from celery.utils.log import get_task_logger
 from geonature.core.gn_synthese.models import Synthese, TSources
 from geonature.utils.env import db
 from geonature.utils.celery import celery_app
+from geonature.utils.sentry import start_sentry_child
 
 from gn_module_import.models import TImports, BibFields, ImportSyntheseData
 from geonature.core.gn_commons.models import TModules
@@ -68,16 +69,20 @@ def do_import_checks(self, import_id):
 
     # Checks on dataframe
     logger.info("Loading import data in dataframe…")
-    df = load_import_data_in_dataframe(imprt, fields)
+    with start_sentry_child(op="check.df", description="load dataframe"):
+        df = load_import_data_in_dataframe(imprt, fields)
     self.update_state(state="PROGRESS", meta={"progress": 0.1})
     logger.info("Running dataframe checks…")
-    run_all_checks(imprt, fields, df)
+    with start_sentry_child(op="check.df", description="run all checks"):
+        run_all_checks(imprt, fields, df)
     self.update_state(state="PROGRESS", meta={"progress": 0.2})
     logger.info("Completing geometric columns…")
-    set_the_geom_column(imprt, fields, df)
+    with start_sentry_child(op="check.df", description="set geom column"):
+        set_the_geom_column(imprt, fields, df)
     self.update_state(state="PROGRESS", meta={"progress": 0.3})
     logger.info("Updating import data from dataframe…")
-    update_import_data_from_dataframe(imprt, fields, df)
+    with start_sentry_child(op="check.df", description="save dataframe"):
+        update_import_data_from_dataframe(imprt, fields, df)
     self.update_state(state="PROGRESS", meta={"progress": 0.4})
 
     fields.update({field.name_field: field for field in selected_fields})
@@ -98,11 +103,13 @@ def do_import_checks(self, import_id):
         check_digital_proof_urls,
         check_mandatory_fields,
     ]
-    for i, check in enumerate(sql_checks):
-        logger.info(f"Running SQL check '{check.__name__}'…")
-        check(imprt, fields)
-        progress = 0.4 + ((i + 1) / len(sql_checks)) * 0.6
-        self.update_state(state="PROGRESS", meta={"progress": progress})
+    with start_sentry_child(op="check.sql", description="run all checks"):
+        for i, check in enumerate(sql_checks):
+            logger.info(f"Running SQL check '{check.__name__}'…")
+            with start_sentry_child(op="check.sql", description=check.__name__):
+                check(imprt, fields)
+            progress = 0.4 + ((i + 1) / len(sql_checks)) * 0.6
+            self.update_state(state="PROGRESS", meta={"progress": progress})
 
     imprt = TImports.query.with_for_update(of=TImports).get(import_id)
     if imprt is None or imprt.task_id != self.request.id:
