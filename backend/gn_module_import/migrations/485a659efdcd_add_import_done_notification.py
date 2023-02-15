@@ -19,7 +19,6 @@ SCHEMA_NAME = "gn_notifications"
 
 
 def upgrade():
-
     # Insert the notification category 'IMPORT-DONE'
     op.execute(
         f"""
@@ -44,7 +43,6 @@ def upgrade():
 
 
 def downgrade():
-
     # First, remove the notifications rules corresponding to 'IMPORT-DONE'
     op.execute(
         f"""
