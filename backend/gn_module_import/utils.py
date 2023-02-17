@@ -142,12 +142,14 @@ def insert_import_data_in_database(imprt):
         )
     }
     obs = []
-    line_no = 0
+    line_no = line_count = 0
     for row in csvreader:
         line_no += 1
         if None in row:
             raise Exception(f"La ligne {line_no} contient des valeurs excédentaires : {row[None]}")
         assert list(row.keys()) == columns
+        if not any(row.values()):
+            continue
         o = {
             "id_import": imprt.id_import,
             "line_no": line_no,
@@ -161,12 +163,13 @@ def insert_import_data_in_database(imprt):
             }
         )
         obs.append(o)
+        line_count += 1
         if len(obs) > 1000:
             db.session.bulk_insert_mappings(ImportSyntheseData, obs)
             obs = []
     if obs:
         db.session.bulk_insert_mappings(ImportSyntheseData, obs)
-    return line_no
+    return line_count
 
 
 def load_import_data_in_dataframe(imprt, fields):
