@@ -1,6 +1,7 @@
 from datetime import datetime
 from collections.abc import Mapping
 import re
+from packaging import version
 
 from flask import g
 import sqlalchemy as sa
@@ -11,11 +12,16 @@ from sqlalchemy.dialects.postgresql import HSTORE, JSON, UUID, JSONB
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import column_property
 from sqlalchemy.sql.expression import exists
-from flask_sqlalchemy import BaseQuery
 from jsonschema.exceptions import ValidationError as JSONValidationError
 from jsonschema import validate as validate_json
 from geoalchemy2 import Geometry
 from celery.result import AsyncResult
+import flask_sqlalchemy
+
+if version.parse(flask_sqlalchemy.__version__) >= version.parse("3"):
+    from flask_sqlalchemy.query import Query
+else:  # retro-compatibility Flask-SQLAlchemy 2
+    from flask_sqlalchemy import BaseQuery as Query
 
 from utils_flask_sqla.serializers import serializable
 
@@ -125,7 +131,7 @@ cor_role_import = db.Table(
 )
 
 
-class ImportQuery(BaseQuery):
+class ImportQuery(Query):
     def filter_by_scope(self, scope, user=None):
         if user is None:
             user = g.current_user
@@ -550,7 +556,7 @@ class BibFields(db.Model):
         return self.fr_label
 
 
-class MappingQuery(BaseQuery):
+class MappingQuery(Query):
     def filter_by_scope(self, scope, user=None):
         if user is None:
             user = g.current_user
