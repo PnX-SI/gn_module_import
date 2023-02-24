@@ -6,6 +6,7 @@ import { CommonService } from "@geonature_common/service/common.service";
 import { Step } from "../../../models/enums.model";
 import { Import } from "../../../models/import.model";
 import { ConfigService } from '@geonature/services/config.service';
+import { CsvExportService } from "../../../services/csv-export.service";
 
 @Component({
     selector: "import-step",
@@ -46,6 +47,7 @@ export class ImportStepComponent implements OnInit {
       private _route: ActivatedRoute,
       private _ds: DataService,
       private _commonService: CommonService,
+      public _csvExport: CsvExportService,
       public config: ConfigService
     ) { }
 

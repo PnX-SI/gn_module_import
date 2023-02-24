@@ -11,6 +11,7 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { ImportProcessService} from "../import_process/import-process.service";
 import { Import } from "../../models/import.model";
 import { ConfigService } from '@geonature/services/config.service';
+import { CsvExportService } from "../../services/csv-export.service";
 
 @Component({
   styleUrls: ["import-list.component.scss"],
@@ -41,6 +42,7 @@ export class ImportListComponent implements OnInit {
         private _commonService: CommonService,
         private modal: NgbModal,
         private importProcessService: ImportProcessService,
+        public _csvExport: CsvExportService,
         public config: ConfigService
     ) {
     }
