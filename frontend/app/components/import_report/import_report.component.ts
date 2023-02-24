@@ -9,6 +9,7 @@ import { ImportProcessService } from '../import_process/import-process.service';
 import { Import, ImportError, Nomenclature,
          NomenclatureType, TaxaDistribution } from '../../models/import.model';
 import { ConfigService } from '@geonature/services/config.service';
+import { CsvExportService } from '../../services/csv-export.service';
 
 interface MatchedNomenclature {
   source: Nomenclature;
@@ -70,6 +71,7 @@ export class ImportReportComponent implements OnInit {
     private _dataService: DataService,
     private _router: Router,
     private _map: MapService,
+    public _csvExport: CsvExportService,
     public config: ConfigService
   ) {
     this.rank= this.rankOptions.includes(this.config.IMPORT.DEFAULT_RANK)
