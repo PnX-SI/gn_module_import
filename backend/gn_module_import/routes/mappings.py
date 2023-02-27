@@ -123,7 +123,10 @@ def update_mapping(mappingtype, mapping, scope):
             mapping.values.update(request.json)
         elif mappingtype == "CONTENT":
             for key, value in request.json.items():
-                mapping.values[key].update(value)
+                if key not in mapping.values:
+                    mapping.values[key] = value
+                else:
+                    mapping.values[key].update(value)
             flag_modified(
                 mapping, "values"
             )  # nested dict modification not detected by MutableDict
