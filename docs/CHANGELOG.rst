@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+2.0.6 (2023-02-27)
+------------------
+
+**🐛 Corrections**
+
+* Correction de la vérification des dénombrements afin d’effecter une comparaison entière et non textuelle (#343)
+* Correction d’un bug lors de la mise-à-jour d’un mapping de valeurs lorsqu’un nouveau type de nomenclature est ajouté (#432)
+
+
 2.0.5 (2023-02-14)
 ------------------
 
