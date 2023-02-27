@@ -25,11 +25,11 @@ from geonature.core.gn_permissions.models import (
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_meta.models import TDatasets
 from geonature.core.gn_synthese.models import Synthese
-from geonature.tests.test_ref_geo import has_french_dem
 from geonature.tests.fixtures import synthese_data, celery_eager
 
 from pypnusershub.db.models import User, Organisme
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
+from ref_geo.tests.test_ref_geo import has_french_dem
 
 from gn_module_import.models import (
     TImports,
