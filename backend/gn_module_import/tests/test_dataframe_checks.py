@@ -388,8 +388,9 @@ class TestChecks:
                 [None, 2],
                 [1, 2],
                 [2, 1],
+                [20, 5],
             ],
-            columns=[field.source_field for field in fields.values()],
+            columns=[field.synthese_field for field in fields.values()],
         )
         errors = list(check_counts(df, fields))
         assert_errors(
@@ -398,7 +399,7 @@ class TestChecks:
                 Error(
                     error_code="COUNT_MIN_SUP_COUNT_MAX",
                     column="count_min",
-                    invalid_rows=frozenset([4]),
+                    invalid_rows=frozenset([4, 5]),
                 ),
             ],
         )
@@ -411,6 +412,7 @@ class TestChecks:
                     [default_value, 2],
                     [1, 2],
                     [2, 1],
+                    [20, 5],
                 ],
                 columns=[field.synthese_field for field in fields.values()],
                 dtype=float,
@@ -425,7 +427,7 @@ class TestChecks:
                 [None],
                 [2],
             ],
-            columns=[count_min_field.source_field],
+            columns=[count_min_field.synthese_field],
         )
         list(check_counts(df, {"count_min": count_min_field}))
         pd.testing.assert_frame_equal(
@@ -448,7 +450,7 @@ class TestChecks:
                 [None],
                 [2],
             ],
-            columns=[count_max_field.source_field],
+            columns=[count_max_field.synthese_field],
         )
         list(check_counts(df, {"count_max": count_max_field}))
         pd.testing.assert_frame_equal(
