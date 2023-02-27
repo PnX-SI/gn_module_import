@@ -284,15 +284,18 @@
     <div *ngIf="doughnutChartData.length > 0" class="d-flex flex-column col-sm-6">
       <h5 class="card-title">Répartition des taxons importés</h5>
       <div style="display: block">
-        <canvas id="chart" baseChart [data]="doughnutChartData" [labels]="doughnutChartLabels"
-          [chartType]="doughnutChartType" [colors]="doughnutChartColors" [options]="options">
-        </canvas>
+        <canvas id="chart" baseChart [datasets]="doughnutChartData" [labels]="doughnutChartLabels"
+        type="doughnut" [options]="options">
+      </canvas>
       </div>
-      <mat-select [(value)]="rank" (selectionChange)="onRankChange($event)">
-       <mat-option *ngFor="let r of rankOptions" [value]="r">
-         {{ r }}
-       </mat-option>
-      </mat-select>
+      <mat-form-field>
+        <mat-label>Selectionner un rang</mat-label>
+        <mat-select [(value)]="rank" (selectionChange)="onRankChange($event)">
+          <mat-option *ngFor="let r of rankOptions" [value]="r">
+            {{ r }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
     </div>
     </mat-expansion-panel>

@@ -6,7 +6,7 @@ import { Routes, RouterModule } from "@angular/router";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatCheckboxModule } from "@angular/material/checkbox";
-import { ChartsModule } from "ng2-charts";
+import { NgChartsModule } from "ng2-charts";
 
 import { ImportModalDatasetComponent } from "./components/modal_dataset/import-modal-dataset.component";
 import { ModalDeleteImport } from "./components/delete-modal/delete-modal.component";
@@ -103,7 +103,7 @@ const routes: Routes = [
     ImportReportComponent,
   ],
   imports: [
-    ChartsModule,
+    NgChartsModule,
     GN2CommonModule,
     RouterModule.forChild(routes),
     CommonModule,
