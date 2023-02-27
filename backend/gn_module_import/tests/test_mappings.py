@@ -400,6 +400,7 @@ class TestMappings:
         set_logged_user_cookie(self.client, users["admin_user"])
         cm = mappings["content_public"]
         contentvalues_update = deepcopy(cm.values)
+        del cm.values["METH_OBS"]  # to test adding of new key in mapping
         contentvalues_update["NAT_OBJ_GEO"]["In"] = "St"  # change existing mapping
         contentvalues_update["NAT_OBJ_GEO"]["ne sais pas"] = "NSP"  # add new mapping
         contentvalues_should = deepcopy(contentvalues_update)
