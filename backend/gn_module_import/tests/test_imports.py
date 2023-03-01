@@ -6,7 +6,7 @@ from functools import reduce
 from unittest.mock import patch
 
 import pytest
-from flask import url_for, current_app
+from flask import g, url_for, current_app
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import Unauthorized, Forbidden, BadRequest, Conflict
 from jsonschema import validate as validate_json
@@ -16,7 +16,7 @@ from sqlalchemy.sql.expression import select
 from apptax.taxonomie.models import BibListes, CorNomListe, BibNoms
 from geonature.utils.env import db
 from geonature.tests.utils import set_logged_user_cookie, unset_logged_user_cookie
-from geonature.core.gn_permissions.tools import _get_scopes_by_action
+from geonature.core.gn_permissions.tools import get_scopes_by_action as _get_scopes_by_action
 from geonature.core.gn_permissions.models import (
     TActions,
     TFilters,
@@ -291,6 +291,7 @@ class TestImports:
                 module=geonature_module,
             )
             db.session.add(permission)
+            del g.permissions_by_action[user.id_role]
         scope = get_scopes_by_action(user.id_role)["U"]
         assert scope == 1
         assert imprt.has_instance_permission(scope, user=user) is False
@@ -425,7 +426,7 @@ class TestImports:
                 headers=Headers({"Content-Type": "multipart/form-data"}),
             )
             assert r.status_code == Forbidden.code, r.data
-            assert 'cannot "C" in IMPORT' in r.json["description"]
+            assert "not C in IMPORT" in r.json["description"]
 
         set_logged_user_cookie(self.client, users["user"])
 
