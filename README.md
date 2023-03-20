@@ -125,6 +125,7 @@ Mise à jour du module
 ```
     source ~/geonature/backend/venv/bin/activate
     geonature install-gn-module ~/gn_module_import IMPORT
+    sudo systemctl restart geonature
 ```
 
 Utilisation du module d'imports
