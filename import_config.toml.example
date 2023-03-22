@@ -30,9 +30,6 @@ DEFAULT_VALUE_MAPPING_ID = 3
 # Leve un warning et non une erreur sur les lignes concernées
 FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE = false
 
-# Nombre de lignes à partir duquel l'import est fait en tâche de fond
-MAX_LINE_LIMIT = 10000
-
 # Encodages acceptés
 ENCODAGE = ["UTF-8"]
 
