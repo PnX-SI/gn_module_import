@@ -37,10 +37,17 @@ Configuration du module
 =======================
 
 La configuration du module se fait pour partie via le fichier
-`conf_gn_module.toml`. Voir le fichier `conf_gn_module.toml.example`
+`import_config.toml` dans le dossier de configuration de GeoNature (`geonature/config`). 
+Consultez le fichier `import_config.toml.example`
 pour voir la liste des paramètres disponibles (champs affichés en
 interface à l'étape 1, préfixe des champs ajoutés par le module,
 répertoire d'upload des fichiers, SRID, encodage, séparateurs, etc).
+
+Pour créer le fichier de configuration du module à partir du fichier d'exemple :
+
+```bash
+cp ~/gn_module_import/import_config.toml.example ~/geonature/config/import_config.toml
+```
 
 Configuration avancée
 ---------------------
@@ -114,10 +121,10 @@ Mise à jour du module
     mv ~/gn_module_import-X.Y.Z ~/gn_module_import
 ```
 
--   Rapatriez le fichier de configuration
+-   Si vous avez encore votre configuration du module dans les dossiers du module, rapatriez le fichier de configuration dans le dossier de configuration centralisée de GeoNature (depuis sa version 2.11) :
 
 ```
-    cp ~/gn_module_import_old/config/conf_gn_module.toml  ~/gn_module_import/config/conf_gn_module.toml
+    cp ~/gn_module_import_old/config/conf_gn_module.toml  ~/geonature/config/import_config.toml
 ```
 
 -   Lancez la mise à jour du module
