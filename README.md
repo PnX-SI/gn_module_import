@@ -117,7 +117,7 @@ Mise à jour du module
     mv ~/gn_module_import-X.Y.Z ~/gn_module_import
 ```
 
--   Si vous avez encore votre configuration du module dans les dossiers du module, rapatriez le fichier de configuration dans le dossier de configuration centralisée de GeoNature (depuis sa version 2.11) :
+-   Si vous avez encore votre configuration du module dans le dossier config d’import, copiez le vers le dossier de configuration centralisée de GeoNature :
 
 ```
     cp ~/gn_module_import_old/config/conf_gn_module.toml  ~/geonature/config/import_config.toml
