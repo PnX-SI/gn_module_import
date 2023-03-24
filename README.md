@@ -36,18 +36,14 @@ Le module est installé et prêt à importer !
 Configuration du module
 =======================
 
-La configuration du module se fait pour partie via le fichier
-`import_config.toml` dans le dossier de configuration de GeoNature (`geonature/config`). 
-Consultez le fichier `import_config.toml.example`
-pour voir la liste des paramètres disponibles (champs affichés en
-interface à l'étape 1, préfixe des champs ajoutés par le module,
+Vous pouvez modifier la configuration du module en créant un fichier
+`import_config.toml` dans le dossier `config` de GeoNature, en vous inspirant 
+du fichier `import_config.toml.example` et en surcouchant les paramètres que vous souhaitez
+(champs affichés en interface à l'étape 1, préfixe des champs ajoutés par le module,
 répertoire d'upload des fichiers, SRID, encodage, séparateurs, etc).
 
-Pour créer le fichier de configuration du module à partir du fichier d'exemple :
-
-```bash
-cp ~/gn_module_import/import_config.toml.example ~/geonature/config/import_config.toml
-```
+Pour appliquer les modifications de la configuration du module, consultez 
+la [rubrique dédiée de la documentation de GeoNature](https://docs.geonature.fr/installation.html#module-config).
 
 Configuration avancée
 ---------------------
