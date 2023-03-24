@@ -8,28 +8,28 @@ Module d’import
 
 Ce module permet d’importer des données depuis un fichier CSV dans [GeoNature](https://github.com/PnX-SI/GeoNature).
 
-Installation du module d’imports
-================================
+Installation du module
+======================
 
-Télécharger puis renommer la version souhaitée du module :
+-   Télécharger puis renommer la version souhaitée du module :
 
-```
+    ```
     cd
     wget https://github.com/PnX-SI/gn_module_import/archive/X.Y.Z.zip
     unzip X.Y.Z.zip
     rm X.Y.Z.zip
     mv gn_module_import-X.Y.Z gn_module_import
-```
+    ```
 
-Le module doit ensuite être installé comme suit :
+-   Le module doit ensuite être installé comme suit :
 
-```
+    ```
     source ~/geonature/backend/venv/bin/activate
     geonature install-gn-module ~/gn_module_import IMPORT
     deactivate
     sudo systemctl restart geonature
     sudo systemctl restart geonature-worker
-```
+    ```
 
 Le module est installé et prêt à importer !
 
@@ -97,39 +97,39 @@ niveau de l'objet "mapping".
 Contrôles et transformations
 ============================
 
-[Liste des contrôles](docs/controls.rst)
+[Liste des contrôles](docs/controls.md)
 
 Mise à jour du module
 =====================
 
 -   Téléchargez la nouvelle version du module
 
-```
+    ```
     wget https://github.com/PnX-SI/gn_module_import/archive/X.Y.Z.zip
     unzip X.Y.Z.zip
     rm X.Y.Z.zip
-```
+    ```
 
 -   Renommez l'ancien et le nouveau répertoire
 
-```
+    ```
     mv ~/gn_module_import ~/gn_module_import_old
     mv ~/gn_module_import-X.Y.Z ~/gn_module_import
-```
+    ```
 
 -   Si vous avez encore votre configuration du module dans le dossier `config` du module, copiez le vers le dossier de configuration centralisée de GeoNature :
 
-```
+    ```
     cp ~/gn_module_import_old/config/conf_gn_module.toml  ~/geonature/config/import_config.toml
-```
+    ```
 
 -   Lancez la mise à jour du module
 
-```
+    ```
     source ~/geonature/backend/venv/bin/activate
     geonature install-gn-module ~/gn_module_import IMPORT
     sudo systemctl restart geonature
-```
+    ```
 
 Utilisation du module d'imports
 ================================
