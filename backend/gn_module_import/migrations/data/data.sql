@@ -174,7 +174,7 @@ INSERT INTO cor_synthese_nomenclature (mnemonique, synthese_col) VALUES
 -----------------
 ---PERMISSIONS---
 -----------------
-DELETE FROM gn_permissions.cor_role_action_filter_module_object
+DELETE FROM gn_permissions.t_permissions
 WHERE id_object = (SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'MAPPING');
 
 DELETE FROM gn_permissions.cor_object_module

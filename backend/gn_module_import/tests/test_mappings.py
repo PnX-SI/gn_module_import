@@ -12,9 +12,7 @@ from sqlalchemy.orm import joinedload
 from geonature.utils.env import db
 from geonature.tests.utils import set_logged_user_cookie
 from geonature.core.gn_permissions.models import (
-    TActions,
-    TFilters,
-    CorRoleActionFilterModuleObject,
+    Permission,
 )
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_meta.models import (

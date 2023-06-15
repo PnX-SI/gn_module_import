@@ -18,9 +18,9 @@ from geonature.utils.env import db
 from geonature.tests.utils import set_logged_user_cookie, unset_logged_user_cookie
 from geonature.core.gn_permissions.tools import get_scopes_by_action as _get_scopes_by_action
 from geonature.core.gn_permissions.models import (
-    TActions,
-    TFilters,
-    CorRoleActionFilterModuleObject,
+    PermAction,
+    PermFilter,
+    Permission,
 )
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_meta.models import TDatasets
@@ -273,9 +273,9 @@ class TestImports:
         )
         assert get_scopes_by_action(user.id_role) == {action: 0 for action in "CRUVED"}
 
-        update_action = TActions.query.filter(TActions.code_action == "U").one()
+        update_action = PermAction.query.filter(PermAction.code_action == "U").one()
         none_filter, self_filter, organism_filter, all_filter = [
-            TFilters.query.filter(TFilters.value_filter == str(i)).one() for i in [0, 1, 2, 3]
+            PermFilter.query.filter(PermFilter.value_filter == str(i)).one() for i in [0, 1, 2, 3]
         ]
         geonature_module, import_module = [
             TModules.query.filter(TModules.module_code == module_code).one()
@@ -284,7 +284,7 @@ class TestImports:
 
         # Add permission for it-self
         with db.session.begin_nested():
-            permission = CorRoleActionFilterModuleObject(
+            permission = Permission(
                 role=user,
                 action=update_action,
                 filter=self_filter,

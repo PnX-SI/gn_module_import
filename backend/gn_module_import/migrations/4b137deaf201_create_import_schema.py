@@ -15,7 +15,7 @@ from distutils.util import strtobool
 revision = "4b137deaf201"
 down_revision = None
 branch_labels = ("import",)
-depends_on = None
+depends_on = ("dde31e76ce45",)
 
 
 schema = "gn_imports"
