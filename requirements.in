@@ -1,5 +1,6 @@
 pandas<1.4  # panda 1.4 requires sqlalchemy>=1.4
 pyproj<3;python_version<"3.10"  # v3 require PROJ 7.2.0 but Debian 10 provide PROJ 5.2.0
+pyproj;python_version>="3.10"
 chardet
 jsonschema
 utils-flask-sqlalchemy>=0.3.0,<1.0.0
