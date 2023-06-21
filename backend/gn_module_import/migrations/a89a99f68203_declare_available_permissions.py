@@ -13,10 +13,29 @@ import sqlalchemy as sa
 revision = "a89a99f68203"
 down_revision = "5158afe602d2"
 branch_labels = None
-depends_on = ("f051b88a57fd",)
+depends_on = ("f1dd984bff97",)
 
 
 def upgrade():
+    op.execute(
+        """
+            INSERT INTO gn_permissions.t_objects (code_object, description_object)
+            VALUES (
+                'IMPORT', 
+                'Imports de données'
+            )
+        """
+    )
+    op.execute(
+        """
+            INSERT INTO gn_permissions.cor_object_module
+                (id_object, id_module)
+            VALUES(
+	            (SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'IMPORT'),
+	            (SELECT id_module FROM gn_commons.t_modules WHERE module_code = 'IMPORT')
+            )
+        """     
+    )
     op.execute(
         """
         INSERT INTO
@@ -36,16 +55,13 @@ def upgrade():
         FROM
             (
                 VALUES
-                     ('IMPORT', 'ALL', 'C', True, 'Créer des imports')
-                    ,('IMPORT', 'ALL', 'R', True, 'Voir les imports')
-                    ,('IMPORT', 'ALL', 'D', True, 'Supprimer un import')
-                    ,('IMPORT', 'IMPORT', 'C', True, 'Créer des imports')
+                    ('IMPORT', 'IMPORT', 'C', True, 'Créer des imports')
                     ,('IMPORT', 'IMPORT', 'R', True, 'Voir les imports')
-                    ,('IMPORT', 'IMPORT', 'D', True, 'Supprimer un import')
-                    ,('IMPORT', 'MAPPING', 'C', True, 'Créer un mapping')
-                    ,('IMPORT', 'MAPPING', 'R', True, 'Voir les mapping')
-                    ,('IMPORT', 'MAPPING', 'U', True, 'Modifier un mapping')
-                    ,('IMPORT', 'MAPPING', 'D', True, 'Supprimer des mapping')
+                    ,('IMPORT', 'IMPORT', 'D', True, 'Supprimer des imports')
+                    ,('IMPORT', 'MAPPING', 'C', True, 'Créer des mappings')
+                    ,('IMPORT', 'MAPPING', 'R', True, 'Voir les mappings')
+                    ,('IMPORT', 'MAPPING', 'U', True, 'Modifier des mappings')
+                    ,('IMPORT', 'MAPPING', 'D', True, 'Supprimer des mappings')
             ) AS v (module_code, object_code, action_code, scope_filter, label)
         JOIN
             gn_commons.t_modules m ON m.module_code = v.module_code
@@ -53,6 +69,33 @@ def upgrade():
             gn_permissions.t_objects o ON o.code_object = v.object_code
         JOIN
             gn_permissions.bib_actions a ON a.code_action = v.action_code
+        """
+    )
+    op.execute(
+        """
+        WITH new_all_permissions AS (
+            SELECT 
+	            p.id_role,
+	            p.id_action,
+	            p.id_module,
+	            (SELECT id_object FROM gn_permissions.t_objects WHERE code_object = 'IMPORT') as id_object,
+	            p.scope_value,
+	            p.sensitivity_filter
+            FROM 
+	            gn_permissions.t_permissions p
+            JOIN 
+	            gn_commons.t_modules m
+	            USING (id_module)
+            JOIN
+	            gn_permissions.t_objects o
+	            USING (id_object)
+            WHERE
+	            m.module_code = 'IMPORT'
+	            AND o.code_object = 'ALL'
+        )
+        INSERT INTO gn_permissions.t_permissions
+            (id_role, id_action, id_module, id_object, scope_value, sensitivity_filter)
+        SELECT * FROM new_all_permissions
         """
     )
     op.execute(
@@ -84,8 +127,6 @@ def upgrade():
             bp.id_permission = p.id_permission;
         """
     )
-
-
 def downgrade():
     op.execute(
         """
@@ -99,3 +140,22 @@ def downgrade():
             module_code = 'IMPORT'
         """
     )
+    op.execute(
+        """
+        DELETE FROM
+            gn_permissions.t_permissions p
+        USING
+            gn_commons.t_modules m,
+            gn_permissions.t_objects o
+        WHERE
+            p.id_module = m.id_module
+            AND
+            module_code = 'IMPORT'
+            AND
+            p.id_object = o.id_object
+            AND
+            code_object = 'IMPORT'
+        """
+    )
+    op.execute("DELETE FROM gn_permissions.t_objects WHERE code_object = 'IMPORT'")
+

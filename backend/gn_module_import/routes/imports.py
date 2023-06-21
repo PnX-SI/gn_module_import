@@ -439,7 +439,7 @@ def prepare_import(scope, import_id):
 
 
 @blueprint.route("/imports/<int:import_id>/preview_valid_data", methods=["GET"])
-@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT")
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
 def preview_valid_data(scope, import_id):
     imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
@@ -482,7 +482,7 @@ def preview_valid_data(scope, import_id):
 
 
 @blueprint.route("/imports/<int:import_id>/errors", methods=["GET"])
-@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT")
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
 def get_import_errors(scope, import_id):
     """
     .. :quickref: Import; Get errors of an import.
@@ -496,7 +496,7 @@ def get_import_errors(scope, import_id):
 
 
 @blueprint.route("/imports/<int:import_id>/source_file", methods=["GET"])
-@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT")
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
 def get_import_source_file(scope, import_id):
     imprt = TImports.query.options(undefer("source_file")).get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
@@ -512,7 +512,7 @@ def get_import_source_file(scope, import_id):
 
 
 @blueprint.route("/imports/<int:import_id>/invalid_rows", methods=["GET"])
-@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT")
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
 def get_import_invalid_rows_as_csv(scope, import_id):
     """
     .. :quickref: Import; Get invalid rows of an import as CSV.
@@ -609,7 +609,7 @@ def delete_import(scope, import_id):
 
 
 @blueprint.route("/export_pdf/<int:import_id>", methods=["POST"])
-@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT")
+@permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
 def export_pdf(scope, import_id):
     """
     Downloads the report in pdf format

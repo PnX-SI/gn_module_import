@@ -149,7 +149,7 @@ def delete_mapping(mappingtype, mapping, scope):
 
 
 @blueprint.route("/synthesis/fields", methods=["GET"])
-@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT")
+@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
 def get_synthesis_fields(scope):
     """
     .. :quickref: Import; Get synthesis fields.
