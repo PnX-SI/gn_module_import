@@ -291,6 +291,12 @@ def set_altitudes(imprt, fields):
             }
         )
     )
+    fields.update(
+        {
+            "altitude_min": BibFields.query.filter_by(name_field="altitude_min").one(),
+            "altitude_max": BibFields.query.filter_by(name_field="altitude_max").one(),
+        }
+    )
     db.session.execute(stmt)
 
 
@@ -447,57 +453,67 @@ def check_dates(imprt, fields):
 
 
 def check_altitudes(imprt, fields):
-    if "altitude_min" not in fields or "altitude_max" not in fields:
-        return
-    alti_min_field = fields["altitude_min"]
-    alti_max_field = fields["altitude_max"]
-    alti_min_synthese_field = getattr(ImportSyntheseData, alti_min_field.synthese_field)
-    alti_max_synthese_field = getattr(ImportSyntheseData, alti_max_field.synthese_field)
-    report_erroneous_rows(
-        imprt,
-        error_type="ALTI_MIN_SUP_ALTI_MAX",
-        error_column=alti_min_field.name_field,
-        whereclause=(alti_min_synthese_field > alti_max_synthese_field),
-    )
-    report_erroneous_rows(
-        imprt,
-        error_type="INVALID_INTEGER",
-        error_column=alti_min_field.name_field,
-        whereclause=(alti_min_synthese_field < 0),
-    )
-    report_erroneous_rows(
-        imprt,
-        error_type="INVALID_INTEGER",
-        error_column=alti_max_field.name_field,
-        whereclause=(alti_max_synthese_field < 0),
-    )
+    if "altitude_min" in fields:
+        alti_min_field = fields["altitude_min"]
+        alti_min_name_field = alti_min_field.name_field
+        alti_min_synthese_field = getattr(ImportSyntheseData, alti_min_field.synthese_field)
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_INTEGER",
+            error_column=alti_min_name_field,
+            whereclause=(alti_min_synthese_field < 0),
+        )
+
+    if "altitude_max" in fields:
+        alti_max_field = fields["altitude_max"]
+        alti_max_name_field = alti_max_field.name_field
+        alti_max_synthese_field = getattr(ImportSyntheseData, alti_max_field.synthese_field)
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_INTEGER",
+            error_column=alti_max_name_field,
+            whereclause=(alti_max_synthese_field < 0),
+        )
+
+    if "altitude_min" in fields and "altitude_max" in fields:
+        report_erroneous_rows(
+            imprt,
+            error_type="ALTI_MIN_SUP_ALTI_MAX",
+            error_column=alti_min_name_field,
+            whereclause=(alti_min_synthese_field > alti_max_synthese_field),
+        )
 
 
 def check_depths(imprt, fields):
-    if "depth_min" not in fields or "depth_max" not in fields:
-        return
-    depth_min_field = fields["depth_min"]
-    depth_max_field = fields["depth_max"]
-    depth_min_synthese_field = getattr(ImportSyntheseData, depth_min_field.synthese_field)
-    depth_max_synthese_field = getattr(ImportSyntheseData, depth_max_field.synthese_field)
-    report_erroneous_rows(
-        imprt,
-        error_type="DEPTH_MIN_SUP_ALTI_MAX",  # Yes, there is a typo in db...
-        error_column=depth_min_field.name_field,
-        whereclause=(depth_min_synthese_field > depth_max_synthese_field),
-    )
-    report_erroneous_rows(
-        imprt,
-        error_type="INVALID_INTEGER",
-        error_column=depth_min_field.name_field,
-        whereclause=(depth_min_synthese_field < 0),
-    )
-    report_erroneous_rows(
-        imprt,
-        error_type="INVALID_INTEGER",
-        error_column=depth_max_field.name_field,
-        whereclause=(depth_max_synthese_field < 0),
-    )
+    if "depth_min" in fields:
+        depth_min_field = fields["depth_min"]
+        depth_min_name_field = depth_min_field.name_field
+        depth_min_synthese_field = getattr(ImportSyntheseData, depth_min_field.synthese_field)
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_INTEGER",
+            error_column=depth_min_name_field,
+            whereclause=(depth_min_synthese_field < 0),
+        )
+
+    if "depth_max" in fields:
+        depth_max_field = fields["depth_max"]
+        depth_max_name_field = depth_max_field.name_field
+        depth_max_synthese_field = getattr(ImportSyntheseData, depth_max_field.synthese_field)
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_INTEGER",
+            error_column=depth_max_name_field,
+            whereclause=(depth_max_synthese_field < 0),
+        )
+
+    if "depth_min" in fields and "depth_max" in fields:
+        report_erroneous_rows(
+            imprt,
+            error_type="DEPTH_MIN_SUP_ALTI_MAX",  # Yes, there is a typo in db... Should be "DEPTH_MIN_SUP_DEPTH_MAX"
+            error_column=depth_min_name_field,
+            whereclause=(depth_min_synthese_field > depth_max_synthese_field),
+        )
 
 
 def check_digital_proof_urls(imprt, fields):
