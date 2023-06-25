@@ -2,6 +2,16 @@
 CHANGELOG
 =========
 
+2.2.0 (unreleased)
+------------------
+
+Nécessite la version 2.13.0 de GeoNature.
+
+**🚀 Nouveautés**
+
+* Compatibilité avec GeoNature 2.13.0 et la refonte des permissions, en définissant les permissions disponibles du module (#232)
+* Amélioration du contrôle des altitudes et des profondeurs (#445)
+
 2.1.0 (2023-03-27)
 ------------------
 
