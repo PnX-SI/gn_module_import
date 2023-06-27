@@ -16,12 +16,10 @@ from sqlalchemy.sql.expression import select
 from apptax.taxonomie.models import BibListes, CorNomListe, BibNoms
 from geonature.utils.env import db
 from geonature.tests.utils import set_logged_user_cookie, unset_logged_user_cookie
-from geonature.core.gn_permissions.tools import get_scopes_by_action as _get_scopes_by_action
-from geonature.core.gn_permissions.models import (
-    PermAction,
-    PermFilter,
-    Permission,
+from geonature.core.gn_permissions.tools import (
+    get_scopes_by_action as _get_scopes_by_action,
 )
+from geonature.core.gn_permissions.models import PermAction, PermFilter, Permission, PermObject
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_meta.models import TDatasets
 from geonature.core.gn_synthese.models import Synthese
@@ -281,15 +279,11 @@ class TestImports:
             module_code="IMPORT",
             object_code="IMPORT",
         )
-        print("TEST1")
-        print(get_scopes_by_action(user.id_role))
         assert get_scopes_by_action(user.id_role) == {action: 0 for action in "CRUVED"}
 
         update_action = PermAction.query.filter(PermAction.code_action == "U").one()
-        geonature_module, import_module = [
-            TModules.query.filter(TModules.module_code == module_code).one()
-            for module_code in ["GEONATURE", "IMPORT"]
-        ]
+        import_module = TModules.query.filter(TModules.module_code == "IMPORT").one()
+        import_object = PermObject.query.filter_by(code_object="IMPORT").one()
 
         # Add permission for it-self
         with db.session.begin_nested():
@@ -297,13 +291,15 @@ class TestImports:
                 role=user,
                 action=update_action,
                 scope_value=1,
-                module=geonature_module,
+                module=import_module,
+                object=import_object,
             )
             db.session.add(permission)
-            # del g.permissions_by_action[user.id_role]
+        # clean cache
+        g._permissions = {}
+        g._permissions_by_user = {}
         scope = get_scopes_by_action(user.id_role)["U"]
-        print(scope)
-        # assert scope == 1
+        assert scope == 1
         assert imprt.has_instance_permission(scope, user=user) is False
         imprt.authors.append(user)
         assert imprt.has_instance_permission(scope, user=user) is True
