@@ -56,6 +56,7 @@ valid_file_line_count = 6
 valid_file_column_count = 76
 valid_file_taxa_count = 2
 
+
 @pytest.fixture(scope="class")
 def g_permissions():
     """
