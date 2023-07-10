@@ -10,7 +10,14 @@ Nécessite la version 2.13.0 de GeoNature.
 **🚀 Nouveautés**
 
 * Compatibilité avec GeoNature 2.13.0 et la refonte des permissions, en définissant les permissions disponibles du module (#232)
+* Vérification des permissions sur le nouvel objet "IMPORT" et non plus sur le module lui-même
 * Amélioration du contrôle des altitudes et des profondeurs (#445)
+* Amélioration du rapport d'import en n'affichant le bloc "Données importées" seulement si l'import a un statut terminé (#457)
+* Compatibilité avec Debian 12 et Python 3.11, en adaptant la version de la dépendance "pyproj" selon la version de Python (#452)
+
+**🐛 Corrections**
+
+* Correction du lien de téléchargement du fichier source depuis la liste des imports (#456)
 
 2.1.0 (2023-03-27)
 ------------------
