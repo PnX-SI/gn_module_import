@@ -223,7 +223,9 @@ def import_data_to_synthese(imprt):
         "the_geom_point",
         "id_area_attachment",
     }
-    if imprt.fieldmapping.get("unique_id_sinp_generate", False):
+    if imprt.fieldmapping.get(
+        "unique_id_sinp_generate", current_app.config["IMPORT"]["DEFAULT_GENERATE_MISSING_UUID"]
+    ):
         generated_fields |= {"unique_id_sinp"}
     if imprt.fieldmapping.get("altitudes_generate", False):
         generated_fields |= {"altitude_min", "altitude_max"}
