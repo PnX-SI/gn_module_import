@@ -1,0 +1,12 @@
+date_min;nom_cite;observateurs;WKT;cd_nom;altitude_min;altitude_max;Erreur(s) attendue(s);additional_data
+2017-01-01;Ablette;Toto;POINT(6.5 44.85);67111;10;1000;Valide;"{""menu"": {
+  ""id"": ""file"",
+  ""value"": ""File"",
+  ""popup"": {
+    ""menuitem"": [
+      {""value"": ""New"", ""onclick"": ""CreateNewDoc()""},
+      {""value"": ""Open"", ""onclick"": ""OpenDoc()""},
+      {""value"": ""Close"", ""onclick"": ""CloseDoc()""}
+    ]
+  }
+}}"

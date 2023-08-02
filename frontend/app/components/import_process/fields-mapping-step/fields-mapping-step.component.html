@@ -193,21 +193,25 @@
                                             ></i>
 
                                         </small>
-                                        <select
-                                            class="form-control form-control-sm"
+                                        <ng-select
                                             id="{{field.name_field}}"
-                                            placeholder="Open this select menu"
+                                            [items]="sourceFields"
+                                            [multiple]="field.multi"
+                                            [clearable]="true"
+                                            [virtualScroll]="true"
                                             formControlName="{{field.name_field}}"
                                         >
-                                            <option [ngValue]="null"></option>
-                                            <option
-                                                *ngFor="let sourceField of sourceFields.sort()"
-                                                [ngClass]="{'in_use': mappedSourceFields.has(sourceField)}"
-                                                [value]="sourceField"
-                                            >
-                                                {{ sourceField }}
-                                            </option>
-                                        </select>
+                                            <ng-template ng-option-tmp let-item="item" let-index="index" let-search="searchTerm">
+                                                <div>
+                                                    <span 
+                                                        [ngClass]="{'in_use': mappedSourceFields.has(item)}"
+                                                        class="pre-wrap"
+                                                    >
+                                                        {{ item }}
+                                                    </span>
+                                                </div>
+                                            </ng-template>
+                                        </ng-select>
                                         <div
                                             *ngIf="syntheseForm.controls[field.name_field].hasError('required')"
                                             class="invalid-feedback d-block"

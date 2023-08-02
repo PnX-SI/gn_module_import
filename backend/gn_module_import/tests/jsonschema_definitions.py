@@ -50,6 +50,9 @@ jsonschema_definitions = {
             "display": {
                 "type": "boolean",
             },
+            "multi": {
+                "type": "boolean",
+            },
         },
         "required": [
             "id_field",
