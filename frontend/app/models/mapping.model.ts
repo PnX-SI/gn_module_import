@@ -11,7 +11,7 @@ interface Mapping {
 }
 
 export interface FieldMappingValues {
-    [propName: string]: string;
+    [propName: string]: string | string[];
 }
 
 
