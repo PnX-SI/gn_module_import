@@ -117,10 +117,7 @@ def get_import_list(scope):
         order_by = desc(order_by)
 
     imports = (
-        TImports.query.options(
-            contains_eager(TImports.dataset),
-            contains_eager(TImports.authors)
-        )
+        TImports.query.options(contains_eager(TImports.dataset), contains_eager(TImports.authors))
         .join(TImports.dataset, isouter=True)
         .join(TImports.authors, isouter=True)
         .filter_by_scope(scope)
