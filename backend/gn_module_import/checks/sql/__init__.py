@@ -8,7 +8,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from geoalchemy2.functions import (
     ST_Transform,
-    ST_GeomFromWKB,
+    ST_IsValid,
     ST_Centroid,
     ST_GeomFromText,
     ST_MakePoint,
@@ -701,6 +701,21 @@ def complete_others_geom_columns(imprt, fields):
     )
 
 
+def check_is_valid_geography(imprt, fields):
+    if "WKT" in fields:
+        where_clause = sa.and_(
+            ImportSyntheseData.src_WKT != None,
+            ImportSyntheseData.src_WKT != "",
+            sa.not_(ST_IsValid(ST_GeomFromText(ImportSyntheseData.src_WKT))),
+        )
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_GEOMETRY",
+            error_column="WKT",
+            whereclause=where_clause,
+        )
+
+
 def check_geography_outside(imprt, fields):
     id_area = current_app.config["IMPORT"]["ID_AREA_RESTRICTION"]
     where_clause = ()
@@ -735,24 +750,22 @@ def check_geography_outside(imprt, fields):
             )
 
         if "longitude" in fields and "latitude" in fields:
-            where_clause = sa.or_(
-                sa.and_(
-                    sa.not_(WKT_present),
-                    lat_long_present,
-                    area.geom.ST_Intersects(
-                        ST_Transform(
-                            ST_SetSRID(
-                                ST_MakePoint(
-                                    ImportSyntheseData.src_longitude.cast(sa.Float),
-                                    ImportSyntheseData.src_latitude.cast(sa.Float),
-                                ),
-                                imprt.srid,
+            where_clause = sa.and_(
+                sa.not_(WKT_present),
+                lat_long_present,
+                area.geom.ST_Intersects(
+                    ST_Transform(
+                        ST_SetSRID(
+                            ST_MakePoint(
+                                ImportSyntheseData.src_longitude.cast(sa.Float),
+                                ImportSyntheseData.src_latitude.cast(sa.Float),
                             ),
-                            local_srid,
+                            imprt.srid,
                         ),
-                    )
-                    == False,
+                        local_srid,
+                    ),
                 )
+                == False,
             )
             report_erroneous_rows(
                 imprt,

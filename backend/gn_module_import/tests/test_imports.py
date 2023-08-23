@@ -929,9 +929,10 @@ class TestImports:
                     "Champs géométriques",
                     frozenset([10, 13]),
                 ),
-                ("GEOMETRY_OUTSIDE", "WKT", frozenset([8, 11])),
+                ("GEOMETRY_OUTSIDE", "WKT", frozenset([8, 11, 15])),
                 ("GEOMETRY_OUTSIDE", "longitude", frozenset([9, 12])),
                 ("NO-GEOM", "Champs géométriques", frozenset([14])),
+                ("INVALID_GEOMETRY", "WKT", frozenset([15])),
             },
         )
 
