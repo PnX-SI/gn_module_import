@@ -28,6 +28,7 @@ from geonature.tests.fixtures import synthese_data, celery_eager
 from pypnusershub.db.models import User, Organisme
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
 from ref_geo.tests.test_ref_geo import has_french_dem
+from ref_geo.models import LAreas
 
 from gn_module_import.models import (
     TImports,
@@ -101,6 +102,11 @@ def assert_import_errors(imprt, expected_errors):
         assert erroneous_rows == expected_erroneous_rows
 
 
+@pytest.fixture()
+def sample_area():
+    return LAreas.query.filter(LAreas.area_name == "Bouches-du-Rhône").one()
+
+
 @pytest.fixture(scope="function")
 def imports(users):
     def create_import(authors=[]):
@@ -122,6 +128,11 @@ def no_default_nomenclatures(monkeypatch):
     monkeypatch.setitem(
         current_app.config["IMPORT"], "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE", False
     )
+
+
+@pytest.fixture()
+def area_restriction(monkeypatch, sample_area):
+    monkeypatch.setitem(current_app.config["IMPORT"], "ID_AREA_RESTRICTION", sample_area.id_area)
 
 
 @pytest.fixture()
@@ -926,7 +937,7 @@ class TestImports:
         assert r.status_code == 200, r.data
 
     @pytest.mark.parametrize("import_file_name", ["geom_file.csv"])
-    def test_import_geometry_file(self, prepared_import):
+    def test_import_geometry_file(self, area_restriction, prepared_import):
         assert_import_errors(
             prepared_import,
             {
@@ -939,6 +950,8 @@ class TestImports:
                     "Champs géométriques",
                     frozenset([10, 13]),
                 ),
+                ("GEOMETRY_OUTSIDE", "WKT", frozenset([8, 11])),
+                ("GEOMETRY_OUTSIDE", "longitude", frozenset([9, 12])),
                 ("NO-GEOM", "Champs géométriques", frozenset([14])),
             },
         )

@@ -146,23 +146,6 @@ def check_geography(
                 }
             )
 
-        if id_area is not None:
-            inside = df[mask & df["_geom"].notnull()]["_geom"].apply(
-                partial(check_geometry_inside_l_areas, id_area=id_area, geom_srid=file_srid)
-            )
-
-            is_outside = df[mask & ~inside]
-
-            if len(is_outside):
-                df.loc[mask & ~bound, "_geom"] = None
-                errors.append(
-                    {
-                        "error_code": "GEOMETRY_OUTSIDE",
-                        "column": column,
-                        "invalid_rows": is_outside,
-                    }
-                )
-
     if "codecommune" in fields:
         codecommune_field = fields["codecommune"].source_field
         codecommune_mask = df[codecommune_field].notnull()
