@@ -2,6 +2,14 @@
 CHANGELOG
 =========
 
+2.2.1 (unreleased)
+------------------
+
+**🐛 Corrections**
+
+* 
+
+
 2.2.0 (2023-08-23)
 ------------------
 
@@ -9,10 +17,10 @@ Nécessite la version 2.13.0 (ou plus) de GeoNature.
 
 **🚀 Nouveautés**
 
-* Compatibilité avec GeoNature 2.13.0 et la refonte des permissions, en définissant les permissions disponibles du module (#232)
+* Compatibilité avec GeoNature 2.13.0 et la refonte des permissions, en définissant les permissions disponibles du module (#451)
 * Vérification des permissions sur le nouvel objet "IMPORT" et non plus sur le module lui-même
-* Réimplémentation de la possibilité d'alimenter le champs ``additionnal_data`` de la synthèse avec un ou plusieurs champs du fichier source, ou depuis un champs JSON agrégeant déjà plusieurs informations (#165)
-* Réimplémentation du contrôle de validité des géométries des observations à importer (#453)
+* Ré-implémentation de la possibilité d'alimenter le champs ``additionnal_data`` de la synthèse avec un ou plusieurs champs du fichier source, ou depuis un champs JSON agrégeant déjà plusieurs informations (#165)
+* Ré-implémentation du contrôle de validité des géométries des observations à importer (#453)
 * Amélioration du contrôle des altitudes et des profondeurs (#445)
 * Amélioration du rapport d'import en n'affichant le bloc "Données importées" seulement si l'import a un statut terminé (#457)
 * Amélioration du tri dans la liste des imports en permettant de trier sur les colonnes avec une clé étrangère comme celle des JDD et des auteurs (#460)
