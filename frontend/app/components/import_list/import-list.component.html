@@ -53,7 +53,7 @@
                                     {{row.date_create_import |date:'dd-MM-yyyy'}}
                                 </ng-container>
                                 <ng-container *ngSwitchCase="'full_file_name'">
-                                    <a [routerLink]="" (click)="downloadSourceFile(row)">{{row[col.prop]}}</a>
+                                    <a href="javascript:void(0)" (click)="downloadSourceFile(row)">{{row[col.prop]}}</a>
                                 </ng-container>
                                 <ng-container *ngSwitchDefault>
                                     {{row[col.prop]}}

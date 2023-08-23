@@ -8,7 +8,8 @@ from flask import request, current_app, jsonify, g, stream_with_context, send_fi
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden, Gone
 from werkzeug.urls import url_quote
 from sqlalchemy import or_, func, desc
-from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
+from sqlalchemy.inspection import inspect
+from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager, class_mapper
 from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.sql.expression import collate
 
@@ -107,19 +108,18 @@ def get_import_list(scope):
                 func.lower(User.nom_role).contains(func.lower(search)),
             )
         )
-    # Todo: order_by foreign keys
     try:
-        order_by = getattr(TImports, sort)
+        order_by = get_foreign_key_attr(TImports, sort)
+        order_by = order_by() if callable(order_by) else order_by
     except AttributeError:
         raise BadRequest(f"Import field '{sort}' does not exist.")
     if sort_dir == "desc":
         order_by = desc(order_by)
+
     imports = (
-        TImports.query.options(
-            Load(TImports).raiseload("*"),
-            joinedload("authors"),
-            joinedload("dataset"),
-        )
+        TImports.query.options(contains_eager(TImports.dataset), contains_eager(TImports.authors))
+        .join(TImports.dataset, isouter=True)
+        .join(TImports.authors, isouter=True)
         .filter_by_scope(scope)
         .filter(or_(*filters))
         .order_by(order_by)
@@ -641,3 +641,17 @@ def export_pdf(scope, import_id):
         as_attachment=True,
         download_name="rapport.pdf",
     )
+
+
+def get_foreign_key_attr(obj, field: str):
+    """
+    Go through a object path to find the class to order on
+    """
+    elems = dict(inspect(obj).relationships.items())
+    fields = field.split(".")
+    if len(fields) == 1:
+        return getattr(obj, fields[0], "")
+    else:
+        first_field = fields[0]
+        remaining_fields = ".".join(fields[1:])
+        return get_foreign_key_attr(elems[first_field].mapper.class_, remaining_fields)

@@ -259,7 +259,7 @@
       </div>
       </div>
     </mat-expansion-panel>
-    <mat-expansion-panel class="card content row" [expanded]="true" *ngIf="validBbox || doughnutChartData.length > 0">
+    <mat-expansion-panel class="card content row" [expanded]="true" *ngIf="importStatus == 'TERMINE'">
       <mat-expansion-panel-header class="card-header">
         <div class="d-flex justify-content-start">
           <mat-panel-title>

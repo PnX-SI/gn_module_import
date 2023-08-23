@@ -6,7 +6,14 @@ from sqlalchemy.sql.expression import select, update, insert, literal
 from sqlalchemy.sql import column
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
-from geoalchemy2.functions import ST_Transform, ST_GeomFromWKB, ST_Centroid
+from geoalchemy2.functions import (
+    ST_Transform,
+    ST_IsValid,
+    ST_Centroid,
+    ST_GeomFromText,
+    ST_MakePoint,
+    ST_SetSRID,
+)
 from geonature.utils.env import db
 
 from gn_module_import.models import (
@@ -291,6 +298,12 @@ def set_altitudes(imprt, fields):
             }
         )
     )
+    fields.update(
+        {
+            "altitude_min": BibFields.query.filter_by(name_field="altitude_min").one(),
+            "altitude_max": BibFields.query.filter_by(name_field="altitude_max").one(),
+        }
+    )
     db.session.execute(stmt)
 
 
@@ -447,57 +460,67 @@ def check_dates(imprt, fields):
 
 
 def check_altitudes(imprt, fields):
-    if "altitude_min" not in fields or "altitude_max" not in fields:
-        return
-    alti_min_field = fields["altitude_min"]
-    alti_max_field = fields["altitude_max"]
-    alti_min_synthese_field = getattr(ImportSyntheseData, alti_min_field.synthese_field)
-    alti_max_synthese_field = getattr(ImportSyntheseData, alti_max_field.synthese_field)
-    report_erroneous_rows(
-        imprt,
-        error_type="ALTI_MIN_SUP_ALTI_MAX",
-        error_column=alti_min_field.name_field,
-        whereclause=(alti_min_synthese_field > alti_max_synthese_field),
-    )
-    report_erroneous_rows(
-        imprt,
-        error_type="INVALID_INTEGER",
-        error_column=alti_min_field.name_field,
-        whereclause=(alti_min_synthese_field < 0),
-    )
-    report_erroneous_rows(
-        imprt,
-        error_type="INVALID_INTEGER",
-        error_column=alti_max_field.name_field,
-        whereclause=(alti_max_synthese_field < 0),
-    )
+    if "altitude_min" in fields:
+        alti_min_field = fields["altitude_min"]
+        alti_min_name_field = alti_min_field.name_field
+        alti_min_synthese_field = getattr(ImportSyntheseData, alti_min_field.synthese_field)
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_INTEGER",
+            error_column=alti_min_name_field,
+            whereclause=(alti_min_synthese_field < 0),
+        )
+
+    if "altitude_max" in fields:
+        alti_max_field = fields["altitude_max"]
+        alti_max_name_field = alti_max_field.name_field
+        alti_max_synthese_field = getattr(ImportSyntheseData, alti_max_field.synthese_field)
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_INTEGER",
+            error_column=alti_max_name_field,
+            whereclause=(alti_max_synthese_field < 0),
+        )
+
+    if "altitude_min" in fields and "altitude_max" in fields:
+        report_erroneous_rows(
+            imprt,
+            error_type="ALTI_MIN_SUP_ALTI_MAX",
+            error_column=alti_min_name_field,
+            whereclause=(alti_min_synthese_field > alti_max_synthese_field),
+        )
 
 
 def check_depths(imprt, fields):
-    if "depth_min" not in fields or "depth_max" not in fields:
-        return
-    depth_min_field = fields["depth_min"]
-    depth_max_field = fields["depth_max"]
-    depth_min_synthese_field = getattr(ImportSyntheseData, depth_min_field.synthese_field)
-    depth_max_synthese_field = getattr(ImportSyntheseData, depth_max_field.synthese_field)
-    report_erroneous_rows(
-        imprt,
-        error_type="DEPTH_MIN_SUP_ALTI_MAX",  # Yes, there is a typo in db...
-        error_column=depth_min_field.name_field,
-        whereclause=(depth_min_synthese_field > depth_max_synthese_field),
-    )
-    report_erroneous_rows(
-        imprt,
-        error_type="INVALID_INTEGER",
-        error_column=depth_min_field.name_field,
-        whereclause=(depth_min_synthese_field < 0),
-    )
-    report_erroneous_rows(
-        imprt,
-        error_type="INVALID_INTEGER",
-        error_column=depth_max_field.name_field,
-        whereclause=(depth_max_synthese_field < 0),
-    )
+    if "depth_min" in fields:
+        depth_min_field = fields["depth_min"]
+        depth_min_name_field = depth_min_field.name_field
+        depth_min_synthese_field = getattr(ImportSyntheseData, depth_min_field.synthese_field)
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_INTEGER",
+            error_column=depth_min_name_field,
+            whereclause=(depth_min_synthese_field < 0),
+        )
+
+    if "depth_max" in fields:
+        depth_max_field = fields["depth_max"]
+        depth_max_name_field = depth_max_field.name_field
+        depth_max_synthese_field = getattr(ImportSyntheseData, depth_max_field.synthese_field)
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_INTEGER",
+            error_column=depth_max_name_field,
+            whereclause=(depth_max_synthese_field < 0),
+        )
+
+    if "depth_min" in fields and "depth_max" in fields:
+        report_erroneous_rows(
+            imprt,
+            error_type="DEPTH_MIN_SUP_ALTI_MAX",  # Yes, there is a typo in db... Should be "DEPTH_MIN_SUP_DEPTH_MAX"
+            error_column=depth_min_name_field,
+            whereclause=(depth_min_synthese_field > depth_max_synthese_field),
+        )
 
 
 def check_digital_proof_urls(imprt, fields):
@@ -676,3 +699,77 @@ def complete_others_geom_columns(imprt, fields):
             synchronize_session=False,
         )
     )
+
+
+def check_is_valid_geography(imprt, fields):
+    if "WKT" in fields:
+        where_clause = sa.and_(
+            ImportSyntheseData.src_WKT != None,
+            ImportSyntheseData.src_WKT != "",
+            sa.not_(ST_IsValid(ST_GeomFromText(ImportSyntheseData.src_WKT))),
+        )
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_GEOMETRY",
+            error_column="WKT",
+            whereclause=where_clause,
+        )
+
+
+def check_geography_outside(imprt, fields):
+    id_area = current_app.config["IMPORT"]["ID_AREA_RESTRICTION"]
+    where_clause = ()
+    if id_area:
+        local_srid = db.session.execute(sa.func.Find_SRID("ref_geo", "l_areas", "geom")).scalar()
+        area = LAreas.query.filter(LAreas.id_area == id_area).one()
+
+        lat_long_present = sa.and_(
+            ImportSyntheseData.src_longitude != None,
+            ImportSyntheseData.src_longitude != "",
+            ImportSyntheseData.src_latitude != None,
+            ImportSyntheseData.src_latitude != "",
+        )
+        WKT_present = sa.and_(ImportSyntheseData.src_WKT != None, ImportSyntheseData.src_WKT != "")
+
+        if "WKT" in fields:
+            where_clause = sa.and_(
+                WKT_present,
+                sa.not_(lat_long_present),
+                area.geom.ST_Intersects(
+                    ST_Transform(
+                        ST_GeomFromText(ImportSyntheseData.src_WKT, imprt.srid), local_srid
+                    )
+                )
+                == False,
+            )
+            report_erroneous_rows(
+                imprt,
+                error_type="GEOMETRY_OUTSIDE",
+                error_column="WKT",
+                whereclause=where_clause,
+            )
+
+        if "longitude" in fields and "latitude" in fields:
+            where_clause = sa.and_(
+                sa.not_(WKT_present),
+                lat_long_present,
+                area.geom.ST_Intersects(
+                    ST_Transform(
+                        ST_SetSRID(
+                            ST_MakePoint(
+                                ImportSyntheseData.src_longitude.cast(sa.Float),
+                                ImportSyntheseData.src_latitude.cast(sa.Float),
+                            ),
+                            imprt.srid,
+                        ),
+                        local_srid,
+                    ),
+                )
+                == False,
+            )
+            report_erroneous_rows(
+                imprt,
+                error_type="GEOMETRY_OUTSIDE",
+                error_column="longitude",
+                whereclause=where_clause,
+            )

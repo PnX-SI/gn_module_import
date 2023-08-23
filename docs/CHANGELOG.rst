@@ -2,6 +2,29 @@
 CHANGELOG
 =========
 
+2.2.0 (2023-08-23)
+------------------
+
+Nécessite la version 2.13.0 (ou plus) de GeoNature.
+
+**🚀 Nouveautés**
+
+* Compatibilité avec GeoNature 2.13.0 et la refonte des permissions, en définissant les permissions disponibles du module (#232)
+* Vérification des permissions sur le nouvel objet "IMPORT" et non plus sur le module lui-même
+* Réimplémentation de la possibilité d'alimenter le champs ``additionnal_data`` de la synthèse avec un ou plusieurs champs du fichier source, ou depuis un champs JSON agrégeant déjà plusieurs informations (#165)
+* Réimplémentation du contrôle de validité des géométries des observations à importer (#453)
+* Amélioration du contrôle des altitudes et des profondeurs (#445)
+* Amélioration du rapport d'import en n'affichant le bloc "Données importées" seulement si l'import a un statut terminé (#457)
+* Amélioration du tri dans la liste des imports en permettant de trier sur les colonnes avec une clé étrangère comme celle des JDD et des auteurs (#460)
+* Amélioration des performances (x10) du contrôle d'intersection des géométries des observations à importer avec le zonage optionnellement défini dans le paramètre ``ID_AREA_RESTRICTION`` (#423)
+* Compatibilité avec Debian 12 et Python 3.11, en adaptant la version de la dépendance "pyproj" selon la version de Python (#452)
+
+**🐛 Corrections**
+
+* Correction du lien de téléchargement du fichier source depuis la liste des imports (#456)
+* Correction de la génération des UUID quand le champs permettant de les générer ou non est masqué et que le paramètre ``DEFAULT_GENERATE_MISSING_UUID`` est à ``True`` (#447)
+
+
 2.1.0 (2023-03-27)
 ------------------
 
