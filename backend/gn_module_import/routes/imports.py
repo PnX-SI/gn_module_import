@@ -533,14 +533,14 @@ def get_import_invalid_rows_as_csv(scope, import_id):
         inputfile = BytesIO(imprt.source_file)
         yield inputfile.readline()  # header
         line_no = 1
-        n_qchar = 0             # Initiation de la variable dénobrant le nombre de quotechar
+        n_qchar = 0  # Initiation de la variable dénobrant le nombre de quotechar
         for row in inputfile:
-            n_qchar += row.count(b'"')     # nb quotechar dans la ligne binaire
+            n_qchar += row.count(b'"')  # nb quotechar dans la ligne binaire
             if line_no in imprt.erroneous_rows:
                 yield row
-            if n_qchar % 2 == 0:           # si nb quotechar est pair
+            if n_qchar % 2 == 0:  # si nb quotechar est pair
                 line_no += 1
-                n_qchar = 0                # Ré-initialisation de n_qchar
+                n_qchar = 0  # Ré-initialisation de n_qchar
 
     response = current_app.response_class(
         generate_invalid_rows_csv(),
