@@ -530,13 +530,20 @@ def get_import_invalid_rows_as_csv(scope, import_id):
 
     @stream_with_context
     def generate_invalid_rows_csv():
-        inputfile = BytesIO(imprt.source_file)
-        yield inputfile.readline()  # header
+        sourcefile = StringIO(imprt.source_file.decode(imprt.encoding))
+        destfile = StringIO()
+        csvreader = csv.reader(sourcefile, delimiter=imprt.separator)
+        csvwriter = csv.writer(destfile, dialect=csvreader.dialect, lineterminator="\n")
         line_no = 0
-        for row in inputfile:
+        for row in csvreader:
+            # line_no == 0 → csv header
+            if line_no == 0 or line_no in imprt.erroneous_rows:
+                csvwriter.writerow(row)
+                destfile.seek(0)
+                yield destfile.read().encode(imprt.encoding)
+                destfile.seek(0)
+                destfile.truncate()
             line_no += 1
-            if line_no in imprt.erroneous_rows:
-                yield row
 
     response = current_app.response_class(
         generate_invalid_rows_csv(),

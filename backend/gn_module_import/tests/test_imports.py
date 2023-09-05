@@ -4,6 +4,7 @@ from functools import partial
 from operator import or_
 from functools import reduce
 from unittest.mock import patch
+import csv
 
 import pytest
 from flask import g, url_for, current_app
@@ -1136,6 +1137,29 @@ class TestImports:
         # Le champs est vide, mais on doit utiliser la valeur du mapping,
         # et ne pas l’écraser avec la valeur par défaut
         assert obs3.nomenclature_life_stage.label_default == "Alevin"
+
+    @pytest.mark.parametrize("import_file_name", ["multiline_comment_file.csv"])
+    def test_import_multiline_comment_file(self, users, imported_import):
+        assert_import_errors(
+            imported_import,
+            {
+                ("MISSING_VALUE", "cd_nom", frozenset({1})),
+                ("CD_NOM_NOT_FOUND", "cd_nom", frozenset({2})),
+            },
+        )
+
+        obs = Synthese.query.filter_by(source=imported_import.source).first()
+        assert obs.comment_description == "Cette ligne\nest valide"
+
+        set_logged_user_cookie(self.client, users["user"])
+        r = self.client.get(
+            url_for("import.get_import_invalid_rows_as_csv", import_id=imported_import.id_import)
+        )
+        assert r.status_code == 200, r.data
+        csvfile = StringIO(r.data.decode("utf-8"))
+        csvreader = csv.DictReader(csvfile, delimiter=";")
+        rows = list(csvreader)
+        assert rows[1]["comment_description"] == "Ligne erronée :\nCD_NOM_NOT_FOUND"
 
     def test_export_pdf(self, users, imports):
         user = users["user"]
