@@ -170,8 +170,24 @@ def check_nomenclatures(imprt, fields):
 def set_column_from_referential(imprt, field, reference, error_type, whereclause=None):
     source_field = getattr(ImportSyntheseData, field.source_field)
     synthese_field = getattr(ImportSyntheseData, field.synthese_field)
+    cast_cte = (
+        select(
+            [
+                ImportSyntheseData.id_import,
+                func.try_cast_int(source_field, -1).label("source_field"),
+                ImportSyntheseData.line_no,
+            ]
+        )
+        .where(
+            ImportSyntheseData.id_import == imprt.id_import,
+        )
+        .cte("cast_cte")
+    )
+
     stmt = (
         update(ImportSyntheseData)
+        .where(ImportSyntheseData.id_import == cast_cte.c.id_import)
+        .where(ImportSyntheseData.line_no == cast_cte.c.line_no)
         .values(
             {
                 synthese_field: reference,
@@ -179,7 +195,7 @@ def set_column_from_referential(imprt, field, reference, error_type, whereclause
         )
         .where(
             sa.and_(
-                sa.cast(source_field, sa.Integer) == reference,
+                cast_cte.c.source_field == reference,
                 ImportSyntheseData.id_import == imprt.id_import,
             )
         )
@@ -195,6 +211,18 @@ def set_column_from_referential(imprt, field, reference, error_type, whereclause
             source_field != None,
             source_field != "",
             synthese_field == None,
+        ),
+    )
+    report_erroneous_rows(
+        imprt,
+        error_type="INVALID_INTEGER",
+        error_column=field.name_field,
+        whereclause=sa.and_(
+            ImportSyntheseData.id_import == cast_cte.c.id_import,
+            ImportSyntheseData.line_no == cast_cte.c.line_no,
+            source_field != None,
+            source_field != "",
+            cast_cte.c.source_field == -1,
         ),
     )
 
