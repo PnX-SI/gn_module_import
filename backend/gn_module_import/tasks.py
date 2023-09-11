@@ -104,8 +104,8 @@ def do_import_checks(self, import_id):
         check_depths,
         check_digital_proof_urls,
         check_mandatory_fields,
-        check_geography_outside,
         check_is_valid_geography,
+        check_geography_outside,
     ]
     with start_sentry_child(op="check.sql", description="run all checks"):
         for i, check in enumerate(sql_checks):

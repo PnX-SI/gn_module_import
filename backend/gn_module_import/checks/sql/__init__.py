@@ -703,10 +703,11 @@ def complete_others_geom_columns(imprt, fields):
 
 def check_is_valid_geography(imprt, fields):
     if "WKT" in fields:
+        # It is useless to check valid WKT when created from X/Y
         where_clause = sa.and_(
             ImportSyntheseData.src_WKT != None,
             ImportSyntheseData.src_WKT != "",
-            sa.not_(ST_IsValid(ST_GeomFromText(ImportSyntheseData.src_WKT))),
+            sa.not_(ST_IsValid(ImportSyntheseData.the_geom_4326)),
         )
         report_erroneous_rows(
             imprt,
@@ -718,58 +719,15 @@ def check_is_valid_geography(imprt, fields):
 
 def check_geography_outside(imprt, fields):
     id_area = current_app.config["IMPORT"]["ID_AREA_RESTRICTION"]
-    where_clause = ()
     if id_area:
         local_srid = db.session.execute(sa.func.Find_SRID("ref_geo", "l_areas", "geom")).scalar()
         area = LAreas.query.filter(LAreas.id_area == id_area).one()
-
-        lat_long_present = sa.and_(
-            ImportSyntheseData.src_longitude != None,
-            ImportSyntheseData.src_longitude != "",
-            ImportSyntheseData.src_latitude != None,
-            ImportSyntheseData.src_latitude != "",
+        report_erroneous_rows(
+            imprt,
+            error_type="GEOMETRY_OUTSIDE",
+            error_column="Champs géométriques",
+            whereclause=sa.and_(
+                ImportSyntheseData.valid == True,
+                ImportSyntheseData.the_geom_local.ST_Disjoint(area.geom),
+            ),
         )
-        WKT_present = sa.and_(ImportSyntheseData.src_WKT != None, ImportSyntheseData.src_WKT != "")
-
-        if "WKT" in fields:
-            where_clause = sa.and_(
-                WKT_present,
-                sa.not_(lat_long_present),
-                area.geom.ST_Intersects(
-                    ST_Transform(
-                        ST_GeomFromText(ImportSyntheseData.src_WKT, imprt.srid), local_srid
-                    )
-                )
-                == False,
-            )
-            report_erroneous_rows(
-                imprt,
-                error_type="GEOMETRY_OUTSIDE",
-                error_column="WKT",
-                whereclause=where_clause,
-            )
-
-        if "longitude" in fields and "latitude" in fields:
-            where_clause = sa.and_(
-                sa.not_(WKT_present),
-                lat_long_present,
-                area.geom.ST_Intersects(
-                    ST_Transform(
-                        ST_SetSRID(
-                            ST_MakePoint(
-                                ImportSyntheseData.src_longitude.cast(sa.Float),
-                                ImportSyntheseData.src_latitude.cast(sa.Float),
-                            ),
-                            imprt.srid,
-                        ),
-                        local_srid,
-                    ),
-                )
-                == False,
-            )
-            report_erroneous_rows(
-                imprt,
-                error_type="GEOMETRY_OUTSIDE",
-                error_column="longitude",
-                whereclause=where_clause,
-            )
