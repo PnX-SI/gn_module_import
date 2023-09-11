@@ -955,11 +955,11 @@ class TestImports:
                 (
                     "MULTIPLE_ATTACHMENT_TYPE_CODE",
                     "Champs géométriques",
-                    frozenset([10, 13]),
+                    frozenset([10, 14]),
                 ),
-                ("NO-GEOM", "Champs géométriques", frozenset([14])),
-                ("INVALID_GEOMETRY", "WKT", frozenset([15])),
-                ("GEOMETRY_OUTSIDE", "Champs géométriques", frozenset([16, 17])),
+                ("NO-GEOM", "Champs géométriques", frozenset([15])),
+                ("INVALID_GEOMETRY", "WKT", frozenset([16])),
+                ("GEOMETRY_OUTSIDE", "Champs géométriques", frozenset([17, 18])),
             },
         )
 
