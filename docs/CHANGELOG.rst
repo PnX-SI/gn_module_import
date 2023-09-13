@@ -2,12 +2,17 @@
 CHANGELOG
 =========
 
-2.2.1 (unreleased)
+2.2.1 (2023-09-13)
 ------------------
+
+**🚀 Nouveautés**
+
+* Prise en charge des virgules comme séparateur des décimales dans les coordonnées des champs X et Y (#473, par @bouttier)
 
 **🐛 Corrections**
 
-* 
+* Correction du rapport d'erreur quand des lignes contiennent des sauts de ligne (#464, par @cen-cgeier et @bouttier)
+* Correction de la migration de suppression du schéma ``gn_import_archives`` (#471, par @joelclems)
 
 
 2.2.0 (2023-08-23)
