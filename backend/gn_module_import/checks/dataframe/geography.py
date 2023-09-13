@@ -36,7 +36,7 @@ def wkt_to_geometry(value):
 
 def x_y_to_geometry(x, y):
     try:
-        return Point(float(x), float(y))
+        return Point(float(x.replace(",", ".")), float(y.replace(",", ".")))
     except Exception:
         return None
 
