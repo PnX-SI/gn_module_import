@@ -57,6 +57,7 @@ def upgrade():
                 VALUES
                     ('IMPORT', 'IMPORT', 'C', True, 'Créer des imports')
                     ,('IMPORT', 'IMPORT', 'R', True, 'Voir les imports')
+                    ,('IMPORT', 'IMPORT', 'U', True, 'Modifier des imports')
                     ,('IMPORT', 'IMPORT', 'D', True, 'Supprimer des imports')
                     ,('IMPORT', 'MAPPING', 'C', True, 'Créer des mappings')
                     ,('IMPORT', 'MAPPING', 'R', True, 'Voir les mappings')

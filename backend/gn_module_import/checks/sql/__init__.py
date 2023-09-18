@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 
 from flask import current_app
 from sqlalchemy import func
@@ -186,7 +186,7 @@ def set_column_from_referential(imprt, field, reference, error_type, whereclause
         )
         .where(
             sa.and_(
-                sa.cast(source_field, sa.Integer) == reference,
+                source_field == sa.cast(reference, sa.Unicode),
                 ImportSyntheseData.id_import == imprt.id_import,
             )
         )
