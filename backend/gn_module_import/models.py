@@ -30,7 +30,7 @@ from geonature.utils.celery import celery_app
 from geonature.core.gn_permissions.tools import get_scopes_by_action
 from geonature.core.gn_synthese.models import TSources
 from geonature.core.gn_commons.models import TModules
-
+from geonature.core.gn_meta.models import TDatasets
 from pypnnomenclature.models import BibNomenclaturesTypes, TNomenclatures
 from pypnusershub.db.models import User
 from apptax.taxonomie.models import Taxref
@@ -199,7 +199,7 @@ class TImports(InstancePermissionMixin, db.Model):
     )
     loaded = db.Column(db.Boolean, nullable=False, default=False)
     processed = db.Column(db.Boolean, nullable=False, default=False)
-    dataset = db.relationship("TDatasets", lazy="joined")
+    dataset = db.relationship(TDatasets, lazy="joined")
     source_file = deferred(db.Column(db.LargeBinary))
     columns = db.Column(ARRAY(db.Unicode))
     # keys are target names, values are source names
@@ -223,6 +223,10 @@ class TImports(InstancePermissionMixin, db.Model):
         order_by="ImportSyntheseData.line_no",
         cascade="all, delete-orphan",
     )
+
+    def authors_name():
+        order_by = getattr(User, "nom_role")
+        return order_by
 
     @property
     def cruved(self):

@@ -6,7 +6,14 @@ from sqlalchemy.sql.expression import select, update, insert, literal
 from sqlalchemy.sql import column
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
-from geoalchemy2.functions import ST_Transform, ST_GeomFromWKB, ST_Centroid
+from geoalchemy2.functions import (
+    ST_Transform,
+    ST_IsValid,
+    ST_Centroid,
+    ST_GeomFromText,
+    ST_MakePoint,
+    ST_SetSRID,
+)
 from geonature.utils.env import db
 
 from gn_module_import.models import (
@@ -692,3 +699,35 @@ def complete_others_geom_columns(imprt, fields):
             synchronize_session=False,
         )
     )
+
+
+def check_is_valid_geography(imprt, fields):
+    if "WKT" in fields:
+        # It is useless to check valid WKT when created from X/Y
+        where_clause = sa.and_(
+            ImportSyntheseData.src_WKT != None,
+            ImportSyntheseData.src_WKT != "",
+            sa.not_(ST_IsValid(ImportSyntheseData.the_geom_4326)),
+        )
+        report_erroneous_rows(
+            imprt,
+            error_type="INVALID_GEOMETRY",
+            error_column="WKT",
+            whereclause=where_clause,
+        )
+
+
+def check_geography_outside(imprt, fields):
+    id_area = current_app.config["IMPORT"]["ID_AREA_RESTRICTION"]
+    if id_area:
+        local_srid = db.session.execute(sa.func.Find_SRID("ref_geo", "l_areas", "geom")).scalar()
+        area = LAreas.query.filter(LAreas.id_area == id_area).one()
+        report_erroneous_rows(
+            imprt,
+            error_type="GEOMETRY_OUTSIDE",
+            error_column="Champs géométriques",
+            whereclause=sa.and_(
+                ImportSyntheseData.valid == True,
+                ImportSyntheseData.the_geom_local.ST_Disjoint(area.geom),
+            ),
+        )

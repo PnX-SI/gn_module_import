@@ -29,7 +29,7 @@ def upgrade():
 
     for archive_table in list(filter(lambda x: x != "cor_import_archives", archive_tables)):
         # Read table with pandas
-        op.drop_column(archive_table, "gn_pk", "gn_import_archives")
+        op.drop_column(archive_table, "gn_pk", schema="gn_import_archives")
         arch_df = pd.read_sql_table(archive_table, con=conn, schema="gn_import_archives")
         update_id = conn.execute(
             imprt.update()

@@ -36,7 +36,7 @@ def wkt_to_geometry(value):
 
 def x_y_to_geometry(x, y):
     try:
-        return Point(float(x), float(y))
+        return Point(float(x.replace(",", ".")), float(y.replace(",", ".")))
     except Exception:
         return None
 
@@ -145,23 +145,6 @@ def check_geography(
                     "invalid_rows": out_of_bound,
                 }
             )
-
-        if id_area is not None:
-            inside = df[mask & df["_geom"].notnull()]["_geom"].apply(
-                partial(check_geometry_inside_l_areas, id_area=id_area, geom_srid=file_srid)
-            )
-
-            is_outside = df[mask & ~inside]
-
-            if len(is_outside):
-                df.loc[mask & ~bound, "_geom"] = None
-                errors.append(
-                    {
-                        "error_code": "GEOMETRY_OUTSIDE",
-                        "column": column,
-                        "invalid_rows": is_outside,
-                    }
-                )
 
     if "codecommune" in fields:
         codecommune_field = fields["codecommune"].source_field

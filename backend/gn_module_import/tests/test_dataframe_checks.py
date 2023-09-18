@@ -190,37 +190,6 @@ class TestChecks:
             ],
         )
 
-    def test_check_geography_outside(self, imprt, sample_area):
-        fields = get_fields(
-            [
-                "WKT",
-                "longitude",
-                "latitude",
-                "codecommune",
-                "codemaille",
-                "codedepartement",
-            ]
-        )
-        df = pd.DataFrame(
-            [
-                ["Point(600000 7000000)", None, None, None, None, None],
-                [None, "600000", "7000000", None, None, None],
-            ],
-            columns=[field.source_field for field in fields.values()],
-        )
-
-        errors = check_geography(df, fields, file_srid=imprt.srid, id_area=sample_area.id_area)
-
-        assert_errors(
-            errors,
-            expected=[
-                Error(error_code="GEOMETRY_OUTSIDE", column="WKT", invalid_rows=frozenset([0])),
-                Error(
-                    error_code="GEOMETRY_OUTSIDE", column="longitude", invalid_rows=frozenset([1])
-                ),
-            ],
-        )
-
     def test_check_types(self, imprt):
         uuid = "82ff094c-c3b3-11eb-9804-bfdc95e73f38"
         fields = get_fields(
