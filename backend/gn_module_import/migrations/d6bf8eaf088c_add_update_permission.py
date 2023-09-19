@@ -1,4 +1,4 @@
-"""add update permission
+"""add missing update permission for those that had installed 2.2.0 or 2.2.1 versions
 
 Revision ID: d6bf8eaf088c
 Revises: 8611f7aab8dc
