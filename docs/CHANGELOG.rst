@@ -2,6 +2,19 @@
 CHANGELOG
 =========
 
+2.2.2 (2023-09-19)
+------------------
+
+**🐛 Corrections**
+
+* Ajout de la permissions disponible manquante "Modifier les imports" (#477)
+
+**⚠️ Notes de version**
+
+* Si vous aviez installé la version 2.2.0 ou 2.2.1, la permission disponible manquante "Modifier les imports" sera ajoutée automatiquement.
+  Cependant, il est possible que vous deviez l'associer manuellement aux utilisateurs qui en disposaient auparavant.
+
+
 2.2.1 (2023-09-13)
 ------------------
 
