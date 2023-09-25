@@ -40,6 +40,7 @@ export class ImportReportComponent implements OnInit {
     "tribu",
     "group1_inpn",
     "group2_inpn",
+    "group3_inpn",
   ];
   public importData: Import | null;
   public expansionPanelHeight: string = "60px";
