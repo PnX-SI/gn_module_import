@@ -23,8 +23,8 @@ from gn_module_import.checks.sql import (
     do_nomenclatures_mapping,
     check_nomenclatures,
     complete_others_geom_columns,
-    set_cd_nom,
-    set_cd_hab,
+    check_cd_nom,
+    check_cd_hab,
     set_altitudes,
     set_uuid,
     check_mandatory_fields,
@@ -63,9 +63,7 @@ def do_import_checks(self, import_id):
         field.name_field: field
         for field in selected_fields
         if (  # handled in SQL, exclude from dataframe
-            field.source_field is not None
-            and field.mnemonique is None
-            and field.name_field not in ["cd_nom", "cd_hab"]
+            field.source_field is not None and field.mnemonique is None
         )
     }
 
@@ -94,8 +92,8 @@ def do_import_checks(self, import_id):
         complete_others_geom_columns,
         do_nomenclatures_mapping,
         check_nomenclatures,
-        set_cd_nom,
-        set_cd_hab,
+        check_cd_nom,
+        check_cd_hab,
         check_duplicates_source_pk,
         set_altitudes,
         check_altitudes,

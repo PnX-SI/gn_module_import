@@ -970,7 +970,9 @@ class TestImports:
             {
                 ("MISSING_VALUE", "cd_nom", frozenset([1, 4, 5])),
                 ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([2, 6, 8, 10])),
-                ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([4, 6, 7])),
+                ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([6, 7])),
+                ("INVALID_INTEGER", "cd_nom", frozenset([11])),
+                ("INVALID_INTEGER", "cd_hab", frozenset([12])),
             },
         )
 
