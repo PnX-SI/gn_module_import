@@ -47,6 +47,7 @@ class ImportModule(TModules):
         return f"/import/process/upload?datasetId={dataset.id_dataset}"
 
     generate_input_url_for_dataset.label = "Importer des données"
+    generate_input_url_for_dataset.object_code = "IMPORT"
 
     def generate_module_url_for_source(self, source):
         id_import = re.search(r"^Import\(id=(?P<id>\d+)\)$", source.name_source).group("id")
