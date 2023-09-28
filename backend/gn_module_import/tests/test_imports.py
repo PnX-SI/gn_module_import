@@ -125,6 +125,11 @@ def imports(users):
 
 
 @pytest.fixture()
+def small_batch(monkeypatch):
+    monkeypatch.setitem(current_app.config["IMPORT"], "DATAFRAME_BATCH_SIZE", 3)
+
+
+@pytest.fixture()
 def no_default_nomenclatures(monkeypatch):
     monkeypatch.setitem(
         current_app.config["IMPORT"], "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE", False
@@ -247,7 +252,7 @@ def content_mapped_import(client, import_file_name, loaded_import):
 
 
 @pytest.fixture()
-def prepared_import(client, content_mapped_import):
+def prepared_import(client, content_mapped_import, small_batch):
     set_logged_user_cookie(client, content_mapped_import.authors[0])
     r = client.post(url_for("import.prepare_import", import_id=content_mapped_import.id_import))
     assert r.status_code == 200, r.data
