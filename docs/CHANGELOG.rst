@@ -2,6 +2,24 @@
 CHANGELOG
 =========
 
+2.2.3 (2023-09-28)
+------------------
+
+Nécessite la version 2.13.2 (ou plus) de GeoNature.
+
+**🚀 Nouveautés**
+
+* Amélioration des performances de la vérification des cd_nom des observations importées (#424)
+* Amélioration des performances du chargement des données pour leur contrôle (#484)
+* Amélioration des performances de l'analyse des colonnes du fichier source (#486)
+* Amélioration des tests automatisés
+
+**🐛 Corrections**
+
+* Correction des permissions de la liste des JDD auxquels un utilisateur peut associer un import (#481)
+* Correction du bouton d'import dans un JDD depuis sa fiche dans le module Métadonnées (#483)
+
+
 2.2.2 (2023-09-19)
 ------------------
 

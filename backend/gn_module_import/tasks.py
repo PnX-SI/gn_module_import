@@ -1,4 +1,5 @@
 from datetime import datetime
+from math import ceil
 
 from flask import current_app
 from sqlalchemy import func, distinct
@@ -16,6 +17,7 @@ from gn_module_import.checks.dataframe import run_all_checks
 from gn_module_import.checks.dataframe.geography import set_the_geom_column
 from gn_module_import.utils import (
     load_import_data_in_dataframe,
+    mark_all_rows_as_invalid,
     update_import_data_from_dataframe,
     import_data_to_synthese,
 )
@@ -23,11 +25,10 @@ from gn_module_import.checks.sql import (
     do_nomenclatures_mapping,
     check_nomenclatures,
     complete_others_geom_columns,
-    set_cd_nom,
-    set_cd_hab,
+    check_cd_nom,
+    check_cd_hab,
     set_altitudes,
     set_uuid,
-    check_mandatory_fields,
     check_duplicates_source_pk,
     check_dates,
     check_altitudes,
@@ -63,30 +64,46 @@ def do_import_checks(self, import_id):
         field.name_field: field
         for field in selected_fields
         if (  # handled in SQL, exclude from dataframe
-            field.source_field is not None
-            and field.mnemonique is None
-            and field.name_field not in ["cd_nom", "cd_hab"]
+            field.source_field is not None and field.mnemonique is None
         )
     }
 
-    # Checks on dataframe
-    logger.info("Loading import data in dataframe…")
-    with start_sentry_child(op="check.df", description="load dataframe"):
-        df = load_import_data_in_dataframe(imprt, fields)
+    with start_sentry_child(op="check.df", description="mark_all"):
+        mark_all_rows_as_invalid(imprt)
     self.update_state(state="PROGRESS", meta={"progress": 0.1})
-    logger.info("Running dataframe checks…")
-    with start_sentry_child(op="check.df", description="run all checks"):
-        run_all_checks(imprt, fields, df)
-    self.update_state(state="PROGRESS", meta={"progress": 0.2})
-    logger.info("Completing geometric columns…")
-    with start_sentry_child(op="check.df", description="set geom column"):
-        set_the_geom_column(imprt, fields, df)
-    self.update_state(state="PROGRESS", meta={"progress": 0.3})
-    logger.info("Updating import data from dataframe…")
-    with start_sentry_child(op="check.df", description="save dataframe"):
-        update_import_data_from_dataframe(imprt, fields, df)
-    self.update_state(state="PROGRESS", meta={"progress": 0.4})
 
+    batch_size = current_app.config["IMPORT"]["DATAFRAME_BATCH_SIZE"]
+    batch_count = ceil(imprt.source_count / batch_size)
+
+    def update_batch_progress(batch, step):
+        start = 0.1
+        end = 0.4
+        step_count = 4
+        progress = start + ((batch + 1) / batch_count) * (step / step_count) * (end - start)
+        self.update_state(state="PROGRESS", meta={"progress": progress})
+
+    for batch in range(batch_count):
+        offset = batch * batch_size
+        batch_fields = fields.copy()
+        # Checks on dataframe
+        logger.info(f"[{batch+1}/{batch_count}] Loading import data in dataframe…")
+        with start_sentry_child(op="check.df", description="load dataframe"):
+            df = load_import_data_in_dataframe(imprt, batch_fields, offset, batch_size)
+        update_batch_progress(batch, 1)
+        logger.info(f"[{batch+1}/{batch_count}] Running dataframe checks…")
+        with start_sentry_child(op="check.df", description="run all checks"):
+            run_all_checks(imprt, batch_fields, df)
+        update_batch_progress(batch, 2)
+        logger.info(f"[{batch+1}/{batch_count}] Completing geometric columns…")
+        with start_sentry_child(op="check.df", description="set geom column"):
+            set_the_geom_column(imprt, batch_fields, df)
+        update_batch_progress(batch, 3)
+        logger.info(f"[{batch+1}/{batch_count}] Updating import data from dataframe…")
+        with start_sentry_child(op="check.df", description="save dataframe"):
+            update_import_data_from_dataframe(imprt, batch_fields, df)
+        update_batch_progress(batch, 4)
+
+    fields = batch_fields  # retrive fields added during dataframe checks
     fields.update({field.name_field: field for field in selected_fields})
 
     # Checks in SQL
@@ -94,8 +111,8 @@ def do_import_checks(self, import_id):
         complete_others_geom_columns,
         do_nomenclatures_mapping,
         check_nomenclatures,
-        set_cd_nom,
-        set_cd_hab,
+        check_cd_nom,
+        check_cd_hab,
         check_duplicates_source_pk,
         set_altitudes,
         check_altitudes,
@@ -103,7 +120,6 @@ def do_import_checks(self, import_id):
         check_dates,
         check_depths,
         check_digital_proof_urls,
-        check_mandatory_fields,
         check_is_valid_geography,
         check_geography_outside,
     ]

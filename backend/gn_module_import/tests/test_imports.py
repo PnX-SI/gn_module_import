@@ -125,6 +125,11 @@ def imports(users):
 
 
 @pytest.fixture()
+def small_batch(monkeypatch):
+    monkeypatch.setitem(current_app.config["IMPORT"], "DATAFRAME_BATCH_SIZE", 3)
+
+
+@pytest.fixture()
 def no_default_nomenclatures(monkeypatch):
     monkeypatch.setitem(
         current_app.config["IMPORT"], "FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE", False
@@ -247,7 +252,7 @@ def content_mapped_import(client, import_file_name, loaded_import):
 
 
 @pytest.fixture()
-def prepared_import(client, content_mapped_import):
+def prepared_import(client, content_mapped_import, small_batch):
     set_logged_user_cookie(client, content_mapped_import.authors[0])
     r = client.post(url_for("import.prepare_import", import_id=content_mapped_import.id_import))
     assert r.status_code == 200, r.data
@@ -395,11 +400,9 @@ class TestImports:
 
     def test_order_import(self, users, imports, uploaded_import):
         set_logged_user_cookie(self.client, users["user"])
-        r_des = self.client.get(url_for("import.get_import_list"))
+        r_des = self.client.get(url_for("import.get_import_list") + "?sort=id_import")
         assert r_des.status_code == 200, r_des.data
-        r_asc = self.client.get(
-            url_for("import.get_import_list") + "?sort=date_create_import&sort_dir=asc"
-        )
+        r_asc = self.client.get(url_for("import.get_import_list") + "?sort=id_import&sort_dir=asc")
         assert r_asc.status_code == 200, r_asc.data
         import_ids_des = [imprt["id_import"] for imprt in r_des.get_json()["imports"]]
         import_ids_asc = [imprt["id_import"] for imprt in r_asc.get_json()["imports"]]
@@ -970,7 +973,9 @@ class TestImports:
             {
                 ("MISSING_VALUE", "cd_nom", frozenset([1, 4, 5])),
                 ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([2, 6, 8, 10])),
-                ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([4, 6, 7])),
+                ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([6, 7])),
+                ("INVALID_INTEGER", "cd_nom", frozenset([11])),
+                ("INVALID_INTEGER", "cd_hab", frozenset([12])),
             },
         )
 

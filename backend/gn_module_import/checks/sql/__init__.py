@@ -2,7 +2,7 @@ from datetime import date
 
 from flask import current_app
 from sqlalchemy import func
-from sqlalchemy.sql.expression import select, update, insert, literal
+from sqlalchemy.sql.expression import select, update, insert, literal, join
 from sqlalchemy.sql import column
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
@@ -174,39 +174,36 @@ def check_nomenclatures(imprt, fields):
         )
 
 
-def set_column_from_referential(imprt, field, reference, error_type, whereclause=None):
-    source_field = getattr(ImportSyntheseData, field.source_field)
+def check_referential(imprt, field, reference_field, error_type, reference_table=None):
     synthese_field = getattr(ImportSyntheseData, field.synthese_field)
-    stmt = (
-        update(ImportSyntheseData)
-        .values(
-            {
-                synthese_field: reference,
-            }
-        )
-        .where(
-            sa.and_(
-                source_field == sa.cast(reference, sa.Unicode),
-                ImportSyntheseData.id_import == imprt.id_import,
+    if reference_table is None:
+        reference_table = reference_field.class_
+    # We outerjoin the referential, and select rows where there is a value in synthese field
+    # but no value in referential, which means no value in the referential matched synthese field.
+    cte = (
+        select([ImportSyntheseData.line_no])
+        .select_from(
+            join(
+                ImportSyntheseData,
+                reference_table,
+                synthese_field == reference_field,
+                isouter=True,
             )
         )
+        .where(ImportSyntheseData.imprt == imprt)
+        .where(synthese_field != None)
+        .where(reference_field == None)
+        .cte("invalid_ref")
     )
-    if whereclause is not None:
-        stmt = stmt.where(whereclause)
-    db.session.execute(stmt)
     report_erroneous_rows(
         imprt,
         error_type=error_type,
         error_column=field.name_field,
-        whereclause=sa.and_(
-            source_field != None,
-            source_field != "",
-            synthese_field == None,
-        ),
+        whereclause=ImportSyntheseData.line_no == cte.c.line_no,
     )
 
 
-def set_cd_nom(imprt, fields):
+def check_cd_nom(imprt, fields):
     if "cd_nom" not in fields:
         return
     field = fields["cd_nom"]
@@ -214,21 +211,22 @@ def set_cd_nom(imprt, fields):
     # Filter out on a taxhub list if provided
     list_id = current_app.config["IMPORT"].get("ID_LIST_TAXA_RESTRICTION", None)
     if list_id is not None:
-        whereclause = sa.and_(
-            CorNomListe.id_liste == list_id,
-            BibNoms.id_nom == CorNomListe.id_nom,
-            Taxref.cd_nom == BibNoms.cd_nom,
+        reference_table = join(Taxref, BibNoms).join(
+            CorNomListe,
+            sa.and_(BibNoms.id_nom == CorNomListe.id_nom, CorNomListe.id_liste == list_id),
         )
-    set_column_from_referential(
-        imprt, field, Taxref.cd_nom, "CD_NOM_NOT_FOUND", whereclause=whereclause
+    else:
+        reference_table = Taxref
+    check_referential(
+        imprt, field, Taxref.cd_nom, "CD_NOM_NOT_FOUND", reference_table=reference_table
     )
 
 
-def set_cd_hab(imprt, fields):
+def check_cd_hab(imprt, fields):
     if "cd_hab" not in fields:
         return
     field = fields["cd_hab"]
-    set_column_from_referential(imprt, field, Habref.cd_hab, "CD_HAB_NOT_FOUND")
+    check_referential(imprt, field, Habref.cd_hab, "CD_HAB_NOT_FOUND")
 
 
 def set_altitudes(imprt, fields):
@@ -380,6 +378,7 @@ def set_uuid(imprt, fields):
         db.session.execute(stmt)
 
 
+# Currently not used as done during dataframe checks
 def check_mandatory_fields(imprt, fields):
     for field in fields.values():
         if not field.mandatory or not field.synthese_field:
