@@ -120,6 +120,10 @@ def update_mapping(mappingtype, mapping, scope):
             raise BadRequest(*e.args)
         if mappingtype == "FIELD":
             mapping.values.update(request.json)
+            keys = list(mapping.values.keys())
+            for k in keys:
+                if k not in request.json:
+                    mapping.values.pop(k)
         elif mappingtype == "CONTENT":
             for key, value in request.json.items():
                 if key not in mapping.values:
