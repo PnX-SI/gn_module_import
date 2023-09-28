@@ -378,6 +378,7 @@ def set_uuid(imprt, fields):
         db.session.execute(stmt)
 
 
+# Currently not used as done during dataframe checks
 def check_mandatory_fields(imprt, fields):
     for field in fields.values():
         if not field.mandatory or not field.synthese_field:

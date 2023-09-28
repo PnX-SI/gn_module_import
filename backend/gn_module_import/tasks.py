@@ -29,7 +29,6 @@ from gn_module_import.checks.sql import (
     check_cd_hab,
     set_altitudes,
     set_uuid,
-    check_mandatory_fields,
     check_duplicates_source_pk,
     check_dates,
     check_altitudes,
@@ -121,7 +120,6 @@ def do_import_checks(self, import_id):
         check_dates,
         check_depths,
         check_digital_proof_urls,
-        check_mandatory_fields,
         check_is_valid_geography,
         check_geography_outside,
     ]
