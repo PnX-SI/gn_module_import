@@ -1,6 +1,5 @@
-from io import BytesIO
 import codecs
-from io import StringIO
+from io import BytesIO, StringIO, TextIOWrapper
 import csv
 import unicodedata
 
@@ -215,7 +214,7 @@ def upload_file(scope, import_id):
 @blueprint.route("/imports/<int:import_id>/decode", methods=["POST"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
 def decode_file(scope, import_id):
-    imprt = TImports.query.options(undefer("source_file")).get_or_404(import_id)
+    imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.dataset.active:
@@ -257,15 +256,19 @@ def decode_file(scope, import_id):
     except ValueError:
         raise BadRequest(description="decode parameter must but an int")
     if decode:
+        csvfile = TextIOWrapper(BytesIO(imprt.source_file), encoding=imprt.encoding)
+        csvreader = csv.reader(csvfile, delimiter=imprt.separator)
         try:
-            csvfile = StringIO(imprt.source_file.decode(imprt.encoding))
+            columns = next(csvreader)
+            while True:  # read full file to ensure that no encoding errors occur
+                next(csvreader)
         except UnicodeError as e:
             raise BadRequest(
                 description="Erreur d’encodage lors de la lecture du fichier source. "
                 "Avez-vous sélectionné le bon encodage de votre fichier ?"
             )
-        csvreader = csv.reader(csvfile, delimiter=imprt.separator)
-        columns = next(csvreader)
+        except StopIteration:
+            pass
         duplicates = set([col for col in columns if columns.count(col) > 1])
         if duplicates:
             raise BadRequest(f"Duplicates column names: {duplicates}")
