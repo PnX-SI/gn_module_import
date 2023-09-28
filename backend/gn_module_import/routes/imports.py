@@ -522,7 +522,7 @@ def get_import_invalid_rows_as_csv(scope, import_id):
 
     Export invalid data in CSV.
     """
-    imprt = TImports.query.options(undefer("source_file")).get_or_404(import_id)
+    imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.processed:
@@ -533,7 +533,7 @@ def get_import_invalid_rows_as_csv(scope, import_id):
 
     @stream_with_context
     def generate_invalid_rows_csv():
-        sourcefile = StringIO(imprt.source_file.decode(imprt.encoding))
+        sourcefile = TextIOWrapper(BytesIO(imprt.source_file), encoding=imprt.encoding)
         destfile = StringIO()
         csvreader = csv.reader(sourcefile, delimiter=imprt.separator)
         csvwriter = csv.writer(destfile, dialect=csvreader.dialect, lineterminator="\n")
