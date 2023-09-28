@@ -1,5 +1,5 @@
 import os
-from io import StringIO
+from io import BytesIO, TextIOWrapper
 import csv
 import ast
 import json
@@ -131,7 +131,7 @@ def insert_import_data_in_database(imprt):
 
     extra_columns = set(columns) - set(used_columns)
 
-    csvfile = StringIO(imprt.source_file.decode(imprt.encoding))
+    csvfile = TextIOWrapper(BytesIO(imprt.source_file), encoding=imprt.encoding)
     csvreader = csv.DictReader(csvfile, fieldnames=columns, delimiter=imprt.separator)
     header = next(csvreader, None)  # skip header
     for key, value in header.items():  # FIXME
