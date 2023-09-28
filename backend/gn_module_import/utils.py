@@ -219,7 +219,7 @@ def build_fieldmapping(imprt, columns):
     return fieldmapping, used_columns
 
 
-def load_import_data_in_dataframe(imprt, fields):
+def load_import_data_in_dataframe(imprt, fields, offset, limit):
     source_cols = [
         "id_import",
         "line_no",
@@ -230,6 +230,9 @@ def load_import_data_in_dataframe(imprt, fields):
         .filter(
             ImportSyntheseData.imprt == imprt,
         )
+        .order_by(ImportSyntheseData.line_no)
+        .offset(offset)
+        .limit(limit)
         .all()
     )
     df = pd.DataFrame.from_records(
@@ -239,10 +242,13 @@ def load_import_data_in_dataframe(imprt, fields):
     return df
 
 
-def update_import_data_from_dataframe(imprt, fields, df):
+def mark_all_rows_as_invalid(imprt):
     db.session.query(ImportSyntheseData).filter_by(id_import=imprt.id_import).update(
         {"valid": False}
     )
+
+
+def update_import_data_from_dataframe(imprt, fields, df):
     if not len(df[df["valid"] == True]):
         return
     updated_cols = [

@@ -2,7 +2,9 @@ from typing import Dict
 from uuid import uuid4
 from itertools import chain
 
+from sqlalchemy import func
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from flask import current_app
 
 from geonature.utils.env import db
@@ -118,11 +120,21 @@ def run_all_checks(imprt, fields: Dict[str, BibFields], df):
         ordered_invalid_rows = sorted(invalid_rows["line_no"])
         column = generated_fields.get(error["column"], error["column"])
         column = imprt.fieldmapping.get(column, column)
-        error = ImportUserError(
-            imprt=imprt,
-            type=error_type,
-            column=column,
-            rows=ordered_invalid_rows,
-            comment=error.get("comment"),
+        # If an error for same import, same column and of the same type already exists,
+        # we concat existing erroneous rows with current rows.
+        stmt = pg_insert(ImportUserError).values(
+            {
+                "id_import": imprt.id_import,
+                "id_error": error_type.pk,
+                "column_error": column,
+                "id_rows": ordered_invalid_rows,
+                "comment": error.get("comment"),
+            }
         )
-        db.session.add(error)
+        stmt = stmt.on_conflict_do_update(
+            constraint="t_user_errors_un",  # unique (import, error_type, column)
+            set_={
+                "id_rows": func.array_cat(ImportUserError.rows, stmt.excluded["id_rows"]),
+            },
+        )
+        db.session.execute(stmt)
