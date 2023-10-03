@@ -168,7 +168,8 @@ def do_import_in_synthese(self, import_id):
             entity_source_pk_field=entity_source_pk_field.synthese_field,
             module=TModules.query.filter_by(module_code="IMPORT").one(),
         )
-    import_data_to_synthese(imprt)
+    for progress in import_data_to_synthese(imprt):
+        self.update_state(state="PROGRESS", meta={"progress": progress})
     ImportSyntheseData.query.filter_by(imprt=imprt).delete()
     imprt = TImports.query.with_for_update(of=TImports).get(import_id)
     if imprt is None or imprt.task_id != self.request.id:

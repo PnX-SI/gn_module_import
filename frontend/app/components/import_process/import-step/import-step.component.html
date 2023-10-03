@@ -117,7 +117,7 @@
                     class="d-flex flex-column justify-content-center align-items-center w-100 mb-3"
             >
                     <p> Import des données en cours</p>
-                    <mat-spinner [color]="color" [diameter]="50" class="upload-spinner"></mat-spinner>
+                    <mat-progress-bar [value]="progress"></mat-progress-bar>
             </div>
 
             <div class="d-flex flex-row justify-content-between progressBar" *ngIf="!importRunning">
