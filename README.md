@@ -61,8 +61,8 @@ l'instar des attributs gérés dans TaxHub, il est possible de définir
 des "blocs" dans la table `gn_imports.dict_themes`, et d'y attribuer
 des champs (`dict_fields`) en y définissant leur ordre d'affichage.
 
-Droits du module
-================
+Permissions du module
+=====================
 
 La gestions des permissions dans le module d'import se fait via le réglage
 du CRUVED à deux niveaux : au niveau de l'objet "import" et au
