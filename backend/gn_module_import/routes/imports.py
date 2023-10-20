@@ -4,29 +4,27 @@ import csv
 import unicodedata
 
 from flask import request, current_app, jsonify, g, stream_with_context, send_file
-from werkzeug.exceptions import Conflict, BadRequest, Forbidden, Gone
+from werkzeug.exceptions import Conflict, BadRequest, Forbidden, Gone, NotFound
 # url_quote was deprecated in werkzeug 3.0 https://stackoverflow.com/a/77222063/5807438
-from urllib.parse import (
-    quote as url_quote,
-)  
+from urllib.parse import quote as url_quote
 from sqlalchemy import or_, func, desc
 from sqlalchemy.inspection import inspect
-from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager, class_mapper
+from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
 from sqlalchemy.orm.attributes import set_committed_value
 from sqlalchemy.sql.expression import collate
 
 from geonature.utils.env import db
 from geonature.utils.sentry import start_sentry_child
 from geonature.core.gn_permissions import decorators as permissions
-from geonature.core.gn_synthese.models import (
-    Synthese,
-    TSources,
-)
+from geonature.core.gn_permissions.decorators import login_required
+from geonature.core.gn_permissions.tools import get_scopes_by_action
+from geonature.core.gn_synthese.models import Synthese
 from geonature.core.gn_meta.models import TDatasets
 
-from pypnnomenclature.models import BibNomenclaturesTypes, TNomenclatures
+from pypnnomenclature.models import TNomenclatures
 
 from gn_module_import.models import (
+    Destination,
     TImports,
     ImportSyntheseData,
     ImportUserError,
@@ -51,34 +49,24 @@ from gn_module_import.tasks import do_import_checks, do_import_in_synthese
 IMPORTS_PER_PAGE = 15
 
 
-@blueprint.route("/nomenclatures", methods=["GET"])
-def get_nomenclatures():
-    nomenclature_fields = (
-        BibFields.query.filter(BibFields.nomenclature_type != None)
-        .options(
-            joinedload(BibFields.nomenclature_type).joinedload(
-                BibNomenclaturesTypes.nomenclatures
-            ),
-        )
-        .all()
-    )
-    return jsonify(
-        {
-            field.nomenclature_type.mnemonique: {
-                "nomenclature_type": field.nomenclature_type.as_dict(),
-                "nomenclatures": {
-                    nomenclature.cd_nomenclature: nomenclature.as_dict()
-                    for nomenclature in field.nomenclature_type.nomenclatures
-                },
-            }
-            for field in nomenclature_fields
-        }
-    )
+@blueprint.url_value_preprocessor
+def resolve_import(endpoint, values):
+    if current_app.url_map.is_endpoint_expecting(endpoint, "import_id"):
+        import_id = values.pop("import_id")
+        if import_id is not None:
+            imprt = TImports.query.options(
+                joinedload(TImports.destination).joinedload(Destination.module)
+            ).get_or_404(import_id)
+            if imprt.destination != values.pop("destination"):
+                raise NotFound
+        else:
+            imprt = None
+        values["imprt"] = imprt
 
 
-@blueprint.route("/imports/", methods=["GET"])
+@blueprint.route("/<destination>/imports/", methods=["GET"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def get_import_list(scope):
+def get_import_list(scope, destination):
     """
     .. :quickref: Import; Get all imports.
 
@@ -123,6 +111,7 @@ def get_import_list(scope):
         .join(TImports.dataset, isouter=True)
         .join(TImports.authors, isouter=True)
         .filter_by_scope(scope)
+        .filter(TImports.destination == destination)
         .filter(or_(*filters) if len(filters) > 0 else True)
         .order_by(order_by)
         .paginate(page=page, error_out=False, max_per_page=limit)
@@ -137,25 +126,24 @@ def get_import_list(scope):
     return jsonify(data)
 
 
-@blueprint.route("/imports/<int:import_id>/", methods=["GET"])
+@blueprint.route("/<destination>/imports/<int:import_id>/", methods=["GET"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def get_one_import(scope, import_id):
+def get_one_import(scope, imprt):
     """
     .. :quickref: Import; Get an import.
 
     Get an import.
     """
-    imprt = TImports.query.get_or_404(import_id)
     # check that the user has read permission to this particular import instance:
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     return jsonify(imprt.as_dict())
 
 
-@blueprint.route("/imports/upload", defaults={"import_id": None}, methods=["POST"])
-@blueprint.route("/imports/<int:import_id>/upload", methods=["PUT"])
+@blueprint.route("/<destination>/imports/upload", defaults={"import_id": None}, methods=["POST"])
+@blueprint.route("/<destination>/imports/<int:import_id>/upload", methods=["PUT"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def upload_file(scope, import_id):
+def upload_file(scope, imprt, destination=None):  # destination is set when imprt is None
     """
     .. :quickref: Import; Add an import or update an existing import.
 
@@ -164,15 +152,15 @@ def upload_file(scope, import_id):
     :form file: file to import
     :form int datasetId: dataset ID to which import data
     """
-    author = g.current_user
-    if import_id:
-        imprt = TImports.query.get_or_404(import_id)
+    if imprt:
         if not imprt.has_instance_permission(scope):
             raise Forbidden
         if not imprt.dataset.active:
             raise Forbidden("Le jeu de données est fermé.")
+        destination = imprt.destination
     else:
-        imprt = None
+        assert destination
+    author = g.current_user
     f = request.files["file"]
     size = get_file_size(f)
     # value in config file is in Mo
@@ -188,14 +176,18 @@ def upload_file(scope, import_id):
             dataset_id = int(request.form["datasetId"])
         except ValueError:
             raise BadRequest(description="'datasetId' must be an integer.")
-        dataset = db.session.get(TDatasets, (dataset_id))
+        dataset = db.session.get(TDatasets, dataset_id)
         if dataset is None:
             raise BadRequest(description=f"Dataset '{dataset_id}' does not exist.")
-        if not dataset.has_instance_permission(scope):  # FIXME wrong scope
+        ds_scope = get_scopes_by_action(
+            module_code=destination.module.module_code,
+            object_code="ALL",  # TODO object_code should be configurable by destination
+        )["C"]
+        if not dataset.has_instance_permission(ds_scope):
             raise Forbidden(description="Vous n’avez pas les permissions sur ce jeu de données.")
         if not dataset.active:
             raise Forbidden("Le jeu de données est fermé.")
-        imprt = TImports(dataset=dataset)
+        imprt = TImports(destination=destination, dataset=dataset)
         imprt.authors.append(author)
         db.session.add(imprt)
     else:
@@ -214,10 +206,9 @@ def upload_file(scope, import_id):
     return jsonify(imprt.as_dict())
 
 
-@blueprint.route("/imports/<int:import_id>/decode", methods=["POST"])
+@blueprint.route("/<destination>/imports/<int:import_id>/decode", methods=["POST"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def decode_file(scope, import_id):
-    imprt = TImports.query.get_or_404(import_id)
+def decode_file(scope, imprt):
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.dataset.active:
@@ -265,7 +256,7 @@ def decode_file(scope, import_id):
             columns = next(csvreader)
             while True:  # read full file to ensure that no encoding errors occur
                 next(csvreader)
-        except UnicodeError as e:
+        except UnicodeError:
             raise BadRequest(
                 description="Erreur d’encodage lors de la lecture du fichier source. "
                 "Avez-vous sélectionné le bon encodage de votre fichier ?"
@@ -281,10 +272,9 @@ def decode_file(scope, import_id):
     return jsonify(imprt.as_dict())
 
 
-@blueprint.route("/imports/<int:import_id>/fieldmapping", methods=["POST"])
+@blueprint.route("/<destination>/imports/<int:import_id>/fieldmapping", methods=["POST"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def set_import_field_mapping(scope, import_id):
-    imprt = TImports.query.get_or_404(import_id)
+def set_import_field_mapping(scope, imprt):
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.dataset.active:
@@ -299,10 +289,9 @@ def set_import_field_mapping(scope, import_id):
     return jsonify(imprt.as_dict())
 
 
-@blueprint.route("/imports/<int:import_id>/load", methods=["POST"])
+@blueprint.route("/<destination>/imports/<int:import_id>/load", methods=["POST"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def load_import(scope, import_id):
-    imprt = TImports.query.get_or_404(import_id)
+def load_import(scope, imprt):
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.dataset.active:
@@ -322,15 +311,14 @@ def load_import(scope, import_id):
     return jsonify(imprt.as_dict())
 
 
-@blueprint.route("/imports/<int:import_id>/columns", methods=["GET"])
+@blueprint.route("/<destination>/imports/<int:import_id>/columns", methods=["GET"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def get_import_columns_name(scope, import_id):
+def get_import_columns_name(scope, imprt):
     """
     .. :quickref: Import;
 
     Return all the columns of the file of an import
     """
-    imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.columns:
@@ -338,15 +326,14 @@ def get_import_columns_name(scope, import_id):
     return jsonify(imprt.columns)
 
 
-@blueprint.route("/imports/<int:import_id>/values", methods=["GET"])
+@blueprint.route("/<destination>/imports/<int:import_id>/values", methods=["GET"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def get_import_values(scope, import_id):
+def get_import_values(scope, imprt):
     """
     .. :quickref: Import;
 
     Return all values present in imported file for nomenclated fields
     """
-    imprt = TImports.query.get_or_404(import_id)
     # check that the user has read permission to this particular import instance:
     if not imprt.has_instance_permission(scope):
         raise Forbidden
@@ -354,11 +341,9 @@ def get_import_values(scope, import_id):
         raise Conflict(description="Data have not been loaded")
     nomenclated_fields = (
         BibFields.query.filter(BibFields.mnemonique != None)
-        .join(BibFields.nomenclature_type)
-        .options(
-            contains_eager(BibFields.nomenclature_type),
-        )
-        .order_by(BibFields.id_theme, BibFields.order_field)
+        .filter(BibFields.destination == imprt.destination)
+        .options(joinedload(BibFields.nomenclature_type))
+        .order_by(BibFields.id_field)
         .all()
     )
     # Note: response format is validated with jsonschema in tests
@@ -397,10 +382,9 @@ def get_import_values(scope, import_id):
     return jsonify(response)
 
 
-@blueprint.route("/imports/<int:import_id>/contentmapping", methods=["POST"])
+@blueprint.route("/<destination>/imports/<int:import_id>/contentmapping", methods=["POST"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def set_import_content_mapping(scope, import_id):
-    imprt = TImports.query.get_or_404(import_id)
+def set_import_content_mapping(scope, imprt):
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.dataset.active:
@@ -415,13 +399,12 @@ def set_import_content_mapping(scope, import_id):
     return jsonify(imprt.as_dict())
 
 
-@blueprint.route("/imports/<int:import_id>/prepare", methods=["POST"])
+@blueprint.route("/<destination>/imports/<int:import_id>/prepare", methods=["POST"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def prepare_import(scope, import_id):
+def prepare_import(scope, imprt):
     """
     Prepare data to be imported: apply all checks and transformations.
     """
-    imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.dataset.active:
@@ -444,10 +427,9 @@ def prepare_import(scope, import_id):
     return jsonify(imprt.as_dict())
 
 
-@blueprint.route("/imports/<int:import_id>/preview_valid_data", methods=["GET"])
+@blueprint.route("/<destination>/imports/<int:import_id>/preview_valid_data", methods=["GET"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def preview_valid_data(scope, import_id):
-    imprt = TImports.query.get_or_404(import_id)
+def preview_valid_data(scope, imprt):
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.processed:
@@ -488,24 +470,22 @@ def preview_valid_data(scope, import_id):
     )
 
 
-@blueprint.route("/imports/<int:import_id>/errors", methods=["GET"])
+@blueprint.route("/<destination>/imports/<int:import_id>/errors", methods=["GET"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def get_import_errors(scope, import_id):
+def get_import_errors(scope, imprt):
     """
     .. :quickref: Import; Get errors of an import.
 
     Get errors of an import.
     """
-    imprt = TImports.query.options(joinedload("errors")).get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     return jsonify([error.as_dict(fields=["type"]) for error in imprt.errors])
 
 
-@blueprint.route("/imports/<int:import_id>/source_file", methods=["GET"])
+@blueprint.route("/<destination>/imports/<int:import_id>/source_file", methods=["GET"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def get_import_source_file(scope, import_id):
-    imprt = TImports.query.options(undefer("source_file")).get_or_404(import_id)
+def get_import_source_file(scope, imprt):
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if imprt.source_file is None:
@@ -518,15 +498,14 @@ def get_import_source_file(scope, import_id):
     )
 
 
-@blueprint.route("/imports/<int:import_id>/invalid_rows", methods=["GET"])
+@blueprint.route("/<destination>/imports/<int:import_id>/invalid_rows", methods=["GET"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def get_import_invalid_rows_as_csv(scope, import_id):
+def get_import_invalid_rows_as_csv(scope, imprt):
     """
     .. :quickref: Import; Get invalid rows of an import as CSV.
 
     Export invalid data in CSV.
     """
-    imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.processed:
@@ -569,15 +548,14 @@ def get_import_invalid_rows_as_csv(scope, import_id):
     return response
 
 
-@blueprint.route("/imports/<int:import_id>/import", methods=["POST"])
+@blueprint.route("/<destination>/imports/<int:import_id>/import", methods=["POST"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def import_valid_data(scope, import_id):
+def import_valid_data(scope, imprt):
     """
     .. :quickref: Import; Import the valid data.
 
     Import valid data in GeoNature synthese.
     """
-    imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.dataset.active:
@@ -599,15 +577,14 @@ def import_valid_data(scope, import_id):
     return jsonify(imprt.as_dict())
 
 
-@blueprint.route("/imports/<int:import_id>/", methods=["DELETE"])
+@blueprint.route("/<destination>/imports/<int:import_id>/", methods=["DELETE"])
 @permissions.check_cruved_scope("D", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def delete_import(scope, import_id):
+def delete_import(scope, imprt):
     """
     .. :quickref: Import; Delete an import.
 
     Delete an import.
     """
-    imprt = TImports.query.get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     if not imprt.dataset.active:
@@ -622,18 +599,12 @@ def delete_import(scope, import_id):
     return jsonify()
 
 
-@blueprint.route("/export_pdf/<int:import_id>", methods=["POST"])
+@blueprint.route("/<destination>/export_pdf/<int:import_id>", methods=["POST"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def export_pdf(scope, import_id):
+def export_pdf(scope, imprt):
     """
     Downloads the report in pdf format
     """
-    imprt = TImports.query.options(
-        Load(TImports).raiseload("*"),
-        joinedload("authors"),
-        joinedload("dataset"),
-        joinedload("errors"),
-    ).get_or_404(import_id)
     if not imprt.has_instance_permission(scope):
         raise Forbidden
     ctx = imprt.as_dict(fields=["errors", "errors.type", "dataset.dataset_name"])

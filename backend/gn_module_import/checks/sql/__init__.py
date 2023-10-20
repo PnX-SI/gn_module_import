@@ -56,7 +56,9 @@ def do_nomenclatures_mapping(imprt, fields):
         )
         db.session.execute(stmt, execution_options=dict({"synchronize_session": 'fetch'}))
 
-    for field in BibFields.query.filter(BibFields.mnemonique != None).all():
+    for field in BibFields.query.filter(
+        BibFields.destination == imprt.destination, BibFields.mnemonique != None
+    ).all():
         if (
             not current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]
             and field.name_field in fields
@@ -96,7 +98,7 @@ def do_nomenclatures_mapping(imprt, fields):
 def check_nomenclatures(imprt, fields):
     if current_app.config["IMPORT"]["CHECK_EXIST_PROOF"]:
         nomenclature_field = BibFields.query.filter_by(
-            name_field="id_nomenclature_exist_proof"
+            destination=imprt.destination, name_field="id_nomenclature_exist_proof"
         ).one()
         digital_proof_field = fields.get("digital_proof")
         non_digital_proof_field = fields.get("non_digital_proof")
@@ -141,7 +143,9 @@ def check_nomenclatures(imprt, fields):
         and not current_app.config["IMPORT"]["FILL_MISSING_NOMENCLATURE_WITH_DEFAULT_VALUE"]
         and imprt.dataset.nomenclature_data_origin.mnemonique == "Privée"
     ):
-        blurring_field = BibFields.query.filter_by(name_field="id_nomenclature_blurring").one()
+        blurring_field = BibFields.query.filter_by(
+            destination=imprt.destination, name_field="id_nomenclature_blurring"
+        ).one()
         report_erroneous_rows(
             imprt,
             error_type="CONDITIONAL_MANDATORY_FIELD_ERROR",
@@ -156,9 +160,11 @@ def check_nomenclatures(imprt, fields):
             TNomenclatures.cd_nomenclature == "Li",
         ).one()
         source_status_field = BibFields.query.filter_by(
-            name_field="id_nomenclature_source_status"
+            destination=imprt.destination, name_field="id_nomenclature_source_status"
         ).one()
-        ref_biblio_field = BibFields.query.filter_by(name_field="reference_biblio").one()
+        ref_biblio_field = BibFields.query.filter_by(
+            destination=imprt.destination, name_field="reference_biblio"
+        ).one()
         report_erroneous_rows(
             imprt,
             error_type="CONDITIONAL_MANDATORY_FIELD_ERROR",
@@ -290,8 +296,12 @@ def set_altitudes(imprt, fields):
     )
     fields.update(
         {
-            "altitude_min": BibFields.query.filter_by(name_field="altitude_min").one(),
-            "altitude_max": BibFields.query.filter_by(name_field="altitude_max").one(),
+            "altitude_min": BibFields.query.filter_by(
+                destination=imprt.destination, name_field="altitude_min"
+            ).one(),
+            "altitude_max": BibFields.query.filter_by(
+                destination=imprt.destination, name_field="altitude_max"
+            ).one(),
         }
     )
     db.session.execute(stmt.execution_options(synchronize_session="fetch"))

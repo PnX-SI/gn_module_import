@@ -10,11 +10,12 @@ import sqlalchemy as sa
 
 from geonature.utils.config import config
 from geonature import create_app
+from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_synthese.models import Synthese
 from geonature.tests.fixtures import synthese_data
 from shapely.geometry import Point
 
-from gn_module_import.models import TImports, BibFields
+from gn_module_import.models import TImports, Destination, Entity, EntityField, BibFields
 from gn_module_import.checks.dataframe import *
 from gn_module_import.checks.dataframe.geography import (
     check_wkt_inside_area_id,
@@ -33,14 +34,20 @@ def sample_area():
 
 @pytest.fixture()
 def imprt():
-    return TImports(id_import=42, srid="2154")
+    return TImports(
+        id_import=42,
+        srid="2154",
+        destination=Destination.query.filter(
+            Destination.module.has(TModules.module_code == "SYNTHESE")
+        ).one(),
+    )
 
 
-def get_fields(names):
-    fields = OrderedDict()
-    for name in names:
-        fields[name] = BibFields.query.filter_by(name_field=name).one()
-    return fields
+def get_fields(imprt, names):
+    return {
+        name: BibFields.query.filter_by(destination=imprt.destination, name_field=name).one()
+        for name in names
+    }
 
 
 def assert_errors(errors, expected):
@@ -62,7 +69,7 @@ def assert_errors(errors, expected):
 @pytest.mark.usefixtures("app")
 class TestChecks:
     def test_clean_missing_values(self, imprt):
-        fields = get_fields(["WKT"])
+        fields = get_fields(imprt, ["WKT"])
         df = pd.DataFrame(
             [
                 [None],
@@ -84,8 +91,8 @@ class TestChecks:
         )
         pd.testing.assert_frame_equal(df, expected_df)
 
-    def test_check_required_values(self):
-        fields = get_fields(["precision", "cd_nom", "nom_cite"])
+    def test_check_required_values(self, imprt):
+        fields = get_fields(imprt, ["precision", "cd_nom", "nom_cite"])
         df = pd.DataFrame(
             [
                 ["a", np.nan, "c"],
@@ -104,6 +111,7 @@ class TestChecks:
 
     def test_check_geography(self, imprt):
         fields = get_fields(
+            imprt,
             [
                 "WKT",
                 "longitude",
@@ -111,7 +119,7 @@ class TestChecks:
                 "codecommune",
                 "codemaille",
                 "codedepartement",
-            ]
+            ],
         )
         df = pd.DataFrame(
             [
@@ -195,6 +203,7 @@ class TestChecks:
     def test_check_types(self, imprt):
         uuid = "82ff094c-c3b3-11eb-9804-bfdc95e73f38"
         fields = get_fields(
+            imprt,
             [
                 "datetime_min",
                 "datetime_max",
@@ -202,7 +211,7 @@ class TestChecks:
                 "digital_proof",
                 "id_digitiser",
                 "unique_id_sinp",
-            ]
+            ],
         )
         df = pd.DataFrame(
             [
@@ -238,7 +247,7 @@ class TestChecks:
         )
 
     def test_concat_dates(self, imprt):
-        fields = get_fields(["date_min", "hour_min", "date_max", "hour_max"])
+        fields = get_fields(imprt, ["date_min", "hour_min", "date_max", "hour_max"])
         df = pd.DataFrame(
             [
                 ["2020-01-01", "12:00:00", "2020-01-02", "14:00:00"],
@@ -296,7 +305,7 @@ class TestChecks:
         )
 
     def test_dates_parsing(self, imprt):
-        fields = get_fields(["date_min", "hour_min"])
+        fields = get_fields(imprt, ["date_min", "hour_min"])
         df = pd.DataFrame(
             [
                 ["2020-01-05", ""],
@@ -353,7 +362,7 @@ class TestChecks:
 
     def test_check_counts(self, imprt):
         default_value = current_app.config["IMPORT"]["DEFAULT_COUNT_VALUE"]
-        fields = get_fields(["count_min", "count_max"])
+        fields = get_fields(imprt, ["count_min", "count_max"])
         df = pd.DataFrame(
             [
                 [None, None],
@@ -392,7 +401,7 @@ class TestChecks:
             ),
         )
 
-        fields = get_fields(["count_min", "count_max"])
+        fields = get_fields(imprt, ["count_min", "count_max"])
         count_min_field = fields["count_min"]
         count_max_field = fields["count_max"]
         df = pd.DataFrame(

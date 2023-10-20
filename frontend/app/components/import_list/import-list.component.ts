@@ -87,11 +87,6 @@ export class ImportListComponent implements OnInit {
                 this.limit = res["limit"]
                 this.offset = res["offset"]
             },
-            error => {
-                if (error.status === 404) {
-                    this._commonService.regularToaster("warning", "Aucun import trouvé");
-                }
-            }
         );
     }
     private getImportsStatus() {

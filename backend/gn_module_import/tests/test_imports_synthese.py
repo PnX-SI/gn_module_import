@@ -109,10 +109,10 @@ def sample_area():
 
 
 @pytest.fixture(scope="function")
-def imports(users):
+def imports(synthese_destination, users):
     def create_import(authors=[]):
         with db.session.begin_nested():
-            imprt = TImports(authors=authors)
+            imprt = TImports(destination=synthese_destination, authors=authors)
             db.session.add(imprt)
         return imprt
 
@@ -168,9 +168,10 @@ def import_dataset(datasets, import_file_name):
 
 
 @pytest.fixture()
-def new_import(users, import_dataset):
+def new_import(synthese_destination, users, import_dataset):
     with db.session.begin_nested():
         imprt = TImports(
+            destination=synthese_destination,
             authors=[users["user"]],
             id_dataset=import_dataset.id_dataset,
         )
@@ -296,9 +297,11 @@ def change_id_list_conf(monkeypatch, sample_taxhub_list):
     )
 
 
-@pytest.mark.usefixtures("client_class", "temporary_transaction", "celery_eager")
-class TestImports:
-    def test_import_permissions(self, g_permissions):
+@pytest.mark.usefixtures(
+    "client_class", "temporary_transaction", "celery_eager", "default_synthese_destination"
+)
+class TestImportsSynthese:
+    def test_import_permissions(self, g_permissions, synthese_destination):
         with db.session.begin_nested():
             organisme = Organisme(nom_organisme="test_import")
             db.session.add(organisme)
@@ -310,7 +313,7 @@ class TestImports:
             other_user.organisme = organisme
             db.session.add(other_user)
             user.groups.append(group)
-            imprt = TImports()
+            imprt = TImports(destination=synthese_destination)
             db.session.add(imprt)
 
         get_scopes_by_action = partial(

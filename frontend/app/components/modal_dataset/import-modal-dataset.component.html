@@ -18,8 +18,8 @@
         <pnx-datasets
             label="{{ 'MetaData.Datasets' | translate }}"
             [parentFormControl]="selectDatasetForm"
-            moduleCode="IMPORT"
-            creatableInModule="IMPORT.IMPORT"
+            moduleCode="SYNTHESE"
+            creatableInModule="SYNTHESE.ALL"
         >
         </pnx-datasets>
         <div
@@ -48,7 +48,7 @@
 
 
 <button
-    [disabled]="cruvedStore.cruved?.IMPORT?.module_objects?.IMPORT?.cruved?.C == '0'"
+    [disabled]="cruvedStore.cruved?.IMPORT?.module_objects?.IMPORT?.cruved?.U == 0"
     mat-fab
     color="primary"
     (click)="onOpenModal(content)"

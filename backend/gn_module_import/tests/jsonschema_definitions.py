@@ -1,5 +1,17 @@
 jsonschema_definitions = {
-    "synthesis_field": {
+    "entity": {
+        "type": "object",
+        "properties": {
+            "label": {
+                "type": "string",
+            },
+        },
+        "required": [
+            "label",
+        ],
+        "additionalProperties": False,
+    },
+    "fields": {
         "type": "object",
         "properties": {
             "id_field": {
@@ -66,7 +78,7 @@ jsonschema_definitions = {
         ],
         "additionalProperties": False,
     },
-    "synthesis_theme": {
+    "theme": {
         "type": "object",
         "properties": {
             "id_theme": {
@@ -270,6 +282,7 @@ jsonschema_definitions = {
         "type": "object",
         "properties": {
             "id": {"type": "integer"},
+            "id_destination": {"type": "integer"},
             "label": {"type": "string"},
             "type": {
                 "type": "string",

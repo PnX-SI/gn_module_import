@@ -283,6 +283,7 @@ def import_data_to_synthese(imprt):
     if imprt.fieldmapping.get("altitudes_generate", False):
         generated_fields |= {"altitude_min", "altitude_max"}
     fields = BibFields.query.filter(
+        BibFields.destination == imprt.destination,
         BibFields.synthese_field != None,
         BibFields.name_field.in_(imprt.fieldmapping.keys() | generated_fields),
     ).all()

@@ -99,7 +99,11 @@ export interface ImportValues {
     }
 }
 
-interface SynthesisTheme {
+interface Entity {
+    label: string,
+}
+
+interface Theme {
     id_theme: number,
     name_theme: string,
     fr_label_theme: string,
@@ -107,7 +111,7 @@ interface SynthesisTheme {
     desc_theme: string,
 }
 
-interface SynthesisField {
+interface Field {
     id_field: number,
     name_field: string,
     fr_label: string,
@@ -118,9 +122,14 @@ interface SynthesisField {
     comment: string,
 }
 
-export interface SynthesisThemeFields {
-    theme: SynthesisTheme,
-    fields: [SynthesisField],
+interface ThemesFields {
+    theme: Theme,
+    fields: [Field],
+}
+
+export interface EntitiesThemesFields {
+    entity: Entity,
+    themes: [ThemesFields],
 }
 
 export interface TaxaDistribution {

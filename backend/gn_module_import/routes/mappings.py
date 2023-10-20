@@ -1,16 +1,11 @@
-from itertools import groupby
-
 from flask import request, jsonify, current_app, g
 from werkzeug.exceptions import Forbidden, Conflict, BadRequest, NotFound
-from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 
 from geonature.utils.env import db
 from geonature.core.gn_permissions import decorators as permissions
 
 from gn_module_import.models import (
-    BibFields,
-    BibThemes,
     MappingTemplate,
     FieldMapping,
     ContentMapping,
@@ -27,14 +22,16 @@ def check_mapping_type(endpoint, values):
         values["mappingtype"] = values["mappingtype"].upper()
         if current_app.url_map.is_endpoint_expecting(endpoint, "id_mapping"):
             mapping = MappingTemplate.query.get_or_404(values.pop("id_mapping"))
-            if mapping.type != values["mappingtype"]:
+            if mapping.destination != values.pop("destination"):
+                raise NotFound
+            if mapping.type != values.pop("mappingtype"):
                 raise NotFound
             values["mapping"] = mapping
 
 
-@blueprint.route("/<mappingtype>mappings/", methods=["GET"])
+@blueprint.route("/<destination>/<mappingtype>mappings/", methods=["GET"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="MAPPING")
-def list_mappings(mappingtype, scope):
+def list_mappings(destination, mappingtype, scope):
     """
     .. :quickref: Import; Return all active named mappings.
 
@@ -44,16 +41,17 @@ def list_mappings(mappingtype, scope):
     :type type: str
     """
     mappings = (
-        MappingTemplate.query.filter(MappingTemplate.type == mappingtype)
-        .filter(MappingTemplate.active == True)
+        MappingTemplate.query.filter(MappingTemplate.destination == destination)
+        .filter(MappingTemplate.type == mappingtype)
+        .filter(MappingTemplate.active == True)  # noqa: E712
         .filter_by_scope(scope)
     )
     return jsonify([mapping.as_dict() for mapping in mappings])
 
 
-@blueprint.route("/<mappingtype>mappings/<int:id_mapping>/", methods=["GET"])
+@blueprint.route("/<destination>/<mappingtype>mappings/<int:id_mapping>/", methods=["GET"])
 @permissions.check_cruved_scope("R", get_scope=True, module_code="IMPORT", object_code="MAPPING")
-def get_mapping(mappingtype, mapping, scope):
+def get_mapping(mapping, scope):
     """
     .. :quickref: Import; Return a mapping.
 
@@ -66,9 +64,9 @@ def get_mapping(mappingtype, mapping, scope):
     return jsonify(mapping.as_dict())
 
 
-@blueprint.route("/<mappingtype>mappings/", methods=["POST"])
+@blueprint.route("/<destination>/<mappingtype>mappings/", methods=["POST"])
 @permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="MAPPING")
-def add_mapping(mappingtype, scope):
+def add_mapping(destination, mappingtype, scope):
     """
     .. :quickref: Import; Add a mapping.
     """
@@ -78,7 +76,9 @@ def add_mapping(mappingtype, scope):
 
     # check if name already exists
     if db.session.query(
-        MappingTemplate.query.filter_by(type=mappingtype, label=label).exists()
+        MappingTemplate.query.filter_by(
+            destination=destination, type=mappingtype, label=label
+        ).exists()
     ).scalar():
         raise Conflict(description="Un mapping de ce type portant ce nom existe déjà")
 
@@ -89,16 +89,20 @@ def add_mapping(mappingtype, scope):
         raise BadRequest(*e.args)
 
     mapping = MappingClass(
-        type=mappingtype, label=label, owners=[g.current_user], values=request.json
+        destination=destination,
+        type=mappingtype,
+        label=label,
+        owners=[g.current_user],
+        values=request.json,
     )
     db.session.add(mapping)
     db.session.commit()
     return jsonify(mapping.as_dict())
 
 
-@blueprint.route("/<mappingtype>mappings/<int:id_mapping>/", methods=["POST"])
+@blueprint.route("/<destination>/<mappingtype>mappings/<int:id_mapping>/", methods=["POST"])
 @permissions.check_cruved_scope("U", get_scope=True, module_code="IMPORT", object_code="MAPPING")
-def update_mapping(mappingtype, mapping, scope):
+def update_mapping(mapping, scope):
     """
     .. :quickref: Import; Update a mapping (label and/or content).
     """
@@ -109,7 +113,7 @@ def update_mapping(mappingtype, mapping, scope):
     if label:
         # check if name already exists
         if db.session.query(
-            MappingTemplate.query.filter_by(type=mappingtype, label=label).exists()
+            MappingTemplate.query.filter_by(type=mapping.type, label=label).exists()
         ).scalar():
             raise Conflict(description="Un mapping de ce type portant ce nom existe déjà")
         mapping.label = label
@@ -118,9 +122,9 @@ def update_mapping(mappingtype, mapping, scope):
             mapping.validate_values(request.json)
         except ValueError as e:
             raise BadRequest(*e.args)
-        if mappingtype == "FIELD":
+        if mapping.type == "FIELD":
             mapping.values.update(request.json)
-        elif mappingtype == "CONTENT":
+        elif mapping.type == "CONTENT":
             for key, value in request.json.items():
                 if key not in mapping.values:
                     mapping.values[key] = value
@@ -133,9 +137,9 @@ def update_mapping(mappingtype, mapping, scope):
     return jsonify(mapping.as_dict())
 
 
-@blueprint.route("/<mappingtype>mappings/<int:id_mapping>/", methods=["DELETE"])
+@blueprint.route("/<destination>/<mappingtype>mappings/<int:id_mapping>/", methods=["DELETE"])
 @permissions.check_cruved_scope("D", get_scope=True, module_code="IMPORT", object_code="MAPPING")
-def delete_mapping(mappingtype, mapping, scope):
+def delete_mapping(mapping, scope):
     """
     .. :quickref: Import; Delete a mapping.
     """
@@ -144,57 +148,3 @@ def delete_mapping(mappingtype, mapping, scope):
     db.session.delete(mapping)
     db.session.commit()
     return "", 204
-
-
-@blueprint.route("/synthesis/fields", methods=["GET"])
-@permissions.check_cruved_scope("C", get_scope=True, module_code="IMPORT", object_code="IMPORT")
-def get_synthesis_fields(scope):
-    """
-    .. :quickref: Import; Get synthesis fields.
-
-    Get all synthesis fields
-    Use in field mapping steps
-    You can find a jsonschema of the returned data in the associated test.
-    """
-    # TODO use selectinload
-    fields = (
-        BibFields.query.filter_by(display=True)
-        .options(joinedload(BibFields.theme))
-        .join(BibThemes)
-        .order_by(BibThemes.order_theme, BibFields.order_field)
-        .all()
-    )
-    data = []
-    for id_theme, fields in groupby(fields, lambda field: field.id_theme):
-        fields = list(fields)
-        theme = fields[0].theme
-        data.append(
-            {
-                "theme": theme.as_dict(
-                    fields=[
-                        "id_theme",
-                        "name_theme",
-                        "fr_label_theme",
-                        "eng_label_theme",
-                        "desc_theme",
-                    ],
-                ),
-                "fields": [
-                    field.as_dict(
-                        fields=[
-                            "id_field",
-                            "name_field",
-                            "fr_label",
-                            "eng_label",
-                            "desc_field",
-                            "mandatory",
-                            "autogenerated",
-                            "comment",
-                            "multi",
-                        ],
-                    )
-                    for field in fields
-                ],
-            }
-        )
-    return jsonify(data)

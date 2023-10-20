@@ -58,7 +58,10 @@ def do_import_checks(self, import_id):
         for field_name, source_field in imprt.fieldmapping.items()
         if source_field in imprt.columns
     ]
-    selected_fields = BibFields.query.filter(BibFields.name_field.in_(selected_fields_names)).all()
+    selected_fields = BibFields.query.filter(
+        BibFields.destination == imprt.destination,
+        BibFields.name_field.in_(selected_fields_names),
+    ).all()
 
     fields = {
         field.name_field: field
