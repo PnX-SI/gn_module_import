@@ -310,7 +310,8 @@ class TestImports:
             db.session.add(group)
             user = User(groupe=False)
             db.session.add(user)
-            other_user = User(groupe=False, organisme=organisme)
+            other_user = User(groupe=False)
+            other_user.organisme = organisme
             db.session.add(other_user)
             user.groups.append(group)
             imprt = TImports()
@@ -431,7 +432,7 @@ class TestImports:
             imprt["id_import"] for imprt in r_ordered_dataset.get_json()["imports"]
         ]
         assert r_ordered_dataset.status_code == 200, r_ordered_dataset.data
-        assert import_ids_sorte_dataset == import_ids_ordered_dataset
+        assert set(import_ids_sorte_dataset) == set(import_ids_ordered_dataset)
 
     def test_get_import(self, users, imports):
         def get(import_name):

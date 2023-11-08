@@ -120,7 +120,7 @@ def get_import_list(scope):
         .join(TImports.dataset, isouter=True)
         .join(TImports.authors, isouter=True)
         .filter_by_scope(scope)
-        .filter(or_(*filters))
+        .filter(or_(*filters) if len(filters) > 0 else True)
         .order_by(order_by)
         .paginate(page=page, error_out=False, max_per_page=limit)
     )
@@ -369,13 +369,13 @@ def get_import_values(scope, import_id):
             # the file do not contain this field expected by the mapping
             continue
         # TODO: vérifier que l’on a pas trop de valeurs différentes ?
-        column = field.source_column
+        column = getattr(ImportSyntheseData, field.source_column)
         values = [
-            getattr(data, column)
+            getattr(data, field.source_column)
             for data in (
                 ImportSyntheseData.query.filter_by(imprt=imprt)
                 .options(load_only(column))
-                .distinct(getattr(ImportSyntheseData, column))
+                .distinct(column)
                 .all()
             )
         ]
@@ -454,13 +454,14 @@ def preview_valid_data(scope, import_id):
         BibFields.name_field.in_(imprt.fieldmapping.keys()),
     ).all()
     columns = [field.name_field for field in fields]
+    columns_instance = [getattr(ImportSyntheseData, field.name_field) for field in fields]
     valid_data = (
         ImportSyntheseData.query.filter_by(
             imprt=imprt,
             valid=True,
         )
         .options(
-            load_only(*columns),
+            load_only(*columns_instance),
         )
         .limit(100)
     )

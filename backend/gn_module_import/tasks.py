@@ -154,7 +154,7 @@ def do_import_checks(self, import_id):
 @celery_app.task(bind=True)
 def do_import_in_synthese(self, import_id):
     logger.info(f"Starting insertion in synthese of import {import_id}.")
-    imprt = TImports.query.get(import_id)
+    imprt = db.session.get(TImports, import_id)
     if imprt is None or imprt.task_id != self.request.id:
         logger.warning("Task cancelled, doing nothing.")
         return

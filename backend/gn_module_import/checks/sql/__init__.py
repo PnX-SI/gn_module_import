@@ -547,7 +547,6 @@ def set_geom_from_area_code(imprt, source_column, area_type_filter):
         )
         .join(
             LAreas.area_type,
-            aliased=True,
         )
         .filter(area_type_filter)
         .with_entities(
@@ -570,7 +569,7 @@ def set_geom_from_area_code(imprt, source_column, area_type_filter):
         .where(ImportSyntheseData.id_import == cte.c.id_import)
         .where(ImportSyntheseData.line_no == cte.c.line_no)
     )
-    db.session.execute(stmt)
+    db.session.execute(stmt.execution_options(synchronize_session="fetch"))
 
 
 def report_erroneous_rows(imprt, error_type, error_column, whereclause):
