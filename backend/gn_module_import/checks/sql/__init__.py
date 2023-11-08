@@ -38,7 +38,7 @@ def do_nomenclatures_mapping(imprt, fields):
         source_field = getattr(ImportSyntheseData, field.source_field)
         # This CTE return the list of source value / cd_nomenclature for a given nomenclature type
         cte = (
-            select([column("key").label("value"), column("value").label("cd_nomenclature")])
+            select(column("key").label("value"), column("value").label("cd_nomenclature"))
             .select_from(sa.func.JSON_EACH_TEXT(TImports.contentmapping[field.mnemonique]))
             .where(TImports.id_import == imprt.id_import)
             .cte("cte")
@@ -54,7 +54,7 @@ def do_nomenclatures_mapping(imprt, fields):
             .where(TNomenclatures.id_type == BibNomenclaturesTypes.id_type)
             .values({field.synthese_field: TNomenclatures.id_nomenclature})
         )
-        db.session.execute(stmt)
+        db.session.execute(stmt, execution_options=dict({"synchronize_session": 'fetch'}))
 
     for field in BibFields.query.filter(BibFields.mnemonique != None).all():
         if (
@@ -181,7 +181,7 @@ def check_referential(imprt, field, reference_field, error_type, reference_table
     # We outerjoin the referential, and select rows where there is a value in synthese field
     # but no value in referential, which means no value in the referential matched synthese field.
     cte = (
-        select([ImportSyntheseData.line_no])
+        select(ImportSyntheseData.line_no)
         .select_from(
             join(
                 ImportSyntheseData,
@@ -234,22 +234,18 @@ def set_altitudes(imprt, fields):
         return
     altitudes = (
         select(
-            [
-                column("altitude_min"),
-                column("altitude_max"),
-            ]
+            column("altitude_min"),
+            column("altitude_max"),
         )
         .select_from(func.ref_geo.fct_get_altitude_intersection(ImportSyntheseData.the_geom_local))
         .lateral("altitudes")
     )
     cte = (
         select(
-            [
-                ImportSyntheseData.id_import,
-                ImportSyntheseData.line_no,
-                altitudes.c.altitude_min,
-                altitudes.c.altitude_max,
-            ]
+            ImportSyntheseData.id_import,
+            ImportSyntheseData.line_no,
+            altitudes.c.altitude_min,
+            altitudes.c.altitude_max,
         )
         .where(ImportSyntheseData.id_import == imprt.id_import)
         .where(ImportSyntheseData.the_geom_local != None)
@@ -270,27 +266,23 @@ def set_altitudes(imprt, fields):
         .values(
             {
                 ImportSyntheseData.altitude_min: sa.case(
-                    whens=[
-                        (
-                            sa.or_(
-                                ImportSyntheseData.src_altitude_min == None,
-                                ImportSyntheseData.src_altitude_min == "",
-                            ),
-                            cte.c.altitude_min,
+                    (
+                        sa.or_(
+                            ImportSyntheseData.src_altitude_min == None,
+                            ImportSyntheseData.src_altitude_min == "",
                         ),
-                    ],
+                        cte.c.altitude_min,
+                    ),
                     else_=ImportSyntheseData.altitude_min,
                 ),
                 ImportSyntheseData.altitude_max: sa.case(
-                    whens=[
-                        (
-                            sa.or_(
-                                ImportSyntheseData.src_altitude_max == None,
-                                ImportSyntheseData.src_altitude_max == "",
-                            ),
-                            cte.c.altitude_max,
+                    (
+                        sa.or_(
+                            ImportSyntheseData.src_altitude_max == None,
+                            ImportSyntheseData.src_altitude_max == "",
                         ),
-                    ],
+                        cte.c.altitude_max,
+                    ),
                     else_=ImportSyntheseData.altitude_max,
                 ),
             }
@@ -302,7 +294,7 @@ def set_altitudes(imprt, fields):
             "altitude_max": BibFields.query.filter_by(name_field="altitude_max").one(),
         }
     )
-    db.session.execute(stmt)
+    db.session.execute(stmt.execution_options(synchronize_session="fetch"))
 
 
 def get_duplicates_query(imprt, synthese_field, whereclause=sa.true()):
@@ -312,19 +304,17 @@ def get_duplicates_query(imprt, synthese_field, whereclause=sa.true()):
     )
     partitions = (
         select(
-            [
-                array_agg(ImportSyntheseData.line_no)
-                .over(
-                    partition_by=synthese_field,
-                )
-                .label("duplicate_lines")
-            ]
+            array_agg(ImportSyntheseData.line_no)
+            .over(
+                partition_by=synthese_field,
+            )
+            .label("duplicate_lines")
         )
         .where(whereclause)
         .alias("partitions")
     )
     duplicates = (
-        select([func.unnest(partitions.c.duplicate_lines).label("lines")])
+        select(func.unnest(partitions.c.duplicate_lines).label("lines"))
         .where(func.array_length(partitions.c.duplicate_lines, 1) > 1)
         .alias("duplicates")
     )
@@ -602,20 +592,18 @@ def report_erroneous_rows(imprt, error_type, error_column, whereclause):
         )
     else:
         cte = (
-            select([ImportSyntheseData.line_no])
+            select(ImportSyntheseData.line_no)
             .where(ImportSyntheseData.imprt == imprt)
             .where(whereclause)
             .cte("cte")
         )
     error = select(
-        [
-            literal(imprt.id_import).label("id_import"),
-            literal(error_type.pk).label("id_type"),
-            array_agg(
-                aggregate_order_by(cte.c.line_no, cte.c.line_no),
-            ).label("rows"),
-            literal(error_column).label("error_column"),
-        ]
+        literal(imprt.id_import).label("id_import"),
+        literal(error_type.pk).label("id_type"),
+        array_agg(
+            aggregate_order_by(cte.c.line_no, cte.c.line_no),
+        ).label("rows"),
+        literal(error_column).label("error_column"),
     ).alias("error")
     stmt = insert(ImportUserError).from_select(
         names=[
@@ -624,7 +612,7 @@ def report_erroneous_rows(imprt, error_type, error_column, whereclause):
             ImportUserError.rows,
             ImportUserError.column,
         ],
-        select=(select([error]).where(error.c.rows != None)),
+        select=(select(error).where(error.c.rows != None)),
     )
     db.session.execute(stmt)
 

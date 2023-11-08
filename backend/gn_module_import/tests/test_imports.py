@@ -16,7 +16,6 @@ from sqlalchemy.sql.expression import select
 
 from apptax.taxonomie.models import BibListes, CorNomListe, BibNoms
 from geonature.utils.env import db
-from geonature.tests.utils import set_logged_user_cookie, unset_logged_user_cookie
 from geonature.core.gn_permissions.tools import (
     get_scopes_by_action as _get_scopes_by_action,
 )
@@ -27,6 +26,11 @@ from geonature.core.gn_synthese.models import Synthese
 from geonature.tests.fixtures import synthese_data, celery_eager
 
 from pypnusershub.db.models import User, Organisme
+from pypnusershub.tests.utils import (
+    set_logged_user,
+    set_logged_user_cookie, 
+    unset_logged_user_cookie
+)
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
 from ref_geo.tests.test_ref_geo import has_french_dem
 from ref_geo.models import LAreas
@@ -437,7 +441,7 @@ class TestImports:
 
         assert get("own_import").status_code == Unauthorized.code
 
-        set_logged_user_cookie(self.client, users["noright_user"])
+        set_logged_user(self.client, users["noright_user"])
         assert get("own_import").status_code == Forbidden.code
 
         set_logged_user_cookie(self.client, users["user"])
@@ -532,7 +536,7 @@ class TestImports:
             )
             assert r.status_code == 200, r.data
 
-        imprt = TImports.query.get(r.json["id_import"])
+        imprt = db.session.get(TImports, r.json["id_import"])
         assert imprt.source_file is not None
         assert imprt.full_file_name == "simple_file.csv"
 
@@ -833,7 +837,7 @@ class TestImports:
             )
         assert r.status_code == 200, r.data
         imprt_json = r.get_json()
-        imprt = TImports.query.get(imprt_json["id_import"])
+        imprt = db.session.get(TImports, imprt_json["id_import"])
         assert len(imprt.authors) == 1
         assert imprt_json["date_create_import"]
         assert imprt_json["date_update_import"]

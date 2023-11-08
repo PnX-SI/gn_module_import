@@ -46,7 +46,7 @@ logger = get_task_logger(__name__)
 @celery_app.task(bind=True)
 def do_import_checks(self, import_id):
     logger.info(f"Starting verification of import {import_id}.")
-    imprt = TImports.query.get(import_id)
+    imprt = db.session.get(TImports, import_id)
     if imprt is None or imprt.task_id != self.request.id:
         logger.warning("Task cancelled, doing nothing.")
         return
@@ -131,7 +131,7 @@ def do_import_checks(self, import_id):
             progress = 0.4 + ((i + 1) / len(sql_checks)) * 0.6
             self.update_state(state="PROGRESS", meta={"progress": progress})
 
-    imprt = TImports.query.with_for_update(of=TImports).get(import_id)
+    imprt = db.session.get(TImports, import_id, with_for_update={"of": TImports})
     if imprt is None or imprt.task_id != self.request.id:
         logger.warning("Task cancelled, rollback changes.")
         db.session.rollback()
@@ -170,7 +170,7 @@ def do_import_in_synthese(self, import_id):
         )
     import_data_to_synthese(imprt)
     ImportSyntheseData.query.filter_by(imprt=imprt).delete()
-    imprt = TImports.query.with_for_update(of=TImports).get(import_id)
+    imprt = db.session.get(TImports, import_id, with_for_update={"of": TImports})
     if imprt is None or imprt.task_id != self.request.id:
         logger.warning("Task cancelled, rollback changes.")
         db.session.rollback()

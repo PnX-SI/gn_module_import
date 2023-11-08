@@ -185,7 +185,7 @@ def upload_file(scope, import_id):
             dataset_id = int(request.form["datasetId"])
         except ValueError:
             raise BadRequest(description="'datasetId' must be an integer.")
-        dataset = TDatasets.query.get(dataset_id)
+        dataset = db.session.get(TDatasets, (dataset_id))
         if dataset is None:
             raise BadRequest(description=f"Dataset '{dataset_id}' does not exist.")
         if not dataset.has_instance_permission(scope):  # FIXME wrong scope
