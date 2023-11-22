@@ -1,10 +1,12 @@
-import pytest
-import pandas as pd
-import numpy as np
 from collections import namedtuple, OrderedDict
 from datetime import datetime
 from uuid import UUID
+
+import pytest
+import pandas as pd
+import numpy as np
 from flask import current_app
+import sqlalchemy as sa
 
 from geonature.utils.config import config
 from geonature import create_app
