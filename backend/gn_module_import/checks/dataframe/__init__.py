@@ -112,7 +112,7 @@ def run_all_checks(imprt, fields: Dict[str, BibFields], df):
         try:
             error_type = ImportUserErrorType.query.filter_by(name=error["error_code"]).one()
         except NoResultFound:
-            raise Exception(f"Error code '{error_code}' not found.")
+            raise Exception(f"Error code '{error['error_code']}' not found.")
         invalid_rows = error["invalid_rows"]
         df.loc[invalid_rows.index, "valid"] = False
         # df['gn_invalid_reason'][invalid_rows.index.intersection(df['gn_invalid_reason'].isnull())] = \
