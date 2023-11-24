@@ -225,10 +225,6 @@ class TImports(InstancePermissionMixin, db.Model):
         cascade="all, delete-orphan",
     )
 
-    def authors_name():
-        order_by = getattr(User, "nom_role")
-        return order_by
-
     @property
     def cruved(self):
         scopes_by_action = get_scopes_by_action(module_code="IMPORT", object_code="IMPORT")
