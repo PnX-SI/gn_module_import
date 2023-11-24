@@ -168,7 +168,7 @@ def do_import_in_synthese(self, import_id):
         imprt.source = TSources(
             name_source=imprt.source_name,
             desc_source=f"Imported data from import module (id={import_id})",
-            entity_source_pk_field=entity_source_pk_field.synthese_field,
+            entity_source_pk_field=entity_source_pk_field.dest_field,
             module=TModules.query.filter_by(module_code="IMPORT").one(),
         )
     import_data_to_synthese(imprt)

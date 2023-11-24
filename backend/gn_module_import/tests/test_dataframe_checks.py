@@ -283,9 +283,7 @@ class TestChecks:
             ],
         )
         pd.testing.assert_frame_equal(
-            df.loc[
-                :, [fields["datetime_min"].synthese_field, fields["datetime_max"].synthese_field]
-            ],
+            df.loc[:, [fields["datetime_min"].dest_field, fields["datetime_max"].dest_field]],
             pd.DataFrame(
                 [
                     [datetime(2020, 1, 1, 12), datetime(2020, 1, 2, 14)],
@@ -300,7 +298,7 @@ class TestChecks:
                     [pd.NaT, datetime(2020, 1, 2, 14)],
                     [pd.NaT, datetime(2020, 1, 2, 14)],
                 ],
-                columns=[fields[name].synthese_field for name in ("datetime_min", "datetime_max")],
+                columns=[fields[name].dest_field for name in ("datetime_min", "datetime_max")],
             ),
         )
 
@@ -334,7 +332,7 @@ class TestChecks:
         errors = list(check_types(df, fields))
         assert_errors(errors, expected=[])
         pd.testing.assert_frame_equal(
-            df.loc[:, [fields["datetime_min"].synthese_field]],
+            df.loc[:, [fields["datetime_min"].dest_field]],
             pd.DataFrame(
                 [
                     [datetime(2020, 1, 5, 0)],
@@ -356,7 +354,7 @@ class TestChecks:
                     [datetime(2020, 1, 5, 13, 12)],
                     [datetime(2020, 1, 5, 13, 12, 5)],
                 ],
-                columns=[fields["datetime_min"].synthese_field],
+                columns=[fields["datetime_min"].dest_field],
             ),
         )
 
@@ -372,7 +370,7 @@ class TestChecks:
                 [2, 1],
                 [20, 5],
             ],
-            columns=[field.synthese_field for field in fields.values()],
+            columns=[field.dest_field for field in fields.values()],
         )
         errors = list(check_counts(df, fields))
         assert_errors(
@@ -386,7 +384,7 @@ class TestChecks:
             ],
         )
         pd.testing.assert_frame_equal(
-            df.loc[:, [field.synthese_field for field in fields.values()]],
+            df.loc[:, [field.dest_field for field in fields.values()]],
             pd.DataFrame(
                 [
                     [default_value, default_value],
@@ -396,7 +394,7 @@ class TestChecks:
                     [2, 1],
                     [20, 5],
                 ],
-                columns=[field.synthese_field for field in fields.values()],
+                columns=[field.dest_field for field in fields.values()],
                 dtype=float,
             ),
         )
@@ -409,19 +407,19 @@ class TestChecks:
                 [None],
                 [2],
             ],
-            columns=[count_min_field.synthese_field],
+            columns=[count_min_field.dest_field],
         )
         list(check_counts(df, {"count_min": count_min_field}))
         pd.testing.assert_frame_equal(
-            df.loc[:, [count_min_field.synthese_field, count_max_field.synthese_field]],
+            df.loc[:, [count_min_field.dest_field, count_max_field.dest_field]],
             pd.DataFrame(
                 [
                     [default_value, default_value],
                     [2, 2],
                 ],
                 columns=[
-                    count_min_field.synthese_field,
-                    count_max_field.synthese_field,
+                    count_min_field.dest_field,
+                    count_max_field.dest_field,
                 ],
                 dtype=float,
             ),
@@ -432,19 +430,19 @@ class TestChecks:
                 [None],
                 [2],
             ],
-            columns=[count_max_field.synthese_field],
+            columns=[count_max_field.dest_field],
         )
         list(check_counts(df, {"count_max": count_max_field}))
         pd.testing.assert_frame_equal(
-            df.loc[:, [count_min_field.synthese_field, count_max_field.synthese_field]],
+            df.loc[:, [count_min_field.dest_field, count_max_field.dest_field]],
             pd.DataFrame(
                 [
                     [default_value, default_value],
                     [2, 2],
                 ],
                 columns=[
-                    count_min_field.synthese_field,
-                    count_max_field.synthese_field,
+                    count_min_field.dest_field,
+                    count_max_field.dest_field,
                 ],
                 dtype=float,
             ),
@@ -453,15 +451,15 @@ class TestChecks:
         df = pd.DataFrame([[], []])
         list(check_counts(df, {}))
         pd.testing.assert_frame_equal(
-            df.loc[:, [count_min_field.synthese_field, count_max_field.synthese_field]],
+            df.loc[:, [count_min_field.dest_field, count_max_field.dest_field]],
             pd.DataFrame(
                 [
                     [default_value, default_value],
                     [default_value, default_value],
                 ],
                 columns=[
-                    count_min_field.synthese_field,
-                    count_max_field.synthese_field,
+                    count_min_field.dest_field,
+                    count_max_field.dest_field,
                 ],
             ),
         )

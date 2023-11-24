@@ -435,7 +435,7 @@ def preview_valid_data(scope, imprt):
     if not imprt.processed:
         raise Conflict("Import must have been prepared before executing this action.")
     fields = BibFields.query.filter(
-        BibFields.synthese_field != None,
+        BibFields.dest_field != None,
         BibFields.name_field.in_(imprt.fieldmapping.keys()),
     ).all()
     columns = [field.name_field for field in fields]

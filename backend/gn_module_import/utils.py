@@ -256,7 +256,7 @@ def update_import_data_from_dataframe(imprt, fields, df):
         "line_no",
         "valid",
     ]
-    updated_cols += [field.synthese_field for field in fields.values() if field.synthese_field]
+    updated_cols += [field.dest_field for field in fields.values() if field.dest_field]
     df.replace({np.nan: None}, inplace=True)
     records = df[df["valid"] == True][updated_cols].to_dict(orient="records")
     insert_stmt = pg_insert(ImportSyntheseData)
@@ -284,12 +284,12 @@ def import_data_to_synthese(imprt):
         generated_fields |= {"altitude_min", "altitude_max"}
     fields = BibFields.query.filter(
         BibFields.destination == imprt.destination,
-        BibFields.synthese_field != None,
+        BibFields.dest_field != None,
         BibFields.name_field.in_(imprt.fieldmapping.keys() | generated_fields),
     ).all()
     select_stmt = (
         ImportSyntheseData.query.filter_by(imprt=imprt, valid=True)
-        .with_entities(*[getattr(ImportSyntheseData, field.synthese_field) for field in fields])
+        .with_entities(*[getattr(ImportSyntheseData, field.dest_field) for field in fields])
         .add_columns(
             literal(imprt.id_source),
             literal(TModules.query.filter_by(module_code=MODULE_CODE).one().id_module),
@@ -297,7 +297,7 @@ def import_data_to_synthese(imprt):
             literal("I"),
         )
     )
-    names = [field.synthese_field for field in fields] + [
+    names = [field.dest_field for field in fields] + [
         "id_source",
         "id_module",
         "id_dataset",

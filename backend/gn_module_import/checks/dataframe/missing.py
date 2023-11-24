@@ -5,8 +5,6 @@ import numpy as np
 
 from flask import current_app
 
-from geonature.core.gn_synthese.models import Synthese
-
 from gn_module_import.models import BibFields
 
 

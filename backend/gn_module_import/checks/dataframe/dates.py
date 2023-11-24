@@ -13,8 +13,8 @@ def concat_dates(df, fields: Dict[str, BibFields]):
         }
     )
 
-    datetime_min_col = fields["datetime_min"].synthese_column
-    datetime_max_col = fields["datetime_max"].synthese_column
+    datetime_min_col = fields["datetime_min"].dest_column
+    datetime_max_col = fields["datetime_max"].dest_column
 
     date_min_col = fields["date_min"].source_field
     date_min = df[date_min_col]

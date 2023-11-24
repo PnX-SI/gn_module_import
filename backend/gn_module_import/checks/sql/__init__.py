@@ -52,7 +52,7 @@ def do_nomenclatures_mapping(imprt, fields):
             .where(TNomenclatures.cd_nomenclature == cte.c.cd_nomenclature)
             .where(BibNomenclaturesTypes.mnemonique == field.mnemonique)
             .where(TNomenclatures.id_type == BibNomenclaturesTypes.id_type)
-            .values({field.synthese_field: TNomenclatures.id_nomenclature})
+            .values({field.dest_field: TNomenclatures.id_nomenclature})
         )
         db.session.execute(stmt, execution_options=dict({"synchronize_session": 'fetch'}))
 
@@ -65,17 +65,17 @@ def do_nomenclatures_mapping(imprt, fields):
         ):
             continue
         source_field = getattr(ImportSyntheseData, field.source_field)
-        synthese_field = getattr(ImportSyntheseData, field.synthese_field)
+        dest_field = getattr(ImportSyntheseData, field.dest_field)
         # Set default nomenclature for empty user fields
         (
             ImportSyntheseData.query.filter(ImportSyntheseData.imprt == imprt)
             .filter(
                 sa.or_(source_field == None, source_field == ""),
-                synthese_field == None,
+                dest_field == None,
             )
             .update(
                 values={
-                    field.synthese_field: sa.func.gn_synthese.get_default_nomenclature_value(
+                    field.dest_field: sa.func.gn_synthese.get_default_nomenclature_value(
                         field.mnemonique,
                     ),
                 },
@@ -85,13 +85,13 @@ def do_nomenclatures_mapping(imprt, fields):
 
     for field in filter(lambda field: field.mnemonique != None, fields.values()):
         source_field = getattr(ImportSyntheseData, field.source_field)
-        synthese_field = getattr(ImportSyntheseData, field.synthese_field)
+        dest_field = getattr(ImportSyntheseData, field.dest_field)
         # Note: with a correct contentmapping, no errors should occur.
         report_erroneous_rows(
             imprt,
             error_type="INVALID_NOMENCLATURE",
             error_column=field.name_field,
-            whereclause=synthese_field == None,
+            whereclause=dest_field == None,
         )
 
 
@@ -111,21 +111,21 @@ def check_nomenclatures(imprt, fields):
             TNomenclatures.mnemonique == "Oui",
         ).one()
         oui_filter = (
-            getattr(ImportSyntheseData, nomenclature_field.synthese_field) == oui.id_nomenclature
+            getattr(ImportSyntheseData, nomenclature_field.dest_field) == oui.id_nomenclature
         )
         proof_set_filters = []
         if digital_proof_field is not None:
             proof_set_filters.append(
                 sa.and_(
-                    getattr(ImportSyntheseData, digital_proof_field.synthese_field) != None,
-                    getattr(ImportSyntheseData, digital_proof_field.synthese_field) != "",
+                    getattr(ImportSyntheseData, digital_proof_field.dest_field) != None,
+                    getattr(ImportSyntheseData, digital_proof_field.dest_field) != "",
                 )
             )
         if non_digital_proof_field is not None:
             proof_set_filters.append(
                 sa.and_(
-                    getattr(ImportSyntheseData, non_digital_proof_field.synthese_field) != None,
-                    getattr(ImportSyntheseData, non_digital_proof_field.synthese_field) != "",
+                    getattr(ImportSyntheseData, non_digital_proof_field.dest_field) != None,
+                    getattr(ImportSyntheseData, non_digital_proof_field.dest_field) != "",
                 )
             )
         proof_set_filter = sa.or_(*proof_set_filters) if proof_set_filters else sa.false()
@@ -150,7 +150,7 @@ def check_nomenclatures(imprt, fields):
             imprt,
             error_type="CONDITIONAL_MANDATORY_FIELD_ERROR",
             error_column=blurring_field.name_field,
-            whereclause=(getattr(ImportSyntheseData, blurring_field.synthese_field) == None),
+            whereclause=(getattr(ImportSyntheseData, blurring_field.dest_field) == None),
         )
     if current_app.config["IMPORT"]["CHECK_REF_BIBLIO_LITTERATURE"]:
         litterature = TNomenclatures.query.filter(
@@ -170,18 +170,18 @@ def check_nomenclatures(imprt, fields):
             error_type="CONDITIONAL_MANDATORY_FIELD_ERROR",
             error_column=source_status_field.name_field,
             whereclause=sa.and_(
-                getattr(ImportSyntheseData, source_status_field.synthese_field)
+                getattr(ImportSyntheseData, source_status_field.dest_field)
                 == litterature.id_nomenclature,
                 sa.or_(
-                    getattr(ImportSyntheseData, ref_biblio_field.synthese_field) == None,
-                    getattr(ImportSyntheseData, ref_biblio_field.synthese_field) == "",
+                    getattr(ImportSyntheseData, ref_biblio_field.dest_field) == None,
+                    getattr(ImportSyntheseData, ref_biblio_field.dest_field) == "",
                 ),
             ),
         )
 
 
 def check_referential(imprt, field, reference_field, error_type, reference_table=None):
-    synthese_field = getattr(ImportSyntheseData, field.synthese_field)
+    dest_field = getattr(ImportSyntheseData, field.dest_field)
     if reference_table is None:
         reference_table = reference_field.class_
     # We outerjoin the referential, and select rows where there is a value in synthese field
@@ -192,12 +192,12 @@ def check_referential(imprt, field, reference_field, error_type, reference_table
             join(
                 ImportSyntheseData,
                 reference_table,
-                synthese_field == reference_field,
+                dest_field == reference_field,
                 isouter=True,
             )
         )
         .where(ImportSyntheseData.imprt == imprt)
-        .where(synthese_field != None)
+        .where(dest_field != None)
         .where(reference_field == None)
         .cte("invalid_ref")
     )
@@ -307,7 +307,7 @@ def set_altitudes(imprt, fields):
     db.session.execute(stmt.execution_options(synchronize_session="fetch"))
 
 
-def get_duplicates_query(imprt, synthese_field, whereclause=sa.true()):
+def get_duplicates_query(imprt, dest_field, whereclause=sa.true()):
     whereclause = sa.and_(
         ImportSyntheseData.imprt == imprt,
         whereclause,
@@ -316,7 +316,7 @@ def get_duplicates_query(imprt, synthese_field, whereclause=sa.true()):
         select(
             array_agg(ImportSyntheseData.line_no)
             .over(
-                partition_by=synthese_field,
+                partition_by=dest_field,
             )
             .label("duplicate_lines")
         )
@@ -334,11 +334,11 @@ def get_duplicates_query(imprt, synthese_field, whereclause=sa.true()):
 def set_uuid(imprt, fields):
     if "unique_id_sinp" in fields:
         field = fields["unique_id_sinp"]
-        synthese_field = getattr(ImportSyntheseData, field.synthese_field)
+        dest_field = getattr(ImportSyntheseData, field.dest_field)
         duplicates = get_duplicates_query(
             imprt,
-            synthese_field,
-            whereclause=synthese_field != None,
+            dest_field,
+            whereclause=dest_field != None,
         )
         report_erroneous_rows(
             imprt,
@@ -381,7 +381,7 @@ def set_uuid(imprt, fields):
 # Currently not used as done during dataframe checks
 def check_mandatory_fields(imprt, fields):
     for field in fields.values():
-        if not field.mandatory or not field.synthese_field:
+        if not field.mandatory or not field.dest_field:
             continue
         source_field = getattr(ImportSyntheseData, field.source_column)
         whereclause = sa.or_(
@@ -400,13 +400,13 @@ def check_duplicates_source_pk(imprt, fields):
     if "entity_source_pk_value" not in fields:
         return
     field = fields["entity_source_pk_value"]
-    synthese_field = getattr(ImportSyntheseData, field.synthese_field)
+    dest_field = getattr(ImportSyntheseData, field.dest_field)
     duplicates = get_duplicates_query(
         imprt,
-        synthese_field,
+        dest_field,
         whereclause=sa.and_(
-            synthese_field != None,
-            synthese_field != "",
+            dest_field != None,
+            dest_field != "",
         ),
     )
     report_erroneous_rows(
@@ -420,41 +420,41 @@ def check_duplicates_source_pk(imprt, fields):
 def check_dates(imprt, fields):
     date_min_field = fields["datetime_min"]
     date_max_field = fields["datetime_max"]
-    date_min_synthese_field = getattr(ImportSyntheseData, date_min_field.synthese_field)
-    date_max_synthese_field = getattr(ImportSyntheseData, date_max_field.synthese_field)
+    date_min_dest_field = getattr(ImportSyntheseData, date_min_field.dest_field)
+    date_max_dest_field = getattr(ImportSyntheseData, date_max_field.dest_field)
     today = date.today()
     report_erroneous_rows(
         imprt,
         error_type="DATE_MIN_TOO_HIGH",
         error_column=date_min_field.name_field,
-        whereclause=(date_min_synthese_field > today),
+        whereclause=(date_min_dest_field > today),
     )
     report_erroneous_rows(
         imprt,
         error_type="DATE_MAX_TOO_HIGH",
         error_column=date_max_field.name_field,
         whereclause=sa.and_(
-            date_max_synthese_field > today,
-            date_min_synthese_field <= today,
+            date_max_dest_field > today,
+            date_min_dest_field <= today,
         ),
     )
     report_erroneous_rows(
         imprt,
         error_type="DATE_MIN_SUP_DATE_MAX",
         error_column=date_min_field.name_field,
-        whereclause=(date_min_synthese_field > date_max_synthese_field),
+        whereclause=(date_min_dest_field > date_max_dest_field),
     )
     report_erroneous_rows(
         imprt,
         error_type="DATE_MIN_TOO_LOW",
         error_column=date_min_field.name_field,
-        whereclause=(date_min_synthese_field < date(1900, 1, 1)),
+        whereclause=(date_min_dest_field < date(1900, 1, 1)),
     )
     report_erroneous_rows(
         imprt,
         error_type="DATE_MAX_TOO_LOW",
         error_column=date_max_field.name_field,
-        whereclause=(date_max_synthese_field < date(1900, 1, 1)),
+        whereclause=(date_max_dest_field < date(1900, 1, 1)),
     )
 
 
@@ -462,23 +462,23 @@ def check_altitudes(imprt, fields):
     if "altitude_min" in fields:
         alti_min_field = fields["altitude_min"]
         alti_min_name_field = alti_min_field.name_field
-        alti_min_synthese_field = getattr(ImportSyntheseData, alti_min_field.synthese_field)
+        alti_min_dest_field = getattr(ImportSyntheseData, alti_min_field.dest_field)
         report_erroneous_rows(
             imprt,
             error_type="INVALID_INTEGER",
             error_column=alti_min_name_field,
-            whereclause=(alti_min_synthese_field < 0),
+            whereclause=(alti_min_dest_field < 0),
         )
 
     if "altitude_max" in fields:
         alti_max_field = fields["altitude_max"]
         alti_max_name_field = alti_max_field.name_field
-        alti_max_synthese_field = getattr(ImportSyntheseData, alti_max_field.synthese_field)
+        alti_max_dest_field = getattr(ImportSyntheseData, alti_max_field.dest_field)
         report_erroneous_rows(
             imprt,
             error_type="INVALID_INTEGER",
             error_column=alti_max_name_field,
-            whereclause=(alti_max_synthese_field < 0),
+            whereclause=(alti_max_dest_field < 0),
         )
 
     if "altitude_min" in fields and "altitude_max" in fields:
@@ -486,7 +486,7 @@ def check_altitudes(imprt, fields):
             imprt,
             error_type="ALTI_MIN_SUP_ALTI_MAX",
             error_column=alti_min_name_field,
-            whereclause=(alti_min_synthese_field > alti_max_synthese_field),
+            whereclause=(alti_min_dest_field > alti_max_dest_field),
         )
 
 
@@ -494,23 +494,23 @@ def check_depths(imprt, fields):
     if "depth_min" in fields:
         depth_min_field = fields["depth_min"]
         depth_min_name_field = depth_min_field.name_field
-        depth_min_synthese_field = getattr(ImportSyntheseData, depth_min_field.synthese_field)
+        depth_min_dest_field = getattr(ImportSyntheseData, depth_min_field.dest_field)
         report_erroneous_rows(
             imprt,
             error_type="INVALID_INTEGER",
             error_column=depth_min_name_field,
-            whereclause=(depth_min_synthese_field < 0),
+            whereclause=(depth_min_dest_field < 0),
         )
 
     if "depth_max" in fields:
         depth_max_field = fields["depth_max"]
         depth_max_name_field = depth_max_field.name_field
-        depth_max_synthese_field = getattr(ImportSyntheseData, depth_max_field.synthese_field)
+        depth_max_dest_field = getattr(ImportSyntheseData, depth_max_field.dest_field)
         report_erroneous_rows(
             imprt,
             error_type="INVALID_INTEGER",
             error_column=depth_max_name_field,
-            whereclause=(depth_max_synthese_field < 0),
+            whereclause=(depth_max_dest_field < 0),
         )
 
     if "depth_min" in fields and "depth_max" in fields:
@@ -518,7 +518,7 @@ def check_depths(imprt, fields):
             imprt,
             error_type="DEPTH_MIN_SUP_ALTI_MAX",  # Yes, there is a typo in db... Should be "DEPTH_MIN_SUP_DEPTH_MAX"
             error_column=depth_min_name_field,
-            whereclause=(depth_min_synthese_field > depth_max_synthese_field),
+            whereclause=(depth_min_dest_field > depth_max_dest_field),
         )
 
 
@@ -526,16 +526,16 @@ def check_digital_proof_urls(imprt, fields):
     if "digital_proof" not in fields:
         return
     digital_proof_field = fields["digital_proof"]
-    digital_proof_synthese_field = getattr(ImportSyntheseData, digital_proof_field.synthese_field)
+    digital_proof_dest_field = getattr(ImportSyntheseData, digital_proof_field.dest_field)
     report_erroneous_rows(
         imprt,
         error_type="INVALID_URL_PROOF",
         error_column=digital_proof_field.name_field,
         whereclause=(
             sa.and_(
-                digital_proof_synthese_field is not None,
-                digital_proof_synthese_field != "",
-                digital_proof_synthese_field.op("!~")(
+                digital_proof_dest_field is not None,
+                digital_proof_dest_field != "",
+                digital_proof_dest_field.op("!~")(
                     r"^(?:(?:https?|ftp):\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$"
                 ),
             )

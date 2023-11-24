@@ -19,6 +19,13 @@ depends_on = None
 
 def upgrade():
     meta = MetaData(bind=op.get_bind())
+    # Rename synthese_field → dest_field
+    op.alter_column(
+        schema="gn_imports",
+        table_name="bib_fields",
+        column_name="synthese_field",
+        new_column_name="dest_field",
+    )
     ### Destination
     module = Table("t_modules", meta, autoload=True, schema="gn_commons")
     id_module_synthese = (
@@ -317,3 +324,9 @@ def downgrade():
     )
     op.drop_column(schema="gn_imports", table_name="bib_fields", column_name="id_destination")
     op.drop_table("bib_destinations", schema="gn_imports")
+    op.alter_column(
+        schema="gn_imports",
+        table_name="bib_fields",
+        column_name="dest_field",
+        new_column_name="synthese_field",
+    )

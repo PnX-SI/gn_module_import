@@ -143,16 +143,16 @@ def check_anytype_field(df, field_type, source_col, dest_col, required):
 
 def check_types(df, fields: Dict[str, BibFields]):
     for name, field in fields.items():
-        if not field.synthese_field:
+        if not field.dest_field:
             continue
         if field.mnemonique:  # set from content mapping
             continue
-        field_type = Synthese.__table__.c[field.synthese_field].type
+        field_type = Synthese.__table__.c[field.dest_field].type
         for error in check_anytype_field(
             df,
             field_type=field_type,
             source_col=field.source_column,
-            dest_col=field.synthese_field,
+            dest_col=field.dest_field,
             required=False,
         ):
             error.update(
