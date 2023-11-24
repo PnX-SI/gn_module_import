@@ -415,24 +415,15 @@ class TestImports:
 
     def test_order_import_foreign(self, users, imports, uploaded_import):
         set_logged_user_cookie(self.client, users["user"])
-        r_normal = self.client.get(url_for("import.get_import_list"))
-        assert r_normal.status_code == 200, r_normal.data
-        r_ordered_authors = self.client.get(
-            url_for("import.get_import_list") + "?sort=authors_name"
-        )
-        r_ordered_dataset = self.client.get(
+        response = self.client.get(
             url_for("import.get_import_list") + "?sort=dataset.dataset_name"
         )
-        sorte = sorted(r_normal.get_json()["imports"], key=lambda x: x["id_import"])
-        sorte_dataset = sorted(
-            sorte, key=lambda x: x["dataset"]["dataset_name"] if x["dataset"] != None else ""
-        )
-        import_ids_sorte_dataset = [imprt["id_import"] for imprt in sorte_dataset]
-        import_ids_ordered_dataset = [
-            imprt["id_import"] for imprt in r_ordered_dataset.get_json()["imports"]
-        ]
-        assert r_ordered_dataset.status_code == 200, r_ordered_dataset.data
-        assert set(import_ids_sorte_dataset) == set(import_ids_ordered_dataset)
+        assert response.status_code == 200, response.data
+        imports = response.get_json()["imports"]
+        for a, b in zip(imports[:1], imports[1:]):
+            assert (a["dataset"] is None) or (
+                a["dataset"]["dataset_name"] <= b["dataset"]["dataset_name"]
+            )
 
     def test_get_import(self, users, imports):
         def get(import_name):
