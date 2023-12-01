@@ -33,13 +33,12 @@ from ref_geo.models import LAreas
 
 from gn_module_import.models import (
     TImports,
-    ImportSyntheseData,
     FieldMapping,
     ContentMapping,
     BibFields,
     ImportUserErrorType,
 )
-from gn_module_import.utils import insert_import_data_in_database
+from gn_module_import.utils import insert_import_data_in_transient_table
 
 from .jsonschema_definitions import jsonschema_definitions
 
@@ -94,10 +93,11 @@ def assert_import_errors(imprt, expected_errors):
     if imprt.processed:
         assert set(imprt.erroneous_rows or []) == expected_erroneous_rows
     else:
+        transient_table = imprt.destination.get_transient_table()
         stmt = (
-            select([ImportSyntheseData.line_no])
-            .where(ImportSyntheseData.imprt == imprt)
-            .where(ImportSyntheseData.valid == False)
+            select([transient_table.c.line_no])
+            .where(transient_table.c.id_import == imprt.id_import)
+            .where(transient_table.c.valid == False)
         )
         erroneous_rows = {line_no for line_no, in db.session.execute(stmt)}
         assert erroneous_rows == expected_erroneous_rows
@@ -232,7 +232,9 @@ def field_mapped_import(client, decoded_import, fieldmapping):
 @pytest.fixture()
 def loaded_import(client, field_mapped_import):
     with db.session.begin_nested():
-        field_mapped_import.source_count = insert_import_data_in_database(field_mapped_import)
+        field_mapped_import.source_count = insert_import_data_in_transient_table(
+            field_mapped_import
+        )
         field_mapped_import.loaded = True
     return field_mapped_import
 
@@ -449,6 +451,7 @@ class TestImportsSynthese:
 
     def test_delete_import(self, users, imported_import):
         imprt = imported_import
+        transient_table = imprt.destination.get_transient_table()
         r = self.client.delete(url_for("import.delete_import", import_id=imprt.id_import))
         assert r.status_code == Unauthorized.code, r.data
         set_logged_user(self.client, users["admin_user"])
@@ -457,7 +460,12 @@ class TestImportsSynthese:
         # TODO: check data from synthese, and import tables are also removed
         r = self.client.delete(url_for("import.delete_import", import_id=imprt.id_import))
         assert r.status_code == 404, r.data
-        assert 0 == ImportSyntheseData.query.filter_by(imprt=imprt).count()
+        transient_rows_count = db.session.execute(
+            select([func.count()])
+            .select_from(transient_table)
+            .where(transient_table.c.id_import == imprt.id_import)
+        ).scalar()
+        assert transient_rows_count == 0
 
     def test_import_upload(self, users, datasets):
         with open(tests_path / "files" / "simple_file.csv", "rb") as f:
@@ -688,16 +696,18 @@ class TestImportsSynthese:
 
     def test_import_loading(self, users, field_mapped_import):
         imprt = field_mapped_import
-
+        transient_table = imprt.destination.get_transient_table()
         set_logged_user(self.client, users["user"])
         r = self.client.post(url_for("import.load_import", import_id=imprt.id_import))
         assert r.status_code == 200, r.data
         assert r.json["source_count"] == valid_file_line_count
         assert r.json["loaded"] == True
-        assert (
-            ImportSyntheseData.query.filter_by(id_import=imprt.id_import).count()
-            == r.json["source_count"]
-        )
+        transient_rows_count = db.session.execute(
+            select([func.count()])
+            .select_from(transient_table)
+            .where(transient_table.c.id_import == imprt.id_import)
+        ).scalar()
+        assert transient_rows_count == r.json["source_count"]
 
     def test_import_values(self, users, loaded_import):
         imprt = loaded_import
@@ -859,7 +869,13 @@ class TestImportsSynthese:
         assert imprt.srid == 4326
         assert imprt.columns
         assert len(imprt.columns) == valid_file_column_count
-        assert ImportSyntheseData.query.filter_by(imprt=imprt).count() == 0
+        transient_table = imprt.destination.get_transient_table()
+        transient_rows_count = db.session.execute(
+            select([func.count()])
+            .select_from(transient_table)
+            .where(transient_table.c.id_import == imprt.id_import)
+        ).scalar()
+        assert transient_rows_count == 0
 
         # Field mapping step
         fieldmapping = FieldMapping.query.filter_by(label="Synthese GeoNature").one()
@@ -880,7 +896,12 @@ class TestImportsSynthese:
         assert r.json["source_count"] == valid_file_line_count
         assert imprt.source_count == valid_file_line_count
         assert imprt.loaded == True
-        assert ImportSyntheseData.query.filter_by(imprt=imprt).count() == test_file_line_count
+        transient_rows_count = db.session.execute(
+            select([func.count()])
+            .select_from(transient_table)
+            .where(transient_table.c.id_import == imprt.id_import)
+        ).scalar()
+        assert transient_rows_count == test_file_line_count
 
         # Content mapping step
         contentmapping = ContentMapping.query.filter_by(label="Nomenclatures SINP (labels)").one()
@@ -932,7 +953,12 @@ class TestImportsSynthese:
             data,
             {"definitions": jsonschema_definitions, "$ref": "#/definitions/import"},
         )
-        assert 0 == ImportSyntheseData.query.filter_by(imprt=imprt).count()
+        transient_rows_count = db.session.execute(
+            select([func.count()])
+            .select_from(transient_table)
+            .where(transient_table.c.id_import == imprt.id_import)
+        ).scalar()
+        assert transient_rows_count == 0
         assert valid_file_line_count - len(valid_file_invalid_rows) == imprt.import_count
         assert valid_file_taxa_count == imprt.taxa_count
         assert Synthese.query.filter_by(source=imprt.source).count() == imprt.import_count
@@ -1004,7 +1030,12 @@ class TestImportsSynthese:
             },
         )
         if has_french_dem():
-            altitudes = [(s.altitude_min, s.altitude_max) for s in prepared_import.synthese_data]
+            transient_table = prepared_import.destination.get_transient_table()
+            altitudes = db.session.execute(
+                select([transient_table.c.altitude_min, transient_table.c.altitude_max])
+                .where(transient_table.c.id_import == prepared_import.id_import)
+                .order_by(transient_table.c.line_no)
+            ).fetchall()
             expected_altitudes = [
                 (1389, 1389),
                 (10, 1389),
@@ -1030,8 +1061,13 @@ class TestImportsSynthese:
                 ("INVALID_UUID", "unique_id_sinp", frozenset([5])),
             },
         )
-        generated_line = ImportSyntheseData.query.filter_by(imprt=prepared_import, line_no=6).one()
-        assert generated_line.unique_id_sinp != None
+        transient_table = prepared_import.destination.get_transient_table()
+        unique_id_sinp = db.session.execute(
+            select([transient_table.c.unique_id_sinp])
+            .where(transient_table.c.id_import == prepared_import.id_import)
+            .where(transient_table.c.line_no == 6)
+        ).scalar()
+        assert unique_id_sinp != None
 
     @pytest.mark.parametrize("import_file_name", ["dates.csv"])
     def test_import_dates_file(self, prepared_import):

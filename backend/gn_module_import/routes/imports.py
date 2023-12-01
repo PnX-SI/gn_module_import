@@ -7,11 +7,11 @@ from flask import request, current_app, jsonify, g, stream_with_context, send_fi
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden, Gone, NotFound
 # url_quote was deprecated in werkzeug 3.0 https://stackoverflow.com/a/77222063/5807438
 from urllib.parse import quote as url_quote
-from sqlalchemy import or_, func, desc
+from sqlalchemy import or_, func, desc, select, delete
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager
 from sqlalchemy.orm.attributes import set_committed_value
-from sqlalchemy.sql.expression import collate
+from sqlalchemy.sql.expression import collate, exists
 
 from geonature.utils.env import db
 from geonature.utils.sentry import start_sentry_child
@@ -26,7 +26,6 @@ from pypnnomenclature.models import TNomenclatures
 from gn_module_import.models import (
     Destination,
     TImports,
-    ImportSyntheseData,
     ImportUserError,
     BibFields,
     FieldMapping,
@@ -39,7 +38,7 @@ from gn_module_import.utils import (
     get_valid_bbox,
     detect_encoding,
     detect_separator,
-    insert_import_data_in_database,
+    insert_import_data_in_transient_table,
     get_file_size,
     clean_import,
     generate_pdf_from_template,
@@ -302,7 +301,7 @@ def load_import(scope, imprt):
         raise BadRequest(description="File fields must be first mapped.")
     clean_import(imprt, ImportStep.LOAD)
     with start_sentry_child(op="task", description="insert data in db"):
-        line_no = insert_import_data_in_database(imprt)
+        line_no = insert_import_data_in_transient_table(imprt)
     if not line_no:
         raise BadRequest("File with 0 lines.")
     imprt.source_count = line_no
@@ -347,6 +346,7 @@ def get_import_values(scope, imprt):
         .all()
     )
     # Note: response format is validated with jsonschema in tests
+    transient_table = imprt.destination.get_transient_table()
     response = {}
     for field in nomenclated_fields:
         if field.name_field not in imprt.fieldmapping:
@@ -357,15 +357,14 @@ def get_import_values(scope, imprt):
             # the file do not contain this field expected by the mapping
             continue
         # TODO: vérifier que l’on a pas trop de valeurs différentes ?
-        column = getattr(ImportSyntheseData, field.source_column)
+        column = field.source_column
         values = [
-            getattr(data, field.source_column)
-            for data in (
-                ImportSyntheseData.query.filter_by(imprt=imprt)
-                .options(load_only(column))
-                .distinct(column)
-                .all()
-            )
+            value
+            for value, in db.session.execute(
+                select(transient_table.c[column])
+                .where(transient_table.c.id_import == imprt.id_import)
+                .distinct(transient_table.c[column])
+            ).fetchall()
         ]
         set_committed_value(
             field.nomenclature_type,
@@ -434,35 +433,34 @@ def preview_valid_data(scope, imprt):
         raise Forbidden
     if not imprt.processed:
         raise Conflict("Import must have been prepared before executing this action.")
+    transient_table = imprt.destination.get_transient_table()
     fields = BibFields.query.filter(
         BibFields.dest_field != None,
         BibFields.name_field.in_(imprt.fieldmapping.keys()),
     ).all()
-    columns = [field.name_field for field in fields]
-    columns_instance = [getattr(ImportSyntheseData, field.name_field) for field in fields]
-    valid_data = (
-        ImportSyntheseData.query.filter_by(
-            imprt=imprt,
-            valid=True,
-        )
-        .options(
-            load_only(*columns_instance),
-        )
+    columns = [field.dest_column for field in fields]
+    valid_data = db.session.execute(
+        select(*[transient_table.c[col] for col in columns])
+        .where(transient_table.c.valid == True)
         .limit(100)
-    )
+    ).fetchall()
     valid_bbox = get_valid_bbox(imprt)
-    n_valid_data = ImportSyntheseData.query.filter_by(
-        imprt=imprt,
-        valid=True,
-    ).count()
-    n_invalid_data = ImportSyntheseData.query.filter_by(
-        imprt=imprt,
-        valid=False,
-    ).count()
+    n_valid_data = db.session.execute(
+        select(func.count())
+        .select_from(transient_table)
+        .where(transient_table.c.id_import == imprt.id_import)
+        .where(transient_table.c.valid == True)
+    ).scalar()
+    n_invalid_data = db.session.execute(
+        select(func.count())
+        .select_from(transient_table)
+        .where(transient_table.c.id_import == imprt.id_import)
+        .where(transient_table.c.valid == False)
+    ).scalar()
     return jsonify(
         {
             "columns": columns,
-            "valid_data": [o.as_dict(fields=columns) for o in valid_data],
+            "valid_data": valid_data,
             "n_valid_data": n_valid_data,
             "n_invalid_data": n_invalid_data,
             "valid_bbox": valid_bbox,
@@ -562,8 +560,14 @@ def import_valid_data(scope, imprt):
         raise Forbidden("Le jeu de données est fermé.")
     if not imprt.processed:
         raise Forbidden("L’import n’a pas été préalablement vérifié.")
-    valid_data_count = ImportSyntheseData.query.filter_by(imprt=imprt, valid=True).count()
-    if not valid_data_count:
+    transient_table = imprt.destination.get_transient_table()
+    if not db.session.execute(
+        select(
+            exists()
+            .where(transient_table.c.id_import == imprt.id_import)
+            .where(transient_table.c.valid == True)
+        )
+    ).scalar():
         raise BadRequest("Not valid data to import")
 
     clean_import(imprt, ImportStep.IMPORT)
@@ -590,7 +594,10 @@ def delete_import(scope, imprt):
     if not imprt.dataset.active:
         raise Forbidden("Le jeu de données est fermé.")
     ImportUserError.query.filter_by(imprt=imprt).delete()
-    ImportSyntheseData.query.filter_by(imprt=imprt).delete()
+    transient_table = imprt.destination.get_transient_table()
+    db.session.execute(
+        delete(transient_table).where(transient_table.c.id_import == imprt.id_import)
+    )
     if imprt.source:
         Synthese.query.filter_by(source=imprt.source).delete()
         imprt.source = None

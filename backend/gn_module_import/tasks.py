@@ -2,7 +2,7 @@ from datetime import datetime
 from math import ceil
 
 from flask import current_app
-from sqlalchemy import func, distinct
+from sqlalchemy import func, distinct, select, delete
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from celery.utils.log import get_task_logger
 
@@ -11,14 +11,14 @@ from geonature.utils.env import db
 from geonature.utils.celery import celery_app
 from geonature.utils.sentry import start_sentry_child
 
-from gn_module_import.models import TImports, BibFields, ImportSyntheseData
+from gn_module_import.models import TImports, BibFields
 from geonature.core.gn_commons.models import TModules
 from gn_module_import.checks.dataframe import run_all_checks
 from gn_module_import.checks.dataframe.geography import set_the_geom_column
 from gn_module_import.utils import (
-    load_import_data_in_dataframe,
+    load_transient_data_in_dataframe,
     mark_all_rows_as_invalid,
-    update_import_data_from_dataframe,
+    update_transient_data_from_dataframe,
     import_data_to_synthese,
 )
 from gn_module_import.checks.sql import (
@@ -91,7 +91,7 @@ def do_import_checks(self, import_id):
         # Checks on dataframe
         logger.info(f"[{batch+1}/{batch_count}] Loading import data in dataframe…")
         with start_sentry_child(op="check.df", description="load dataframe"):
-            df = load_import_data_in_dataframe(imprt, batch_fields, offset, batch_size)
+            df = load_transient_data_in_dataframe(imprt, batch_fields, offset, batch_size)
         update_batch_progress(batch, 1)
         logger.info(f"[{batch+1}/{batch_count}] Running dataframe checks…")
         with start_sentry_child(op="check.df", description="run all checks"):
@@ -103,7 +103,7 @@ def do_import_checks(self, import_id):
         update_batch_progress(batch, 3)
         logger.info(f"[{batch+1}/{batch_count}] Updating import data from dataframe…")
         with start_sentry_child(op="check.df", description="save dataframe"):
-            update_import_data_from_dataframe(imprt, batch_fields, df)
+            update_transient_data_from_dataframe(imprt, batch_fields, df)
         update_batch_progress(batch, 4)
 
     fields = batch_fields  # retrive fields added during dataframe checks
@@ -140,17 +140,19 @@ def do_import_checks(self, import_id):
         db.session.rollback()
     else:
         logger.info("All done, committing…")
+        transient_table = imprt.destination.get_transient_table()
         imprt.processed = True
         imprt.task_id = None
-        imprt.erroneous_rows = (
-            db.session.query(
+        stmt = (
+            select(
                 array_agg(
-                    aggregate_order_by(ImportSyntheseData.line_no, ImportSyntheseData.line_no)
+                    aggregate_order_by(transient_table.c.line_no, transient_table.c.line_no)
                 )
             )
-            .filter_by(imprt=imprt, valid=False)
-            .scalar()
+            .where(transient_table.c.id_import == imprt.id_import)
+            .where(transient_table.c.valid == False)  # FIXME
         )
+        imprt.erroneous_rows = db.session.execute(stmt).scalar()
         db.session.commit()
 
 
@@ -172,7 +174,9 @@ def do_import_in_synthese(self, import_id):
             module=TModules.query.filter_by(module_code="IMPORT").one(),
         )
     import_data_to_synthese(imprt)
-    ImportSyntheseData.query.filter_by(imprt=imprt).delete()
+    transient_table = imprt.destination.get_transient_table()
+    stmt = delete(transient_table).where(transient_table.c.id_import == imprt.id_import)
+    db.session.execute(stmt)
     imprt = db.session.get(TImports, import_id, with_for_update={"of": TImports})
     if imprt is None or imprt.task_id != self.request.id:
         logger.warning("Task cancelled, rollback changes.")

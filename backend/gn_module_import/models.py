@@ -5,16 +5,14 @@ from packaging import version
 
 from flask import g
 import sqlalchemy as sa
-from sqlalchemy import func, ForeignKey
+from sqlalchemy import func, ForeignKey, Table
 from sqlalchemy.orm import relationship, deferred, joinedload
 from sqlalchemy.types import ARRAY
-from sqlalchemy.dialects.postgresql import HSTORE, JSON, UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import column_property
-from sqlalchemy.sql.expression import exists
 from jsonschema.exceptions import ValidationError as JSONValidationError
 from jsonschema import validate as validate_json
-from geoalchemy2 import Geometry
 from celery.result import AsyncResult
 import flask_sqlalchemy
 
@@ -31,11 +29,8 @@ from geonature.core.gn_permissions.tools import get_scopes_by_action
 from geonature.core.gn_synthese.models import TSources
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_meta.models import TDatasets
-from pypnnomenclature.models import BibNomenclaturesTypes, TNomenclatures
+from pypnnomenclature.models import BibNomenclaturesTypes
 from pypnusershub.db.models import User
-from apptax.taxonomie.models import Taxref
-from pypn_habref_api.models import Habref
-from ref_geo.models import LAreas
 
 
 class ImportModule(TModules):
@@ -117,6 +112,15 @@ class Destination(db.Model):
     table_name = db.Column(db.String(64))
 
     module = relationship(TModules)
+
+    def get_transient_table(self):
+        return Table(
+            self.table_name,
+            db.metadata,
+            autoload=True,
+            autoload_with=db.session.connection(),
+            schema="gn_imports",
+        )
 
 
 @serializable
@@ -282,12 +286,6 @@ class TImports(InstancePermissionMixin, db.Model):
         order_by="ImportUserError.id_type",  # TODO order by type.category
         cascade="all, delete-orphan",
     )
-    synthese_data = db.relationship(
-        "ImportSyntheseData",
-        back_populates="imprt",
-        order_by="ImportSyntheseData.line_no",
-        cascade="all, delete-orphan",
-    )
 
     @property
     def cruved(self):
@@ -346,230 +344,6 @@ class TImports(InstancePermissionMixin, db.Model):
             if extension in TImports.AVAILABLE_FORMATS:
                 import_as_dict["detected_format"] = extension
         return import_as_dict
-
-
-@serializable
-class ImportSyntheseData(db.Model):
-    __tablename__ = "t_imports_synthese"
-    __table_args__ = {"schema": "gn_imports"}
-
-    id_import = db.Column(db.Integer, ForeignKey(TImports.id_import), primary_key=True)
-    imprt = db.relationship(TImports, back_populates="synthese_data")
-    line_no = db.Column(db.Integer, primary_key=True)
-
-    valid = db.Column(db.Boolean, nullable=False, server_default=sa.false())
-
-    """
-    source fields
-    Load data as unicode. They will be casted during check & transformation process.
-    """
-    # non-synthese fields: used to populate synthese fields
-    src_WKT = db.Column(db.Unicode)
-    src_codecommune = db.Column(db.Unicode)
-    src_codedepartement = db.Column(db.Unicode)
-    src_codemaille = db.Column(db.Unicode)
-    src_hour_max = db.Column(db.Unicode)
-    src_hour_min = db.Column(db.Unicode)
-    src_latitude = db.Column(db.Unicode)
-    src_longitude = db.Column(db.Unicode)
-
-    # synthese fields
-    src_unique_id_sinp = db.Column(db.Unicode)
-    src_unique_id_sinp_grp = db.Column(db.Unicode)
-    # nomenclature fields
-    src_id_nomenclature_geo_object_nature = db.Column(db.Unicode)
-    src_id_nomenclature_grp_typ = db.Column(db.Unicode)
-    src_id_nomenclature_obs_technique = db.Column(db.Unicode)
-    src_id_nomenclature_bio_status = db.Column(db.Unicode)
-    src_id_nomenclature_bio_condition = db.Column(db.Unicode)
-    src_id_nomenclature_naturalness = db.Column(db.Unicode)
-    src_id_nomenclature_exist_proof = db.Column(db.Unicode)
-    src_id_nomenclature_valid_status = db.Column(db.Unicode)
-    src_id_nomenclature_exist_proof = db.Column(db.Unicode)
-    src_id_nomenclature_diffusion_level = db.Column(db.Unicode)
-    src_id_nomenclature_life_stage = db.Column(db.Unicode)
-    src_id_nomenclature_sex = db.Column(db.Unicode)
-    src_id_nomenclature_obj_count = db.Column(db.Unicode)
-    src_id_nomenclature_type_count = db.Column(db.Unicode)
-    src_id_nomenclature_sensitivity = db.Column(db.Unicode)
-    src_id_nomenclature_observation_status = db.Column(db.Unicode)
-    src_id_nomenclature_blurring = db.Column(db.Unicode)
-    src_id_nomenclature_source_status = db.Column(db.Unicode)
-    src_id_nomenclature_info_geo_type = db.Column(db.Unicode)
-    src_id_nomenclature_behaviour = db.Column(db.Unicode)
-    src_id_nomenclature_biogeo_status = db.Column(db.Unicode)
-    src_id_nomenclature_determination_method = db.Column(db.Unicode)
-    src_count_min = db.Column(db.Unicode)
-    src_count_max = db.Column(db.Unicode)
-    src_cd_nom = db.Column(db.Unicode)
-    src_cd_hab = db.Column(db.Unicode)
-    src_altitude_min = db.Column(db.Unicode)
-    src_altitude_max = db.Column(db.Unicode)
-    src_depth_min = db.Column(db.Unicode)
-    src_depth_max = db.Column(db.Unicode)
-    src_precision = db.Column(db.Unicode)
-    src_id_area_attachment = db.Column(db.Unicode)
-    src_date_min = db.Column(db.Unicode)
-    src_date_max = db.Column(db.Unicode)
-    src_id_digitiser = db.Column(db.Unicode)
-    src_meta_validation_date = db.Column(db.Unicode)
-    src_meta_create_date = db.Column(db.Unicode)
-    src_meta_update_date = db.Column(db.Unicode)
-    # un-mapped fields
-    extra_fields = db.Column(HSTORE)
-
-    """
-    synthese fields
-    """
-    unique_id_sinp = db.Column(UUID(as_uuid=True))
-    unique_id_sinp_grp = db.Column(UUID(as_uuid=True))
-    entity_source_pk_value = db.Column(db.Unicode)
-    grp_method = db.Column(db.Unicode)  # length=255
-    # nomenclature fields
-    id_nomenclature_geo_object_nature = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_geo_object_nature = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_geo_object_nature]
-    )
-    id_nomenclature_grp_typ = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_grp_typ = db.relationship(TNomenclatures, foreign_keys=[id_nomenclature_grp_typ])
-    id_nomenclature_obs_technique = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_obs_technique = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_obs_technique]
-    )
-    id_nomenclature_bio_status = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_bio_status = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_bio_status]
-    )
-    id_nomenclature_bio_condition = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_bio_condition = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_bio_condition]
-    )
-    id_nomenclature_naturalness = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_naturalness = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_naturalness]
-    )
-    id_nomenclature_exist_proof = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_exist_proof = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_exist_proof]
-    )
-    id_nomenclature_valid_status = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_valid_status = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_valid_status]
-    )
-    id_nomenclature_exist_proof = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_exist_proof = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_exist_proof]
-    )
-    id_nomenclature_diffusion_level = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_diffusion_level = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_diffusion_level]
-    )
-    id_nomenclature_life_stage = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_life_stage = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_life_stage]
-    )
-    id_nomenclature_sex = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_sex = db.relationship(TNomenclatures, foreign_keys=[id_nomenclature_sex])
-    id_nomenclature_obj_count = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_obj_count = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_obj_count]
-    )
-    id_nomenclature_type_count = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_type_count = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_type_count]
-    )
-    id_nomenclature_sensitivity = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_sensitivity = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_sensitivity]
-    )
-    id_nomenclature_observation_status = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_observation_status = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_observation_status]
-    )
-    id_nomenclature_blurring = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_blurring = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_blurring]
-    )
-    id_nomenclature_source_status = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_source_status = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_source_status]
-    )
-    id_nomenclature_info_geo_type = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_info_geo_type = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_info_geo_type]
-    )
-    id_nomenclature_behaviour = db.Column(db.Integer, ForeignKey(TNomenclatures.id_nomenclature))
-    nomenclature_behaviour = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_behaviour]
-    )
-    id_nomenclature_biogeo_status = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_biogeo_status = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_biogeo_status]
-    )
-    id_nomenclature_determination_method = db.Column(
-        db.Integer, ForeignKey(TNomenclatures.id_nomenclature)
-    )
-    nomenclature_determination_method = db.relationship(
-        TNomenclatures, foreign_keys=[id_nomenclature_determination_method]
-    )
-    # others fields
-    reference_biblio = db.Column(db.Unicode)  # length=5000
-    count_min = db.Column(db.Integer)
-    count_max = db.Column(db.Integer)
-    cd_nom = db.Column(db.Integer, ForeignKey(Taxref.cd_nom))
-    taxref = relationship(Taxref)
-    cd_hab = db.Column(db.Integer, ForeignKey(Habref.cd_hab))
-    habitat = relationship(Habref)
-    nom_cite = db.Column(db.Unicode)  # length=1000
-    meta_v_taxref = db.Column(db.Unicode)  # length=50
-    digital_proof = db.Column(db.UnicodeText)
-    non_digital_proof = db.Column(db.UnicodeText)
-    altitude_min = db.Column(db.Integer)
-    altitude_max = db.Column(db.Integer)
-    depth_min = db.Column(db.Integer)
-    depth_max = db.Column(db.Integer)
-    place_name = db.Column(db.Unicode)  # length=500
-    the_geom_4326 = db.Column(Geometry("GEOMETRY", 4326))
-    the_geom_point = db.Column(Geometry("GEOMETRY", 4326))
-    the_geom_local = db.Column(Geometry("GEOMETRY"))
-    precision = db.Column(db.Integer)
-    date_min = db.Column(db.DateTime)
-    date_max = db.Column(db.DateTime)
-    validator = db.Column(db.Unicode)  # length=1000
-    validation_comment = db.Column(db.Unicode)
-    observers = db.Column(db.Unicode)  # length=1000
-    determiner = db.Column(db.Unicode)  # length=1000
-    id_digitiser = db.Column(db.Integer, ForeignKey(User.id_role))
-    digitiser = db.relationship(User, foreign_keys=[id_digitiser])
-    comment_context = db.Column(db.UnicodeText)
-    comment_description = db.Column(db.UnicodeText)
-    additional_data = db.Column(JSONB)
-    meta_validation_date = db.Column(db.DateTime)
-    meta_create_date = db.Column(db.DateTime)
-    meta_update_date = db.Column(db.DateTime)
-    id_area_attachment = db.Column(db.Integer, ForeignKey(LAreas.id_area))
-    area_attachment = db.relationship(LAreas)
-    # missing fields:
-    # sample_number_proof = db.Column(db.UnicodeText)
-    # last_action = db.Column(db.Unicode)
 
 
 @serializable

@@ -19,7 +19,6 @@ from geonature.utils.env import db
 from gn_module_import.models import (
     TImports,
     BibFields,
-    ImportSyntheseData,
     ImportUserError,
     ImportUserErrorType,
 )
@@ -33,9 +32,10 @@ from pypn_habref_api.models import Habref
 
 
 def do_nomenclatures_mapping(imprt, fields):
+    transient_table = imprt.destination.get_transient_table()
     # Set nomenclatures using content mapping
     for field in filter(lambda field: field.mnemonique != None, fields.values()):
-        source_field = getattr(ImportSyntheseData, field.source_field)
+        source_field = transient_table.c[field.source_field]
         # This CTE return the list of source value / cd_nomenclature for a given nomenclature type
         cte = (
             select(column("key").label("value"), column("value").label("cd_nomenclature"))
@@ -46,15 +46,15 @@ def do_nomenclatures_mapping(imprt, fields):
         # This statement join the cte results with nomenclatures
         # in order to set the id_nomenclature
         stmt = (
-            update(ImportSyntheseData)
-            .where(ImportSyntheseData.imprt == imprt)
+            update(transient_table)
+            .where(transient_table.c.id_import == imprt.id_import)
             .where(source_field == cte.c.value)
             .where(TNomenclatures.cd_nomenclature == cte.c.cd_nomenclature)
             .where(BibNomenclaturesTypes.mnemonique == field.mnemonique)
             .where(TNomenclatures.id_type == BibNomenclaturesTypes.id_type)
             .values({field.dest_field: TNomenclatures.id_nomenclature})
         )
-        db.session.execute(stmt, execution_options=dict({"synchronize_session": 'fetch'}))
+        db.session.execute(stmt)
 
     for field in BibFields.query.filter(
         BibFields.destination == imprt.destination, BibFields.mnemonique != None
@@ -64,28 +64,27 @@ def do_nomenclatures_mapping(imprt, fields):
             and field.name_field in fields
         ):
             continue
-        source_field = getattr(ImportSyntheseData, field.source_field)
-        dest_field = getattr(ImportSyntheseData, field.dest_field)
+        source_field = transient_table.c[field.source_field]
+        dest_field = transient_table.c[field.dest_field]
         # Set default nomenclature for empty user fields
-        (
-            ImportSyntheseData.query.filter(ImportSyntheseData.imprt == imprt)
-            .filter(
-                sa.or_(source_field == None, source_field == ""),
-                dest_field == None,
-            )
-            .update(
-                values={
+        stmt = (
+            update(transient_table)
+            .where(transient_table.c.id_import == imprt.id_import)
+            .where(sa.or_(source_field == None, source_field == ""))
+            .where(dest_field == None)
+            .values(
+                {
                     field.dest_field: sa.func.gn_synthese.get_default_nomenclature_value(
                         field.mnemonique,
-                    ),
-                },
-                synchronize_session=False,
+                    )
+                }
             )
         )
+        db.session.execute(stmt)
 
     for field in filter(lambda field: field.mnemonique != None, fields.values()):
-        source_field = getattr(ImportSyntheseData, field.source_field)
-        dest_field = getattr(ImportSyntheseData, field.dest_field)
+        source_field = transient_table.c[field.source_field]
+        dest_field = transient_table.c[field.dest_field]
         # Note: with a correct contentmapping, no errors should occur.
         report_erroneous_rows(
             imprt,
@@ -96,6 +95,7 @@ def do_nomenclatures_mapping(imprt, fields):
 
 
 def check_nomenclatures(imprt, fields):
+    transient_table = imprt.destination.get_transient_table()
     if current_app.config["IMPORT"]["CHECK_EXIST_PROOF"]:
         nomenclature_field = BibFields.query.filter_by(
             destination=imprt.destination, name_field="id_nomenclature_exist_proof"
@@ -110,22 +110,20 @@ def check_nomenclatures(imprt, fields):
             ),
             TNomenclatures.mnemonique == "Oui",
         ).one()
-        oui_filter = (
-            getattr(ImportSyntheseData, nomenclature_field.dest_field) == oui.id_nomenclature
-        )
+        oui_filter = transient_table.c[nomenclature_field.dest_field] == oui.id_nomenclature
         proof_set_filters = []
         if digital_proof_field is not None:
             proof_set_filters.append(
                 sa.and_(
-                    getattr(ImportSyntheseData, digital_proof_field.dest_field) != None,
-                    getattr(ImportSyntheseData, digital_proof_field.dest_field) != "",
+                    transient_table.c[digital_proof_field.dest_field] != None,
+                    transient_table.c[digital_proof_field.dest_field] != "",
                 )
             )
         if non_digital_proof_field is not None:
             proof_set_filters.append(
                 sa.and_(
-                    getattr(ImportSyntheseData, non_digital_proof_field.dest_field) != None,
-                    getattr(ImportSyntheseData, non_digital_proof_field.dest_field) != "",
+                    transient_table.c[non_digital_proof_field.dest_field] != None,
+                    transient_table.c[non_digital_proof_field.dest_field] != "",
                 )
             )
         proof_set_filter = sa.or_(*proof_set_filters) if proof_set_filters else sa.false()
@@ -150,7 +148,7 @@ def check_nomenclatures(imprt, fields):
             imprt,
             error_type="CONDITIONAL_MANDATORY_FIELD_ERROR",
             error_column=blurring_field.name_field,
-            whereclause=(getattr(ImportSyntheseData, blurring_field.dest_field) == None),
+            whereclause=(transient_table.c[blurring_field.dest_field] == None),
         )
     if current_app.config["IMPORT"]["CHECK_REF_BIBLIO_LITTERATURE"]:
         litterature = TNomenclatures.query.filter(
@@ -170,33 +168,33 @@ def check_nomenclatures(imprt, fields):
             error_type="CONDITIONAL_MANDATORY_FIELD_ERROR",
             error_column=source_status_field.name_field,
             whereclause=sa.and_(
-                getattr(ImportSyntheseData, source_status_field.dest_field)
-                == litterature.id_nomenclature,
+                transient_table.c[source_status_field.dest_field] == litterature.id_nomenclature,
                 sa.or_(
-                    getattr(ImportSyntheseData, ref_biblio_field.dest_field) == None,
-                    getattr(ImportSyntheseData, ref_biblio_field.dest_field) == "",
+                    transient_table.c[ref_biblio_field.dest_field] == None,
+                    transient_table.c[ref_biblio_field.dest_field] == "",
                 ),
             ),
         )
 
 
 def check_referential(imprt, field, reference_field, error_type, reference_table=None):
-    dest_field = getattr(ImportSyntheseData, field.dest_field)
+    transient_table = imprt.destination.get_transient_table()
+    dest_field = transient_table.c[field.dest_field]
     if reference_table is None:
         reference_table = reference_field.class_
     # We outerjoin the referential, and select rows where there is a value in synthese field
     # but no value in referential, which means no value in the referential matched synthese field.
     cte = (
-        select(ImportSyntheseData.line_no)
+        select(transient_table.c.line_no)
         .select_from(
             join(
-                ImportSyntheseData,
+                transient_table,
                 reference_table,
                 dest_field == reference_field,
                 isouter=True,
             )
         )
-        .where(ImportSyntheseData.imprt == imprt)
+        .where(transient_table.c.id_import == imprt.id_import)
         .where(dest_field != None)
         .where(reference_field == None)
         .cte("invalid_ref")
@@ -205,7 +203,7 @@ def check_referential(imprt, field, reference_field, error_type, reference_table
         imprt,
         error_type=error_type,
         error_column=field.name_field,
-        whereclause=ImportSyntheseData.line_no == cte.c.line_no,
+        whereclause=transient_table.c.line_no == cte.c.line_no,
     )
 
 
@@ -238,58 +236,59 @@ def check_cd_hab(imprt, fields):
 def set_altitudes(imprt, fields):
     if not imprt.fieldmapping.get("altitudes_generate", False):
         return
+    transient_table = imprt.destination.get_transient_table()
     altitudes = (
         select(
             column("altitude_min"),
             column("altitude_max"),
         )
-        .select_from(func.ref_geo.fct_get_altitude_intersection(ImportSyntheseData.the_geom_local))
+        .select_from(func.ref_geo.fct_get_altitude_intersection(transient_table.c.the_geom_local))
         .lateral("altitudes")
     )
     cte = (
         select(
-            ImportSyntheseData.id_import,
-            ImportSyntheseData.line_no,
+            transient_table.c.id_import,
+            transient_table.c.line_no,
             altitudes.c.altitude_min,
             altitudes.c.altitude_max,
         )
-        .where(ImportSyntheseData.id_import == imprt.id_import)
-        .where(ImportSyntheseData.the_geom_local != None)
+        .where(transient_table.c.id_import == imprt.id_import)
+        .where(transient_table.c.the_geom_local != None)
         .where(
             sa.or_(
-                ImportSyntheseData.src_altitude_min == None,
-                ImportSyntheseData.src_altitude_min == "",
-                ImportSyntheseData.src_altitude_max == None,
-                ImportSyntheseData.src_altitude_max == "",
+                transient_table.c.src_altitude_min == None,
+                transient_table.c.src_altitude_min == "",
+                transient_table.c.src_altitude_max == None,
+                transient_table.c.src_altitude_max == "",
             )
         )
         .cte("cte")
     )
     stmt = (
-        update(ImportSyntheseData)
-        .where(ImportSyntheseData.id_import == cte.c.id_import)
-        .where(ImportSyntheseData.line_no == cte.c.line_no)
+        update(transient_table)
+        .where(transient_table.c.id_import == cte.c.id_import)
+        .where(transient_table.c.line_no == cte.c.line_no)
         .values(
             {
-                ImportSyntheseData.altitude_min: sa.case(
+                transient_table.c.altitude_min: sa.case(
                     (
                         sa.or_(
-                            ImportSyntheseData.src_altitude_min == None,
-                            ImportSyntheseData.src_altitude_min == "",
+                            transient_table.c.src_altitude_min == None,
+                            transient_table.c.src_altitude_min == "",
                         ),
                         cte.c.altitude_min,
                     ),
-                    else_=ImportSyntheseData.altitude_min,
+                    else_=transient_table.c.altitude_min,
                 ),
-                ImportSyntheseData.altitude_max: sa.case(
+                transient_table.c.altitude_max: sa.case(
                     (
                         sa.or_(
-                            ImportSyntheseData.src_altitude_max == None,
-                            ImportSyntheseData.src_altitude_max == "",
+                            transient_table.c.src_altitude_max == None,
+                            transient_table.c.src_altitude_max == "",
                         ),
                         cte.c.altitude_max,
                     ),
-                    else_=ImportSyntheseData.altitude_max,
+                    else_=transient_table.c.altitude_max,
                 ),
             }
         )
@@ -304,17 +303,18 @@ def set_altitudes(imprt, fields):
             ).one(),
         }
     )
-    db.session.execute(stmt.execution_options(synchronize_session="fetch"))
+    db.session.execute(stmt)
 
 
 def get_duplicates_query(imprt, dest_field, whereclause=sa.true()):
+    transient_table = imprt.destination.get_transient_table()
     whereclause = sa.and_(
-        ImportSyntheseData.imprt == imprt,
+        transient_table.c.id_import == imprt.id_import,
         whereclause,
     )
     partitions = (
         select(
-            array_agg(ImportSyntheseData.line_no)
+            array_agg(transient_table.c.line_no)
             .over(
                 partition_by=dest_field,
             )
@@ -334,7 +334,8 @@ def get_duplicates_query(imprt, dest_field, whereclause=sa.true()):
 def set_uuid(imprt, fields):
     if "unique_id_sinp" in fields:
         field = fields["unique_id_sinp"]
-        dest_field = getattr(ImportSyntheseData, field.dest_field)
+        transient_table = imprt.destination.get_transient_table()
+        dest_field = transient_table.c[field.dest_field]
         duplicates = get_duplicates_query(
             imprt,
             dest_field,
@@ -344,14 +345,14 @@ def set_uuid(imprt, fields):
             imprt,
             error_type="DUPLICATE_UUID",
             error_column=field.name_field,
-            whereclause=(ImportSyntheseData.line_no == duplicates.c.lines),
+            whereclause=(transient_table.c.line_no == duplicates.c.lines),
         )
         report_erroneous_rows(
             imprt,
             error_type="EXISTING_UUID",
             error_column=field.name_field,
             whereclause=sa.and_(
-                ImportSyntheseData.unique_id_sinp == Synthese.unique_id_sinp,
+                transient_table.c.unique_id_sinp == Synthese.unique_id_sinp,
                 Synthese.id_dataset == imprt.id_dataset,
                 Synthese.source != imprt.source,
             ),
@@ -359,21 +360,22 @@ def set_uuid(imprt, fields):
     if imprt.fieldmapping.get(
         "unique_id_sinp_generate", current_app.config["IMPORT"]["DEFAULT_GENERATE_MISSING_UUID"]
     ):
+        transient_table = imprt.destination.get_transient_table()
         stmt = (
-            update(ImportSyntheseData)
+            update(transient_table)
             .values(
                 {
                     "unique_id_sinp": func.uuid_generate_v4(),
                 }
             )
-            .where(ImportSyntheseData.imprt == imprt)
+            .where(transient_table.c.id_import == imprt.id_import)
             .where(
                 sa.or_(
-                    ImportSyntheseData.src_unique_id_sinp == None,
-                    ImportSyntheseData.src_unique_id_sinp == "",
+                    transient_table.c.src_unique_id_sinp == None,
+                    transient_table.c.src_unique_id_sinp == "",
                 )
             )
-            .where(ImportSyntheseData.unique_id_sinp == None)
+            .where(transient_table.c.unique_id_sinp == None)
         )
         db.session.execute(stmt)
 
@@ -383,7 +385,8 @@ def check_mandatory_fields(imprt, fields):
     for field in fields.values():
         if not field.mandatory or not field.dest_field:
             continue
-        source_field = getattr(ImportSyntheseData, field.source_column)
+        transient_table = imprt.destination.get_transient_table()
+        source_field = transient_table.c[field.source_column]
         whereclause = sa.or_(
             source_field == None,
             source_field == "",
@@ -400,7 +403,8 @@ def check_duplicates_source_pk(imprt, fields):
     if "entity_source_pk_value" not in fields:
         return
     field = fields["entity_source_pk_value"]
-    dest_field = getattr(ImportSyntheseData, field.dest_field)
+    transient_table = imprt.destination.get_transient_table()
+    dest_field = transient_table.c[field.dest_field]
     duplicates = get_duplicates_query(
         imprt,
         dest_field,
@@ -413,15 +417,16 @@ def check_duplicates_source_pk(imprt, fields):
         imprt,
         error_type="DUPLICATE_ENTITY_SOURCE_PK",
         error_column=field.name_field,
-        whereclause=(ImportSyntheseData.line_no == duplicates.c.lines),
+        whereclause=(transient_table.c.line_no == duplicates.c.lines),
     )
 
 
 def check_dates(imprt, fields):
+    transient_table = imprt.destination.get_transient_table()
     date_min_field = fields["datetime_min"]
     date_max_field = fields["datetime_max"]
-    date_min_dest_field = getattr(ImportSyntheseData, date_min_field.dest_field)
-    date_max_dest_field = getattr(ImportSyntheseData, date_max_field.dest_field)
+    date_min_dest_field = transient_table.c[date_min_field.dest_field]
+    date_max_dest_field = transient_table.c[date_max_field.dest_field]
     today = date.today()
     report_erroneous_rows(
         imprt,
@@ -459,10 +464,11 @@ def check_dates(imprt, fields):
 
 
 def check_altitudes(imprt, fields):
+    transient_table = imprt.destination.get_transient_table()
     if "altitude_min" in fields:
         alti_min_field = fields["altitude_min"]
         alti_min_name_field = alti_min_field.name_field
-        alti_min_dest_field = getattr(ImportSyntheseData, alti_min_field.dest_field)
+        alti_min_dest_field = transient_table.c[alti_min_field.dest_field]
         report_erroneous_rows(
             imprt,
             error_type="INVALID_INTEGER",
@@ -473,7 +479,7 @@ def check_altitudes(imprt, fields):
     if "altitude_max" in fields:
         alti_max_field = fields["altitude_max"]
         alti_max_name_field = alti_max_field.name_field
-        alti_max_dest_field = getattr(ImportSyntheseData, alti_max_field.dest_field)
+        alti_max_dest_field = transient_table.c[alti_max_field.dest_field]
         report_erroneous_rows(
             imprt,
             error_type="INVALID_INTEGER",
@@ -491,10 +497,11 @@ def check_altitudes(imprt, fields):
 
 
 def check_depths(imprt, fields):
+    transient_table = imprt.destination.get_transient_table()
     if "depth_min" in fields:
         depth_min_field = fields["depth_min"]
         depth_min_name_field = depth_min_field.name_field
-        depth_min_dest_field = getattr(ImportSyntheseData, depth_min_field.dest_field)
+        depth_min_dest_field = transient_table.c[depth_min_field.dest_field]
         report_erroneous_rows(
             imprt,
             error_type="INVALID_INTEGER",
@@ -505,7 +512,7 @@ def check_depths(imprt, fields):
     if "depth_max" in fields:
         depth_max_field = fields["depth_max"]
         depth_max_name_field = depth_max_field.name_field
-        depth_max_dest_field = getattr(ImportSyntheseData, depth_max_field.dest_field)
+        depth_max_dest_field = transient_table.c[depth_max_field.dest_field]
         report_erroneous_rows(
             imprt,
             error_type="INVALID_INTEGER",
@@ -525,8 +532,9 @@ def check_depths(imprt, fields):
 def check_digital_proof_urls(imprt, fields):
     if "digital_proof" not in fields:
         return
+    transient_table = imprt.destination.get_transient_table()
     digital_proof_field = fields["digital_proof"]
-    digital_proof_dest_field = getattr(ImportSyntheseData, digital_proof_field.dest_field)
+    digital_proof_dest_field = transient_table.c[digital_proof_field.dest_field]
     report_erroneous_rows(
         imprt,
         error_type="INVALID_URL_PROOF",
@@ -544,65 +552,64 @@ def check_digital_proof_urls(imprt, fields):
 
 
 def set_geom_from_area_code(imprt, source_column, area_type_filter):
+    transient_table = imprt.destination.get_transient_table()
     # Find area in CTE, then update corresponding column in statement
     cte = (
-        ImportSyntheseData.query.filter(
-            ImportSyntheseData.imprt == imprt,
-            ImportSyntheseData.valid == True,
-            ImportSyntheseData.the_geom_4326 == None,
-        )
-        .join(
-            LAreas,
-            LAreas.area_code == source_column,
-        )
-        .join(
-            LAreas.area_type,
-        )
-        .filter(area_type_filter)
-        .with_entities(
-            ImportSyntheseData.id_import,
-            ImportSyntheseData.line_no,
+        select(
+            transient_table.c.id_import,
+            transient_table.c.line_no,
             LAreas.id_area,
             LAreas.geom,
+            # TODO: add LAreas.geom_4326
         )
+        .select_from(
+            join(transient_table, LAreas, source_column == LAreas.area_code).join(BibAreasTypes)
+        )
+        .where(transient_table.c.id_import == imprt.id_import)
+        .where(transient_table.c.valid == True)
+        .where(transient_table.c.the_geom_4326 == None)
+        .where(area_type_filter)
         .cte("cte")
     )
     stmt = (
-        update(ImportSyntheseData)
+        update(transient_table)
         .values(
             {
-                ImportSyntheseData.id_area_attachment: cte.c.id_area,
-                ImportSyntheseData.the_geom_local: cte.c.geom,
-                ImportSyntheseData.the_geom_4326: ST_Transform(cte.c.geom, 4326),
+                transient_table.c.id_area_attachment: cte.c.id_area,
+                transient_table.c.the_geom_local: cte.c.geom,
+                transient_table.c.the_geom_4326: ST_Transform(
+                    cte.c.geom, 4326
+                ),  # TODO: replace with cte.c.geom_4326
             }
         )
-        .where(ImportSyntheseData.id_import == cte.c.id_import)
-        .where(ImportSyntheseData.line_no == cte.c.line_no)
+        .where(transient_table.c.id_import == cte.c.id_import)
+        .where(transient_table.c.line_no == cte.c.line_no)
     )
-    db.session.execute(stmt.execution_options(synchronize_session="fetch"))
+    db.session.execute(stmt)
 
 
 def report_erroneous_rows(imprt, error_type, error_column, whereclause):
+    transient_table = imprt.destination.get_transient_table()
     error_type = ImportUserErrorType.query.filter_by(name=error_type).one()
     error_column = generated_fields.get(error_column, error_column)
     error_column = imprt.fieldmapping.get(error_column, error_column)
     if error_type.level == "ERROR":
         cte = (
-            update(ImportSyntheseData)
+            update(transient_table)
             .values(
                 {
-                    ImportSyntheseData.valid: False,
+                    transient_table.c.valid: False,
                 }
             )
-            .where(ImportSyntheseData.imprt == imprt)
+            .where(transient_table.c.id_import == imprt.id_import)
             .where(whereclause)
-            .returning(ImportSyntheseData.line_no)
+            .returning(transient_table.c.line_no)
             .cte("cte")
         )
     else:
         cte = (
-            select(ImportSyntheseData.line_no)
-            .where(ImportSyntheseData.imprt == imprt)
+            select(transient_table.c.line_no)
+            .where(transient_table.c.id_import == imprt.id_import)
             .where(whereclause)
             .cte("cte")
         )
@@ -628,6 +635,7 @@ def report_erroneous_rows(imprt, error_type, error_column, whereclause):
 
 def complete_others_geom_columns(imprt, fields):
     local_srid = db.session.execute(sa.func.Find_SRID("ref_geo", "l_areas", "geom")).scalar()
+    transient_table = imprt.destination.get_transient_table()
     if "the_geom_4326" not in fields:
         assert "the_geom_local" in fields
         source_col = "the_geom_local"
@@ -638,18 +646,18 @@ def complete_others_geom_columns(imprt, fields):
         source_col = "the_geom_4326"
         dest_col = "the_geom_local"
         dest_srid = local_srid
-    (
-        ImportSyntheseData.query.filter(
-            ImportSyntheseData.imprt == imprt,
-            ImportSyntheseData.valid == True,
-            getattr(ImportSyntheseData, source_col) != None,
-        ).update(
-            values={
-                dest_col: ST_Transform(getattr(ImportSyntheseData, source_col), dest_srid),
-            },
-            synchronize_session=False,
+    stmt = (
+        update(transient_table)
+        .where(transient_table.c.id_import == imprt.id_import)
+        .where(transient_table.c.valid == True)
+        .where(transient_table.c[source_col] != None)
+        .values(
+            {
+                dest_col: ST_Transform(transient_table.c[source_col], dest_srid),
+            }
         )
     )
+    db.session.execute(stmt)
     for name_field, area_type_filter in [
         ("codecommune", BibAreasTypes.type_code == "COM"),
         ("codedepartement", BibAreasTypes.type_code == "DEP"),
@@ -658,7 +666,7 @@ def complete_others_geom_columns(imprt, fields):
         if name_field not in fields:
             continue
         field = fields[name_field]
-        source_column = getattr(ImportSyntheseData, field.source_field)
+        source_column = transient_table.c[field.source_field]
         # Set geom from area of the given type and with matching area_code:
         set_geom_from_area_code(imprt, source_column, area_type_filter)
         # Mark rows with code specified but geom still empty as invalid:
@@ -667,8 +675,8 @@ def complete_others_geom_columns(imprt, fields):
             error_type="INVALID_ATTACHMENT_CODE",
             error_column=field.name_field,
             whereclause=sa.and_(
-                ImportSyntheseData.the_geom_4326 == None,
-                ImportSyntheseData.valid == True,
+                transient_table.c.the_geom_4326 == None,
+                transient_table.c.valid == True,
                 source_column != None,
                 source_column != "",
             ),
@@ -679,31 +687,32 @@ def complete_others_geom_columns(imprt, fields):
         error_type="NO-GEOM",
         error_column="Colonnes géométriques",
         whereclause=sa.and_(
-            ImportSyntheseData.the_geom_4326 == None,
-            ImportSyntheseData.valid == True,
+            transient_table.c.the_geom_4326 == None,
+            transient_table.c.valid == True,
         ),
     )
     # Set the_geom_point:
-    (
-        ImportSyntheseData.query.filter(
-            ImportSyntheseData.imprt == imprt,
-            ImportSyntheseData.valid == True,
-        ).update(
-            values={
-                ImportSyntheseData.the_geom_point: ST_Centroid(ImportSyntheseData.the_geom_4326),
-            },
-            synchronize_session=False,
+    stmt = (
+        update(transient_table)
+        .where(transient_table.c.id_import == imprt.id_import)
+        .where(transient_table.c.valid == True)
+        .values(
+            {
+                "the_geom_point": ST_Centroid(transient_table.c.the_geom_4326),
+            }
         )
     )
+    db.session.execute(stmt)
 
 
 def check_is_valid_geography(imprt, fields):
+    # It is useless to check valid WKT when created from X/Y
     if "WKT" in fields:
-        # It is useless to check valid WKT when created from X/Y
+        transient_table = imprt.destination.get_transient_table()
         where_clause = sa.and_(
-            ImportSyntheseData.src_WKT != None,
-            ImportSyntheseData.src_WKT != "",
-            sa.not_(ST_IsValid(ImportSyntheseData.the_geom_4326)),
+            transient_table.c.src_WKT != None,
+            transient_table.c.src_WKT != "",
+            sa.not_(ST_IsValid(transient_table.c.the_geom_4326)),
         )
         report_erroneous_rows(
             imprt,
@@ -717,13 +726,14 @@ def check_geography_outside(imprt, fields):
     id_area = current_app.config["IMPORT"]["ID_AREA_RESTRICTION"]
     if id_area:
         local_srid = db.session.execute(sa.func.Find_SRID("ref_geo", "l_areas", "geom")).scalar()
+        transient_table = imprt.destination.get_transient_table()
         area = LAreas.query.filter(LAreas.id_area == id_area).one()
         report_erroneous_rows(
             imprt,
             error_type="GEOMETRY_OUTSIDE",
             error_column="Champs géométriques",
             whereclause=sa.and_(
-                ImportSyntheseData.valid == True,
-                ImportSyntheseData.the_geom_local.ST_Disjoint(area.geom),
+                transient_table.c.valid == True,
+                transient_table.c.the_geom_local.ST_Disjoint(area.geom),
             ),
         )
