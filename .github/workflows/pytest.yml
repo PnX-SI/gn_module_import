@@ -106,8 +106,7 @@ jobs:
         GEONATURE_CONFIG_FILE: dependencies/GeoNature/config/test_config.toml
     - name: Install import module backend
       run: |
-        pip install -r requirements-dev.in
-        pip install .
+        pip install --editable .
     - name: Install import module database
       run: |
         geonature upgrade-modules-db IMPORT
