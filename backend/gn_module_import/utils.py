@@ -22,7 +22,6 @@ from gn_module_import import MODULE_CODE
 from gn_module_import.models import BibFields, ImportUserError
 
 from geonature.core.gn_commons.models import TModules
-from geonature.core.gn_synthese.models import Synthese, corAreaSynthese, TSources
 from geonature.utils.sentry import start_sentry_child
 from ref_geo.models import LAreas
 
@@ -65,10 +64,7 @@ def clean_import(imprt, step: ImportStep):
         imprt.taxa_count = None
         imprt.import_count = None
         imprt.date_end_import = None
-        if imprt.source:
-            with start_sentry_child(op="task", description="clean source"):
-                Synthese.query.filter(Synthese.source == imprt.source).delete()
-                imprt.source = None
+        imprt.destination.remove_data_from_destination(imprt)
 
 
 def get_file_size(f):
@@ -266,51 +262,6 @@ def update_transient_data_from_dataframe(imprt, fields, df):
     insert_stmt = insert_stmt.values(records).on_conflict_do_update(
         index_elements=updated_cols[:2],
         set_={col: insert_stmt.excluded[col] for col in updated_cols[2:]},
-    )
-    db.session.execute(insert_stmt)
-
-
-def import_data_to_synthese(imprt):
-    transient_table = imprt.destination.get_transient_table()
-    generated_fields = {
-        "datetime_min",
-        "datetime_max",
-        "the_geom_4326",
-        "the_geom_local",
-        "the_geom_point",
-        "id_area_attachment",
-    }
-    if imprt.fieldmapping.get(
-        "unique_id_sinp_generate", current_app.config["IMPORT"]["DEFAULT_GENERATE_MISSING_UUID"]
-    ):
-        generated_fields |= {"unique_id_sinp"}
-    if imprt.fieldmapping.get("altitudes_generate", False):
-        generated_fields |= {"altitude_min", "altitude_max"}
-    fields = BibFields.query.filter(
-        BibFields.destination == imprt.destination,
-        BibFields.dest_field != None,
-        BibFields.name_field.in_(imprt.fieldmapping.keys() | generated_fields),
-    ).all()
-    select_stmt = (
-        select(
-            *[transient_table.c[field.dest_field] for field in fields],
-            literal(imprt.id_source),
-            literal(TModules.query.filter_by(module_code=MODULE_CODE).one().id_module),
-            literal(imprt.id_dataset),
-            literal("I"),
-        )
-        .where(transient_table.c.id_import == imprt.id_import)
-        .where(transient_table.c.valid == True)
-    )
-    names = [field.dest_field for field in fields] + [
-        "id_source",
-        "id_module",
-        "id_dataset",
-        "last_action",
-    ]
-    insert_stmt = insert(Synthese).from_select(
-        names=names,
-        select=select_stmt,
     )
     db.session.execute(insert_stmt)
 

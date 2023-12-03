@@ -23,7 +23,7 @@ from geonature.core.gn_permissions.tools import (
 from geonature.core.gn_permissions.models import PermAction, PermFilter, Permission, PermObject
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_meta.models import TDatasets
-from geonature.core.gn_synthese.models import Synthese
+from geonature.core.gn_synthese.models import Synthese, TSources
 from geonature.tests.fixtures import synthese_data, celery_eager
 
 from pypnusershub.db.models import User, Organisme
@@ -961,7 +961,8 @@ class TestImportsSynthese:
         assert transient_rows_count == 0
         assert valid_file_line_count - len(valid_file_invalid_rows) == imprt.import_count
         assert valid_file_taxa_count == imprt.taxa_count
-        assert Synthese.query.filter_by(source=imprt.source).count() == imprt.import_count
+        source = TSources.query.filter_by(name_source=f"Import(id={imprt.id_import})").one()
+        assert Synthese.query.filter_by(source=source).count() == imprt.import_count
 
         # Delete step
         r = self.client.delete(url_for("import.delete_import", import_id=imprt.id_import))
@@ -1133,7 +1134,10 @@ class TestImportsSynthese:
             imported_import,
             set(),
         )
-        obs = Synthese.query.filter_by(source=imported_import.source).one()
+        source = TSources.query.filter_by(
+            name_source=f"Import(id={imported_import.id_import})"
+        ).one()
+        obs = Synthese.query.filter_by(source=source).one()
         # le Json se créer correctement
         assert obs.additional_data == test_json
 
@@ -1143,18 +1147,17 @@ class TestImportsSynthese:
             imported_import,
             set(),
         )
-        obs2 = Synthese.query.filter_by(
-            source=imported_import.source, entity_source_pk_value="2"
+        source = TSources.query.filter_by(
+            name_source=f"Import(id={imported_import.id_import})"
         ).one()
+        obs2 = Synthese.query.filter_by(source=source, entity_source_pk_value="2").one()
         # champs non mappé → valeur par défaut de la synthèse
         assert obs2.nomenclature_determination_method.label_default == "Non renseigné"
         # champs non mappé mais sans valeur par défaut dans la synthèse → NULL
         assert obs2.nomenclature_diffusion_level == None
         # champs mappé mais cellule vide → valeur par défaut de la synthèse
         assert obs2.nomenclature_naturalness.label_default == "Inconnu"
-        obs3 = Synthese.query.filter_by(
-            source=imported_import.source, entity_source_pk_value="3"
-        ).one()
+        obs3 = Synthese.query.filter_by(source=source, entity_source_pk_value="3").one()
         # Le champs est vide, mais on doit utiliser la valeur du mapping,
         # et ne pas l’écraser avec la valeur par défaut
         assert obs3.nomenclature_life_stage.label_default == "Alevin"
@@ -1169,9 +1172,10 @@ class TestImportsSynthese:
                 ("INVALID_NOMENCLATURE", "id_nomenclature_naturalness", frozenset({2})),
             },
         )
-        obs3 = Synthese.query.filter_by(
-            source=imported_import.source, entity_source_pk_value="3"
+        source = TSources.query.filter_by(
+            name_source=f"Import(id={imported_import.id_import})"
         ).one()
+        obs3 = Synthese.query.filter_by(source=source, entity_source_pk_value="3").one()
         # champs non mappé → valeur par défaut de la synthèse
         assert obs3.nomenclature_determination_method.label_default == "Non renseigné"
         # champs non mappé mais sans valeur par défaut dans la synthèse → NULL
@@ -1190,7 +1194,10 @@ class TestImportsSynthese:
             },
         )
 
-        obs = Synthese.query.filter_by(source=imported_import.source).first()
+        source = TSources.query.filter_by(
+            name_source=f"Import(id={imported_import.id_import})"
+        ).one()
+        obs = Synthese.query.filter_by(source=source).first()
         assert obs.comment_description == "Cette ligne\nest valide"
 
         set_logged_user(self.client, users["user"])

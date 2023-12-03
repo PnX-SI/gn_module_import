@@ -18,7 +18,6 @@ from geonature.utils.sentry import start_sentry_child
 from geonature.core.gn_permissions import decorators as permissions
 from geonature.core.gn_permissions.decorators import login_required
 from geonature.core.gn_permissions.tools import get_scopes_by_action
-from geonature.core.gn_synthese.models import Synthese
 from geonature.core.gn_meta.models import TDatasets
 
 from pypnnomenclature.models import TNomenclatures
@@ -43,7 +42,7 @@ from gn_module_import.utils import (
     clean_import,
     generate_pdf_from_template,
 )
-from gn_module_import.tasks import do_import_checks, do_import_in_synthese
+from gn_module_import.tasks import do_import_checks, do_import_in_destination
 
 IMPORTS_PER_PAGE = 15
 
@@ -552,7 +551,7 @@ def import_valid_data(scope, imprt):
     """
     .. :quickref: Import; Import the valid data.
 
-    Import valid data in GeoNature synthese.
+    Import valid data in destination table.
     """
     if not imprt.has_instance_permission(scope):
         raise Forbidden
@@ -572,7 +571,7 @@ def import_valid_data(scope, imprt):
 
     clean_import(imprt, ImportStep.IMPORT)
 
-    sig = do_import_in_synthese.s(imprt.id_import)
+    sig = do_import_in_destination.s(imprt.id_import)
     task = sig.freeze()
     imprt.task_id = task.task_id
     db.session.commit()
@@ -598,9 +597,7 @@ def delete_import(scope, imprt):
     db.session.execute(
         delete(transient_table).where(transient_table.c.id_import == imprt.id_import)
     )
-    if imprt.source:
-        Synthese.query.filter_by(source=imprt.source).delete()
-        imprt.source = None
+    imprt.destination.remove_data_from_destination(imprt)
     db.session.delete(imprt)
     db.session.commit()
     return jsonify()

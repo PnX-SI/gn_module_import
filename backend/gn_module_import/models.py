@@ -122,6 +122,18 @@ class Destination(db.Model):
             schema="gn_imports",
         )
 
+    @property
+    def check_transient_data(self):
+        return self.module._imports_["check_transient_data"]
+
+    @property
+    def import_data_to_destination(self):
+        return self.module._imports_["import_data_to_destination"]
+
+    @property
+    def remove_data_from_destination(self):
+        return self.module._imports_["remove_data_from_destination"]
+
 
 @serializable
 class BibThemes(db.Model):
