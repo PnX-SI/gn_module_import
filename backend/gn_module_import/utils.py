@@ -61,9 +61,9 @@ def clean_import(imprt, step: ImportStep):
         imprt.erroneous_rows = None
         imprt.processed = False
     if step <= ImportStep.IMPORT:
-        imprt.taxa_count = None
-        imprt.import_count = None
         imprt.date_end_import = None
+        imprt.import_count = None
+        imprt.statistics = {}
         imprt.destination.remove_data_from_destination(imprt)
 
 

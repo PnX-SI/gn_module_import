@@ -8,6 +8,7 @@ Create Date: 2023-10-20 09:05:49.973738
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.schema import Table, MetaData
+from sqlalchemy.dialects.postgresql import JSON
 
 
 # revision identifiers, used by Alembic.
@@ -238,9 +239,52 @@ def upgrade():
     # TODO constraint entity_field.entity.id_destination == entity_field.field.id_destination
     ### Remove synthese specific 'id_source' column
     op.drop_column(schema="gn_imports", table_name="t_imports", column_name="id_source_synthese")
+    ### Put synthese specific 'taxa_count' field in generic 'statistics' field
+    op.add_column(
+        schema="gn_imports",
+        table_name="t_imports",
+        column=sa.Column(
+            "statistics",
+            JSON,
+            nullable=False,
+            server_default=sa.text("'{}'::jsonb"),
+        ),
+    )
+    op.execute(
+        """
+        UPDATE
+            gn_imports.t_imports
+        SET
+            statistics = json_build_object('taxa_count', taxa_count)
+        WHERE
+            taxa_count IS NOT NULL
+        """
+    )
+    op.drop_column(schema="gn_imports", table_name="t_imports", column_name="taxa_count")
 
 
 def downgrade():
+    # Restore 'taxa_count'
+    op.add_column(
+        schema="gn_imports",
+        table_name="t_imports",
+        column=sa.Column(
+            "taxa_count",
+            sa.Integer,
+            nullable=True,
+        ),
+    )
+    op.execute(
+        """
+        UPDATE
+            gn_imports.t_imports
+        SET
+            taxa_count = (statistics ->> 'taxa_count')::integer
+        WHERE
+            to_jsonb(statistics) ? 'taxa_count'
+        """
+    )
+    op.drop_column(schema="gn_imports", table_name="t_imports", column_name="statistics")
     # Restore 'id_source_synthese'
     op.add_column(
         schema="gn_imports",

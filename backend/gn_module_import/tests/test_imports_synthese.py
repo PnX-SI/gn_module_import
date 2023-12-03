@@ -960,7 +960,7 @@ class TestImportsSynthese:
         ).scalar()
         assert transient_rows_count == 0
         assert valid_file_line_count - len(valid_file_invalid_rows) == imprt.import_count
-        assert valid_file_taxa_count == imprt.taxa_count
+        assert valid_file_taxa_count == imprt.statistics["taxa_count"]
         source = TSources.query.filter_by(name_source=f"Import(id={imprt.id_import})").one()
         assert Synthese.query.filter_by(source=source).count() == imprt.import_count
 

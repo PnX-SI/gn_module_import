@@ -43,7 +43,7 @@ export interface Import {
     date_end_import: null | string;
     source_count: number;
     import_count: number;
-    taxa_count: number;
+    statistics: object;
     date_min_data: string;
     date_max_data: string;
     step: Step;
