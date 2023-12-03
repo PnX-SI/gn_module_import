@@ -236,9 +236,36 @@ def upgrade():
         """
     )
     # TODO constraint entity_field.entity.id_destination == entity_field.field.id_destination
+    ### Remove synthese specific 'id_source' column
+    op.drop_column(schema="gn_imports", table_name="t_imports", column_name="id_source_synthese")
 
 
 def downgrade():
+    # Restore 'id_source_synthese'
+    op.add_column(
+        schema="gn_imports",
+        table_name="t_imports",
+        column=sa.Column(
+            "id_source_synthese",
+            sa.Integer,
+            sa.ForeignKey("gn_synthese.t_sources.id_source"),
+            nullable=True,
+        ),
+    )
+    op.execute(
+        """
+        UPDATE
+            gn_imports.t_imports i
+        SET
+            id_source_synthese = s.id_source
+        FROM
+            gn_synthese.t_sources s
+        WHERE
+            s.id_module = (SELECT id_module FROM gn_commons.t_modules WHERE module_code = 'IMPORT')
+            AND
+            s.name_source = 'Import(id=' || i.id_import || ')'
+        """
+    )
     op.execute(
         """
         DELETE FROM

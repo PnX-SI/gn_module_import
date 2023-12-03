@@ -24,7 +24,6 @@ from gn_module_import.models import (
 )
 from gn_module_import.utils import generated_fields
 
-from geonature.core.gn_synthese.models import Synthese, TSources
 from ref_geo.models import LAreas, BibAreasTypes
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
 from apptax.taxonomie.models import Taxref, CorNomListe, BibNoms
@@ -332,6 +331,9 @@ def get_duplicates_query(imprt, dest_field, whereclause=sa.true()):
 
 
 def set_uuid(imprt, fields):
+    from geonature.core.gn_commons.models import TModules
+    from geonature.core.gn_synthese.models import Synthese, TSources
+
     if "unique_id_sinp" in fields:
         field = fields["unique_id_sinp"]
         transient_table = imprt.destination.get_transient_table()
@@ -347,6 +349,11 @@ def set_uuid(imprt, fields):
             error_column=field.name_field,
             whereclause=(transient_table.c.line_no == duplicates.c.lines),
         )
+        module = TModules.query.filter_by(module_code="IMPORT").one()
+        source = TSources.query.filter_by(
+            module=module, name_source=f"Import(id={imprt.id_import})"
+        ).one_or_none()
+        id_source = source if source is not None else None
         report_erroneous_rows(
             imprt,
             error_type="EXISTING_UUID",
@@ -354,7 +361,7 @@ def set_uuid(imprt, fields):
             whereclause=sa.and_(
                 transient_table.c.unique_id_sinp == Synthese.unique_id_sinp,
                 Synthese.id_dataset == imprt.id_dataset,
-                Synthese.source != imprt.source,
+                Synthese.id_source != id_source,
             ),
         )
     if imprt.fieldmapping.get(

@@ -26,7 +26,6 @@ from utils_flask_sqla.serializers import serializable
 from geonature.utils.env import db
 from geonature.utils.celery import celery_app
 from geonature.core.gn_permissions.tools import get_scopes_by_action
-from geonature.core.gn_synthese.models import TSources
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_meta.models import TDatasets
 from pypnnomenclature.models import BibNomenclaturesTypes
@@ -256,12 +255,6 @@ class TImports(InstancePermissionMixin, db.Model):
     # import_table = db.Column(db.Unicode, nullable=True)
     full_file_name = db.Column(db.Unicode, nullable=True)
     id_dataset = db.Column(db.Integer, ForeignKey("gn_meta.t_datasets.id_dataset"), nullable=True)
-    id_source = db.Column(
-        "id_source_synthese", db.Integer, ForeignKey(TSources.id_source), nullable=True
-    )
-    source = db.relationship(
-        TSources, lazy="joined", single_parent=True, cascade="all, delete-orphan"
-    )
     date_create_import = db.Column(db.DateTime, default=datetime.now)
     date_update_import = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     date_end_import = db.Column(db.DateTime, nullable=True)
@@ -287,10 +280,6 @@ class TImports(InstancePermissionMixin, db.Model):
     fieldmapping = db.Column(MutableDict.as_mutable(JSON))
     contentmapping = db.Column(MutableDict.as_mutable(JSON))
     task_id = db.Column(sa.String(155))
-
-    @property
-    def source_name(self):
-        return f"Import(id={self.id_import})"
 
     errors = db.relationship(
         "ImportUserError",
