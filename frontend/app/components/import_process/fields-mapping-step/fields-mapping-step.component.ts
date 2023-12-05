@@ -59,6 +59,8 @@ export class FieldsMappingStepComponent implements OnInit {
   public modalCreateMappingForm = new FormControl('');
   public updateAvailable: boolean = false;
   public mappingSelected: boolean = false;
+  public isCollapseUnmappedSourceFields: boolean = true;
+
   @ViewChild('saveMappingModal') saveMappingModal;
   @ViewChild('deleteConfirmModal') deleteConfirmModal;
 

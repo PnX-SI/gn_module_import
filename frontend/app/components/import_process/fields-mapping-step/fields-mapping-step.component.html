@@ -155,10 +155,16 @@
                             role="alert"
                             style="text-align: center;"
                         >
-                            <a data-toggle="collapse" href="#unmappedSourceFields" aria-expanded="false" aria-controls="unmappedSourceFields">
-                              {{ unmappedSourceFields.size }} champs
-                            </a> du fichier d’import ne sont actuellement associés à aucun champs cible et seront donc ignorés.
-                            <div class="collapse" id="unmappedSourceFields">
+                            <p>
+                                {{ unmappedSourceFields.size }} champs
+                                du fichier d’import ne sont actuellement associés à aucun champs cible et seront donc ignorés.
+                            </p>
+                            <button
+                                    (click)="isCollapseUnmappedSourceFields = !isCollapseUnmappedSourceFields"
+                                    color="accent"
+                                    mat-raised-button
+                                >{{ isCollapseUnmappedSourceFields ? 'Voir' : 'Cacher' }} les champs non associés</button>
+                            <div [(ngbCollapse)]="isCollapseUnmappedSourceFields">
                               <ul style="text-align: left;">
                                 <li *ngFor="let sourceField of unmappedSourceFields">{{ sourceField }}</li>
                               </ul>
