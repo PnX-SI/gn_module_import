@@ -433,38 +433,47 @@ def preview_valid_data(scope, imprt):
     if not imprt.processed:
         raise Conflict("Import must have been prepared before executing this action.")
     transient_table = imprt.destination.get_transient_table()
-    fields = BibFields.query.filter(
-        BibFields.dest_field != None,
-        BibFields.name_field.in_(imprt.fieldmapping.keys()),
-    ).all()
-    columns = [field.dest_column for field in fields]
-    valid_data = db.session.execute(
-        select(*[transient_table.c[col] for col in columns])
-        .where(transient_table.c.valid == True)
-        .limit(100)
-    ).fetchall()
-    valid_bbox = get_valid_bbox(imprt)
-    n_valid_data = db.session.execute(
-        select(func.count())
-        .select_from(transient_table)
-        .where(transient_table.c.id_import == imprt.id_import)
-        .where(transient_table.c.valid == True)
-    ).scalar()
-    n_invalid_data = db.session.execute(
-        select(func.count())
-        .select_from(transient_table)
-        .where(transient_table.c.id_import == imprt.id_import)
-        .where(transient_table.c.valid == False)
-    ).scalar()
-    return jsonify(
-        {
-            "columns": columns,
-            "valid_data": valid_data,
-            "n_valid_data": n_valid_data,
-            "n_invalid_data": n_invalid_data,
-            "valid_bbox": valid_bbox,
-        }
-    )
+    data = {
+        "valid_bbox": get_valid_bbox(imprt),
+        "entities": [],
+    }
+    for entity in (
+        Entity.query.filter_by(destination=imprt.destination).order_by(Entity.order).all()
+    ):
+        fields = BibFields.query.filter(
+            BibFields.entities.any(EntityField.entity == entity),
+            BibFields.dest_field != None,
+            BibFields.name_field.in_(imprt.fieldmapping.keys()),
+        ).all()
+        columns = [field.dest_column for field in fields]
+        valid_data = db.session.execute(
+            select(*[transient_table.c[col] for col in columns])
+            .where(transient_table.c.id_import == imprt.id_import)
+            .where(transient_table.c[entity.validity_column] == True)
+            .limit(100)
+        ).fetchall()
+        n_valid_data = db.session.execute(
+            select(func.count())
+            .select_from(transient_table)
+            .where(transient_table.c.id_import == imprt.id_import)
+            .where(transient_table.c[entity.validity_column] == True)
+        ).scalar()
+        n_invalid_data = db.session.execute(
+            select(func.count())
+            .select_from(transient_table)
+            .where(transient_table.c.id_import == imprt.id_import)
+            .where(transient_table.c[entity.validity_column] == False)
+        ).scalar()
+        data["entities"].append(
+            {
+                "entity": entity.as_dict(),
+                "columns": columns,
+                "valid_data": valid_data,
+                "n_valid_data": n_valid_data,
+                "n_invalid_data": n_invalid_data,
+            }
+        )
+    return jsonify(data)
 
 
 @blueprint.route("/<destination>/imports/<int:import_id>/errors", methods=["GET"])

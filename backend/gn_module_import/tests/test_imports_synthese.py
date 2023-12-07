@@ -768,8 +768,8 @@ class TestImportsSynthese:
         set_logged_user(self.client, users["user"])
         r = self.client.get(url_for("import.preview_valid_data", import_id=imprt.id_import))
         assert r.status_code == 200, r.data
-        assert r.json["n_valid_data"] == imprt.source_count - len(valid_file_invalid_rows)
-        assert r.json["n_invalid_data"] == len(valid_file_invalid_rows)
+        assert r.json["entities"][0]["n_valid_data"] == imprt.source_count - len(valid_file_invalid_rows)
+        assert r.json["entities"][0]["n_invalid_data"] == len(valid_file_invalid_rows)
 
     def test_import_invalid_rows(self, users, prepared_import):
         imprt = prepared_import
@@ -934,8 +934,8 @@ class TestImportsSynthese:
         # Get valid data (preview)
         r = self.client.get(url_for("import.preview_valid_data", import_id=imprt.id_import))
         assert r.status_code == 200, r.data
-        assert r.json["n_valid_data"] == imprt.source_count - len(valid_file_invalid_rows)
-        assert r.json["n_invalid_data"] == len(valid_file_invalid_rows)
+        assert r.json["entities"][0]["n_valid_data"] == imprt.source_count - len(valid_file_invalid_rows)
+        assert r.json["entities"][0]["n_invalid_data"] == len(valid_file_invalid_rows)
 
         # Get invalid data
         # The with block forcefully close the request context, which may stay open due

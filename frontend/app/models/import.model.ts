@@ -141,3 +141,14 @@ export interface TaxaDistribution {
 export interface Dataset {
     dataset_name: string
 }
+
+export interface ImportPreview {
+    valid_bbox: any,
+    entities: [{
+        entity: Entity,
+        columns: [string],
+        valid_data: [object],
+        n_valid_data: number,
+        n_invalid_data: number
+    }],
+}

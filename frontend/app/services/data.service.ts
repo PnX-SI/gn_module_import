@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { HttpClient, HttpParams } from "@angular/common/http";
-import { Dataset, Import, ImportError, ImportValues, EntitiesThemesFields, TaxaDistribution } from "../models/import.model";
+import { Dataset, Import, ImportError, ImportValues, EntitiesThemesFields, TaxaDistribution, ImportPreview } from "../models/import.model";
 import { FieldMapping, FieldMappingValues, ContentMapping, ContentMappingValues } from "../models/mapping.model";
 import { ConfigService } from '@geonature/services/config.service';
 
@@ -163,7 +163,7 @@ export class DataService {
     return this._http.post<Import>(`${this.urlApi}/imports/${import_id}/prepare`, {});
   }
 
-  getValidData(import_id: number): Observable<any> {
+  getValidData(import_id: number): Observable<ImportPreview> {
     return this._http.get<any>(`${this.urlApi}/imports/${import_id}/preview_valid_data`);
   }
 

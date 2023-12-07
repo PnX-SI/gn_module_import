@@ -4,7 +4,7 @@ import { ImportProcessService } from "../import-process.service";
 import { DataService } from "../../../services/data.service";
 import { CommonService } from "@geonature_common/service/common.service";
 import { Step } from "../../../models/enums.model";
-import { Import } from "../../../models/import.model";
+import { Import, ImportPreview } from "../../../models/import.model";
 import { ConfigService } from '@geonature/services/config.service';
 import { CsvExportService } from "../../../services/csv-export.service";
 
@@ -19,18 +19,14 @@ export class ImportStepComponent implements OnInit {
     // public isCollapsed = false;
     // public idImport: any;
     // importDataRes: any;
-    public validData: Array<any>;
     // total_columns: any;
-    public columns: Array<any> = [];
-    public nValidData: number;
-    public nInvalidData: number;
-    public validBbox: any;
+    public previewData: ImportPreview;
     public spinner: boolean = false;
     // public nbLignes: string = "X";
     public errorCount: number;
     public warningCount: number;
     public invalidRowCount: number;
-    public tableReady: boolean = true;
+    public tableReady: boolean = false;
     public progress: number = 0;
     public importRunning: boolean = false;
     public importDone: boolean = false;
@@ -85,15 +81,8 @@ export class ImportStepComponent implements OnInit {
             });
         this._ds.getValidData(this.importData.id_import).subscribe(res => {
             this.spinner = false;
-            this.nValidData = res.n_valid_data;
-            this.nInvalidData = res.n_invalid_data;
-            this.validData = res.valid_data;
-            this.validBbox = res.valid_bbox;
-            if (this.validData.length > 0) {
-                this.columns = Object.keys(this.validData[0]).map(el => {
-                    return { prop: el, name: el };
-                });
-            }
+            this.tableReady = true;
+            this.previewData = res;
         })
     }
 

@@ -73,7 +73,7 @@
                 searchBar="false"
             >
                 <pnx-geojson
-                    [geojson]="this.validBbox"
+                    [geojson]="this.previewData.valid_bbox"
                     [zoomOnFirstTime]="true"
                 >
                 </pnx-geojson>
@@ -95,12 +95,14 @@
         </div>
         <div class="card-body">
 
+            <mat-tab-group>
+            <mat-tab *ngFor="let entityPreview of this.previewData.entities" label="{{ entityPreview.entity.label }}">
             <ngx-datatable
                 *ngIf="tableReady"
                 #table
                 class="material striped"
-                [rows]="validData"
-                [columns]="columns"
+                [rows]="entityPreview.valid_data"
+                [columns]="entityPreview.columns"
                 [columnMode]="'force'"
                 [headerHeight]="35"
                 [scrollbarH]="true"
@@ -110,6 +112,8 @@
                 [selectionType]='single'
             >
             </ngx-datatable>
+            </mat-tab>
+            </mat-tab-group>
 
             <br />
             <div
