@@ -22,12 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        debian-version: [ '10', '11', '12' ]
+        debian-version: [ '11', '12' ]
         include:
-          - debian-version: '10'
-            python-version: "3.7"
-            postgres-version: '11'
-            postgis-version: '2.5'
           - debian-version: '11'
             python-version: '3.9'
             postgres-version: '13'
@@ -110,7 +106,8 @@ jobs:
         GEONATURE_CONFIG_FILE: dependencies/GeoNature/config/test_config.toml
     - name: Install import module backend
       run: |
-        pip install --editable .
+        pip install -r requirements-dev.in
+        pip install .
     - name: Install import module database
       run: |
         geonature upgrade-modules-db IMPORT

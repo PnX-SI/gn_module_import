@@ -10,7 +10,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from geonature.utils.env import db
-from geonature.tests.utils import set_logged_user_cookie
 from geonature.core.gn_permissions.models import (
     Permission,
 )
@@ -29,6 +28,7 @@ from pypnusershub.db.models import (
     Profils as Profil,
     UserApplicationRight,
 )
+from pypnusershub.tests.utils import (set_logged_user_cookie)
 
 from gn_module_import.models import (
     MappingTemplate,
@@ -282,7 +282,7 @@ class TestMappings:
         assert r.json["label"] == mappings["content_public"].label
         assert r.json["type"] == "FIELD"
         assert r.json["values"] == fieldmapping
-        mapping = MappingTemplate.query.get(r.json["id"])
+        mapping = db.session.get(MappingTemplate, r.json["id"])
         assert mapping.owners == [users["user"]]
 
     def test_add_content_mapping(self, users, mappings):
@@ -308,7 +308,7 @@ class TestMappings:
         assert r.json["label"] == "test content mapping"
         assert r.json["type"] == "CONTENT"
         assert r.json["values"] == contentmapping
-        mapping = MappingTemplate.query.get(r.json["id"])
+        mapping = db.session.get(MappingTemplate, r.json["id"])
         assert mapping.owners == [users["user"]]
 
     def test_update_mapping_label(self, users, mappings):
@@ -404,6 +404,7 @@ class TestMappings:
         contentvalues_update["NAT_OBJ_GEO"]["ne sais pas"] = "NSP"  # add new mapping
         contentvalues_should = deepcopy(contentvalues_update)
         del contentvalues_update["NAT_OBJ_GEO"]["St"]  # should not be removed!
+        db.session.flush()
         r = self.client.post(
             url_for("import.update_mapping", mappingtype=cm.type.lower(), id_mapping=cm.id),
             data=contentvalues_update,
@@ -429,7 +430,7 @@ class TestMappings:
             )
         )
         assert r.status_code == Unauthorized.code
-        assert MappingTemplate.query.get(mapping.id) is not None
+        assert db.session.get(MappingTemplate, mapping.id) is not None
 
         set_logged_user_cookie(self.client, users["self_user"])
         r = self.client.delete(
@@ -440,14 +441,14 @@ class TestMappings:
             )
         )
         assert r.status_code == Forbidden.code
-        assert MappingTemplate.query.get(mapping.id) is not None
+        assert db.session.get(MappingTemplate, mapping.id) is not None
 
         set_logged_user_cookie(self.client, users["user"])
         r = self.client.delete(
             url_for("import.delete_mapping", mappingtype="content", id_mapping=mapping.id)
         )
         assert r.status_code == NotFound.code
-        assert MappingTemplate.query.get(mapping.id) is not None
+        assert db.session.get(MappingTemplate, mapping.id) is not None
 
         r = self.client.delete(
             url_for(
@@ -457,7 +458,7 @@ class TestMappings:
             )
         )
         assert r.status_code == 204
-        assert MappingTemplate.query.get(mapping.id) is None
+        assert db.session.get(MappingTemplate, mapping.id) is None
 
     def test_synthesis_fields(self, users):
         assert (
