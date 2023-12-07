@@ -404,6 +404,7 @@ class TestMappings:
         contentvalues_update["NAT_OBJ_GEO"]["ne sais pas"] = "NSP"  # add new mapping
         contentvalues_should = deepcopy(contentvalues_update)
         del contentvalues_update["NAT_OBJ_GEO"]["St"]  # should not be removed!
+        db.session.flush()
         r = self.client.post(
             url_for("import.update_mapping", mappingtype=cm.type.lower(), id_mapping=cm.id),
             data=contentvalues_update,

@@ -555,7 +555,6 @@ class TestImports:
             )
             assert r.status_code == 400, r.data
             assert r.json["description"] == "Impossible to upload empty files"
-
         with open(tests_path / "files" / "starts_with_empty_line.csv", "rb") as f:
             data = {
                 "file": (f, "starts_with_empty_line.csv"),
@@ -620,6 +619,7 @@ class TestImports:
 
         with open(tests_path / "files" / "utf8_file.csv", "rb") as f:
             imprt.source_file = f.read()
+        db.session.flush()
         r = self.client.post(url_for("import.decode_file", import_id=imprt.id_import), data=data)
         assert r.status_code == BadRequest.code, r.data
 
@@ -627,6 +627,7 @@ class TestImports:
 
         with open(tests_path / "files" / "duplicate_column_names.csv", "rb") as f:
             imprt.source_file = f.read()
+        db.session.flush()
         r = self.client.post(url_for("import.decode_file", import_id=imprt.id_import), data=data)
         assert r.status_code == BadRequest.code, r.data
         assert "Duplicates column names" in r.json["description"]
