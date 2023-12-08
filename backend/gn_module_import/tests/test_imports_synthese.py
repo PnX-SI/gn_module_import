@@ -46,8 +46,8 @@ from .jsonschema_definitions import jsonschema_definitions
 tests_path = Path(__file__).parent
 
 valid_file_expected_errors = {
-    ("DUPLICATE_ENTITY_SOURCE_PK", "id_synthese", frozenset([3, 4])),
-    ("COUNT_MIN_SUP_COUNT_MAX", "nombre_min", frozenset([5])),
+    ("DUPLICATE_ENTITY_SOURCE_PK", "id_synthese", frozenset([4, 5])),
+    ("COUNT_MIN_SUP_COUNT_MAX", "nombre_min", frozenset([6])),
 }
 valid_file_invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
 valid_file_line_count = 6
@@ -959,18 +959,18 @@ class TestImportsSynthese:
         assert_import_errors(
             prepared_import,
             {
-                ("INVALID_ATTACHMENT_CODE", "codecommune", frozenset([2])),
-                ("INVALID_ATTACHMENT_CODE", "codedepartement", frozenset([4])),
-                ("INVALID_ATTACHMENT_CODE", "codemaille", frozenset([6])),
-                ("MULTIPLE_CODE_ATTACHMENT", "Champs géométriques", frozenset([7])),
+                ("INVALID_ATTACHMENT_CODE", "codecommune", frozenset([3])),
+                ("INVALID_ATTACHMENT_CODE", "codedepartement", frozenset([5])),
+                ("INVALID_ATTACHMENT_CODE", "codemaille", frozenset([7])),
+                ("MULTIPLE_CODE_ATTACHMENT", "Champs géométriques", frozenset([8])),
                 (
                     "MULTIPLE_ATTACHMENT_TYPE_CODE",
                     "Champs géométriques",
-                    frozenset([10, 14]),
+                    frozenset([11, 15]),
                 ),
-                ("NO-GEOM", "Champs géométriques", frozenset([15])),
-                ("INVALID_GEOMETRY", "WKT", frozenset([16])),
-                ("GEOMETRY_OUTSIDE", "Champs géométriques", frozenset([17, 18])),
+                ("NO-GEOM", "Champs géométriques", frozenset([16])),
+                ("INVALID_GEOMETRY", "WKT", frozenset([17])),
+                ("GEOMETRY_OUTSIDE", "Champs géométriques", frozenset([18, 19])),
             },
         )
 
@@ -979,11 +979,11 @@ class TestImportsSynthese:
         assert_import_errors(
             prepared_import,
             {
-                ("MISSING_VALUE", "cd_nom", frozenset([1, 4, 5])),
-                ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([2, 6, 8, 10])),
-                ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([6, 7])),
-                ("INVALID_INTEGER", "cd_nom", frozenset([11])),
-                ("INVALID_INTEGER", "cd_hab", frozenset([12])),
+                ("MISSING_VALUE", "cd_nom", frozenset([2, 5, 6])),
+                ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([3, 7, 9, 11])),
+                ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([7, 8])),
+                ("INVALID_INTEGER", "cd_nom", frozenset([12])),
+                ("INVALID_INTEGER", "cd_hab", frozenset([13])),
             },
         )
 
@@ -995,7 +995,7 @@ class TestImportsSynthese:
                 (
                     "DUPLICATE_ENTITY_SOURCE_PK",
                     "entity_source_pk_value",
-                    frozenset([4, 5]),
+                    frozenset([5, 6]),
                 ),
             },
         )
@@ -1004,15 +1004,15 @@ class TestImportsSynthese:
     def test_import_altitude_file(self, prepared_import):
         french_dem = has_french_dem()
         if french_dem:
-            alti_min_sup_alti_max = frozenset([3, 5, 8])
+            alti_min_sup_alti_max = frozenset([4, 6, 9])
         else:
-            alti_min_sup_alti_max = frozenset([8])
+            alti_min_sup_alti_max = frozenset([9])
         assert_import_errors(
             prepared_import,
             {
                 ("ALTI_MIN_SUP_ALTI_MAX", "altitude_min", alti_min_sup_alti_max),
-                ("INVALID_INTEGER", "altitude_min", frozenset([9, 11])),
-                ("INVALID_INTEGER", "altitude_max", frozenset([10, 11])),
+                ("INVALID_INTEGER", "altitude_min", frozenset([10, 12])),
+                ("INVALID_INTEGER", "altitude_max", frozenset([11, 12])),
             },
         )
         if has_french_dem():
@@ -1042,9 +1042,9 @@ class TestImportsSynthese:
         assert_import_errors(
             prepared_import,
             {
-                ("DUPLICATE_UUID", "unique_id_sinp", frozenset([2, 3])),
-                ("EXISTING_UUID", "unique_id_sinp", frozenset([4])),
-                ("INVALID_UUID", "unique_id_sinp", frozenset([5])),
+                ("DUPLICATE_UUID", "unique_id_sinp", frozenset([3, 4])),
+                ("EXISTING_UUID", "unique_id_sinp", frozenset([5])),
+                ("INVALID_UUID", "unique_id_sinp", frozenset([6])),
             },
         )
         transient_table = prepared_import.destination.get_transient_table()
@@ -1060,14 +1060,14 @@ class TestImportsSynthese:
         assert_import_errors(
             prepared_import,
             {
-                ("DATE_MIN_SUP_DATE_MAX", "date_min", frozenset({3, 9})),
-                ("DATE_MIN_TOO_HIGH", "date_min", frozenset({2, 3})),
-                ("DATE_MAX_TOO_HIGH", "date_max", frozenset({4})),
-                ("MISSING_VALUE", "date_min", frozenset({11})),
-                ("INVALID_DATE", "date_min", frozenset({12})),
-                ("DATE_MIN_TOO_LOW", "date_min", frozenset({13, 14})),
-                ("DATE_MAX_TOO_LOW", "date_max", frozenset({14})),
-                ("INVALID_DATE", "meta_validation_date", frozenset({16})),
+                ("DATE_MIN_SUP_DATE_MAX", "date_min", frozenset({4, 10})),
+                ("DATE_MIN_TOO_HIGH", "date_min", frozenset({3, 4})),
+                ("DATE_MAX_TOO_HIGH", "date_max", frozenset({5})),
+                ("MISSING_VALUE", "date_min", frozenset({12})),
+                ("INVALID_DATE", "date_min", frozenset({13})),
+                ("DATE_MIN_TOO_LOW", "date_min", frozenset({14, 15})),
+                ("DATE_MAX_TOO_LOW", "date_max", frozenset({15})),
+                ("INVALID_DATE", "meta_validation_date", frozenset({17})),
             },
         )
 
@@ -1076,11 +1076,11 @@ class TestImportsSynthese:
         assert_import_errors(
             prepared_import,
             {
-                ("INVALID_URL_PROOF", "digital_proof", frozenset({2, 4, 5})),
+                ("INVALID_URL_PROOF", "digital_proof", frozenset({3, 5, 6})),
                 (
                     "INVALID_EXISTING_PROOF_VALUE",
                     "id_nomenclature_exist_proof",
-                    frozenset({8, 9, 11, 13, 15}),
+                    frozenset({9, 10, 12, 14, 16}),
                 ),
             },
         )
@@ -1090,7 +1090,7 @@ class TestImportsSynthese:
         assert_import_errors(
             prepared_import,
             {
-                ("DEPTH_MIN_SUP_ALTI_MAX", "depth_min", frozenset({6})),
+                ("DEPTH_MIN_SUP_ALTI_MAX", "depth_min", frozenset({7})),
             },
         )
 
@@ -1099,16 +1099,16 @@ class TestImportsSynthese:
         assert_import_errors(
             prepared_import,
             {
-                ("INVALID_NOMENCLATURE", "id_nomenclature_exist_proof", frozenset({2})),
+                ("INVALID_NOMENCLATURE", "id_nomenclature_exist_proof", frozenset({3})),
                 (
                     "INVALID_EXISTING_PROOF_VALUE",
                     "id_nomenclature_exist_proof",
-                    frozenset({4, 5, 6, 7}),
+                    frozenset({5, 6, 7, 8}),
                 ),
                 (
                     "CONDITIONAL_MANDATORY_FIELD_ERROR",
                     "id_nomenclature_source_status",
-                    frozenset({12}),
+                    frozenset({13}),
                 ),
             },
         )
@@ -1168,7 +1168,7 @@ class TestImportsSynthese:
         assert_import_errors(
             imported_import,
             {
-                ("INVALID_NOMENCLATURE", "id_nomenclature_naturalness", frozenset({2})),
+                ("INVALID_NOMENCLATURE", "id_nomenclature_naturalness", frozenset({3})),
             },
         )
         source = TSources.query.filter_by(
@@ -1188,8 +1188,8 @@ class TestImportsSynthese:
         assert_import_errors(
             imported_import,
             {
-                ("MISSING_VALUE", "cd_nom", frozenset({1})),
-                ("CD_NOM_NOT_FOUND", "cd_nom", frozenset({2})),
+                ("MISSING_VALUE", "cd_nom", frozenset({2})),
+                ("CD_NOM_NOT_FOUND", "cd_nom", frozenset({3})),
             },
         )
 

@@ -526,10 +526,10 @@ def get_import_invalid_rows_as_csv(scope, imprt):
         destfile = StringIO()
         csvreader = csv.reader(sourcefile, delimiter=imprt.separator)
         csvwriter = csv.writer(destfile, dialect=csvreader.dialect, lineterminator="\n")
-        line_no = 0
+        line_no = 1
         for row in csvreader:
-            # line_no == 0 → csv header
-            if line_no == 0 or line_no in imprt.erroneous_rows:
+            # line_no == 1 → csv header
+            if line_no == 1 or line_no in imprt.erroneous_rows:
                 csvwriter.writerow(row)
                 destfile.seek(0)
                 yield destfile.read().encode(imprt.encoding)
