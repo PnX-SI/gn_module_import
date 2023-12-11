@@ -3,13 +3,12 @@ from pathlib import Path
 from functools import partial
 from operator import or_
 from functools import reduce
-from unittest.mock import patch
 import csv
 
 import pytest
 from flask import g, url_for, current_app
 from werkzeug.datastructures import Headers
-from werkzeug.exceptions import Unauthorized, Forbidden, BadRequest, Conflict
+from werkzeug.exceptions import Unauthorized, Forbidden, BadRequest
 from jsonschema import validate as validate_json
 from sqlalchemy import func
 from sqlalchemy.sql.expression import select
@@ -20,7 +19,7 @@ from geonature.tests.utils import set_logged_user, unset_logged_user
 from geonature.core.gn_permissions.tools import (
     get_scopes_by_action as _get_scopes_by_action,
 )
-from geonature.core.gn_permissions.models import PermAction, PermFilter, Permission, PermObject
+from geonature.core.gn_permissions.models import PermAction, Permission, PermObject
 from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_meta.models import TDatasets
 from geonature.core.gn_synthese.models import Synthese, TSources
@@ -36,11 +35,11 @@ from gn_module_import.models import (
     FieldMapping,
     ContentMapping,
     BibFields,
-    ImportUserErrorType,
 )
 from gn_module_import.utils import insert_import_data_in_transient_table
 
 from .jsonschema_definitions import jsonschema_definitions
+from .utils import assert_import_errors
 
 
 tests_path = Path(__file__).parent
@@ -63,29 +62,6 @@ def g_permissions():
     """
     g._permissions_by_user = {}
     g._permissions = {}
-
-
-def assert_import_errors(imprt, expected_errors):
-    errors = {
-        (error.type.name, error.column, frozenset(error.rows or [])) for error in imprt.errors
-    }
-    assert errors == expected_errors
-    expected_erroneous_rows = set()
-    for error_type, _, rows in expected_errors:
-        error_type = ImportUserErrorType.query.filter_by(name=error_type).one()
-        if error_type.level == "ERROR":
-            expected_erroneous_rows |= set(rows)
-    if imprt.processed:
-        assert set(imprt.erroneous_rows or []) == expected_erroneous_rows
-    else:
-        transient_table = imprt.destination.get_transient_table()
-        stmt = (
-            select([transient_table.c.line_no])
-            .where(transient_table.c.id_import == imprt.id_import)
-            .where(transient_table.c.valid == False)
-        )
-        erroneous_rows = {line_no for line_no, in db.session.execute(stmt)}
-        assert erroneous_rows == expected_erroneous_rows
 
 
 @pytest.fixture()
@@ -791,7 +767,7 @@ class TestImportsSynthese:
         set_logged_user(self.client, users["user"])
         r = self.client.get(url_for("import.get_import_errors", import_id=imprt.id_import))
         assert r.status_code == 200, r.data
-        invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])
+        invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])  # TODO check?
         assert_import_errors(imprt, valid_file_expected_errors)
         validate_json(
             r.json,
@@ -981,7 +957,7 @@ class TestImportsSynthese:
             {
                 ("MISSING_VALUE", "cd_nom", frozenset([2, 5, 6])),
                 ("CD_NOM_NOT_FOUND", "cd_nom", frozenset([3, 7, 9, 11])),
-                ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([7, 8])),
+                ("CD_HAB_NOT_FOUND", "cd_hab", frozenset([5, 7, 8])),
                 ("INVALID_INTEGER", "cd_nom", frozenset([12])),
                 ("INVALID_INTEGER", "cd_hab", frozenset([13])),
             },
@@ -1051,7 +1027,7 @@ class TestImportsSynthese:
         unique_id_sinp = db.session.execute(
             select([transient_table.c.unique_id_sinp])
             .where(transient_table.c.id_import == prepared_import.id_import)
-            .where(transient_table.c.line_no == 6)
+            .where(transient_table.c.line_no == 7)
         ).scalar()
         assert unique_id_sinp != None
 

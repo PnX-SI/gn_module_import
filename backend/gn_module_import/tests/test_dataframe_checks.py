@@ -1,21 +1,16 @@
-from collections import namedtuple, OrderedDict
+from collections import namedtuple
 from datetime import datetime
-from uuid import UUID
 
 import pytest
 import pandas as pd
 import numpy as np
 from flask import current_app
-import sqlalchemy as sa
 
-from geonature.utils.config import config
-from geonature import create_app
 from geonature.core.gn_commons.models import TModules
-from geonature.core.gn_synthese.models import Synthese
 from geonature.tests.fixtures import synthese_data
 from shapely.geometry import Point
 
-from gn_module_import.models import TImports, Destination, Entity, EntityField, BibFields
+from gn_module_import.models import TImports, Destination, BibFields
 from gn_module_import.checks.dataframe import *
 from gn_module_import.checks.dataframe.geography import (
     check_wkt_inside_area_id,
@@ -68,29 +63,6 @@ def assert_errors(errors, expected):
 
 @pytest.mark.usefixtures("app")
 class TestChecks:
-    def test_clean_missing_values(self, imprt):
-        fields = get_fields(imprt, ["WKT"])
-        df = pd.DataFrame(
-            [
-                [None],
-                [""],
-                ["str"],
-                [42],
-            ],
-            columns=[field.source_field for field in fields.values()],
-        )
-        clean_missing_values(df, fields)
-        expected_df = pd.DataFrame(
-            [
-                [np.nan],
-                [np.nan],
-                ["str"],
-                [42],
-            ],
-            columns=[field.source_field for field in fields.values()],
-        )
-        pd.testing.assert_frame_equal(df, expected_df)
-
     def test_check_required_values(self, imprt):
         fields = get_fields(imprt, ["precision", "cd_nom", "nom_cite"])
         df = pd.DataFrame(
@@ -100,7 +72,7 @@ class TestChecks:
             ],
             columns=[field.source_column for field in fields.values()],
         )
-        errors = check_required_values(df, fields)
+        errors = check_required_values.__wrapped__(df, fields)
         assert_errors(
             errors,
             expected=[
@@ -113,6 +85,8 @@ class TestChecks:
         fields = get_fields(
             imprt,
             [
+                "the_geom_4326",
+                "the_geom_local",
                 "WKT",
                 "longitude",
                 "latitude",
@@ -162,12 +136,29 @@ class TestChecks:
                 # [18] Codes are ignored if xy
                 [None, "600000", "7000000", "42", "42", "42"],
             ],
-            columns=[field.source_field for field in fields.values()],
+            columns=[
+                fields[n].source_field
+                for n in [
+                    "WKT",
+                    "longitude",
+                    "latitude",
+                    "codecommune",
+                    "codemaille",
+                    "codedepartement",
+                ]
+            ],
         )
-        errors = check_geography(
+        errors = check_geography.__wrapped__(
             df,
-            fields,
             file_srid=imprt.srid,
+            geom_4326_field=fields["the_geom_4326"],
+            geom_local_field=fields["the_geom_local"],
+            wkt_field=fields["WKT"],
+            latitude_field=fields["latitude"],
+            longitude_field=fields["longitude"],
+            codecommune_field=fields["codecommune"],
+            codemaille_field=fields["codemaille"],
+            codedepartement_field=fields["codedepartement"],
         )
         assert_errors(
             errors,
@@ -201,6 +192,7 @@ class TestChecks:
         )
 
     def test_check_types(self, imprt):
+        entity = imprt.destination.entities[0]
         uuid = "82ff094c-c3b3-11eb-9804-bfdc95e73f38"
         fields = get_fields(
             imprt,
@@ -223,7 +215,7 @@ class TestChecks:
             ],
             columns=[field.source_column for field in fields.values()],
         )
-        errors = list(check_types(df, fields))
+        errors = list(check_types.__wrapped__(entity, df, fields))
         assert_errors(
             errors,
             expected=[
@@ -247,33 +239,46 @@ class TestChecks:
         )
 
     def test_concat_dates(self, imprt):
-        fields = get_fields(imprt, ["date_min", "hour_min", "date_max", "hour_max"])
+        entity = imprt.destination.entities[0]
+        fields = get_fields(
+            imprt,
+            [
+                "datetime_min",
+                "datetime_max",
+                "date_min",
+                "date_max",
+                "hour_min",
+                "hour_max",
+                "hour_max",
+            ],
+        )
         df = pd.DataFrame(
             [
                 ["2020-01-01", "12:00:00", "2020-01-02", "14:00:00"],
-                ["2020-01-01", "", "2020-01-02", "14:00:00"],
-                ["2020-01-01", "12:00:00", "", "14:00:00"],
-                ["2020-01-01", "12:00:00", "2020-01-01", ""],
-                ["2020-01-01", "12:00:00", "2020-01-02", ""],
-                ["2020-01-01", "12:00:00", "", ""],
-                ["2020-01-01", "", "2020-01-02", ""],
-                ["2020-01-01", "", "", "14:00:00"],
-                ["2020-01-01", "", "", ""],
-                ["", "12:00:00", "2020-01-02", "14:00:00"],
+                ["2020-01-01", None, "2020-01-02", "14:00:00"],
+                ["2020-01-01", "12:00:00", None, "14:00:00"],
+                ["2020-01-01", "12:00:00", "2020-01-01", None],
+                ["2020-01-01", "12:00:00", "2020-01-02", None],
+                ["2020-01-01", "12:00:00", None, None],
+                ["2020-01-01", None, "2020-01-02", None],
+                ["2020-01-01", None, None, "14:00:00"],
+                ["2020-01-01", None, None, None],
+                [None, "12:00:00", "2020-01-02", "14:00:00"],
                 ["bogus", "12:00:00", "2020-01-02", "14:00:00"],
             ],
-            columns=[field.source_field for field in fields.values()],
+            columns=[
+                fields[n].source_field for n in ["date_min", "hour_min", "date_max", "hour_max"]
+            ],
         )
-        clean_missing_values(df, fields)  # replace '' with np.nan
-        concat_dates(df, fields)
-        errors = list(check_required_values(df, fields))
+        concat_dates(df, *fields.values())
+        errors = list(check_required_values.__wrapped__(df, fields))
         assert_errors(
             errors,
             expected=[
                 Error(error_code="MISSING_VALUE", column="date_min", invalid_rows=frozenset([9])),
             ],
         )
-        errors = list(check_types(df, fields))
+        errors = list(check_types.__wrapped__(entity, df, fields))
         assert_errors(
             errors,
             expected=[
@@ -303,20 +308,21 @@ class TestChecks:
         )
 
     def test_dates_parsing(self, imprt):
-        fields = get_fields(imprt, ["date_min", "hour_min"])
+        entity = imprt.destination.entities[0]
+        fields = get_fields(imprt, ["date_min", "hour_min", "datetime_min", "datetime_max"])
         df = pd.DataFrame(
             [
-                ["2020-01-05", ""],
-                ["2020/01/05", ""],
-                ["2020-1-05", ""],
-                ["2020/01/5", ""],
-                ["05-01-2020", ""],
-                ["05/01/2020", ""],
-                ["05-1-2020", ""],
-                ["5/01/2020", ""],
-                ["2020.01.05", ""],
-                ["05.01.2020", ""],
-                ["0027-01-20", ""],
+                ["2020-01-05", None],
+                ["2020/01/05", None],
+                ["2020-1-05", None],
+                ["2020/01/5", None],
+                ["05-01-2020", None],
+                ["05/01/2020", None],
+                ["05-1-2020", None],
+                ["5/01/2020", None],
+                ["2020.01.05", None],
+                ["05.01.2020", None],
+                ["0027-01-20", None],
                 ["2020-01-05", "13"],
                 ["2020-01-05", "13:12"],
                 ["2020-01-05", "13:12:05"],
@@ -325,11 +331,16 @@ class TestChecks:
                 ["2020-01-05", "13h12m"],
                 ["2020-01-05", "13h12m05s"],
             ],
-            columns=[field.source_field for field in fields.values()],
+            columns=[fields["date_min"].source_field, fields["hour_min"].source_field],
         )
-        clean_missing_values(df, fields)  # replace '' with np.nan
-        concat_dates(df, fields)
-        errors = list(check_types(df, fields))
+        concat_dates(
+            df,
+            datetime_min_field=fields["datetime_min"],
+            datetime_max_field=fields["datetime_max"],
+            date_min_field=fields["date_min"],
+            hour_min_field=fields["hour_min"],
+        )
+        errors = list(check_types.__wrapped__(entity, df, fields))
         assert_errors(errors, expected=[])
         pd.testing.assert_frame_equal(
             df.loc[:, [fields["datetime_min"].dest_field]],
@@ -361,6 +372,9 @@ class TestChecks:
     def test_check_counts(self, imprt):
         default_value = current_app.config["IMPORT"]["DEFAULT_COUNT_VALUE"]
         fields = get_fields(imprt, ["count_min", "count_max"])
+        count_min_field = fields["count_min"]
+        count_max_field = fields["count_max"]
+
         df = pd.DataFrame(
             [
                 [None, None],
@@ -372,7 +386,11 @@ class TestChecks:
             ],
             columns=[field.dest_field for field in fields.values()],
         )
-        errors = list(check_counts(df, fields))
+        errors = list(
+            check_counts.__wrapped__(
+                df, count_min_field, count_max_field, default_count=default_value
+            )
+        )
         assert_errors(
             errors,
             expected=[
@@ -398,10 +416,6 @@ class TestChecks:
                 dtype=float,
             ),
         )
-
-        fields = get_fields(imprt, ["count_min", "count_max"])
-        count_min_field = fields["count_min"]
-        count_max_field = fields["count_max"]
         df = pd.DataFrame(
             [
                 [None],
@@ -409,7 +423,12 @@ class TestChecks:
             ],
             columns=[count_min_field.dest_field],
         )
-        list(check_counts(df, {"count_min": count_min_field}))
+        errors = list(
+            check_counts.__wrapped__(
+                df, count_min_field, count_max_field, default_count=default_value
+            )
+        )
+        assert_errors(errors, [])
         pd.testing.assert_frame_equal(
             df.loc[:, [count_min_field.dest_field, count_max_field.dest_field]],
             pd.DataFrame(
@@ -432,7 +451,12 @@ class TestChecks:
             ],
             columns=[count_max_field.dest_field],
         )
-        list(check_counts(df, {"count_max": count_max_field}))
+        errors = list(
+            check_counts.__wrapped__(
+                df, count_min_field, count_max_field, default_count=default_value
+            )
+        )
+        assert_errors(errors, [])
         pd.testing.assert_frame_equal(
             df.loc[:, [count_min_field.dest_field, count_max_field.dest_field]],
             pd.DataFrame(
@@ -449,7 +473,12 @@ class TestChecks:
         )
 
         df = pd.DataFrame([[], []])
-        list(check_counts(df, {}))
+        errors = list(
+            check_counts.__wrapped__(
+                df, count_min_field, count_max_field, default_count=default_value
+            )
+        )
+        assert_errors(errors, [])
         pd.testing.assert_frame_equal(
             df.loc[:, [count_min_field.dest_field, count_max_field.dest_field]],
             pd.DataFrame(
