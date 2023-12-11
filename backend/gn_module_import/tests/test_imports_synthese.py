@@ -729,7 +729,9 @@ class TestImportsSynthese:
         set_logged_user(self.client, users["user"])
         r = self.client.get(url_for("import.preview_valid_data", import_id=imprt.id_import))
         assert r.status_code == 200, r.data
-        assert r.json["entities"][0]["n_valid_data"] == imprt.source_count - len(valid_file_invalid_rows)
+        assert r.json["entities"][0]["n_valid_data"] == imprt.source_count - len(
+            valid_file_invalid_rows
+        )
         assert r.json["entities"][0]["n_invalid_data"] == len(valid_file_invalid_rows)
 
     def test_import_invalid_rows(self, users, prepared_import):
@@ -767,7 +769,9 @@ class TestImportsSynthese:
         set_logged_user(self.client, users["user"])
         r = self.client.get(url_for("import.get_import_errors", import_id=imprt.id_import))
         assert r.status_code == 200, r.data
-        invalid_rows = reduce(or_, [rows for _, _, rows in valid_file_expected_errors])  # TODO check?
+        invalid_rows = reduce(
+            or_, [rows for _, _, rows in valid_file_expected_errors]
+        )  # TODO check?
         assert_import_errors(imprt, valid_file_expected_errors)
         validate_json(
             r.json,
@@ -895,7 +899,9 @@ class TestImportsSynthese:
         # Get valid data (preview)
         r = self.client.get(url_for("import.preview_valid_data", import_id=imprt.id_import))
         assert r.status_code == 200, r.data
-        assert r.json["entities"][0]["n_valid_data"] == imprt.source_count - len(valid_file_invalid_rows)
+        assert r.json["entities"][0]["n_valid_data"] == imprt.source_count - len(
+            valid_file_invalid_rows
+        )
         assert r.json["entities"][0]["n_invalid_data"] == len(valid_file_invalid_rows)
 
         # Get invalid data

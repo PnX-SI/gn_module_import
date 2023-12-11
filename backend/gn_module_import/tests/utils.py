@@ -22,7 +22,9 @@ def assert_import_errors(imprt, expected_errors):
         stmt = (
             select([transient_table.c.line_no])
             .where(transient_table.c.id_import == imprt.id_import)
-            .where(or_(*[transient_table.c[v] == False for v in imprt.destination.validity_columns]))
+            .where(
+                or_(*[transient_table.c[v] == False for v in imprt.destination.validity_columns])
+            )
         )
         erroneous_rows = {line_no for line_no, in db.session.execute(stmt)}
         assert erroneous_rows == expected_erroneous_rows

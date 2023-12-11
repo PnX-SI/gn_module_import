@@ -66,10 +66,10 @@ def contentmapping(occhab_destination):
                 nomenclature.mnemonique: nomenclature.cd_nomenclature
                 for nomenclature in field.nomenclature_type.nomenclatures
             },
-            ** {
+            **{
                 nomenclature.cd_nomenclature: nomenclature.cd_nomenclature
                 for nomenclature in field.nomenclature_type.nomenclatures
-            }
+            },
         }
         for field in fields
     }
@@ -172,7 +172,7 @@ class TestImportsOcchab:
         assert_import_errors(
             imported_import,
             {
-                ("DATASET_NOT_AUTHORIZED", "unique_dataset_id", frozenset({2,3,4,5})),
+                ("DATASET_NOT_AUTHORIZED", "unique_dataset_id", frozenset({2, 3, 4, 5})),
                 ("DATASET_NOT_FOUND", "unique_dataset_id", frozenset({6})),
                 ("INVALID_UUID", "unique_dataset_id", frozenset({7})),
                 ("NO-GEOM", "Champs géométriques", frozenset({8})),
