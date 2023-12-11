@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import sqlalchemy as sa
 
+from geonature.utils.env import db
 from geonature.core.gn_meta.models import TDatasets
 
 from gn_module_import.models import BibFields
@@ -115,11 +116,14 @@ def check_datasets(imprt, df, uuid_field, id_field, module_code, object_code=Non
         # Warning: we check only permissions of first author, but currently there it only one author per import.
         authorized_datasets = {
             ds.unique_dataset_id.hex: ds
-            for ds in TDatasets.query.filter(TDatasets.unique_dataset_id.in_(uuid))
-            .filter_by_creatable(
-                user=imprt.authors[0], module_code=module_code, object_code=object_code
+            for ds in db.session.execute(
+                TDatasets.select.where(TDatasets.unique_dataset_id.in_(uuid))
+                .filter_by_creatable(
+                    user=imprt.authors[0], module_code=module_code, object_code=object_code
+                )
+                .options(sa.orm.raiseload("*"))
             )
-            .options(sa.orm.raiseload("*"))
+            .scalars()
             .all()
         }
         authorized_ds_mask = df[uuid_col].isin(authorized_datasets.keys())
