@@ -267,9 +267,37 @@ def upgrade():
         """
     )
     op.drop_column(schema="gn_imports", table_name="t_imports", column_name="taxa_count")
+    # Add new error types
+    error_type = Table("bib_errors_types", meta, autoload=True, schema="gn_imports")
+    op.execute(
+        sa.insert(error_type).values(
+            [
+                {
+                    "error_type": "Erreur de référentiel",
+                    "name": "DATASET_NOT_FOUND",
+                    "description": "La référence du jeu de données n’a pas été trouvé",
+                    "error_level": "ERROR",
+                },
+                {
+                    "error_type": "Erreur de référentiel",
+                    "name": "DATASET_NOT_AUTHORIZED",
+                    "description": "Vous n’avez pas les permissions nécessaire sur le jeu de données",
+                    "error_level": "ERROR",
+                },
+            ]
+        )
+    )
 
 
 def downgrade():
+    meta = MetaData(bind=op.get_bind())
+    # Remove new error types
+    error_type = Table("bib_errors_types", meta, autoload=True, schema="gn_imports")
+    op.execute(
+        sa.delete(error_type).where(
+            error_type.c.name.in_(["DATASET_NOT_FOUND", "DATASET_NOT_AUTHORIZED"])
+        )
+    )
     # Restore 'taxa_count'
     op.add_column(
         schema="gn_imports",
