@@ -111,6 +111,7 @@ class Destination(db.Model):
     table_name = db.Column(db.String(64))
 
     module = relationship(TModules)
+    entities = relationship("Entity", back_populates="destination")
 
     def get_transient_table(self):
         return Table(
@@ -120,6 +121,10 @@ class Destination(db.Model):
             autoload_with=db.session.connection(),
             schema="gn_imports",
         )
+
+    @property
+    def validity_columns(self):
+        return [entity.validity_column for entity in self.entities]
 
     @property
     def check_transient_data(self):
@@ -175,12 +180,24 @@ class Entity(db.Model):
 
     id_entity = db.Column(db.Integer, primary_key=True, autoincrement=True)
     id_destination = db.Column(db.Integer, ForeignKey(Destination.id_destination))
-    destination = relationship(Destination)
+    destination = relationship(Destination, back_populates="entities")
+    code = db.Column(db.String(16))
     label = db.Column(db.String(64))
     order = db.Column(db.Integer)
     validity_column = db.Column(db.String(64))
+    destination_table_schema = db.Column(db.String(63))
+    destination_table_name = db.Column(db.String(63))
 
     fields = relationship("EntityField", back_populates="entity")
+
+    def get_destination_table(self):
+        return Table(
+            self.destination_table_name,
+            db.metadata,
+            autoload=True,
+            autoload_with=db.session.connection(),
+            schema=self.destination_table_schema,
+        )
 
 
 class InstancePermissionMixin:

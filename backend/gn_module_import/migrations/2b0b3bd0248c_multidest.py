@@ -130,9 +130,12 @@ def upgrade():
             sa.Integer,
             sa.ForeignKey(destination.c.id_destination, ondelete="CASCADE"),
         ),
+        sa.Column("code", sa.String(16)),
         sa.Column("label", sa.String(64)),
         sa.Column("order", sa.Integer),
         sa.Column("validity_column", sa.String(64)),
+        sa.Column("destination_table_schema", sa.String(63)),
+        sa.Column("destination_table_name", sa.String(63)),
         schema="gn_imports",
     )
     id_entity_obs = (
@@ -141,9 +144,12 @@ def upgrade():
             sa.insert(entity)
             .values(
                 id_destination=id_dest_synthese,
+                code="observation",
                 label="Observation",
                 order=1,
                 validity_column="valid",
+                destination_table_schema="gn_synthese",
+                destination_table_name="synthese",
             )
             .returning(entity.c.id_entity)
         )
@@ -372,7 +378,7 @@ def downgrade():
             AND
             d.code = 'synthese'
             AND
-            e.label = 'Observation'
+            e.code = 'observation'
         """
     )
     with op.batch_alter_table(schema="gn_imports", table_name="bib_fields") as batch:
