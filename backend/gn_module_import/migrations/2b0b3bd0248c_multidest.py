@@ -27,6 +27,14 @@ def upgrade():
         column_name="synthese_field",
         new_column_name="dest_field",
     )
+    # Set valid column nullable
+    op.alter_column(
+        schema="gn_imports",
+        table_name="t_imports_synthese",
+        column_name="valid",
+        nullable=True,
+        server_default=None,
+    )
     ### Destination
     module = Table("t_modules", meta, autoload=True, schema="gn_commons")
     id_module_synthese = (
@@ -435,6 +443,13 @@ def downgrade():
     )
     op.drop_column(schema="gn_imports", table_name="bib_fields", column_name="id_destination")
     op.drop_table("bib_destinations", schema="gn_imports")
+    op.alter_column(
+        schema="gn_imports",
+        table_name="t_imports_synthese",
+        column_name="valid",
+        nullable=False,
+        server_default=sa.false(),
+    )
     op.alter_column(
         schema="gn_imports",
         table_name="bib_fields",
