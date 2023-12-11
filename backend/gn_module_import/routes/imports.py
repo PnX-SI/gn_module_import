@@ -433,8 +433,19 @@ def preview_valid_data(scope, imprt):
     if not imprt.processed:
         raise Conflict("Import must have been prepared before executing this action.")
     transient_table = imprt.destination.get_transient_table()
+    # FIXME FIXME FIXME
+    if imprt.destination.code == "synthese":
+        entity = Entity.query.filter_by(destination=imprt.destination, code="observation").one()
+        geom_4326_field = BibFields.query.filter_by(
+            destination=imprt.destination, name_field="the_geom_4326"
+        ).one()
+    elif imprt.destination.code == "occhab":
+        entity = Entity.query.filter_by(destination=imprt.destination, code="station").one()
+        geom_4326_field = BibFields.query.filter_by(
+            destination=imprt.destination, name_field="geom_4326"
+        ).one()
     data = {
-        "valid_bbox": get_valid_bbox(imprt),
+        "valid_bbox": get_valid_bbox(imprt, entity, geom_4326_field),
         "entities": [],
     }
     for entity in (

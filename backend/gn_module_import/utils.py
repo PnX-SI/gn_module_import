@@ -107,12 +107,12 @@ def detect_separator(f, encoding):
     return dialect.delimiter
 
 
-def get_valid_bbox(imprt):
+def get_valid_bbox(imprt, entity, geom_4326_field):
     transient_table = imprt.destination.get_transient_table()
     stmt = (
-        select(func.ST_AsGeojson(func.ST_Extent(transient_table.c.the_geom_4326)))
+        select(func.ST_AsGeojson(func.ST_Extent(transient_table.c[geom_4326_field.dest_field])))
         .where(transient_table.c.id_import == imprt.id_import)
-        .where(transient_table.c.valid == True)
+        .where(transient_table.c[entity.validity_column] == True)
     )
     (valid_bbox,) = db.session.execute(stmt).fetchone()
     if valid_bbox:
@@ -222,7 +222,7 @@ def load_transient_data_in_dataframe(imprt, fields, offset, limit):
         "valid",
     ] + [field.source_column for field in fields.values()]
     stmt = (
-        select(*[transient_table.c[col] for col in source_cols])
+        select([transient_table.c[col] for col in source_cols])
         .where(transient_table.c.id_import == imprt.id_import)
         .order_by(transient_table.c.line_no)
         .offset(offset)
