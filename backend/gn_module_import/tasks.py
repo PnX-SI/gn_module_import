@@ -2,6 +2,7 @@ from datetime import datetime
 from math import ceil
 
 from flask import current_app
+import sqlalchemy as sa
 from sqlalchemy import func, distinct, select, delete
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from celery.utils.log import get_task_logger
@@ -44,8 +45,12 @@ def do_import_checks(self, import_id):
                     aggregate_order_by(transient_table.c.line_no, transient_table.c.line_no)
                 )
             )
+            .where(
+                sa.or_(
+                    *[transient_table.c[v] == False for v in imprt.destination.validity_columns]
+                )
+            )
             .where(transient_table.c.id_import == imprt.id_import)
-            .where(transient_table.c.valid == False)  # FIXME
         )
         imprt.erroneous_rows = db.session.execute(stmt).scalar()
         db.session.commit()
@@ -53,7 +58,7 @@ def do_import_checks(self, import_id):
 
 @celery_app.task(bind=True)
 def do_import_in_destination(self, import_id):
-    logger.info(f"Starting insertion in synthese of import {import_id}.")
+    logger.info(f"Starting insertion in destination of import {import_id}.")
     imprt = db.session.get(TImports, import_id)
     if imprt is None or imprt.task_id != self.request.id:
         logger.warning("Task cancelled, doing nothing.")
@@ -67,7 +72,7 @@ def do_import_in_destination(self, import_id):
         db.select(func.count())
         .select_from(transient_table)
         .where(transient_table.c.id_import == imprt.id_import)
-        .where(transient_table.c.valid == True)  # FIXME
+        .where(sa.or_(*[transient_table.c[v] == True for v in imprt.destination.validity_columns]))
     ).scalar()
 
     # Clear transient data

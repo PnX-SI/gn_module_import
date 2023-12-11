@@ -24,6 +24,8 @@ from pypnnomenclature.models import TNomenclatures
 
 from gn_module_import.models import (
     Destination,
+    Entity,
+    EntityField,
     TImports,
     ImportUserError,
     BibFields,
@@ -584,7 +586,11 @@ def import_valid_data(scope, imprt):
         select(
             exists()
             .where(transient_table.c.id_import == imprt.id_import)
-            .where(transient_table.c.valid == True)
+            .where(
+                or_(
+                    *[transient_table.c[v] == True for v in imprt.destination.validity_columns]
+                )
+            )
         )
     ).scalar():
         raise BadRequest("Not valid data to import")
