@@ -273,6 +273,12 @@ def upgrade():
         sa.insert(error_type).values(
             [
                 {
+                    "error_type": "Ligne orpheline",
+                    "name": "ORPHAN_ROW",
+                    "description": "La ligne du fichier n’a pû être rattaché à aucune entitée.",
+                    "error_level": "ERROR",
+                },
+                {
                     "error_type": "Erreur de référentiel",
                     "name": "DATASET_NOT_FOUND",
                     "description": "La référence du jeu de données n’a pas été trouvé",
@@ -295,7 +301,7 @@ def downgrade():
     error_type = Table("bib_errors_types", meta, autoload=True, schema="gn_imports")
     op.execute(
         sa.delete(error_type).where(
-            error_type.c.name.in_(["DATASET_NOT_FOUND", "DATASET_NOT_AUTHORIZED"])
+            error_type.c.name.in_(["DATASET_NOT_FOUND", "DATASET_NOT_AUTHORIZED", "ORPHAN_ROW"])
         )
     )
     # Restore 'taxa_count'
