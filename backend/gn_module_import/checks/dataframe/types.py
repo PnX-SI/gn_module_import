@@ -1,20 +1,15 @@
 from typing import Dict
 import re
 from uuid import UUID
-import re
 from itertools import product
 from datetime import datetime
 
-from flask import current_app
 import pandas as pd
-import numpy as np
-from shapely import wkt
+from sqlalchemy.sql import sqltypes
 from sqlalchemy.dialects.postgresql import UUID as UUIDType
 
-from geonature.core.gn_synthese.models import Synthese
-from geonature.utils.env import db
-
 from gn_module_import.models import BibFields
+from .utils import dfcheck
 
 
 def convert_to_datetime(value):
@@ -76,6 +71,7 @@ def check_datetime_field(df, source_field, target_field, required):
                 ", ".join(map(lambda x: str(x), values_error))
             ),
         )
+    return {target_field}
 
 
 def check_uuid_field(df, source_field, target_field, required):
@@ -95,6 +91,7 @@ def check_uuid_field(df, source_field, target_field, required):
                 ", ".join(map(lambda x: str(x), values_error))
             ),
         )
+    return {target_field}
 
 
 def check_integer_field(df, source_field, target_field, required):
@@ -114,6 +111,7 @@ def check_integer_field(df, source_field, target_field, required):
                 ", ".join(map(lambda x: str(x), values_error))
             ),
         )
+    return {target_field}
 
 
 def check_unicode_field(df, field, field_length):
@@ -129,35 +127,47 @@ def check_unicode_field(df, field, field_length):
 
 
 def check_anytype_field(df, field_type, source_col, dest_col, required):
-    if type(field_type) == db.DateTime:
-        yield from check_datetime_field(df, source_col, dest_col, required)
-    elif type(field_type) == db.Integer:
-        yield from check_integer_field(df, source_col, dest_col, required)
-    elif type(field_type) == UUIDType:
-        yield from check_uuid_field(df, source_col, dest_col, required)
-    elif type(field_type) in [db.Unicode, db.UnicodeText]:
+    updated_cols = set()
+    if isinstance(field_type, sqltypes.DateTime):
+        updated_cols |= yield from check_datetime_field(df, source_col, dest_col, required)
+    elif isinstance(field_type, sqltypes.Integer):
+        updated_cols |= yield from check_integer_field(df, source_col, dest_col, required)
+    elif isinstance(field_type, UUIDType):
+        updated_cols |= yield from check_uuid_field(df, source_col, dest_col, required)
+    elif isinstance(field_type, sqltypes.String):
         yield from check_unicode_field(df, dest_col, field_length=field_type.length)
     else:
-        raise Exception("Unknown field type {}".format(field_type))  # pragma: no cover
+        raise Exception(
+            "Unknown type {} for field {}".format(type(field_type), dest_col)
+        )  # pragma: no cover
+    return updated_cols
 
 
-def check_types(df, fields: Dict[str, BibFields]):
+@dfcheck
+def check_types(entity, df, fields: Dict[str, BibFields]):
+    updated_cols = set()
+    destination_table = entity.get_destination_table()
+    transient_table = entity.destination.get_transient_table()
     for name, field in fields.items():
         if not field.dest_field:
             continue
+        if field.source_column not in df:
+            continue
         if field.mnemonique:  # set from content mapping
             continue
-        field_type = Synthese.__table__.c[field.dest_field].type
-        for error in check_anytype_field(
-            df,
-            field_type=field_type,
-            source_col=field.source_column,
-            dest_col=field.dest_field,
-            required=False,
-        ):
-            error.update(
-                {
-                    "column": name,
-                }
-            )
-            yield error
+        assert entity in [ef.entity for ef in field.entities]  # FIXME
+        if field.dest_field in destination_table.c:
+            field_type = destination_table.c[field.dest_field].type
+        else:  # we may requires to convert some columns unused in final destination
+            field_type = transient_table.c[field.dest_field].type
+        updated_cols |= yield from map(
+            lambda error: {"column": name, **error},
+            check_anytype_field(
+                df,
+                field_type=field_type,
+                source_col=field.source_column,
+                dest_col=field.dest_field,
+                required=False,
+            ),
+        )
+    return updated_cols

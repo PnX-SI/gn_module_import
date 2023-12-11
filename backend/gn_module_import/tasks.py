@@ -1,20 +1,18 @@
 from datetime import datetime
-from math import ceil
 
 from flask import current_app
 import sqlalchemy as sa
-from sqlalchemy import func, distinct, select, delete
+from sqlalchemy import func, select, delete
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from celery.utils.log import get_task_logger
 
 from geonature.utils.env import db
 from geonature.utils.celery import celery_app
-from geonature.utils.sentry import start_sentry_child
 
-from geonature.core.gn_commons.models import TModules
 from geonature.core.notifications.utils import dispatch_notifications
 
-from gn_module_import.models import TImports, BibFields
+from gn_module_import.models import TImports
+from gn_module_import.checks.sql import init_rows_validity, check_orphan_rows
 
 
 logger = get_task_logger(__name__)
@@ -28,7 +26,15 @@ def do_import_checks(self, import_id):
         logger.warning("Task cancelled, doing nothing.")
         return
 
+    self.update_state(state="PROGRESS", meta={"progress": 0})
+    init_rows_validity(imprt)
+    self.update_state(state="PROGRESS", meta={"progress": 0.05})
+    check_orphan_rows(imprt)
+    self.update_state(state="PROGRESS", meta={"progress": 0.1})
+
     imprt.destination.check_transient_data(self, logger, imprt)
+
+    self.update_state(state="PROGRESS", meta={"progress": 1})
 
     imprt = db.session.get(TImports, import_id, with_for_update={"of": TImports})
     if imprt is None or imprt.task_id != self.request.id:
