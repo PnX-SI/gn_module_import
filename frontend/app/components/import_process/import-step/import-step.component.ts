@@ -26,6 +26,7 @@ export class ImportStepComponent implements OnInit {
     public errorCount: number;
     public warningCount: number;
     public invalidRowCount: number;
+    public nValidData: number;
     public tableReady: boolean = false;
     public progress: number = 0;
     public importRunning: boolean = false;
@@ -81,8 +82,9 @@ export class ImportStepComponent implements OnInit {
             });
         this._ds.getValidData(this.importData.id_import).subscribe(res => {
             this.spinner = false;
-            this.tableReady = true;
             this.previewData = res;
+            this.nValidData = res.entities.map(e => e.n_valid_data).reduce((a, b) => a + b);
+            this.tableReady = true;
         })
     }
 

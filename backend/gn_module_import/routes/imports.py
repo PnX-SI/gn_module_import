@@ -458,9 +458,9 @@ def preview_valid_data(scope, imprt):
             BibFields.dest_field != None,
             BibFields.name_field.in_(imprt.fieldmapping.keys()),
         ).all()
-        columns = [field.dest_column for field in fields]
+        columns = [{"prop": field.dest_column, "name": field.name_field} for field in fields]
         valid_data = db.session.execute(
-            select(*[transient_table.c[col] for col in columns])
+            select(*[transient_table.c[field.dest_column] for field in fields])
             .where(transient_table.c.id_import == imprt.id_import)
             .where(transient_table.c[entity.validity_column] == True)
             .limit(100)
