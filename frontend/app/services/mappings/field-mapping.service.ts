@@ -149,12 +149,12 @@ export class FieldMappingService {
    * Add custom validator to the form
    */
   geoFormValidator(g: FormGroup): ValidationErrors | null {
-    /* We require a position (wkt/x,y) and/or a attachement (code{maille,communedepartement})
+    /* We require a position (wkt/x,y) and/or a attachement (code{maille,commune,departement})
        We can set both as some file can have a position for few rows, and a attachement for others.
        Contraints are:
-       - We must have a position or a attachement (but can set both).
+       - We must have a position or a attachement (or both).
        - WKT and X/Y are mutually exclusive.
-       - Code{maille,communedepartement} are mutually exclusive.
+       - Code{maille,commune,departement} are mutually exclusive.
     */
     /*
         6 cases :
@@ -166,38 +166,42 @@ export class FieldMappingService {
         */
     let xy = false;
     let attachment = false;
-    let wkt_errors = {};
-    let longitude_errors = {};
-    let latitude_errors = {};
-    let codemaille_errors = {};
-    let codecommune_errors = {};
-    let codedepartement_errors = {};
+
+    let wkt_errors = null;
+    let longitude_errors = null;
+    let latitude_errors = null;
+    let codemaille_errors = null;
+    let codecommune_errors = null;
+    let codedepartement_errors = null;
     // check for position
     if ( g.value.longitude != null || g.value.latitude != null) {
       xy = true;
       // ensure both x/y are set
-      if (g.value.longitude == null) longitude_errors['required'] = true;
-      if (g.value.latitude == null) latitude_errors['required'] = true;
+      if (g.value.longitude == null) longitude_errors = {'required': true};
+      if (g.value.latitude == null) latitude_errors = {'required': true};
+    }
+    if (g.value.WKT != null) {
+      xy = true;
     }
     // check for attachment
     if (g.value.codemaille != null || g.value.codecommune != null || g.value.codedepartement != null) {
       attachment = true;
     }
-    if (g.value.WKT == null && xy == false && attachment == false) {
-      wkt_errors['required'] = true;
-      longitude_errors['required'] = true;
-      latitude_errors['required'] = true;
-      codemaille_errors['required'] = true;
-      codecommune_errors['required'] = true;
-      codedepartement_errors['required'] = true;
+    if (xy == false && attachment == false) {
+      wkt_errors = {'required': true};
+      longitude_errors = {'required': true};
+      latitude_errors = {'required': true};
+      codemaille_errors = {'required': true};
+      codecommune_errors = {'required': true};
+      codedepartement_errors = {'required': true};
     }
+    if ('WKT' in g.controls) g.controls.WKT.setErrors(wkt_errors);
+    if ('longitude' in g.controls) g.controls.longitude.setErrors(longitude_errors);
+    if ('latitude' in g.controls) g.controls.latitude.setErrors(latitude_errors);
+    if ('codemaille' in g.controls) g.controls.codemaille.setErrors(codemaille_errors);
+    if ('codecommune' in g.controls) g.controls.codecommune.setErrors(codecommune_errors);
+    if ('codedepartement' in g.controls) g.controls.codedepartement.setErrors(codedepartement_errors);
     // we set errors on individual form control level, so we return no errors (null) at form group level.
-    g.controls.WKT.setErrors(Object.keys(wkt_errors).length ? wkt_errors : null);
-    g.controls.longitude.setErrors(Object.keys(longitude_errors).length ? longitude_errors : null);
-    g.controls.latitude.setErrors(Object.keys(latitude_errors).length ? latitude_errors : null);
-    g.controls.codemaille.setErrors(Object.keys(codemaille_errors).length ? codemaille_errors : null);
-    g.controls.codecommune.setErrors(Object.keys(codecommune_errors).length ? codecommune_errors : null);
-    g.controls.codedepartement.setErrors(Object.keys(codedepartement_errors).length ? codedepartement_errors : null);
     return null;
   }
 

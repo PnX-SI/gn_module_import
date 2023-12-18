@@ -168,7 +168,9 @@
                 </fieldset>
             </form>
             <form [formGroup]="syntheseForm">
-                <div *ngFor="let themefields of targetFields">
+                <div *ngFor="let entitythemes of targetFields">
+                  <h3>{{ entitythemes.entity.label }}</h3><!-- TODO: convert to tabs -->
+                  <div *ngFor="let themefields of entitythemes.themes">
                     <fieldset>
                         <legend class="px-1">
                             {{themefields.theme.fr_label_theme}}
@@ -245,6 +247,7 @@
                             </ng-container>
                         </div>
                     </fieldset>
+                  </div>
                 </div>
                 <br>
                 <div class="d-flex flex-row justify-content-between">

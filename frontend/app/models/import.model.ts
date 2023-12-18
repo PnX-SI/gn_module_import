@@ -43,7 +43,7 @@ export interface Import {
     date_end_import: null | string;
     source_count: number;
     import_count: number;
-    taxa_count: number;
+    statistics: object;
     date_min_data: string;
     date_max_data: string;
     step: Step;
@@ -99,7 +99,11 @@ export interface ImportValues {
     }
 }
 
-interface SynthesisTheme {
+interface Entity {
+    label: string,
+}
+
+interface Theme {
     id_theme: number,
     name_theme: string,
     fr_label_theme: string,
@@ -107,7 +111,7 @@ interface SynthesisTheme {
     desc_theme: string,
 }
 
-interface SynthesisField {
+interface Field {
     id_field: number,
     name_field: string,
     fr_label: string,
@@ -118,9 +122,14 @@ interface SynthesisField {
     comment: string,
 }
 
-export interface SynthesisThemeFields {
-    theme: SynthesisTheme,
-    fields: [SynthesisField],
+interface ThemesFields {
+    theme: Theme,
+    fields: [Field],
+}
+
+export interface EntitiesThemesFields {
+    entity: Entity,
+    themes: [ThemesFields],
 }
 
 export interface TaxaDistribution {
@@ -131,4 +140,15 @@ export interface TaxaDistribution {
 // minimal dataset model
 export interface Dataset {
     dataset_name: string
+}
+
+export interface ImportPreview {
+    valid_bbox: any,
+    entities: [{
+        entity: Entity,
+        columns: [string],
+        valid_data: [object],
+        n_valid_data: number,
+        n_invalid_data: number
+    }],
 }

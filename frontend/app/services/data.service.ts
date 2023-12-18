@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { HttpClient, HttpParams } from "@angular/common/http";
-import { Dataset, Import, ImportError, ImportValues, SynthesisThemeFields, TaxaDistribution } from "../models/import.model";
+import { Dataset, Import, ImportError, ImportValues, EntitiesThemesFields, TaxaDistribution, ImportPreview } from "../models/import.model";
 import { FieldMapping, FieldMappingValues, ContentMapping, ContentMappingValues } from "../models/mapping.model";
 import { ConfigService } from '@geonature/services/config.service';
 
@@ -11,7 +11,8 @@ export class DataService {
   private urlApi = null;
 
   constructor(private _http: HttpClient, public config: ConfigService) {
-    this.urlApi = `${this.config.API_ENDPOINT}/${this.config.IMPORT.MODULE_URL}`;
+    //this.urlApi = `${this.config.API_ENDPOINT}/import/synthese`;
+    this.urlApi = `${this.config.API_ENDPOINT}/import/occhab`;
   }
 
   getNomenclatures(): Observable<any> {
@@ -141,8 +142,8 @@ export class DataService {
     return this._http.get<ImportValues>(`${this.urlApi}/imports/${idImport}/values`);
   }
 
-  getBibFields(): Observable<Array<SynthesisThemeFields>> {
-    return this._http.get<Array<SynthesisThemeFields>>(`${this.urlApi}/synthesis/fields`);
+  getBibFields(): Observable<Array<EntitiesThemesFields>> {
+    return this._http.get<Array<EntitiesThemesFields>>(`${this.urlApi}/fields`);
   }
 
   setImportFieldMapping(idImport: number, values: FieldMappingValues): Observable<Import> {
@@ -163,7 +164,7 @@ export class DataService {
     return this._http.post<Import>(`${this.urlApi}/imports/${import_id}/prepare`, {});
   }
 
-  getValidData(import_id: number): Observable<any> {
+  getValidData(import_id: number): Observable<ImportPreview> {
     return this._http.get<any>(`${this.urlApi}/imports/${import_id}/preview_valid_data`);
   }
 

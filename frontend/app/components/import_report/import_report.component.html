@@ -43,7 +43,6 @@
             <p><b> SRID : </b> {{ importData?.srid }}</p>
             <p><b> Encodage :</b> {{ importData?.encoding }}</p>
             <p><b> Format : </b>{{ importData?.format_source_file }}</p>
-            <p *ngIf="importData?.taxa_count"><b>Taxons importés :</b> {{ importData?.taxa_count }}</p>
             <p><b>Nombre de lignes importées : </b> ({{importData?.import_count || 0}} / {{ importData?.source_count || 0 }})</p>
           </div>
           <div class="col-sm-4 d-flex flex-column justify-content-center">
