@@ -132,64 +132,48 @@ def check_duplicate_uuid(imprt, entity, uuid_field):
         error_column=uuid_field.name_field,
         whereclause=(transient_table.c.line_no == duplicates.c.lines),
     )
-    # FIXME FIXME FIXME specific synthese
-    from geonature.core.gn_commons.models import TModules
-    from geonature.core.gn_synthese.models import Synthese, TSources
 
+
+def check_existing_uuid(imprt, entity, uuid_field, whereclause=sa.true()):
+    transient_table = imprt.destination.get_transient_table()
     dest_table = entity.get_destination_table()
-    module = TModules.query.filter_by(module_code="IMPORT").one()
-    source = TSources.query.filter_by(
-        module=module, name_source=f"Import(id={imprt.id_import})"
-    ).one_or_none()
-    id_source = source if source is not None else None
     report_erroneous_rows(
         imprt,
         entity,
         error_type="EXISTING_UUID",
         error_column=uuid_field.name_field,
         whereclause=sa.and_(
-            transient_table.c.unique_id_sinp == dest_table.c[uuid_field.dest_field],
-            Synthese.id_dataset == imprt.id_dataset,  # FIXME
-            Synthese.id_source != id_source,  # FIXME
+            transient_table.c[uuid_field.dest_field] == dest_table.c[uuid_field.dest_field],
+            whereclause,
         ),
     )
 
 
 def generate_missing_uuid(imprt, entity, uuid_field):
-    if imprt.fieldmapping.get(
-        "unique_id_sinp_generate", current_app.config["IMPORT"]["DEFAULT_GENERATE_MISSING_UUID"]
-    ):
-        transient_table = imprt.destination.get_transient_table()
-        stmt = (
-            update(transient_table)
-            .values(
-                {
-                    "unique_id_sinp": func.uuid_generate_v4(),
-                }
-            )
-            .where(transient_table.c.id_import == imprt.id_import)
-            .where(
-                sa.or_(
-                    transient_table.c.src_unique_id_sinp == None,
-                    transient_table.c.src_unique_id_sinp == "",
-                )
-            )
-            .where(transient_table.c.unique_id_sinp == None)
-        )
-        # FIXME: ajouter unique_id_sinp aux fields s’il n’y ait pas ?
-        db.session.execute(stmt)
-
-
-def check_duplicates_source_pk(imprt, entity, field):  # XXX specific synthese
     transient_table = imprt.destination.get_transient_table()
-    dest_field = transient_table.c[field.dest_field]
+    stmt = (
+        update(transient_table)
+        .values(
+            {
+                transient_table.c[uuid_field.dest_field]: func.uuid_generate_v4(),
+            }
+        )
+        .where(transient_table.c.id_import == imprt.id_import)
+        .where(
+            transient_table.c[uuid_field.source_field] == None,
+        )
+        .where(transient_table.c[uuid_field.dest_field] == None)
+    )
+    db.session.execute(stmt)
+
+
+def check_duplicates_source_pk(imprt, entity, field):
+    transient_table = imprt.destination.get_transient_table()
+    dest_col = transient_table.c[field.dest_field]
     duplicates = get_duplicates_query(
         imprt,
-        dest_field,
-        whereclause=sa.and_(
-            dest_field != None,
-            dest_field != "",
-        ),
+        dest_col,
+        whereclause=dest_col != None,
     )
     report_erroneous_rows(
         imprt,
