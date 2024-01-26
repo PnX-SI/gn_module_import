@@ -54,7 +54,7 @@ def do_nomenclatures_mapping(imprt, fields):
             .where(TNomenclatures.id_type == BibNomenclaturesTypes.id_type)
             .values({field.synthese_field: TNomenclatures.id_nomenclature})
         )
-        db.session.execute(stmt, execution_options=dict({"synchronize_session": 'fetch'}))
+        db.session.execute(stmt, execution_options=dict({"synchronize_session": "fetch"}))
 
     for field in BibFields.query.filter(BibFields.mnemonique != None).all():
         if (

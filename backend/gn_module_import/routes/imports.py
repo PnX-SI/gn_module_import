@@ -5,10 +5,11 @@ import unicodedata
 
 from flask import request, current_app, jsonify, g, stream_with_context, send_file
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden, Gone
+
 # url_quote was deprecated in werkzeug 3.0 https://stackoverflow.com/a/77222063/5807438
 from urllib.parse import (
     quote as url_quote,
-)  
+)
 from sqlalchemy import or_, func, desc
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager, class_mapper

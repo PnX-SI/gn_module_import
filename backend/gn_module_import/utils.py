@@ -114,9 +114,7 @@ def detect_separator(f, encoding):
 
 
 def get_valid_bbox(imprt):
-    stmt = db.select(
-        func.ST_AsGeojson(func.ST_Extent(ImportSyntheseData.the_geom_4326))
-    ).filter(
+    stmt = db.select(func.ST_AsGeojson(func.ST_Extent(ImportSyntheseData.the_geom_4326))).filter(
         ImportSyntheseData.imprt == imprt,
         ImportSyntheseData.valid == True,
     )
