@@ -1,6 +1,7 @@
 """
      Fonctions permettant l'envoi d'email
 """
+
 from flask import url_for, current_app
 
 from geonature.utils.utilsmails import send_mail
@@ -37,9 +38,11 @@ def import_send_mail(mail_to, file_name, step, id_import):
 
     send_mail(
         recipients=mail_to,
-        subject="[GeoNature] Import réalisé"
-        if (step == "import")
-        else "[GeoNature] Import - Contrôles terminés",
+        subject=(
+            "[GeoNature] Import réalisé"
+            if (step == "import")
+            else "[GeoNature] Import - Contrôles terminés"
+        ),
         msg_html=msg,
     )
 
