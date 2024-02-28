@@ -5,4 +5,4 @@ pyproj;python_version>="3.10"
 chardet
 jsonschema
 utils-flask-sqlalchemy>=0.3.0,<1.0.0
-geonature>=2.13.2
+geonature>=2.14.0
