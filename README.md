@@ -61,32 +61,31 @@ l'instar des attributs gérés dans TaxHub, il est possible de définir
 des "blocs" dans la table `gn_imports.dict_themes`, et d'y attribuer
 des champs (`dict_fields`) en y définissant leur ordre d'affichage.
 
-Droits du module
-================
+Permissions du module
+=====================
 
-La gestions des droits dans le module d'import se fait via le réglage
-du CRUVED à deux niveaux : au niveau du module d'import lui-même et au
+La gestions des permissions dans le module d'import se fait via le réglage
+du CRUVED à deux niveaux : au niveau de l'objet "import" et au
 niveau de l'objet "mapping".
 
--   Le CRUVED du module d'import permet uniquement de gérer
+-   Le CRUVED sur l'objet "import" permet de gérer
     l'affichage des imports. Une personne ayant un R = 3 verra tous les
-    imports de la plateforme, un R = 2 seulement ceux de son organisme
+    imports de la plateforme, un R = 2 seulement les siens et ceux de son organisme
     et un R = 1 seulement les siens.
 -   Les jeux de données selectionnables par un utilisateur lors de la
     création d'un import sont eux controlés par les permissions
-    globales de GeoNature (et non du module d'import).
+    sur le C de l'objet "import" (combiné au R du module "Métadonnées).
 -   Les mappings constituent un "objet" du module d'import disposant
-    de droits paramétrables pour les différents rôles. Par défaut, les
-    droits accordés sur les mappings sont identiques aux droits que les
-    utilisateurs ont sur le module Import en lui-même. Le réglage des
-    droits se fait dans le module "Admin" de GeoNature ("Admin" -\>
+    de droits paramétrables pour les différents utilisateurs,
+    indépendamment des permissions sur les imports. Le réglage des
+    permissions se fait dans le module "Admin" de GeoNature ("Admin" -\>
     "Permissions").
--   Certains mappings sont définit comme "public" et sont vu par tout
-    le monde. Seul les administrateurs (U=3) et les propriétaires de ces
+-   Certains mappings sont définis comme "public" et sont vus par tout
+    le monde. Seuls les administrateurs (U=3) et les propriétaires de ces
     mappings peuvent les modifier.
--   Avec un C = 1, R = 2, U = 1 un utilisateur pourra par exemple créer
+-   Par exemple, avec un C = 1, R = 2, U = 1 sur les mappings, un utilisateur pourra créer
     des nouveaux mappings (des modèles d'imports), modifier ses propres
-    mappings et voir les mappings de son organismes ainsi que les
+    mappings et voir les mappings de son organisme ainsi que les
     mappings "publics".
 -   Si vous modifiez un mapping sur lequel vous n'avez pas les droits,
     il vous sera proposé de créer un nouveau mapping vous appartenant
@@ -139,7 +138,8 @@ Utilisation du module d'imports
 Note : le processus a un petit peu évoluer en v2 avec notamment une
 étape supplémentaire.
 
-Le module permet de traiter un fichier CSV ou GeoJSON sous toute
+Le module permet de traiter un fichier CSV 
+(GeoJSON non disponible dans la v2 pour le moment) sous toute
 structure de données, d'établir les correspondances nécessaires entre
 le format source et le format de la synthèse, et de traduire le
 vocabulaire source vers les nomenclatures SINP. Il stocke et archive les
@@ -149,18 +149,18 @@ de 4 Go de RAM.
 
 1.  Une fois connecté à GeoNature, accédez au module Imports. L'accueil
     du module affiche une liste des imports en cours ou terminés, selon
-    les droits de l'utilisateur connecté. Vous pouvez alors finir un
+    les permissions de l'utilisateur connecté. Vous pouvez alors finir un
     import en cours, ou bien commencer un nouvel import.
 
 ![image](https://geonature.fr/docs/img/import/gn_imports-01.jpg)
 
 2.  Choisissez à quel JDD les données importées vont être associées. Si
     vous souhaitez les associer à un nouveau JDD, il faut l'avoir créé
-    au préalable dans le module métadonnées.
+    au préalable dans le module Métadonnées.
 
 ![image](https://geonature.fr/docs/img/import/gn_imports-02.jpg)
 
-3.  Chargez le fichier CSV ou GeoJSON à importer.
+3.  Chargez le fichier CSV (GeoJSON non disponible dans la v2 pour le moment) à importer.
 
 ![image](https://geonature.fr/docs/img/import/gn_imports-03.jpg)
 
@@ -205,8 +205,8 @@ de 4 Go de RAM.
 ![image](https://geonature.fr/docs/img/import/gn_imports-07.jpg)
 
 Pour chaque fichier importé, les données brutes sont importées
-intialement et stockées tel quel dans une table portant le nom du
-fichier, dans le schéma `gn_import_archives`. Elles sont aussi stockées
+intialement et stockées en binaire dans le champs `t_imports.source_file`. 
+Elles sont aussi stockées
 dans une table intermédiaire, enrichie au fur et à mesure des étapes de
 l'import.
 
@@ -230,12 +230,12 @@ Fonctionnement du module (serveur et BDD)
 - J'ai au moins un JDD actif associé au module Import.
 - Je créé un nouvel Import. Le C sur le module Import permet de lister mes JDD actifs et associés au module Import, ceux de mon organisme ou tous les JDD actifs associés au module Import.
 - Je choisis le JDD auquel je veux associer les données à importer.
-- **Etape 1** : J'uploade mon fichier CSV (GeoJSON n'est plus disponible dans la v2 pour le moment). Le contenu du CSV est stocké en binaire dans la table des imports (`gn_imports.t_imports.source_file)`. Cela permet d'analyser le fichier (encodage, séparateur...) et à terme de télécharger les données sources (non disponible pour le moment).
+- **Etape 1** : J'uploade mon fichier CSV (GeoJSON n'est plus disponible dans la v2 pour le moment). Le contenu du CSV est stocké en binaire dans la table des imports (`gn_imports.t_imports.source_file`). Cela permet d'analyser le fichier (encodage, séparateur...) et de télécharger les données sources.
 - **Etape 2** : L'encodage, le format et le séparateur du fichier sont auto-détectés. Je peux les modifier si je le souhaite. Je renseigne le SRID parmi les SRID disponibles dans la configuration du module.
 - **Etape 3** : Je choisis un modèle d'Import existant et/ou je mets en correspondance les champs du fichier source avec ceux de la Synthèse de GeoNature. Les modèles d'import listés dépendent des permissions sur l'objet "MAPPING".
 La première ligne du fichier binaire est lue pour lister les champs du fichier source.
 - Si je choisis un modèle et que je mappe un nouveau champs, ou une valeur différente pour un champs, je peux modifier le modèle existant, en créer un nouveau ou ne sauvegarder ces modifications dans aucun modèle.
-Si j'ai mappé une valeur source différente sur un champs déjà présent dans le modèle, il est écrasé par la nouvelle valeur si je mets à jour le modèle. Actuellement un champs de destination ne peut avoir qu'un seul champs source. Par contre un champs source peut avoir plusieurs champs de destination (`date` → `date_min` et `date` → `date_max`, par exemple).
+- Si j'ai mappé une valeur source différente sur un champs déjà présent dans le modèle, il est écrasé par la nouvelle valeur si je mets à jour le modèle. Actuellement un champs de destination ne peut avoir qu'un seul champs source. Par contre un champs source peut avoir plusieurs champs de destination (`date` → `date_min` et `date` → `date_max`, par exemple).
 - Les correspondances des champs sont stockées dans tous les cas en json dans le champs `gn_imports.t_imports.fieldmapping`. Cela permet de pouvoir reprendre les correspondances d'un import, même si le modèle a été modifié entre temps.
 - Quand on valide l'étape 3, les données sources des champs mappés sont chargées dans la table d'import temporaire (`gn_imports.t_imports_synthese`) avec une colonne pour la valeur de la source et une pour la valeur de destination. Cela permet à l'application de faire des traitements de transformation et de contrôle sur les données. Les données sources dans des champs non mappées sont importées dans un champs json de cette table (`extra_fields`)
 - **Etape 4** : Les valeurs des champs à nomenclature sont déterminées à partir du contenu de la table `gn_imports.t_imports_synthese`. Une nomenclature de destination peut avoir plusieurs valeurs source. Pour chaque type de nomenclature on liste les valeurs trouvées dans le fichier source et on propose de les associer aux valeurs des nomenclatures présentes dans GeoNature. Si le fichier source comprend des lignes vides, on propose en plus de mapper le cas "Pas de valeur".

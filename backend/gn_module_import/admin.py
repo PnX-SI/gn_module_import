@@ -2,7 +2,7 @@ import json
 from itertools import groupby
 from pprint import pformat
 
-from flask import Markup
+from markupsafe import Markup
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.form import BaseForm
 from wtforms.validators import StopValidation

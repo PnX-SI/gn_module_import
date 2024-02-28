@@ -2,6 +2,15 @@
 CHANGELOG
 =========
 
+2.3.0 (2024-02-28)
+------------------
+
+Nécessite la version 2.14.0 (ou plus) de GeoNature.
+
+**🚀 Nouveautés**
+
+ - Mise à jour vers SQLAlchemy 1.4 (#498)
+
 2.2.3 (2023-09-28)
 ------------------
 

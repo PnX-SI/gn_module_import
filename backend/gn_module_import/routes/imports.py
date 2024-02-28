@@ -5,7 +5,11 @@ import unicodedata
 
 from flask import request, current_app, jsonify, g, stream_with_context, send_file
 from werkzeug.exceptions import Conflict, BadRequest, Forbidden, Gone
-from werkzeug.urls import url_quote
+
+# url_quote was deprecated in werkzeug 3.0 https://stackoverflow.com/a/77222063/5807438
+from urllib.parse import (
+    quote as url_quote,
+)
 from sqlalchemy import or_, func, desc
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import joinedload, Load, load_only, undefer, contains_eager, class_mapper
@@ -120,7 +124,7 @@ def get_import_list(scope):
         .join(TImports.dataset, isouter=True)
         .join(TImports.authors, isouter=True)
         .filter_by_scope(scope)
-        .filter(or_(*filters))
+        .filter(or_(*filters) if len(filters) > 0 else True)
         .order_by(order_by)
         .paginate(page=page, error_out=False, max_per_page=limit)
     )
@@ -185,7 +189,7 @@ def upload_file(scope, import_id):
             dataset_id = int(request.form["datasetId"])
         except ValueError:
             raise BadRequest(description="'datasetId' must be an integer.")
-        dataset = TDatasets.query.get(dataset_id)
+        dataset = db.session.get(TDatasets, (dataset_id))
         if dataset is None:
             raise BadRequest(description=f"Dataset '{dataset_id}' does not exist.")
         if not dataset.has_instance_permission(scope):  # FIXME wrong scope
@@ -369,13 +373,13 @@ def get_import_values(scope, import_id):
             # the file do not contain this field expected by the mapping
             continue
         # TODO: vérifier que l’on a pas trop de valeurs différentes ?
-        column = field.source_column
+        column = getattr(ImportSyntheseData, field.source_column)
         values = [
-            getattr(data, column)
+            getattr(data, field.source_column)
             for data in (
                 ImportSyntheseData.query.filter_by(imprt=imprt)
                 .options(load_only(column))
-                .distinct(getattr(ImportSyntheseData, column))
+                .distinct(column)
                 .all()
             )
         ]
@@ -454,13 +458,14 @@ def preview_valid_data(scope, import_id):
         BibFields.name_field.in_(imprt.fieldmapping.keys()),
     ).all()
     columns = [field.name_field for field in fields]
+    columns_instance = [getattr(ImportSyntheseData, field.name_field) for field in fields]
     valid_data = (
         ImportSyntheseData.query.filter_by(
             imprt=imprt,
             valid=True,
         )
         .options(
-            load_only(*columns),
+            load_only(*columns_instance),
         )
         .limit(100)
     )
