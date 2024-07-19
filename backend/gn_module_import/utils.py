@@ -5,6 +5,7 @@ import ast
 import json
 from enum import IntEnum
 from datetime import datetime, timedelta
+from math import ceil
 
 from flask import current_app, render_template
 from sqlalchemy import func
@@ -266,6 +267,10 @@ def update_import_data_from_dataframe(imprt, fields, df):
 
 
 def import_data_to_synthese(imprt):
+    """
+    Import prepared data in synthese.
+    Operate on batches, and yeld progress between each batch.
+    """
     generated_fields = {
         "datetime_min",
         "datetime_max",
@@ -300,11 +305,20 @@ def import_data_to_synthese(imprt):
         "id_dataset",
         "last_action",
     ]
-    insert_stmt = insert(Synthese).from_select(
-        names=names,
-        select=select_stmt,
-    )
-    db.session.execute(insert_stmt)
+    batch_size = current_app.config["IMPORT"]["INSERT_BATCH_SIZE"]
+    batch_count = ceil(imprt.source_count / batch_size)
+    for batch in range(batch_count):
+        min_line_no = batch * batch_size
+        max_line_no = (batch + 1) * batch_size
+        insert_stmt = insert(Synthese).from_select(
+            names=names,
+            select=select_stmt.filter(
+                ImportSyntheseData.line_no >= min_line_no,
+                ImportSyntheseData.line_no < max_line_no,
+            ),
+        )
+        db.session.execute(insert_stmt)
+        yield (batch + 1) / batch_count
 
 
 def generate_pdf_from_template(template, data):

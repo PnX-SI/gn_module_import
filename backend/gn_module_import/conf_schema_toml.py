@@ -156,3 +156,4 @@ class GnModuleSchemaConf(Schema):
     ID_LIST_TAXA_RESTRICTION = fields.Integer(load_default=None)
     MODULE_URL = fields.String(load_default="/import")
     DATAFRAME_BATCH_SIZE = fields.Integer(load_default=10000)
+    INSERT_BATCH_SIZE = fields.Integer(load_default=1000)
