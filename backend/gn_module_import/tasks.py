@@ -79,7 +79,7 @@ def do_import_checks(self, import_id):
         start = 0.1
         end = 0.4
         step_count = 4
-        progress = start + ((batch + 1) / batch_count) * (step / step_count) * (end - start)
+        progress = start + ((batch + step / step_count) / batch_count) * (end - start)
         self.update_state(state="PROGRESS", meta={"progress": progress})
 
     for batch in range(batch_count):
