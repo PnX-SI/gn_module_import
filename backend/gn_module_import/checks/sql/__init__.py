@@ -28,7 +28,7 @@ from gn_module_import.utils import generated_fields
 from geonature.core.gn_synthese.models import Synthese, TSources
 from ref_geo.models import LAreas, BibAreasTypes
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
-from apptax.taxonomie.models import Taxref, CorNomListe, BibNoms
+from apptax.taxonomie.models import Taxref, cor_nom_liste
 from pypn_habref_api.models import Habref
 
 
@@ -211,9 +211,10 @@ def check_cd_nom(imprt, fields):
     # Filter out on a taxhub list if provided
     list_id = current_app.config["IMPORT"].get("ID_LIST_TAXA_RESTRICTION", None)
     if list_id is not None:
-        reference_table = join(Taxref, BibNoms).join(
-            CorNomListe,
-            sa.and_(BibNoms.id_nom == CorNomListe.id_nom, CorNomListe.id_liste == list_id),
+        reference_table = join(
+            Taxref,
+            cor_nom_liste,
+            sa.and_(cor_nom_liste.c.id_liste == list_id, Taxref.cd_nom == cor_nom_liste.c.cd_nom),
         )
     else:
         reference_table = Taxref

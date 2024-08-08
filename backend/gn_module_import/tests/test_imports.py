@@ -11,10 +11,10 @@ from flask import g, url_for, current_app
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import Unauthorized, Forbidden, BadRequest, Conflict
 from jsonschema import validate as validate_json
-from sqlalchemy import func
+from sqlalchemy import func, insert
 from sqlalchemy.sql.expression import select
 
-from apptax.taxonomie.models import BibListes, CorNomListe, BibNoms
+from apptax.taxonomie.models import BibListes, cor_nom_liste
 from geonature.utils.env import db
 from geonature.core.gn_permissions.tools import (
     get_scopes_by_action as _get_scopes_by_action,
@@ -282,16 +282,12 @@ def sample_taxhub_list():
     cd_nom = 67111
     with db.session.begin_nested():
         id_list_not_exist = (db.session.query(func.max(BibListes.id_liste)).scalar() or 0) + 1
-        bibTaxon = db.session.query(BibNoms).filter(BibNoms.cd_nom == cd_nom).first()
-        if bibTaxon is None:
-            bibTaxon = BibNoms(cd_nom=cd_nom, cd_ref=cd_nom)
-            db.session.add(bibTaxon)
-        taxa_list = BibListes(
-            id_liste=id_list_not_exist, nom_liste="test", code_liste="test", picto=""
-        )
+        taxa_list = BibListes(id_liste=id_list_not_exist, nom_liste="test", code_liste="test")
         db.session.add(taxa_list)
     with db.session.begin_nested():
-        db.session.add(CorNomListe(id_nom=bibTaxon.id_nom, id_liste=taxa_list.id_liste))
+        db.session.execute(
+            insert(cor_nom_liste).values(cd_nom=cd_nom, id_liste=taxa_list.id_liste)
+        )
     return taxa_list
 
 
