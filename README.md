@@ -6,6 +6,8 @@ Module d’import
 | master | [![pytest](https://github.com/PnX-SI/gn_module_import/actions/workflows/pytest.yml/badge.svg?branch=master)](https://github.com/PnX-SI/gn_module_import/actions/workflows/pytest.yml) | [![codecov](https://codecov.io/gh/PnX-SI/gn_module_import/branch/master/graph/badge.svg?token=BU2G1MN5XH)](https://codecov.io/gh/PnX-SI/gn_module_import) |
 | develop | [![pytest](https://github.com/PnX-SI/gn_module_import/actions/workflows/pytest.yml/badge.svg?branch=develop)](https://github.com/PnX-SI/gn_module_import/actions/workflows/pytest.yml) | [![codecov](https://codecov.io/gh/PnX-SI/gn_module_import/branch/develop/graph/badge.svg?token=BU2G1MN5XH)](https://codecov.io/gh/PnX-SI/gn_module_import) |
 
+⚠️ **Attention**, depuis la version 2.15 de GeoNature, ce module a été intégré dans le coeur de GeoNature et n'est plus à installer et mettre à jour indépendamment.
+
 Ce module permet d’importer des données depuis un fichier CSV dans [GeoNature](https://github.com/PnX-SI/GeoNature).
 
 Installation du module
